@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>مكتبة التفاسير — Библиотека тафсиров</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Naskh+Arabic:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+/* ===== THEMES ===== */
+[data-theme="green"]{--accent:#1B5E3B;--accent-bg:#E8F3EC;--accent-hover:#24794E;--header-bg:#14331F;--header-text:#EDE8DD}
+[data-theme="blue"]{--accent:#1B4E8E;--accent-bg:#E3EDF8;--accent-hover:#2868B0;--header-bg:#132D4F;--header-text:#E0E8F0}
+[data-theme="gold"]{--accent:#8B6914;--accent-bg:#FDF5E6;--accent-hover:#A67C1A;--header-bg:#3D2E0A;--header-text:#F0E8D0}
+[data-theme="dark"]{--accent:#5DA87E;--accent-bg:#1E2E24;--accent-hover:#6FC090;--header-bg:#0D0D0D;--header-text:#C8C8C0;--bg:#1A1A18;--bg-alt:#222220;--bg-card:#2A2A28;--border:#3A3A36;--border-light:#333330;--text:#D8D4CC;--text-sec:#AAA89E;--text-muted:#706E66}
+
+:root,[data-theme="green"],[data-theme="blue"],[data-theme="gold"]{
+  --bg:#FAF8F5;--bg-alt:#F0EDE6;--bg-card:#fff;--border:#E5E0D8;--border-light:#E8E3DA;
+  --text:#2D2A26;--text-sec:#5A5650;--text-muted:#AAA59C;
+  --note-bg:#FFFBF0;--note-border:#E8D8A0;--note-color:#9E7C20;
+  --tag-bg:#EDE7F6;--tag-color:#5E35B1;
+  --sidebar-w:240px;
+}
+[data-theme="dark"]{--note-bg:#2A2818;--note-border:#4A4520;--note-color:#C8A830;--tag-bg:#2A2440;--tag-color:#9E8DE0}
+
+body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);color:var(--text);height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;-webkit-user-select:none;user-select:none}
+.selectable{-webkit-user-select:text;user-select:text}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+/* HEADER */
+.header{background:var(--header-bg);color:var(--header-text);padding:7px 12px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(0,0,0,.2);z-index:20;flex-shrink:0}
+.header-left{display:flex;align-items:center;gap:10px}
+.h-title{font-size:16px;font-weight:600;font-family:'Amiri',serif}
+.h-sub{font-size:9px;opacity:.5;letter-spacing:1.5px}
+.h-right{display:flex;align-items:center;gap:6px}
+.btn-i{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:inherit;border-radius:6px;padding:5px 9px;cursor:pointer;font-size:13px;transition:background .12s}
+.btn-i:hover{background:rgba(255,255,255,.15)}
+.theme-dots{display:flex;gap:4px;align-items:center}
+.theme-dot{width:18px;height:18px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border .15s}
+.theme-dot:hover,.theme-dot.active{border-color:rgba(255,255,255,.7)}
+
+/* LAYOUT */
+.app-body{display:flex;flex:1;overflow:hidden;position:relative}
+
+/* SIDEBAR — surah list */
+.sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--bg-alt);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:margin-left .25s;z-index:5}
+.sidebar.collapsed{margin-left:calc(var(--sidebar-w)*-1)}
+.sb-head{padding:7px 8px 5px;border-bottom:1px solid var(--border)}
+.sb-head input{width:100%;padding:6px 9px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg-card);outline:none;font-family:inherit;color:var(--text)}
+.sb-head input:focus{border-color:var(--accent)}
+.sb-tabs{display:flex;border-bottom:1px solid var(--border)}
+.sb-tab{flex:1;padding:6px 4px;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:11px;font-weight:500;color:var(--text-sec);border-bottom:2px solid transparent;text-align:center}
+.sb-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.sb-content{flex:1;overflow-y:auto;padding:4px 5px 10px}
+
+.surah-btn{width:100%;display:flex;align-items:center;gap:7px;padding:6px 7px;margin:1px 0;border:none;border-radius:5px;cursor:pointer;background:transparent;color:var(--text);text-align:left;font-family:inherit;font-size:12px;transition:background .12s}
+.surah-btn:hover{background:rgba(128,128,128,.08)}.surah-btn.active{background:var(--accent);color:#fff}
+.s-n{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;background:rgba(128,128,128,.1);flex-shrink:0}
+.surah-btn.active .s-n{background:rgba(255,255,255,.18)}
+.s-ar{font-family:'Amiri',serif;font-size:13px;direction:rtl;line-height:1.3}
+.s-meta{font-size:9px;opacity:.5;margin-top:1px}
+
+/* TAG TREE in sidebar */
+.tag-node{padding-left:10px}
+.tag-row{display:flex;align-items:center;gap:3px;padding:4px 5px;border-radius:4px;cursor:pointer;font-size:11px;transition:background .1s}
+.tag-row:hover{background:rgba(128,128,128,.08)}
+.tag-row.selected{background:var(--tag-bg);color:var(--tag-color);font-weight:600}
+.tag-arrow{font-size:8px;width:12px;text-align:center;color:var(--text-muted);cursor:pointer;flex-shrink:0}
+.tag-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tag-cnt{font-size:9px;color:var(--text-muted)}
+.tag-acts{display:flex;gap:1px;opacity:0;transition:opacity .12s}
+.tag-row:hover .tag-acts{opacity:1}
+.tag-ab{background:none;border:none;cursor:pointer;font-size:10px;padding:1px 3px;border-radius:3px;color:var(--text-muted)}
+.tag-ab:hover{background:rgba(128,128,128,.15);color:var(--text)}
+.tag-add-row{padding:6px 8px;border-top:1px solid var(--border)}
+.tag-add-row input{width:100%;padding:5px 7px;border:1px solid var(--border);border-radius:4px;font-size:11px;font-family:inherit;outline:none;color:var(--text);background:var(--bg-card)}
+.tag-add-hint{font-size:9px;color:var(--text-muted);margin-top:3px}
+
+/* CENTER */
+.center{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.center-bar{padding:6px 12px;border-bottom:1px solid var(--border);background:var(--bg-card);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:6px;flex-wrap:wrap}
+.cb-left{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.cb-left h2{font-size:13px;font-weight:500;margin:0}
+.cb-left .ar{font-family:'Amiri',serif;margin-left:5px;font-size:15px}
+.cb-right{display:flex;align-items:center;gap:6px}
+.btn-s{background:var(--bg-alt);border:1px solid var(--border);border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;font-family:inherit;white-space:nowrap;color:var(--text)}
+.btn-s:hover{background:var(--border)}
+.btn-s.active{background:var(--accent-bg);border-color:var(--accent);color:var(--accent);font-weight:600}
+
+/* RIGHT PANEL — tafsir checkboxes */
+.rpanel{width:var(--sidebar-w);flex-shrink:0;background:var(--bg-alt);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transition:margin-right .25s}
+.rpanel.collapsed{margin-right:calc(var(--sidebar-w)*-1)}
+.rp-head{padding:6px 8px;border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--accent);display:flex;align-items:center;justify-content:space-between}
+.rp-list{flex:1;overflow-y:auto;padding:4px 0}
+
+.tg-head{display:flex;align-items:center;gap:5px;padding:6px 8px 4px;font-size:10px;font-weight:600;color:var(--text-sec);letter-spacing:.3px;cursor:pointer;background:var(--bg);border:none;width:100%;text-align:left;font-family:inherit;position:sticky;top:0;z-index:1}
+.tg-head:hover{background:var(--border-light)}
+.tg-icon{font-size:12px}
+.tg-arrow{margin-left:auto;font-size:8px;color:var(--text-muted);transition:transform .2s}
+.tg.collapsed .tg-arrow{transform:rotate(-90deg)}.tg.collapsed .tg-items{display:none}
+
+.t-item{display:flex;align-items:center;gap:6px;width:100%;padding:5px 8px 5px 14px;border:none;background:transparent;cursor:pointer;text-align:left;font-family:inherit;transition:background .1s}
+.t-item:hover{background:rgba(128,128,128,.06)}
+.t-check{width:15px;height:15px;border-radius:3px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;transition:all .12s;color:transparent}
+.t-item.checked .t-check{background:var(--accent);border-color:var(--accent);color:#fff}
+.t-info{flex:1;min-width:0}
+.t-name{font-size:11px;font-weight:500;color:var(--text);line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.t-item.checked .t-name{color:var(--accent);font-weight:600}
+.t-ar{font-family:'Amiri',serif;font-size:11px;color:var(--text-muted);direction:rtl;line-height:1.1}
+.t-item.special{border-left:3px solid var(--note-color);padding-left:11px}
+.t-item.arabic-item{border-left:3px solid var(--accent);padding-left:11px}
+
+/* READING AREA */
+.reading{flex:1;overflow-y:auto;padding:12px 16px}
+
+/* Horizontal layout */
+.ayah-block{margin-bottom:14px;border:1px solid var(--border-light);border-radius:8px;overflow:hidden;background:var(--bg-card)}
+.ab-head{padding:6px 10px;background:var(--bg-alt);border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.ab-num{width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0}
+.ab-tag-dots{display:flex;gap:3px}
+.ab-tag-dot{width:6px;height:6px;border-radius:50%;background:var(--tag-color)}
+.ab-note-dot{width:6px;height:6px;border-radius:50%;background:var(--note-color)}
+
+.ab-entry{padding:8px 12px;border-bottom:1px solid var(--border-light)}
+.ab-entry:last-child{border-bottom:none}
+.ab-entry-label{font-size:10px;font-weight:600;color:var(--accent);margin-bottom:3px;display:flex;align-items:center;gap:4px}
+.ab-entry-label .lbl-ar{font-family:'Amiri',serif;color:var(--text-muted);font-weight:400}
+.ab-entry-text{font-size:13px;line-height:1.85;color:var(--text-sec);white-space:pre-wrap}
+.ab-entry-text.selectable{-webkit-user-select:text;user-select:text}
+.ab-entry-text.rtl{direction:rtl;text-align:right;font-family:'Noto Naskh Arabic','Amiri',serif;font-size:17px;line-height:2;color:var(--text)}
+.ab-entry-text.arabic-main{font-family:'Noto Naskh Arabic','Amiri',serif;font-size:22px;line-height:2;direction:rtl;text-align:right;color:var(--text)}
+
+/* Notes inline */
+.ab-note-area{width:100%;border:1px solid var(--note-border);border-radius:5px;padding:6px 8px;font-family:inherit;font-size:12px;line-height:1.6;color:var(--text);background:var(--note-bg);resize:vertical;outline:none;min-height:40px;-webkit-user-select:text;user-select:text}
+.ab-note-area:focus{border-color:var(--note-color)}
+
+/* Vertical/column layout */
+.col-layout{display:flex;overflow-x:auto;gap:0}
+.col-col{flex:1;min-width:250px;border-right:1px solid var(--border-light)}
+.col-col:last-child{border-right:none}
+.col-head{padding:6px 8px;background:var(--bg-alt);border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--accent);position:sticky;top:0;z-index:1;text-align:center}
+.col-ayah{padding:8px 10px;border-bottom:1px solid var(--border-light);font-size:13px;line-height:1.85;color:var(--text-sec);white-space:pre-wrap;min-height:50px}
+.col-ayah.rtl{direction:rtl;text-align:right;font-family:'Noto Naskh Arabic','Amiri',serif;font-size:16px;line-height:2;color:var(--text)}
+.col-ayah.arabic-main{font-family:'Noto Naskh Arabic','Amiri',serif;font-size:20px;line-height:2;direction:rtl;text-align:right;color:var(--text)}
+.col-ayah-num{font-size:9px;font-weight:600;color:var(--accent);margin-bottom:2px}
+
+/* TAG RESULTS view */
+.tag-results{flex:1;overflow-y:auto;padding:12px 16px}
+
+/* Tag popup on ayah */
+.tag-popup{z-index:30;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.15);width:260px;max-height:300px;display:flex;flex-direction:column;overflow:hidden}
+.tag-popup-head{padding:6px 10px;border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--tag-color);display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.tag-popup-close{background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-muted);padding:0 2px}
+.tag-popup-list{flex:1;overflow-y:auto;padding:4px 0}
+.tp-node{padding-left:10px}
+.tp-row{display:flex;align-items:center;gap:4px;padding:3px 8px;cursor:pointer;font-size:11px;border-radius:3px;transition:background .1s}
+.tp-row:hover{background:rgba(128,128,128,.08)}
+.tp-check{font-size:10px;width:14px;flex-shrink:0;color:var(--tag-color)}
+.tp-arrow{font-size:7px;width:10px;text-align:center;color:var(--text-muted);cursor:pointer;flex-shrink:0}
+.tr-header{font-size:14px;font-weight:600;color:var(--tag-color);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.tr-ayah{padding:10px 12px;margin-bottom:8px;border:1px solid var(--border-light);border-radius:7px;background:var(--bg-card);cursor:pointer;transition:background .12s}
+.tr-ayah:hover{background:var(--bg-alt)}
+.tr-ayah-ref{font-size:11px;font-weight:600;color:var(--accent);margin-bottom:4px}
+.tr-ayah-ar{font-family:'Noto Naskh Arabic','Amiri',serif;font-size:18px;line-height:1.8;direction:rtl;text-align:right;color:var(--text);margin-bottom:4px}
+.tr-ayah-tr{font-size:12px;color:var(--text-sec);line-height:1.5}
+
+/* FOOTER */
+.footer{padding:3px 12px;border-top:1px solid var(--border);background:var(--bg-alt);font-size:9px;color:var(--text-muted);display:flex;justify-content:space-between;flex-shrink:0}
+
+/* RIGHT PANEL extras */
+.rp-search{padding:4px 8px;border-bottom:1px solid var(--border)}
+.rp-search input{width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-size:11px;font-family:inherit;outline:none;color:var(--text);background:var(--bg-card)}
+.rp-search input:focus{border-color:var(--accent)}
+
+.t-sort{display:flex;flex-direction:column;gap:0;opacity:0;transition:opacity .12s;margin-left:auto;flex-shrink:0}
+.t-item:hover .t-sort{opacity:1}
+.t-item.checked .t-sort{opacity:.4}
+.t-item.checked:hover .t-sort{opacity:1}
+.sort-b{background:none;border:none;cursor:pointer;font-size:8px;color:var(--text-muted);padding:0 3px;line-height:1}
+.sort-b:hover{color:var(--accent)}
+
+.show-more-btn{padding:4px 14px;border:none;background:transparent;cursor:pointer;font-size:10px;color:var(--accent);font-family:inherit;font-weight:500;text-align:left;width:100%}
+.show-more-btn:hover{background:rgba(128,128,128,.06)}
+
+/* MOBILE */
+@media(max-width:768px){
+  :root{--sidebar-w:100%}
+  .sidebar,.rpanel{position:absolute;top:0;height:100%;width:100%;z-index:10;transition:transform .25s}
+  .sidebar{left:0;transform:translateX(0)}.sidebar.collapsed{transform:translateX(-100%);margin-left:0}
+  .rpanel{right:0;transform:translateX(0)}.rpanel.collapsed{transform:translateX(100%);margin-right:0}
+  .header{padding:7px 8px}.reading{padding:8px}
+  .ab-entry-text.arabic-main{font-size:19px}
+  .col-col{min-width:200px}
+  .search-panel{width:100%!important;left:0!important;right:0!important;border-radius:0!important;max-height:80vh!important}
+}
+
+/* SEARCH */
+.search-panel{position:fixed;top:48px;left:50%;transform:translateX(-50%);width:600px;max-width:90vw;max-height:70vh;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 40px rgba(0,0,0,.2);z-index:50;display:flex;flex-direction:column;overflow:hidden}
+.search-panel.hidden{display:none}
+.sp-head{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-shrink:0}
+.sp-input{flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:inherit;outline:none;color:var(--text);background:var(--bg)}
+.sp-input:focus{border-color:var(--accent)}
+.sp-close{background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-muted);padding:4px}
+.sp-opts{padding:6px 14px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center;font-size:11px;color:var(--text-sec);flex-shrink:0;flex-wrap:wrap}
+.sp-opt-label{display:flex;align-items:center;gap:3px;cursor:pointer}
+.sp-opt-label input{margin:0}
+.sp-results{flex:1;overflow-y:auto;padding:8px}
+.sp-result{padding:10px 12px;border-bottom:1px solid var(--border-light);cursor:pointer;transition:background .1s}
+.sp-result:hover{background:var(--bg-alt)}
+.sp-result:last-child{border-bottom:none}
+.sp-ref{font-size:11px;font-weight:600;color:var(--accent);margin-bottom:2px}
+.sp-src{font-size:10px;color:var(--text-muted);margin-bottom:4px}
+.sp-text{font-size:13px;line-height:1.6;color:var(--text-sec)}
+.sp-text.rtl{direction:rtl;text-align:right;font-family:'Noto Naskh Arabic','Amiri',serif;font-size:15px}
+.sp-hl{background:#FFE082;color:#333;border-radius:2px;padding:0 1px}
+.sp-status{padding:12px;text-align:center;color:var(--text-muted);font-size:12px}
+.sp-count{font-size:11px;color:var(--text-muted);padding:4px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+@media print{body{display:none!important}}
+</style>
+</head>
+<body data-theme="green" oncontextmenu="return false;">
+
+<header class="header">
+  <div class="header-left">
+    <button class="btn-i" onclick="toggleSidebar()" title="Суры / Теги">☰</button>
+    <div><div class="h-title">مكتبة التفاسير</div><div class="h-sub">TAFSIR LIBRARY</div></div>
+  </div>
+  <div class="h-right">
+    <div class="theme-dots" title="Тема">
+      <span class="theme-dot active" style="background:#1B5E3B" onclick="setTheme('green')"></span>
+      <span class="theme-dot" style="background:#1B4E8E" onclick="setTheme('blue')"></span>
+      <span class="theme-dot" style="background:#8B6914" onclick="setTheme('gold')"></span>
+      <span class="theme-dot" style="background:#333" onclick="setTheme('dark')"></span>
+    </div>
+    <button class="btn-i" onclick="toggleSearch()" title="Поиск по текстам">🔍</button>
+    <button class="btn-i" onclick="toggleRPanel()" title="Переводы и тафсиры">📚</button>
+  </div>
+</header>
+
+<div class="search-panel hidden" id="searchPanel">
+  <div class="sp-head">
+    <input class="sp-input" id="spInput" placeholder="Поиск по текстам тафсиров и переводов..." oninput="onSearchInput()" onkeydown="if(event.key==='Escape')toggleSearch()">
+    <button class="sp-close" onclick="toggleSearch()">✕</button>
+  </div>
+  <div class="sp-opts">
+    <label class="sp-opt-label"><input type="checkbox" id="spAllTafsirs"> Искать во всех тафсирах</label>
+    <span style="color:var(--text-muted)">|</span>
+    <span style="color:var(--text-muted)">По умолчанию — поиск в включённых</span>
+  </div>
+  <div class="sp-count hidden" id="spCount"></div>
+  <div class="sp-results" id="spResults"><div class="sp-status">Введите запрос для поиска</div></div>
+</div>
+
+<div class="app-body">
+  <aside class="sidebar collapsed" id="sidebar">
+    <div class="sb-head"><input placeholder="Поиск..." oninput="onSearch(this.value)"></div>
+    <div class="sb-tabs">
+      <button class="sb-tab active" onclick="setSbTab('surahs')" id="sbTabSurahs">Суры</button>
+      <button class="sb-tab" onclick="setSbTab('tags')" id="sbTabTags">🏷 Теги</button>
+    </div>
+    <div class="sb-content" id="sbContent"></div>
+  </aside>
+
+  <main class="center">
+    <div class="center-bar" id="centerBar"></div>
+    <div id="centerBody" style="flex:1;overflow:hidden;display:flex;flex-direction:column;"></div>
+  </main>
+
+  <aside class="rpanel collapsed" id="rpanel">
+    <div class="rp-head"><span>📚 Переводы и тафсиры</span><button class="btn-i" onclick="toggleRPanel()" style="font-size:11px">✕</button></div>
+    <div class="rp-search"><input placeholder="Фильтр..." oninput="ST.rpFilter=this.value.toLowerCase();renderRP();" id="rpSearchInput"></div>
+    <div class="rp-list" id="rpList"></div>
+  </aside>
+</div>
+
+<footer class="footer"><span id="footerInfo"></span><span>v4.4</span></footer>
+
+<!-- ============================================================
+  ОФФЛАЙН-РЕЖИМ: раскомментируйте строки ниже для работы без сервера.
+  JS-файлы генерируются конвертером: python3 convert.py input output.json
+  Он создаёт и .json и .js автоматически.
+  Для оффлайн-раздачи: раскомментируйте нужные строки, JSON-файлы можно удалить.
+============================================================ -->
+<!--
+<script src="data/config.js"></script>
+<script src="data/tafsirs/_arabic.js"></script>
+<script src="data/tafsirs/kuliev.js"></script>
+<script src="data/tafsirs/krachkovsky.js"></script>
+<script src="data/tafsirs/osmanov.js"></script>
+<script src="data/tafsirs/tabari.js"></script>
+<script src="data/tafsirs/kathir.js"></script>
+<script src="data/tafsirs/qurtubi.js"></script>
+<script src="data/tafsirs/baghawi.js"></script>
+<script src="data/tafsirs/saadi.js"></script>
+<script src="data/tafsirs/saadi_ru.js"></script>
+-->
+
+<script>
+// ============================================================
+const DATA_PATH="data/";
+const SURAHS=[
+{id:1,name:"الفاتحة",ru:"Аль-Фатиха",n:7},{id:2,name:"البقرة",ru:"Аль-Бакара",n:286},{id:3,name:"آل عمران",ru:"Алю Имран",n:200},
+{id:4,name:"النساء",ru:"Ан-Ниса",n:176},{id:5,name:"المائدة",ru:"Аль-Маида",n:120},{id:6,name:"الأنعام",ru:"Аль-Анам",n:165},
+{id:7,name:"الأعراف",ru:"Аль-Араф",n:206},{id:8,name:"الأنفال",ru:"Аль-Анфаль",n:75},{id:9,name:"التوبة",ru:"Ат-Тауба",n:129},
+{id:10,name:"يونس",ru:"Юнус",n:109},{id:11,name:"هود",ru:"Худ",n:123},{id:12,name:"يوسف",ru:"Юсуф",n:111},
+{id:13,name:"الرعد",ru:"Ар-Раад",n:43},{id:14,name:"إبراهيم",ru:"Ибрахим",n:52},{id:15,name:"الحجر",ru:"Аль-Хиджр",n:99},
+{id:16,name:"النحل",ru:"Ан-Нахль",n:128},{id:17,name:"الإسراء",ru:"Аль-Исра",n:111},{id:18,name:"الكهف",ru:"Аль-Кахф",n:110},
+{id:19,name:"مريم",ru:"Марьям",n:98},{id:20,name:"طه",ru:"Та Ха",n:135},{id:21,name:"الأنبياء",ru:"Аль-Анбия",n:112},
+{id:22,name:"الحج",ru:"Аль-Хадж",n:78},{id:23,name:"المؤمنون",ru:"Аль-Муминун",n:118},{id:24,name:"النور",ru:"Ан-Нур",n:64},
+{id:25,name:"الفرقان",ru:"Аль-Фуркан",n:77},{id:26,name:"الشعراء",ru:"Аш-Шуара",n:227},{id:27,name:"النمل",ru:"Ан-Намль",n:93},
+{id:28,name:"القصص",ru:"Аль-Касас",n:88},{id:29,name:"العنكبوت",ru:"Аль-Анкабут",n:69},{id:30,name:"الروم",ru:"Ар-Рум",n:60},
+{id:31,name:"لقمان",ru:"Лукман",n:34},{id:32,name:"السجدة",ru:"Ас-Саджда",n:30},{id:33,name:"الأحزاب",ru:"Аль-Ахзаб",n:73},
+{id:34,name:"سبأ",ru:"Саба",n:54},{id:35,name:"فاطر",ru:"Фатыр",n:45},{id:36,name:"يس",ru:"Йа Син",n:83},
+{id:37,name:"الصافات",ru:"Ас-Саффат",n:182},{id:38,name:"ص",ru:"Сад",n:88},{id:39,name:"الزمر",ru:"Аз-Зумар",n:75},
+{id:40,name:"غافر",ru:"Гафир",n:85},{id:41,name:"فصلت",ru:"Фуссылат",n:54},{id:42,name:"الشورى",ru:"Аш-Шура",n:53},
+{id:43,name:"الزخرف",ru:"Аз-Зухруф",n:89},{id:44,name:"الدخان",ru:"Ад-Духан",n:59},{id:45,name:"الجاثية",ru:"Аль-Джасия",n:37},
+{id:46,name:"الأحقاف",ru:"Аль-Ахкаф",n:35},{id:47,name:"محمد",ru:"Мухаммад",n:38},{id:48,name:"الفتح",ru:"Аль-Фатх",n:29},
+{id:49,name:"الحجرات",ru:"Аль-Худжурат",n:18},{id:50,name:"ق",ru:"Каф",n:45},{id:51,name:"الذاريات",ru:"Аз-Зарият",n:60},
+{id:52,name:"الطور",ru:"Ат-Тур",n:49},{id:53,name:"النجم",ru:"Ан-Наджм",n:62},{id:54,name:"القمر",ru:"Аль-Камар",n:55},
+{id:55,name:"الرحمن",ru:"Ар-Рахман",n:78},{id:56,name:"الواقعة",ru:"Аль-Вакиа",n:96},{id:57,name:"الحديد",ru:"Аль-Хадид",n:29},
+{id:58,name:"المجادلة",ru:"Аль-Муджадала",n:22},{id:59,name:"الحشر",ru:"Аль-Хашр",n:24},{id:60,name:"الممتحنة",ru:"Аль-Мумтахана",n:13},
+{id:61,name:"الصف",ru:"Ас-Сафф",n:14},{id:62,name:"الجمعة",ru:"Аль-Джумуа",n:11},{id:63,name:"المنافقون",ru:"Аль-Мунафикун",n:11},
+{id:64,name:"التغابن",ru:"Ат-Тагабун",n:18},{id:65,name:"الطلاق",ru:"Ат-Талак",n:12},{id:66,name:"التحريم",ru:"Ат-Тахрим",n:12},
+{id:67,name:"الملك",ru:"Аль-Мульк",n:30},{id:68,name:"القلم",ru:"Аль-Калям",n:52},{id:69,name:"الحاقة",ru:"Аль-Хакка",n:52},
+{id:70,name:"المعارج",ru:"Аль-Маариж",n:44},{id:71,name:"نوح",ru:"Нух",n:28},{id:72,name:"الجن",ru:"Аль-Джинн",n:28},
+{id:73,name:"المزمل",ru:"Аль-Муззаммиль",n:20},{id:74,name:"المدثر",ru:"Аль-Муддассир",n:56},{id:75,name:"القيامة",ru:"Аль-Кияма",n:40},
+{id:76,name:"الإنسان",ru:"Аль-Инсан",n:31},{id:77,name:"المرسلات",ru:"Аль-Мурсалят",n:50},{id:78,name:"النبأ",ru:"Ан-Наба",n:40},
+{id:79,name:"النازعات",ru:"Ан-Назиат",n:46},{id:80,name:"عبس",ru:"Абаса",n:42},{id:81,name:"التكوير",ru:"Ат-Таквир",n:29},
+{id:82,name:"الانفطار",ru:"Аль-Инфитар",n:19},{id:83,name:"المطففين",ru:"Аль-Мутаффифин",n:36},{id:84,name:"الانشقاق",ru:"Аль-Иншикак",n:25},
+{id:85,name:"البروج",ru:"Аль-Бурудж",n:22},{id:86,name:"الطارق",ru:"Ат-Тарик",n:17},{id:87,name:"الأعلى",ru:"Аль-Аля",n:19},
+{id:88,name:"الغاشية",ru:"Аль-Гашия",n:26},{id:89,name:"الفجر",ru:"Аль-Фаджр",n:30},{id:90,name:"البلد",ru:"Аль-Баляд",n:20},
+{id:91,name:"الشمس",ru:"Аш-Шамс",n:15},{id:92,name:"الليل",ru:"Аль-Лайль",n:21},{id:93,name:"الضحى",ru:"Ад-Духа",n:11},
+{id:94,name:"الشرح",ru:"Аш-Шарх",n:8},{id:95,name:"التين",ru:"Ат-Тин",n:8},{id:96,name:"العلق",ru:"Аль-Алак",n:19},
+{id:97,name:"القدر",ru:"Аль-Кадр",n:5},{id:98,name:"البينة",ru:"Аль-Баййина",n:8},{id:99,name:"الزلزلة",ru:"Аз-Зальзаля",n:8},
+{id:100,name:"العاديات",ru:"Аль-Адият",n:11},{id:101,name:"القارعة",ru:"Аль-Кариа",n:11},{id:102,name:"التكاثر",ru:"Ат-Такасур",n:8},
+{id:103,name:"العصر",ru:"Аль-Аср",n:3},{id:104,name:"الهمزة",ru:"Аль-Хумаза",n:9},{id:105,name:"الفيل",ru:"Аль-Филь",n:5},
+{id:106,name:"قريش",ru:"Курайш",n:4},{id:107,name:"الماعون",ru:"Аль-Маун",n:7},{id:108,name:"الكوثر",ru:"Аль-Каусар",n:3},
+{id:109,name:"الكافرون",ru:"Аль-Кафирун",n:6},{id:110,name:"النصر",ru:"Ан-Наср",n:3},{id:111,name:"المسد",ru:"Аль-Масад",n:5},
+{id:112,name:"الإخلاص",ru:"Аль-Ихлас",n:4},{id:113,name:"الفلق",ru:"Аль-Фаляк",n:5},{id:114,name:"الناس",ru:"Ан-Нас",n:6}
+];
+
+// Ayah IDs generated from surah.n — text comes from loaded JSON files
+function getAyahIds(surahId){
+  const su=SURAHS.find(s=>s.id===surahId);
+  if(!su)return[];
+  const arr=[];for(let i=1;i<=su.n;i++)arr.push(i);
+  return arr;
+}
+// Get text for an ayah from loaded tafsir data
+function getTextFromCache(tafsirId,surahId,ayahId){
+  const d=tafsirCache[tafsirId];
+  return d?.[String(surahId)]?.[String(ayahId)]||"";
+}
+// Get Arabic text from the first loaded Arabic-language tafsir, or empty
+function getArabicFromCache(surahId,ayahId){
+  // Try dedicated arabic file first
+  if(tafsirCache["_arabic"])return tafsirCache["_arabic"]?.[String(surahId)]?.[String(ayahId)]||"";
+  // Fallback: any loaded Arabic tafsir
+  for(const t of CONFIG.tafsirs){
+    if(t.lang==="ar"&&tafsirCache[t.id]){
+      const txt=tafsirCache[t.id]?.[String(surahId)]?.[String(ayahId)];
+      if(txt)return txt;
+    }
+  }
+  return "";
+}
+// Get any translation for display in tag results etc.
+function getAnyTranslation(surahId,ayahId){
+  for(const t of CONFIG.tafsirs){
+    if(t.lang!=="ar"&&tafsirCache[t.id]){
+      const txt=tafsirCache[t.id]?.[String(surahId)]?.[String(ayahId)];
+      if(txt)return txt;
+    }
+  }
+  return "";
+}
+
+// ============================================================
+// STATE
+// ============================================================
+let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,
+  layout:"h",
+  enabled:{_arabic:true,kuliev:true},
+  selectedTag:null,
+  theme:"green",
+  rpFilter:"",
+  expandedGroups:{}, // which groups show all items (not just 5)
+};
+let CONFIG={groups:[],tafsirs:[]};
+let tafsirCache={};
+let collapsedG={};
+
+// User order for enabled tafsirs: array of IDs
+function getUserOrder(){return gs("userOrder",[]);}
+function setUserOrder(o){ss("userOrder",o);}
+
+// ============================================================
+// STORAGE
+// ============================================================
+function gs(k,d){try{const v=localStorage.getItem("tl_"+k);return v?JSON.parse(v):d;}catch(e){return d;}}
+function ss(k,v){try{localStorage.setItem("tl_"+k,JSON.stringify(v));}catch(e){}}
+
+function getNotes(){return gs("notes",{});}
+function getNote(s,a){return getNotes()[s+":"+a]||"";}
+function setNote(s,a,t){const n=getNotes();if(t.trim())n[s+":"+a]=t;else delete n[s+":"+a];ss("notes",n);}
+function hasNote(s,a){return!!getNotes()[s+":"+a];}
+
+function getTagTree(){return gs("tagTree",[{name:"Акыда",children:[{name:"Таухид",children:[]},{name:"Имена и Атрибуты",children:[]}]},{name:"Фикх",children:[{name:"Намаз",children:[]},{name:"Закят",children:[]}]},{name:"Ахлак",children:[]}]);}
+function setTagTree(t){ss("tagTree",t);}
+function getAyahTags(){return gs("ayahTags",{});}
+function setAyahTags(a){ss("ayahTags",a);}
+function getATList(s,a){return(getAyahTags()[s+":"+a])||[];}
+function hasAT(s,a){return getATList(s,a).length>0;}
+function toggleAT(s,a,path){const at=getAyahTags();const k=s+":"+a;if(!at[k])at[k]=[];const i=at[k].indexOf(path);if(i>=0)at[k].splice(i,1);else at[k].push(path);if(!at[k].length)delete at[k];setAyahTags(at);}
+
+function tagPath(anc,name){return anc.length?anc.join("/")+"/"+name:name;}
+function countTag(path){const at=getAyahTags();let c=0;for(const k in at)for(const p of at[k])if(p===path||p.startsWith(path+"/"))c++;return c;}
+function ayahsForTag(path){const at=getAyahTags();const res=[];for(const k in at)for(const p of at[k])if(p===path){res.push(k);break;}return res;}
+
+function getEnabled(){return gs("enabled",{_arabic:true});}
+function setEnabled(e){ss("enabled",e);}
+
+// ============================================================
+// DATA
+// ============================================================
+async function loadConfig(){
+  // Try JS preload first (offline mode)
+  if(window.TL_CONFIG){CONFIG=window.TL_CONFIG;}
+  else{try{const r=await fetch(DATA_PATH+"config.json");if(r.ok)CONFIG=await r.json();}catch(e){}}
+  if(!CONFIG.tafsirs||!CONFIG.tafsirs.length)useFB();
+  ST.enabled=getEnabled();
+  if(ST.enabled._arabic===undefined)ST.enabled._arabic=true;
+  render();
+}
+function useFB(){
+  CONFIG={groups:[
+    {id:"classical_ar",name:"Классические тафсиры",icon:"📜"},
+    {id:"modern_ar",name:"Современные тафсиры",icon:"📗"},
+    {id:"russian",name:"На русском языке",icon:"🇷🇺"},
+    {id:"translations",name:"Переводы смыслов",icon:"🌐"},
+  ],tafsirs:[
+    {id:"tabari",name:"Тафсир ат-Табари",nameAr:"الطبري",author:"Ибн Джарир ат-Табари",group:"classical_ar",lang:"ar"},
+    {id:"kathir",name:"Тафсир Ибн Касир",nameAr:"ابن كثير",author:"Ибн Касир",group:"classical_ar",lang:"ar"},
+    {id:"qurtubi",name:"аль-Куртуби",nameAr:"القرطبي",author:"Аль-Куртуби",group:"classical_ar",lang:"ar"},
+    {id:"baghawi",name:"аль-Багави",nameAr:"البغوي",author:"Аль-Багави",group:"classical_ar",lang:"ar"},
+    {id:"saadi",name:"ас-Саади",nameAr:"السعدي",author:"Ас-Саади",group:"modern_ar",lang:"ar"},
+    {id:"saadi_ru",name:"ас-Саади (рус.)",nameAr:"السعدي",author:"Пер. Кулиев",group:"russian",lang:"ru"},
+    {id:"kuliev",name:"Перевод Кулиева",nameAr:"كولييف",author:"Э. Кулиев",group:"translations",lang:"ru"},
+  ]};
+}
+
+async function loadTafsir(id){
+  if(tafsirCache[id])return tafsirCache[id];
+  // Try JS preload first (offline mode)
+  if(window.TL_DATA&&window.TL_DATA[id]){tafsirCache[id]=window.TL_DATA[id];return tafsirCache[id];}
+  const info=CONFIG.tafsirs.find(t=>t.id===id);
+  const file=info?.file||`tafsirs/${id}.json`;
+  try{const r=await fetch(DATA_PATH+file);if(r.ok){tafsirCache[id]=await r.json();return tafsirCache[id];}}catch(e){}
+  // No placeholder for special _arabic — just return empty
+  if(id==="_arabic"){tafsirCache[id]={};return tafsirCache[id];}
+  const ph={};SURAHS.forEach(su=>{ph[su.id]={};for(let i=1;i<=su.n;i++)ph[su.id][i]=`[${info?.name||id}] Сура ${su.id}, аят ${i}\n\n※ Тафсир ещё не добавлен.`;});
+  tafsirCache[id]=ph;return ph;
+}
+
+function esc(t){const d=document.createElement("div");d.textContent=t;return d.innerHTML;}
+function isM(){return window.innerWidth<=768;}
+
+// ============================================================
+// THEME
+// ============================================================
+function setTheme(t){
+  ST.theme=t;
+  document.body.setAttribute("data-theme",t);
+  document.querySelectorAll(".theme-dot").forEach(d=>d.classList.toggle("active",d.style.background.includes(
+    t==="green"?"1B5E3B":t==="blue"?"1B4E8E":t==="gold"?"8B6914":"333"
+  )));
+  ss("theme",t);
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function render(){renderSB();renderCB();renderCenter();renderRP();renderF();}
+
+// -- SIDEBAR --
+function renderSB(){
+  const el=document.getElementById("sbContent");
+  if(ST.sbTab==="surahs")renderSurahList(el);
+  else renderTagPanel(el);
+}
+
+function renderSurahList(el){
+  const q=ST.search.toLowerCase();
+  el.innerHTML=SURAHS.filter(s=>s.name.includes(q)||s.ru.toLowerCase().includes(q)||String(s.id).includes(q)).map(s=>
+    `<button class="surah-btn ${ST.surah===s.id?'active':''}" onclick="goSurah(${s.id})">
+      <span class="s-n">${s.id}</span>
+      <div style="flex:1"><div class="s-ar">${s.name}</div><div class="s-meta">${s.ru} · ${s.n}</div></div>
+    </button>`
+  ).join("");
+}
+
+function renderTagPanel(el){
+  const tree=getTagTree();
+  function renderNode(node,anc){
+    const path=tagPath(anc,node.name);
+    const has=node.children?.length>0;
+    const isOpen=!collapsedG["t_"+path];
+    const cnt=countTag(path);
+    const sel=ST.selectedTag===path;
+    let h=`<div class="tag-node">
+      <div class="tag-row ${sel?'selected':''}" onclick="selectTag('${esc(path)}')">
+        <span class="tag-arrow" onclick="event.stopPropagation();collapsedG['t_${esc(path)}']=!collapsedG['t_${esc(path)}'];renderSB();">${has?(isOpen?'▼':'▶'):' '}</span>
+        <span class="tag-name">${esc(node.name)}</span>
+        ${cnt?`<span class="tag-cnt">${cnt}</span>`:''}
+        <div class="tag-acts">
+          <button class="tag-ab" onclick="event.stopPropagation();renameTag('${esc(path)}')" title="Переименовать">✏</button>
+          <button class="tag-ab" onclick="event.stopPropagation();moveTag('${esc(path)}',-1)" title="Вверх">↑</button>
+          <button class="tag-ab" onclick="event.stopPropagation();moveTag('${esc(path)}',1)" title="Вниз">↓</button>
+          <button class="tag-ab" onclick="event.stopPropagation();deleteTag('${esc(path)}')" title="Удалить">×</button>
+        </div>
+      </div>`;
+    if(has&&isOpen)h+=node.children.map(ch=>renderNode(ch,[...anc,node.name])).join("");
+    return h+"</div>";
+  }
+  el.innerHTML=(tree.length?tree.map(n=>renderNode(n,[])).join(""):'<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:11px">Нет тегов</div>')
+    +`<div class="tag-add-row"><input id="tagInput" placeholder="Новый тег (/ = вложенность)" onkeydown="if(event.key==='Enter'){addTag(this.value);this.value='';}"><div class="tag-add-hint">Пр: Акыда/Таухид/Рубубия</div></div>`;
+}
+
+// -- CENTER BAR --
+function renderCB(){
+  const bar=document.getElementById("centerBar");
+  const su=SURAHS.find(s=>s.id===ST.surah);
+
+  if(ST.selectedTag){
+    bar.innerHTML=`<div class="cb-left"><button class="btn-s" onclick="ST.selectedTag=null;render();">← Суры</button><button class="btn-s" onclick="ST.sbTab='tags';document.getElementById('sbTabSurahs').classList.remove('active');document.getElementById('sbTabTags').classList.add('active');ST.sidebarOpen=true;document.getElementById('sidebar').classList.remove('collapsed');renderSB();">🏷 Теги</button><h2>🏷 ${esc(ST.selectedTag)}</h2></div>`;
+    return;
+  }
+  if(!su)return;
+  const layoutBtn=`<button class="btn-s ${ST.layout==='v'?'active':''}" onclick="toggleLayout()" title="Колонки / Список">${ST.layout==='h'?'▤ Колонки':'▥ Список'}</button>`;
+  bar.innerHTML=`<div class="cb-left"><h2>${su.ru} <span class="ar">${su.name}</span></h2></div><div class="cb-right">${layoutBtn}</div>`;
+}
+
+// -- CENTER BODY --
+function renderCenter(){
+  const el=document.getElementById("centerBody");
+  if(ST.selectedTag){renderTagResults(el);return Promise.resolve();}
+  return renderReading(el);
+}
+
+async function renderReading(el){
+  const ayahIds=getAyahIds(ST.surah);
+  const enabled=getEnabledList();
+  if(!enabled.length&&!ST.enabled._arabic){
+    el.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:13px;text-align:center;padding:40px">
+      <div><div style="font-size:32px;margin-bottom:10px;opacity:.3">📚</div>Включите переводы или тафсиры<br>кнопкой 📚 справа вверху</div></div>`;
+    return;
+  }
+
+  el.innerHTML=`<div class="reading" id="readingArea"><div style="text-align:center;color:var(--text-muted);padding:30px">Загрузка...</div></div>`;
+
+  // Load all enabled tafsirs
+  const loaded={};
+  for(const t of enabled){
+    if(t.id==="_notes")continue;
+    loaded[t.id]=await loadTafsir(t.id);
+  }
+  // Also preload arabic if enabled
+  if(ST.enabled._arabic){
+    // Try loading dedicated arabic file
+    await loadTafsir("_arabic").catch(()=>{});
+  }
+
+  const area=document.getElementById("readingArea");
+  if(!area)return;
+
+  if(ST.layout==="h"){
+    let html="";
+    for(const aid of ayahIds){
+      const hn=hasNote(ST.surah,aid);const ht=hasAT(ST.surah,aid);
+      const arText=getArabicFromCache(ST.surah,aid);
+      html+=`<div class="ayah-block"><div class="ab-head">
+        <div style="display:flex;align-items:center;gap:8px"><span class="ab-num">${aid}</span>
+          <button onclick="event.stopPropagation();openTagPopup(${aid},this)" style="background:${ht?'var(--tag-bg)':'var(--bg-card)'};border:1px solid ${ht?'var(--tag-color)':'var(--border)'};border-radius:4px;padding:1px 6px;cursor:pointer;font-size:11px;color:${ht?'var(--tag-color)':'var(--text-muted)'}" title="Теги">🏷${ht?' '+getATList(ST.surah,aid).length:''}</button>
+        </div>
+        <div class="ab-tag-dots">${hn?'<span class="ab-note-dot"></span>':''}</div>
+      </div>`;
+
+      if(ST.enabled._arabic&&arText){
+        html+=`<div class="ab-entry"><div class="ab-entry-text arabic-main selectable">${arText}</div></div>`;
+      }
+
+      for(const t of enabled){
+        if(t.id==="_notes"){
+          const note=getNote(ST.surah,aid);
+          html+=`<div class="ab-entry" style="background:var(--note-bg)">
+            <div class="ab-entry-label" style="color:var(--note-color)">📝 Мои заметки</div>
+            <textarea class="ab-note-area" placeholder="Ваши мысли..." oninput="saveNote(${ST.surah},${aid},this.value)">${esc(note)}</textarea>
+          </div>`;
+        } else {
+          const text=loaded[t.id]?.[String(ST.surah)]?.[String(aid)]||null;
+          const isAr=t.lang==="ar";
+          html+=`<div class="ab-entry">
+            <div class="ab-entry-label">${esc(t.name)} <span class="lbl-ar">${t.nameAr||''}</span></div>
+            <div class="ab-entry-text selectable ${isAr?'rtl':''}">${text?esc(text):'<span style="color:var(--text-muted)">—</span>'}</div>
+          </div>`;
+        }
+      }
+      html+=`</div>`;
+    }
+    area.innerHTML=html;
+  } else {
+    // Vertical columns
+    const cols=[];
+    if(ST.enabled._arabic)cols.push({id:"_arabic",name:"العربية",isArabic:true});
+    for(const t of enabled){
+      if(t.id==="_notes")cols.push({id:"_notes",name:"📝 Заметки",isNote:true});
+      else cols.push({id:t.id,name:t.name,nameAr:t.nameAr,lang:t.lang,data:loaded[t.id]});
+    }
+    if(!cols.length){area.innerHTML="";return;}
+
+    let html=`<div class="col-layout" style="height:100%;overflow:auto">`;
+    html+=`<div class="col-col" style="min-width:40px;max-width:50px;flex:none"><div class="col-head">#</div>`;
+    for(const aid of ayahIds)html+=`<div class="col-ayah" style="text-align:center;font-weight:600;color:var(--accent);font-size:12px;display:flex;align-items:center;justify-content:center">${aid}</div>`;
+    html+=`</div>`;
+
+    for(const col of cols){
+      html+=`<div class="col-col"><div class="col-head">${esc(col.name)}</div>`;
+      for(const aid of ayahIds){
+        if(col.isArabic){
+          const arText=getArabicFromCache(ST.surah,aid);
+          html+=`<div class="col-ayah arabic-main selectable">${arText||'—'}</div>`;
+        } else if(col.isNote){
+          const note=getNote(ST.surah,aid);
+          html+=`<div class="col-ayah" style="background:var(--note-bg);padding:4px 6px"><textarea class="ab-note-area" style="min-height:30px;font-size:11px" placeholder="..." oninput="saveNote(${ST.surah},${aid},this.value)">${esc(note)}</textarea></div>`;
+        } else {
+          const text=col.data?.[String(ST.surah)]?.[String(aid)]||"";
+          const isAr=col.lang==="ar";
+          html+=`<div class="col-ayah selectable ${isAr?'rtl':''}">${text?esc(text):'—'}</div>`;
+        }
+      }
+      html+=`</div>`;
+    }
+    html+=`</div>`;
+    area.innerHTML=html;
+  }
+}
+
+function renderTagResults(el){
+  const ayahKeys=ayahsForTag(ST.selectedTag);
+  if(!ayahKeys.length){
+    el.innerHTML=`<div class="tag-results"><div class="tr-header">🏷 ${esc(ST.selectedTag)}</div><div style="color:var(--text-muted);padding:20px;text-align:center">Нет аятов с этим тегом</div></div>`;
+    return;
+  }
+  let html=`<div class="tag-results"><div class="tr-header">🏷 ${esc(ST.selectedTag)} — ${ayahKeys.length} аятов</div>`;
+  for(const k of ayahKeys){
+    const[s,a]=k.split(":");
+    const su=SURAHS.find(x=>x.id==+s);
+    const arText=getArabicFromCache(+s,+a);
+    const trText=getAnyTranslation(+s,+a);
+    html+=`<div class="tr-ayah" onclick="ST.selectedTag=null;goSurah(${s})">
+      <div class="tr-ayah-ref">${su?su.ru:s} : ${a}</div>
+      ${arText?`<div class="tr-ayah-ar">${arText}</div>`:''}
+      ${trText?`<div class="tr-ayah-tr">${trText}</div>`:''}
+    </div>`;
+  }
+  el.innerHTML=html+`</div>`;
+}
+
+// -- RIGHT PANEL --
+function renderRP(){
+  const el=document.getElementById("rpList");
+  const q=ST.rpFilter||"";
+  let html="";
+
+  // Arabic text toggle
+  const arOn=ST.enabled._arabic;
+  if(!q||"арабский arabic مصحف".includes(q)){
+    html+=`<div class="t-item arabic-item ${arOn?'checked':''}" onclick="toggleEn('_arabic')">
+      <div class="t-check">${arOn?'✓':''}</div>
+      <div class="t-info"><div class="t-name">Арабский текст (مصحف)</div><div class="t-ar">النص العربي</div></div>
+    </div>`;
+  }
+
+  // User notes toggle
+  const notesOn=ST.enabled._notes;
+  if(!q||"заметки notes мои".includes(q)){
+    html+=`<div class="t-item special ${notesOn?'checked':''}" onclick="toggleEn('_notes')">
+      <div class="t-check">${notesOn?'✓':''}</div>
+      <div class="t-info"><div class="t-name">📝 Мои заметки</div><div class="t-ar" style="font-family:inherit;direction:ltr;font-size:10px">Пользовательский тафсир</div></div>
+    </div>`;
+  }
+
+  html+=`<div style="height:1px;background:var(--border);margin:4px 0"></div>`;
+
+  // Tafsir groups
+  CONFIG.groups.forEach(g=>{
+    let items=CONFIG.tafsirs.filter(t=>t.group===g.id);
+    // Apply search filter
+    if(q){items=items.filter(t=>(t.name||"").toLowerCase().includes(q)||(t.nameAr||"").includes(q)||(t.author||"").toLowerCase().includes(q));}
+    if(!items.length)return;
+
+    const col=collapsedG["rg_"+g.id];
+    const LIMIT=5;
+    const expanded=ST.expandedGroups[g.id];
+    const showItems=(!expanded&&items.length>LIMIT)?items.slice(0,LIMIT):items;
+    const hiddenCount=items.length-LIMIT;
+
+    html+=`<div class="tg ${col?'collapsed':''}"><button class="tg-head" onclick="collapsedG['rg_${g.id}']=!collapsedG['rg_${g.id}'];renderRP();">
+      <span class="tg-icon">${g.icon||'📁'}</span>${g.name} (${items.length})<span class="tg-arrow">▼</span>
+    </button><div class="tg-items">`;
+    showItems.forEach(t=>{
+      const on=ST.enabled[t.id];
+      html+=`<div class="t-item ${on?'checked':''}" onclick="toggleEn('${t.id}')">
+        <div class="t-check">${on?'✓':''}</div>
+        <div class="t-info"><div class="t-name">${t.name}</div><div class="t-ar">${t.nameAr||''}</div></div>
+        ${on?`<div class="t-sort" onclick="event.stopPropagation()">
+          <button class="sort-b" onclick="moveEnabled('${t.id}',-1)" title="Выше">▲</button>
+          <button class="sort-b" onclick="moveEnabled('${t.id}',1)" title="Ниже">▼</button>
+        </div>`:''}
+      </div>`;
+    });
+    if(!expanded&&hiddenCount>0){
+      html+=`<button class="show-more-btn" onclick="event.stopPropagation();ST.expandedGroups['${g.id}']=true;renderRP();">ещё ${hiddenCount}...</button>`;
+    } else if(expanded&&items.length>LIMIT){
+      html+=`<button class="show-more-btn" onclick="event.stopPropagation();ST.expandedGroups['${g.id}']=false;renderRP();">свернуть</button>`;
+    }
+    html+=`</div></div>`;
+  });
+
+  el.innerHTML=html;
+}
+
+function renderF(){
+  const en=Object.keys(ST.enabled).filter(k=>ST.enabled[k]&&k!=='_arabic'&&k!=='_notes').length;
+  document.getElementById("footerInfo").textContent=`Включено: ${en} · Заметок: ${Object.keys(getNotes()).length} · Тегов: ${Object.keys(getAyahTags()).length}`;
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+
+// Arabic text normalization for search
+const AR_DIACRITICS=/[\u0610-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E8\u06EA-\u06ED\u08D3-\u08FF]/g;
+const AR_TATWEEL=/\u0640/g; // Kashida/Tatweel
+
+function normalizeArabic(s){
+  return s
+    .replace(AR_DIACRITICS,"")   // 1. Remove tashkeel
+    .replace(AR_TATWEEL,"")      // 5. Remove tatweel/kashida
+    .replace(/[أإآٱ]/g,"ا")      // 2. All alif forms → plain alif
+    .replace(/ة/g,"ه")           // 3. Ta marbuta → Ha
+    .replace(/ى/g,"ي");          // 4. Alif maqsura → Ya
+}
+
+function normalizeSearch(s){return normalizeArabic(s).toLowerCase().trim();}
+
+function getEnabledList(){
+  let uo=getUserOrder();
+  const allTafsirs=[];
+  const allIds=new Set();
+
+  // Collect all enabled tafsirs from config
+  CONFIG.groups.forEach(g=>{
+    CONFIG.tafsirs.filter(t=>t.group===g.id).forEach(t=>{
+      if(ST.enabled[t.id]){allTafsirs.push(t);allIds.add(t.id);}
+    });
+  });
+  if(ST.enabled._notes){allTafsirs.push({id:"_notes",name:"Мои заметки"});allIds.add("_notes");}
+
+  if(uo.length){
+    // Clean stale IDs (removed from config or disabled)
+    uo=uo.filter(id=>allIds.has(id));
+    // Find new IDs not in userOrder — append at end
+    const newIds=[];
+    allTafsirs.forEach(t=>{if(!uo.includes(t.id))newIds.push(t.id);});
+    if(newIds.length){uo=uo.concat(newIds);setUserOrder(uo);}
+
+    // Build ordered list
+    const ordered=[];
+    uo.forEach(id=>{const t=allTafsirs.find(x=>x.id===id);if(t)ordered.push(t);});
+    return ordered;
+  }
+  return allTafsirs;
+}
+
+function moveEnabled(id,dir){
+  const list=getEnabledList().map(t=>t.id);
+  const idx=list.indexOf(id);
+  if(idx<0)return;
+  const newIdx=idx+dir;
+  if(newIdx<0||newIdx>=list.length)return;
+  [list[idx],list[newIdx]]=[list[newIdx],list[idx]];
+  setUserOrder(list);
+  renderRP();
+  renderCenter();
+}
+
+// ============================================================
+// SEARCH ENGINE
+// ============================================================
+let searchTimer=null;
+let searchOpen=false;
+
+function toggleSearch(){
+  searchOpen=!searchOpen;
+  const panel=document.getElementById("searchPanel");
+  panel.classList.toggle("hidden",!searchOpen);
+  if(searchOpen){
+    document.getElementById("spInput").value="";
+    document.getElementById("spInput").focus();
+    document.getElementById("spResults").innerHTML=`<div class="sp-status">Введите запрос (минимум 2 символа)</div>`;
+    document.getElementById("spCount").classList.add("hidden");
+  }
+}
+
+function onSearchInput(){
+  clearTimeout(searchTimer);
+  searchTimer=setTimeout(doSearch,400);
+}
+
+async function doSearch(){
+  const raw=document.getElementById("spInput").value;
+  const query=normalizeSearch(raw);
+  const resultsEl=document.getElementById("spResults");
+  const countEl=document.getElementById("spCount");
+
+  if(query.length<2){
+    resultsEl.innerHTML=`<div class="sp-status">Введите минимум 2 символа</div>`;
+    countEl.classList.add("hidden");
+    return;
+  }
+
+  resultsEl.innerHTML=`<div class="sp-status">Поиск...</div>`;
+
+  const searchAll=document.getElementById("spAllTafsirs")?.checked;
+
+  // Determine which tafsirs to search
+  let toSearch=[];
+  if(searchAll){
+    toSearch=CONFIG.tafsirs.slice();
+  } else {
+    CONFIG.groups.forEach(g=>{
+      CONFIG.tafsirs.filter(t=>t.group===g.id).forEach(t=>{
+        if(ST.enabled[t.id])toSearch.push(t);
+      });
+    });
+  }
+
+  // Also search in built-in ayah translations
+  const results=[];
+  const MAX=100;
+
+  // Search through all loaded tafsirs (including Arabic text)
+  for(const t of toSearch){
+    if(results.length>=MAX)break;
+    const data=await loadTafsir(t.id);
+    if(!data)continue;
+    for(const sid in data){
+      if(results.length>=MAX)break;
+      const surahData=data[sid];
+      for(const aid in surahData){
+        if(results.length>=MAX)break;
+        const text=surahData[aid];
+        const normalized=normalizeSearch(text);
+        if(normalized.includes(query)){
+          results.push({surah:+sid,ayah:+aid,text:text,source:t.name,sourceAr:t.nameAr,lang:t.lang,tafsirId:t.id});
+        }
+      }
+    }
+  }
+
+  // Also search user notes
+  const notes=getNotes();
+  for(const k in notes){
+    if(results.length>=MAX)break;
+    const normalized=normalizeSearch(notes[k]);
+    if(normalized.includes(query)){
+      const[s,a]=k.split(":");
+      results.push({surah:+s,ayah:+a,text:notes[k],source:"📝 Мои заметки",lang:"ru"});
+    }
+  }
+
+  countEl.textContent=`Найдено: ${results.length}${results.length>=MAX?' (показаны первые '+MAX+')':''}`;
+  countEl.classList.remove("hidden");
+
+  if(!results.length){
+    resultsEl.innerHTML=`<div class="sp-status">Ничего не найдено</div>`;
+    return;
+  }
+
+  // Render results with highlighting
+  resultsEl.innerHTML=results.map(r=>{
+    const su=SURAHS.find(s=>s.id===r.surah);
+    const suName=su?su.ru:`Сура ${r.surah}`;
+    const isAr=r.lang==="ar";
+
+    // Get a snippet around the match
+    let snippet=r.text;
+    const nText=normalizeSearch(snippet);
+    const matchPos=nText.indexOf(query);
+    if(snippet.length>300&&matchPos>=0){
+      const start=Math.max(0,matchPos-80);
+      const end=Math.min(snippet.length,matchPos+query.length+120);
+      snippet=(start>0?'...':'')+snippet.substring(start,end)+(end<snippet.length?'...':'');
+    }
+
+    // Highlight matches (approximate — highlight in original based on normalized position)
+    const highlightedSnippet=highlightMatch(snippet,query);
+
+    return `<div class="sp-result" onclick="goSearchResult(${r.surah},${r.ayah})">
+      <div class="sp-ref">${suName} : ${r.ayah}</div>
+      <div class="sp-src">${esc(r.source)} ${r.sourceAr?'<span style="font-family:Amiri;direction:rtl">'+r.sourceAr+'</span>':''}</div>
+      <div class="sp-text ${isAr?'rtl':''}">${highlightedSnippet}</div>
+    </div>`;
+  }).join("");
+}
+
+function highlightMatch(text,query){
+  const orig=text;
+  const norm=normalizeArabic(orig).toLowerCase();
+
+  // Build map: normalized index → original index
+  const map=[];
+  for(let oi=0;oi<orig.length;oi++){
+    const normalized=normalizeArabic(orig[oi]).toLowerCase();
+    for(let k=0;k<normalized.length;k++) map.push(oi);
+  }
+  map.push(orig.length); // sentinel
+
+  // Find all matches in normalized text
+  const matches=[];
+  let pos=norm.indexOf(query);
+  while(pos>=0){
+    const origStart=map[pos]!==undefined?map[pos]:0;
+    const normEnd=pos+query.length;
+    const origEnd=normEnd<map.length?map[normEnd]:orig.length;
+    matches.push([origStart,origEnd]);
+    pos=norm.indexOf(query,normEnd);
+  }
+
+  if(!matches.length)return esc(orig);
+
+  const parts=[];
+  let last=0;
+  for(const[s,e]of matches){
+    if(s>last)parts.push(esc(orig.substring(last,s)));
+    parts.push('<span class="sp-hl">'+esc(orig.substring(s,e))+'</span>');
+    last=e;
+  }
+  if(last<orig.length)parts.push(esc(orig.substring(last)));
+  return parts.join("");
+}
+
+function goSearchResult(surah,ayah){
+  toggleSearch();
+  ST.surah=surah;
+  ST.selectedTag=null;
+  render();
+  // Scroll to ayah after render
+  setTimeout(()=>{
+    const blocks=document.querySelectorAll(".ayah-block");
+    for(const b of blocks){
+      const num=b.querySelector(".ab-num");
+      if(num&&num.textContent==String(ayah)){
+        b.scrollIntoView({behavior:"smooth",block:"center"});
+        b.style.boxShadow="0 0 0 2px var(--accent)";
+        setTimeout(()=>b.style.boxShadow="",2000);
+        break;
+      }
+    }
+  },300);
+}
+
+// Close search on Escape, open on Ctrl+F, block Ctrl+S/U
+document.addEventListener("keydown",function(e){
+  if(e.key==="Escape"&&searchOpen)toggleSearch();
+  if((e.ctrlKey||e.metaKey)&&e.key==="f"){e.preventDefault();if(!searchOpen)toggleSearch();}
+  if((e.ctrlKey||e.metaKey)&&(e.key==="s"||e.key==="S"||e.key==="u"||e.key==="U"))e.preventDefault();
+});
+
+// ============================================================
+// ACTIONS
+// ============================================================
+function toggleSidebar(){ST.sidebarOpen=!ST.sidebarOpen;document.getElementById("sidebar").classList.toggle("collapsed",!ST.sidebarOpen);}
+function toggleRPanel(){ST.rpanelOpen=!ST.rpanelOpen;document.getElementById("rpanel").classList.toggle("collapsed",!ST.rpanelOpen);}
+function onSearch(q){ST.search=q;renderSB();}
+function setSbTab(t){ST.sbTab=t;document.getElementById("sbTabSurahs").classList.toggle("active",t==="surahs");document.getElementById("sbTabTags").classList.toggle("active",t==="tags");renderSB();}
+function goSurah(id){ST.surah=id;ST.selectedTag=null;if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}render();}
+function toggleLayout(){ST.layout=ST.layout==="h"?"v":"h";render();}
+
+function toggleEn(id){ST.enabled[id]=!ST.enabled[id];setEnabled(ST.enabled);renderRP();renderCenter();}
+
+function saveNote(s,a,text){setNote(s,a,text);}
+
+let openPopupAyah=null;
+
+function openTagPopup(aid,btnEl){
+  closeTagPopup();
+  openPopupAyah=aid;
+
+  const tree=getTagTree();
+  if(!tree.length){alert("Создайте теги в боковой панели (☰ → Теги)");return;}
+
+  const current=getATList(ST.surah,aid);
+
+  function renderPopupNode(node,anc){
+    const path=tagPath(anc,node.name);
+    const has=node.children?.length>0;
+    const isOn=current.includes(path);
+    const isOpen=!collapsedG["tp_"+path];
+    let h=`<div class="tp-node">
+      <div class="tp-row" onclick="popupToggleTag(${aid},'${esc(path)}')">
+        <span class="tp-arrow" onclick="event.stopPropagation();collapsedG['tp_${esc(path)}']=!collapsedG['tp_${esc(path)}'];refreshTagPopup(${aid})">${has?(isOpen?'▼':'▶'):' '}</span>
+        <span class="tp-check">${isOn?'☑':'☐'}</span>
+        <span style="flex:1">${esc(node.name)}</span>
+      </div>`;
+    if(has&&isOpen)h+=node.children.map(ch=>renderPopupNode(ch,[...anc,node.name])).join("");
+    return h+"</div>";
+  }
+
+  const rect=btnEl.getBoundingClientRect();
+  const popup=document.createElement("div");
+  popup.className="tag-popup";
+  popup.id="tagPopup";
+  popup.style.position="fixed";
+  popup.style.top=Math.min(rect.bottom+4,window.innerHeight-310)+"px";
+  popup.style.left=Math.min(rect.left,window.innerWidth-270)+"px";
+  popup.innerHTML=`<div class="tag-popup-head"><span>🏷 Теги · аят ${aid}</span><button class="tag-popup-close" onclick="closeTagPopup()">✕</button></div>
+    <div class="tag-popup-list">${tree.map(n=>renderPopupNode(n,[])).join("")}</div>`;
+  document.body.appendChild(popup);
+
+  setTimeout(()=>document.addEventListener("click",closeOnOutside),10);
+}
+
+function closeOnOutside(e){
+  const popup=document.getElementById("tagPopup");
+  if(!popup)return;
+  if(popup.contains(e.target))return;
+  if(e.target.closest("[onclick*='openTagPopup']"))return;
+  closeTagPopup();
+}
+
+function closeTagPopup(){
+  const popup=document.getElementById("tagPopup");
+  if(popup)popup.remove();
+  openPopupAyah=null;
+  document.removeEventListener("click",closeOnOutside);
+}
+
+function popupToggleTag(aid,path){
+  event.stopPropagation();
+  toggleAT(ST.surah,aid,path);
+  refreshTagPopup(aid);
+}
+
+function refreshTagPopup(aid){
+  const popup=document.getElementById("tagPopup");
+  if(!popup)return;
+  const rect=popup.getBoundingClientRect();
+  const tree=getTagTree();
+  const current=getATList(ST.surah,aid);
+
+  function renderPopupNode(node,anc){
+    const path=tagPath(anc,node.name);
+    const has=node.children?.length>0;
+    const isOn=current.includes(path);
+    const isOpen=!collapsedG["tp_"+path];
+    let h=`<div class="tp-node">
+      <div class="tp-row" onclick="popupToggleTag(${aid},'${esc(path)}')">
+        <span class="tp-arrow" onclick="event.stopPropagation();collapsedG['tp_${esc(path)}']=!collapsedG['tp_${esc(path)}'];refreshTagPopup(${aid})">${has?(isOpen?'▼':'▶'):' '}</span>
+        <span class="tp-check">${isOn?'☑':'☐'}</span>
+        <span style="flex:1">${esc(node.name)}</span>
+      </div>`;
+    if(has&&isOpen)h+=node.children.map(ch=>renderPopupNode(ch,[...anc,node.name])).join("");
+    return h+"</div>";
+  }
+
+  const listEl=popup.querySelector(".tag-popup-list");
+  if(listEl)listEl.innerHTML=tree.map(n=>renderPopupNode(n,[])).join("");
+}
+
+// Tag management
+function addTag(val){
+  if(!val.trim())return;
+  const parts=val.split("/").map(s=>s.trim()).filter(Boolean);
+  const tree=getTagTree();let cur=tree;
+  for(const p of parts){let f=cur.find(n=>n.name===p);if(!f){f={name:p,children:[]};cur.push(f);}cur=f.children;}
+  setTagTree(tree);renderSB();
+}
+function selectTag(path){ST.selectedTag=path;if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}render();}
+function renameTag(path){
+  const parts=path.split("/");const oldName=parts[parts.length-1];
+  const newName=prompt("Новое название:",oldName);
+  if(!newName||!newName.trim()||newName===oldName)return;
+  const tree=getTagTree();
+  function findNode(arr,idx){
+    const n=arr.find(x=>x.name===parts[idx]);
+    if(!n)return null;
+    if(idx===parts.length-1)return n;
+    return findNode(n.children,idx+1);
+  }
+  const node=findNode(tree,0);
+  if(node){
+    const newPath=parts.slice(0,-1).concat(newName.trim()).join("/");
+    // Update tag assignments
+    const at=getAyahTags();
+    for(const k in at){at[k]=at[k].map(p=>p===path?newPath:p.startsWith(path+"/")?newPath+p.slice(path.length):p);}
+    setAyahTags(at);
+    node.name=newName.trim();
+    setTagTree(tree);
+    if(ST.selectedTag===path)ST.selectedTag=newPath;
+    render();
+  }
+}
+function moveTag(path,dir){
+  const parts=path.split("/");
+  const tree=getTagTree();
+  let arr=tree;
+  for(let i=0;i<parts.length-1;i++){const n=arr.find(x=>x.name===parts[i]);if(!n)return;arr=n.children;}
+  const idx=arr.findIndex(x=>x.name===parts[parts.length-1]);
+  const newIdx=idx+dir;
+  if(newIdx<0||newIdx>=arr.length)return;
+  [arr[idx],arr[newIdx]]=[arr[newIdx],arr[idx]];
+  setTagTree(tree);renderSB();
+}
+function deleteTag(path){
+  if(!confirm("Удалить «"+path+"»?"))return;
+  const parts=path.split("/");const tree=getTagTree();
+  let arr=tree;
+  for(let i=0;i<parts.length-1;i++){const n=arr.find(x=>x.name===parts[i]);if(!n)return;arr=n.children;}
+  const idx=arr.findIndex(x=>x.name===parts[parts.length-1]);
+  if(idx>=0)arr.splice(idx,1);
+  setTagTree(tree);
+  const at=getAyahTags();for(const k in at){at[k]=at[k].filter(t=>t!==path&&!t.startsWith(path+"/"));if(!at[k].length)delete at[k];}
+  setAyahTags(at);
+  if(ST.selectedTag===path)ST.selectedTag=null;
+  render();
+}
+
+// Init theme
+const savedTheme=gs("theme","green");
+setTheme(savedTheme);
+// Open sidebar by default on desktop
+if(!isM()){ST.sidebarOpen=true;document.getElementById("sidebar").classList.remove("collapsed");}
+loadConfig();
+</script>
+</body>
+</html>
