@@ -1,6 +1,12 @@
 {
   "groups": [
     {
+      "id": "quran",
+      "name": "Арабский текст",
+      "nameAr": "النص العربي",
+      "icon": "🕋"
+    },
+    {
       "id": "translations",
       "name": "Переводы смыслов",
       "nameAr": "ترجمات المعاني",
@@ -25,71 +31,42 @@
       "icon": "📜"
     }
   ],
+  "facetTags": [
+    { "id": "aqida", "name": "Акыда", "nameAr": "العقيدة" },
+    { "id": "fiqh", "name": "Фикх", "nameAr": "الأحكام" },
+    { "id": "lang", "name": "Язык", "nameAr": "اللغة" },
+    { "id": "hadith", "name": "Предания", "nameAr": "بالمأثور" },
+    { "id": "rational", "name": "Рациональный", "nameAr": "بالرأي" },
+    { "id": "sufi", "name": "Суфийский", "nameAr": "إشاري" },
+    { "id": "history", "name": "История", "nameAr": "القصص" }
+  ],
   "tafsirs": [
     {
-      "id": "tabari",
-      "file": "tafsirs/tabari.json",
-      "name": "Тафсир ат-Табари",
-      "nameAr": "جامع البيان — الطبري",
-      "author": "Ибн Джарир ат-Табари",
-      "authorAr": "ابن جرير الطبري",
-      "group": "classical_ar",
-      "lang": "ar",
-      "year": "310 х."
-    },
-    {
-      "id": "kathir",
-      "file": "tafsirs/kathir.json",
-      "name": "Тафсир Ибн Касир",
-      "nameAr": "تفسير القرآن العظيم — ابن كثير",
-      "author": "Ибн Касир",
-      "authorAr": "ابن كثير",
-      "group": "classical_ar",
-      "lang": "ar",
-      "year": "774 х."
-    },
-    {
-      "id": "qurtubi",
-      "file": "tafsirs/qurtubi.json",
-      "name": "Тафсир аль-Куртуби",
-      "nameAr": "الجامع لأحكام القرآن — القرطبي",
-      "author": "Аль-Куртуби",
-      "authorAr": "القرطبي",
-      "group": "classical_ar",
-      "lang": "ar",
-      "year": "671 х."
-    },
-    {
-      "id": "baghawi",
-      "file": "tafsirs/baghawi.json",
-      "name": "Тафсир аль-Багави",
-      "nameAr": "معالم التنزيل — البغوي",
-      "author": "Аль-Багави",
-      "authorAr": "البغوي",
-      "group": "classical_ar",
-      "lang": "ar",
-      "year": "516 х."
-    },
-    {
-      "id": "saadi",
-      "file": "tafsirs/saadi.json",
-      "name": "Тафсир ас-Саади",
-      "nameAr": "تيسير الكريم الرحمن — السعدي",
-      "author": "Абдуррахман ас-Саади",
-      "authorAr": "عبدالرحمن السعدي",
-      "group": "modern_ar",
-      "lang": "ar",
-      "year": "1376 х."
-    },
-    {
-      "id": "saadi_ru",
-      "file": "tafsirs/saadi_ru.json",
-      "name": "Тафсир ас-Саади (рус.)",
-      "nameAr": "تفسير السعدي بالروسية",
-      "author": "Пер. Э. Кулиев",
+      "id": "_arabic",
+      "file": "tafsirs/_arabic.json",
+      "name": "Усманский (с огласовками)",
+      "nameAr": "مصحف عثماني",
+      "author": "",
       "authorAr": "",
-      "group": "russian",
-      "lang": "ru",
+      "group": "quran",
+      "kind": "quran",
+      "lang": "ar",
+      "era": "",
+      "tags": [],
+      "year": ""
+    },
+    {
+      "id": "_arabic_clean",
+      "file": "tafsirs/_arabic_clean.json",
+      "name": "Без огласовок",
+      "nameAr": "نص مجرد من التشكيل",
+      "author": "",
+      "authorAr": "",
+      "group": "quran",
+      "kind": "quran",
+      "lang": "ar",
+      "era": "",
+      "tags": [],
       "year": ""
     },
     {
@@ -100,7 +77,10 @@
       "author": "Эльмир Кулиев",
       "authorAr": "",
       "group": "translations",
+      "kind": "translation",
       "lang": "ru",
+      "era": "modern",
+      "tags": [],
       "year": ""
     },
     {
@@ -111,7 +91,10 @@
       "author": "Игнатий Крачковский",
       "authorAr": "",
       "group": "translations",
+      "kind": "translation",
       "lang": "ru",
+      "era": "modern",
+      "tags": [],
       "year": "1963"
     },
     {
@@ -122,8 +105,95 @@
       "author": "Магомед-Нури Османов",
       "authorAr": "",
       "group": "translations",
+      "kind": "translation",
       "lang": "ru",
+      "era": "modern",
+      "tags": [],
       "year": "1995"
+    },
+    {
+      "id": "saadi_ru",
+      "file": "tafsirs/saadi_ru.json",
+      "name": "Тафсир ас-Саади (рус.)",
+      "nameAr": "تفسير السعدي بالروسية",
+      "author": "Пер. Э. Кулиев",
+      "authorAr": "",
+      "group": "russian",
+      "kind": "tafsir",
+      "lang": "ru",
+      "era": "modern",
+      "tags": ["aqida", "fiqh"],
+      "year": ""
+    },
+    {
+      "id": "saadi",
+      "file": "tafsirs/saadi.json",
+      "name": "Тафсир ас-Саади",
+      "nameAr": "تيسير الكريم الرحمن — السعدي",
+      "author": "Абдуррахман ас-Саади",
+      "authorAr": "عبدالرحمن السعدي",
+      "group": "modern_ar",
+      "kind": "tafsir",
+      "lang": "ar",
+      "era": "modern",
+      "tags": ["aqida", "fiqh"],
+      "year": "1376 х."
+    },
+    {
+      "id": "tabari",
+      "file": "tafsirs/tabari.json",
+      "name": "Тафсир ат-Табари",
+      "nameAr": "جامع البيان — الطبري",
+      "author": "Ибн Джарир ат-Табари",
+      "authorAr": "ابن جرير الطبري",
+      "group": "classical_ar",
+      "kind": "tafsir",
+      "lang": "ar",
+      "era": "classical",
+      "tags": ["hadith", "lang", "history"],
+      "year": "310 х."
+    },
+    {
+      "id": "kathir",
+      "file": "tafsirs/kathir.json",
+      "name": "Тафсир Ибн Касир",
+      "nameAr": "تفسير القرآن العظيم — ابن كثير",
+      "author": "Ибн Касир",
+      "authorAr": "ابن كثير",
+      "group": "classical_ar",
+      "kind": "tafsir",
+      "lang": "ar",
+      "era": "classical",
+      "tags": ["hadith", "history", "aqida"],
+      "year": "774 х."
+    },
+    {
+      "id": "qurtubi",
+      "file": "tafsirs/qurtubi.json",
+      "name": "Тафсир аль-Куртуби",
+      "nameAr": "الجامع لأحكام القرآن — القرطبي",
+      "author": "Аль-Куртуби",
+      "authorAr": "القرطبي",
+      "group": "classical_ar",
+      "kind": "tafsir",
+      "lang": "ar",
+      "era": "classical",
+      "tags": ["fiqh", "hadith", "lang"],
+      "year": "671 х."
+    },
+    {
+      "id": "baghawi",
+      "file": "tafsirs/baghawi.json",
+      "name": "Тафсир аль-Багави",
+      "nameAr": "معالم التنزيل — البغوي",
+      "author": "Аль-Багави",
+      "authorAr": "البغوي",
+      "group": "classical_ar",
+      "kind": "tafsir",
+      "lang": "ar",
+      "era": "classical",
+      "tags": ["hadith", "history"],
+      "year": "516 х."
     }
   ]
 }

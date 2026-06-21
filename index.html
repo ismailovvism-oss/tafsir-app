@@ -88,11 +88,25 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 .btn-s:hover{background:var(--border)}
 .btn-s.active{background:var(--accent-bg);border-color:var(--accent);color:var(--accent);font-weight:600}
 
-/* RIGHT PANEL — tafsir checkboxes */
-.rpanel{width:var(--sidebar-w);flex-shrink:0;background:var(--bg-alt);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transition:margin-right .25s}
-.rpanel.collapsed{margin-right:calc(var(--sidebar-w)*-1)}
-.rp-head{padding:6px 8px;border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--accent);display:flex;align-items:center;justify-content:space-between}
+/* RIGHT PANEL — flyout for choosing translations & tafsirs */
+.rpanel{position:fixed;top:0;right:0;height:100%;height:100dvh;width:330px;max-width:88vw;background:var(--bg-card);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;z-index:45;transform:translateX(0);transition:transform .25s cubic-bezier(.4,0,.2,1);box-shadow:-6px 0 30px rgba(0,0,0,.16)}
+.rpanel.collapsed{transform:translateX(100%)}
+.panel-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.32);opacity:0;pointer-events:none;transition:opacity .25s;z-index:44}
+.panel-backdrop.show{opacity:1;pointer-events:auto}
+.rp-head{padding:9px 12px;border-bottom:1px solid var(--border);font-size:12px;font-weight:600;color:var(--accent);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .rp-list{flex:1;overflow-y:auto;padding:4px 0}
+
+/* Facet filter bar */
+.rp-facets{padding:6px 10px 8px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:5px}
+.facet-axis{display:flex;align-items:center;flex-wrap:wrap;gap:4px}
+.facet-axis-lbl{font-size:9px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--text-muted);width:74px;flex-shrink:0}
+.facet-chip{font-family:inherit;font-size:10px;padding:2px 8px;border:1px solid var(--border);border-radius:11px;background:var(--bg);color:var(--text-sec);cursor:pointer;transition:all .12s;white-space:nowrap}
+.facet-chip:hover{border-color:var(--accent)}
+.facet-chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.facet-reset{align-self:flex-start;font-family:inherit;font-size:10px;color:var(--accent);background:none;border:none;cursor:pointer;padding:1px 0;margin-top:1px}
+.rp-sec-head{padding:7px 12px 3px;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-muted)}
+.t-meta{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px}
+.t-pill{font-size:8px;line-height:1.4;padding:0 5px;border-radius:6px;background:var(--tag-bg);color:var(--tag-color);white-space:nowrap}
 
 .tg-head{display:flex;align-items:center;gap:5px;padding:6px 8px 4px;font-size:10px;font-weight:600;color:var(--text-sec);letter-spacing:.3px;cursor:pointer;background:var(--bg);border:none;width:100%;text-align:left;font-family:inherit;position:sticky;top:0;z-index:1}
 .tg-head:hover{background:var(--border-light)}
@@ -186,9 +200,8 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 /* MOBILE */
 @media(max-width:768px){
   :root{--sidebar-w:100%}
-  .sidebar,.rpanel{position:absolute;top:0;height:100%;width:100%;z-index:10;transition:transform .25s}
+  .sidebar{position:absolute;top:0;height:100%;width:100%;z-index:10;transition:transform .25s}
   .sidebar{left:0;transform:translateX(0)}.sidebar.collapsed{transform:translateX(-100%);margin-left:0}
-  .rpanel{right:0;transform:translateX(0)}.rpanel.collapsed{transform:translateX(100%);margin-right:0}
   .header{padding:7px 8px}.reading{padding:8px}
   .ab-entry-text.arabic-main{font-size:calc(19px*var(--rs,1))}
   .col-col{min-width:200px}
@@ -277,11 +290,12 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
   </main>
 
   <aside class="rpanel collapsed" id="rpanel">
-    <div class="rp-head"><span>📚 Переводы и тафсиры</span><button class="btn-i" onclick="toggleRPanel()" style="font-size:11px">✕</button></div>
-    <div class="rp-search"><input placeholder="Фильтр..." oninput="ST.rpFilter=this.value.toLowerCase();renderRP();" id="rpSearchInput"></div>
+    <div class="rp-head"><span>📚 Тексты и тафсиры</span><button class="btn-i" onclick="closeRPanel()" style="font-size:11px" title="Закрыть">✕</button></div>
+    <div class="rp-search"><input placeholder="Поиск по названию / автору…" oninput="ST.rpFilter=this.value.toLowerCase();renderRP();" id="rpSearchInput"></div>
     <div class="rp-list" id="rpList"></div>
   </aside>
 </div>
+<div class="panel-backdrop" id="panelBackdrop" onclick="panelBackdrop()"></div>
 
 <footer class="footer"><span id="footerInfo"></span><span>v4.4</span></footer>
 
@@ -294,6 +308,7 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 <!--
 <script src="data/config.js"></script>
 <script src="data/tafsirs/_arabic.js"></script>
+<script src="data/tafsirs/_arabic_clean.js"></script>
 <script src="data/tafsirs/kuliev.js"></script>
 <script src="data/tafsirs/krachkovsky.js"></script>
 <script src="data/tafsirs/osmanov.js"></script>
@@ -385,6 +400,7 @@ let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,
   theme:"green",
   rpFilter:"",
   fontScale:1,       // reading text scale (A−/A+)
+  facets:{lang:[],kind:[],era:[],tags:[]}, // active facet filters in the right panel
   expandedGroups:{}, // which groups show all items (not just 5)
 };
 let CONFIG={groups:[],tafsirs:[]};
@@ -596,8 +612,15 @@ function renderCenter(){
 // Build the entries (Arabic + tafsirs + notes) for one ayah — used on demand by virtualization
 function buildAyahBody(aid,enabled,loaded){
   let html="";
-  const arText=getArabicFromCache(ST.surah,aid);
-  if(ST.enabled._arabic&&arText)html+=`<div class="ab-entry"><div class="ab-entry-text arabic-main selectable">${arText}</div></div>`;
+  // Arabic Quran-text variants (с огласовками / без огласовок / …) — each as its own line
+  const qts=getEnabledQuranTexts();
+  const multiQ=qts.length>1;
+  for(const qt of qts){
+    const at=loaded[qt.id]?.[String(aid)];
+    if(!at)continue;
+    const lbl=multiQ?`<div class="ab-entry-label">${esc(qt.name)} <span class="lbl-ar">${qt.nameAr||''}</span></div>`:"";
+    html+=`<div class="ab-entry">${lbl}<div class="ab-entry-text arabic-main selectable">${at}</div></div>`;
+  }
   for(const t of enabled){
     if(t.id==="_notes"){
       const note=getNote(ST.surah,aid);
@@ -639,7 +662,8 @@ function setupHydration(area,enabled,loaded){
 async function renderReading(el){
   const ayahIds=getAyahIds(ST.surah);
   const enabled=getEnabledList();
-  if(!enabled.length&&!ST.enabled._arabic){
+  const quranTexts=getEnabledQuranTexts();
+  if(!enabled.length&&!quranTexts.length){
     el.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:13px;text-align:center;padding:40px">
       <div><div style="font-size:32px;margin-bottom:10px;opacity:.3">📚</div>Включите переводы или тафсиры<br>кнопкой 📚 справа вверху</div></div>`;
     return;
@@ -647,11 +671,10 @@ async function renderReading(el){
 
   el.innerHTML=`<div class="reading" id="readingArea"><div style="text-align:center;color:var(--text-muted);padding:30px">Загрузка...</div></div>`;
 
-  // Load only the current surah's chunk for each enabled tafsir
+  // Load only the current surah's chunk for each enabled tafsir + Arabic variant
   const loaded={};
-  await Promise.all(enabled.filter(t=>t.id!=="_notes").map(async t=>{loaded[t.id]=await loadChunk(t.id,ST.surah);}));
-  // Also preload arabic chunk if enabled
-  if(ST.enabled._arabic)await loadChunk("_arabic",ST.surah).catch(()=>{});
+  const toLoad=[...enabled.filter(t=>t.id!=="_notes"),...quranTexts];
+  await Promise.all(toLoad.map(async t=>{loaded[t.id]=await loadChunk(t.id,ST.surah);}));
 
   const area=document.getElementById("readingArea");
   if(!area)return;
@@ -685,7 +708,7 @@ async function renderReading(el){
     if(hydrationObserver){hydrationObserver.disconnect();hydrationObserver=null;}
     // Vertical columns
     const cols=[];
-    if(ST.enabled._arabic)cols.push({id:"_arabic",name:"العربية",isArabic:true});
+    for(const qt of quranTexts)cols.push({id:qt.id,name:qt.nameAr||qt.name,isArabic:true,data:loaded[qt.id]});
     for(const t of enabled){
       if(t.id==="_notes")cols.push({id:"_notes",name:"📝 Заметки",isNote:true});
       else cols.push({id:t.id,name:t.name,nameAr:t.nameAr,lang:t.lang,data:loaded[t.id]});
@@ -701,7 +724,7 @@ async function renderReading(el){
       html+=`<div class="col-col"><div class="col-head">${esc(col.name)}</div>`;
       for(const aid of ayahIds){
         if(col.isArabic){
-          const arText=getArabicFromCache(ST.surah,aid);
+          const arText=col.data?.[String(aid)]||"";
           html+=`<div class="col-ayah arabic-main selectable">${arText||'—'}</div>`;
         } else if(col.isNote){
           const note=getNote(ST.surah,aid);
@@ -750,71 +773,121 @@ async function renderTagResults(el){
 }
 
 // -- RIGHT PANEL --
+// --- Facets ---
+const FACET_LABELS={
+  lang:{label:"Язык",vals:[["ar","Арабский"],["ru","Русский"]]},
+  kind:{label:"Тип",vals:[["quran","Коран"],["translation","Перевод"],["tafsir","Тафсир"]]},
+  era:{label:"Эпоха",vals:[["classical","Классич."],["modern","Современ."]]},
+};
+function tagLabel(id){const f=(CONFIG.facetTags||[]).find(x=>x.id===id);return f?f.name:id;}
+function configHasFacet(key,v){return CONFIG.tafsirs.some(t=>key==="tags"?(t.tags||[]).includes(v):(t[key]||"")===v);}
+function passFacets(t){
+  for(const key of ["lang","kind","era"]){
+    const act=ST.facets[key];
+    if(act&&act.length&&!act.includes(t[key]||""))return false;
+  }
+  const tagAct=ST.facets.tags;
+  if(tagAct&&tagAct.length){const tt=t.tags||[];if(!tagAct.some(x=>tt.includes(x)))return false;}
+  return true;
+}
+function toggleFacet(key,v){
+  const a=ST.facets[key]||(ST.facets[key]=[]);
+  const i=a.indexOf(v);if(i>=0)a.splice(i,1);else a.push(v);
+  renderRP();
+}
+function clearFacets(){ST.facets={lang:[],kind:[],era:[],tags:[]};renderRP();}
+function anyFacetActive(){return Object.values(ST.facets).some(a=>a&&a.length);}
+function renderFacetBar(){
+  let h=`<div class="rp-facets">`;
+  for(const key of ["lang","kind","era"]){
+    const def=FACET_LABELS[key];
+    const present=def.vals.filter(([v])=>configHasFacet(key,v));
+    if(present.length<1)continue;
+    h+=`<div class="facet-axis"><span class="facet-axis-lbl">${def.label}</span>`;
+    for(const[v,lbl]of present){
+      const on=(ST.facets[key]||[]).includes(v);
+      h+=`<button class="facet-chip ${on?'on':''}" onclick="toggleFacet('${key}','${v}')">${lbl}</button>`;
+    }
+    h+=`</div>`;
+  }
+  const tags=(CONFIG.facetTags||[]).filter(t=>configHasFacet("tags",t.id));
+  if(tags.length){
+    h+=`<div class="facet-axis"><span class="facet-axis-lbl">Направл.</span>`;
+    for(const t of tags){
+      const on=(ST.facets.tags||[]).includes(t.id);
+      h+=`<button class="facet-chip ${on?'on':''}" onclick="toggleFacet('tags','${t.id}')" title="${esc(t.nameAr||'')}">${esc(t.name)}</button>`;
+    }
+    h+=`</div>`;
+  }
+  if(anyFacetActive())h+=`<button class="facet-reset" onclick="clearFacets()">× сбросить фильтры</button>`;
+  return h+`</div>`;
+}
+function tafsirMeta(t){
+  const bits=[];
+  if(t.era==="classical")bits.push("классич.");else if(t.era==="modern")bits.push("совр.");
+  (t.tags||[]).forEach(tag=>bits.push(tagLabel(tag)));
+  return bits.length?`<div class="t-meta">${bits.map(b=>`<span class="t-pill">${esc(b)}</span>`).join("")}</div>`:"";
+}
+function tItem(t,on,reorder){
+  return `<div class="t-item ${on?'checked':''}" onclick="toggleEn('${t.id}')">
+    <div class="t-check">${on?'✓':''}</div>
+    <div class="t-info"><div class="t-name">${esc(t.name)}</div>${t.nameAr?`<div class="t-ar">${esc(t.nameAr)}</div>`:''}${tafsirMeta(t)}</div>
+    ${on&&reorder?`<div class="t-sort" onclick="event.stopPropagation()">
+      <button class="sort-b" onclick="moveEnabled('${t.id}',-1)" title="Выше">▲</button>
+      <button class="sort-b" onclick="moveEnabled('${t.id}',1)" title="Ниже">▼</button>
+    </div>`:''}
+  </div>`;
+}
+
 function renderRP(){
   const el=document.getElementById("rpList");
+  if(!el)return;
   const q=ST.rpFilter||"";
-  let html="";
+  let html=renderFacetBar();
 
-  // Arabic text toggle
-  const arOn=ST.enabled._arabic;
-  if(!q||"арабский arabic مصحف".includes(q)){
-    html+=`<div class="t-item arabic-item ${arOn?'checked':''}" onclick="toggleEn('_arabic')">
-      <div class="t-check">${arOn?'✓':''}</div>
-      <div class="t-info"><div class="t-name">Арабский текст (مصحف)</div><div class="t-ar">النص العربي</div></div>
-    </div>`;
+  // 1. Enabled (pinned, reorderable) — Quran texts first, then user-ordered tafsirs
+  const enQ=getEnabledQuranTexts();
+  const enRest=getEnabledList().filter(t=>t.id!=="_notes");
+  const enAll=[...enQ,...enRest];
+  if(enAll.length){
+    html+=`<div class="rp-sec-head">✓ Включено · ${enAll.length}</div>`;
+    enAll.forEach(t=>{html+=tItem(t,true,!isQuranText(t.id));});
   }
 
-  // User notes toggle
+  // 2. Notes toggle (standalone special)
   const notesOn=ST.enabled._notes;
-  if(!q||"заметки notes мои".includes(q)){
-    html+=`<div class="t-item special ${notesOn?'checked':''}" onclick="toggleEn('_notes')">
-      <div class="t-check">${notesOn?'✓':''}</div>
-      <div class="t-info"><div class="t-name">📝 Мои заметки</div><div class="t-ar" style="font-family:inherit;direction:ltr;font-size:10px">Пользовательский тафсир</div></div>
-    </div>`;
-  }
+  html+=`<div class="t-item special ${notesOn?'checked':''}" onclick="toggleEn('_notes')">
+    <div class="t-check">${notesOn?'✓':''}</div>
+    <div class="t-info"><div class="t-name">📝 Мои заметки</div><div class="t-ar" style="font-family:inherit;direction:ltr;font-size:10px">Личные комментарии</div></div>
+  </div>`;
 
-  html+=`<div style="height:1px;background:var(--border);margin:4px 0"></div>`;
-
-  // Tafsir groups
+  // 3. Catalog — not-yet-enabled items, filtered by facets + search
+  html+=`<div class="rp-sec-head" style="border-top:1px solid var(--border);margin-top:4px;padding-top:8px">Каталог</div>`;
+  let anyShown=false;
   CONFIG.groups.forEach(g=>{
-    let items=CONFIG.tafsirs.filter(t=>t.group===g.id);
-    // Apply search filter
-    if(q){items=items.filter(t=>(t.name||"").toLowerCase().includes(q)||(t.nameAr||"").includes(q)||(t.author||"").toLowerCase().includes(q));}
+    let items=CONFIG.tafsirs.filter(t=>t.group===g.id&&!ST.enabled[t.id]).filter(passFacets);
+    if(q)items=items.filter(t=>(t.name||"").toLowerCase().includes(q)||(t.nameAr||"").includes(q)||(t.author||"").toLowerCase().includes(q));
     if(!items.length)return;
-
+    anyShown=true;
     const col=collapsedG["rg_"+g.id];
-    const LIMIT=5;
+    const LIMIT=6;
     const expanded=ST.expandedGroups[g.id];
     const showItems=(!expanded&&items.length>LIMIT)?items.slice(0,LIMIT):items;
-    const hiddenCount=items.length-LIMIT;
-
     html+=`<div class="tg ${col?'collapsed':''}"><button class="tg-head" onclick="collapsedG['rg_${g.id}']=!collapsedG['rg_${g.id}'];renderRP();">
       <span class="tg-icon">${g.icon||'📁'}</span>${g.name} (${items.length})<span class="tg-arrow">▼</span>
     </button><div class="tg-items">`;
-    showItems.forEach(t=>{
-      const on=ST.enabled[t.id];
-      html+=`<div class="t-item ${on?'checked':''}" onclick="toggleEn('${t.id}')">
-        <div class="t-check">${on?'✓':''}</div>
-        <div class="t-info"><div class="t-name">${t.name}</div><div class="t-ar">${t.nameAr||''}</div></div>
-        ${on?`<div class="t-sort" onclick="event.stopPropagation()">
-          <button class="sort-b" onclick="moveEnabled('${t.id}',-1)" title="Выше">▲</button>
-          <button class="sort-b" onclick="moveEnabled('${t.id}',1)" title="Ниже">▼</button>
-        </div>`:''}
-      </div>`;
-    });
-    if(!expanded&&hiddenCount>0){
-      html+=`<button class="show-more-btn" onclick="event.stopPropagation();ST.expandedGroups['${g.id}']=true;renderRP();">ещё ${hiddenCount}...</button>`;
-    } else if(expanded&&items.length>LIMIT){
-      html+=`<button class="show-more-btn" onclick="event.stopPropagation();ST.expandedGroups['${g.id}']=false;renderRP();">свернуть</button>`;
-    }
+    showItems.forEach(t=>{html+=tItem(t,false,false);});
+    if(!expanded&&items.length>LIMIT)html+=`<button class="show-more-btn" onclick="event.stopPropagation();ST.expandedGroups['${g.id}']=true;renderRP();">ещё ${items.length-LIMIT}…</button>`;
+    else if(expanded&&items.length>LIMIT)html+=`<button class="show-more-btn" onclick="event.stopPropagation();ST.expandedGroups['${g.id}']=false;renderRP();">свернуть</button>`;
     html+=`</div></div>`;
   });
+  if(!anyShown)html+=`<div style="padding:16px 12px;text-align:center;color:var(--text-muted);font-size:11px">${anyFacetActive()||q?'Ничего не найдено по фильтрам':'Всё включено'}</div>`;
 
   el.innerHTML=html;
 }
 
 function renderF(){
-  const en=Object.keys(ST.enabled).filter(k=>ST.enabled[k]&&k!=='_arabic'&&k!=='_notes').length;
+  const en=Object.keys(ST.enabled).filter(k=>ST.enabled[k]&&k!=='_notes'&&!isQuranText(k)).length;
   document.getElementById("footerInfo").textContent=`Включено: ${en} · Заметок: ${Object.keys(getNotes()).length} · Тегов: ${Object.keys(getAyahTags()).length}`;
 }
 
@@ -837,14 +910,18 @@ function normalizeArabic(s){
 
 function normalizeSearch(s){return normalizeArabic(s).toLowerCase().trim();}
 
+// Arabic Quran-text variants (kind:quran) — rendered as the main Arabic column(s), in config order
+function getEnabledQuranTexts(){return CONFIG.tafsirs.filter(t=>t.kind==="quran"&&ST.enabled[t.id]);}
+function isQuranText(id){const t=CONFIG.tafsirs.find(x=>x.id===id);return t&&t.kind==="quran";}
+
 function getEnabledList(){
   let uo=getUserOrder();
   const allTafsirs=[];
   const allIds=new Set();
 
-  // Collect all enabled tafsirs from config
+  // Collect enabled tafsirs/translations (Quran-text variants are handled separately)
   CONFIG.groups.forEach(g=>{
-    CONFIG.tafsirs.filter(t=>t.group===g.id).forEach(t=>{
+    CONFIG.tafsirs.filter(t=>t.group===g.id&&t.kind!=="quran").forEach(t=>{
       if(ST.enabled[t.id]){allTafsirs.push(t);allIds.add(t.id);}
     });
   });
@@ -895,6 +972,7 @@ function toggleSearch(){
     document.getElementById("spCount").classList.add("hidden");
     pushOverlay();
   }else consumeOverlay();
+  updateBackdrop();
 }
 
 function onSearchInput(){
@@ -1073,6 +1151,7 @@ function goSearchResult(surah,ayah){
 // Close search on Escape, open on Ctrl+F, block Ctrl+S/U
 document.addEventListener("keydown",function(e){
   if(e.key==="Escape"&&searchOpen)toggleSearch();
+  else if(e.key==="Escape"&&ST.rpanelOpen)closeRPanel();
   if((e.ctrlKey||e.metaKey)&&e.key==="f"){e.preventDefault();if(!searchOpen)toggleSearch();}
 });
 
@@ -1080,14 +1159,19 @@ document.addEventListener("keydown",function(e){
 // ROUTING — URL hash "#surah[:ayah]" + back button closes panels (mobile)
 // ============================================================
 let pendingAyah=null;
-function anyPanelOpen(){return searchOpen||ST.sidebarOpen||ST.rpanelOpen;}
-function pushOverlay(){if(isM()&&!(history.state&&history.state.ov))history.pushState({ov:1},"");}
-function consumeOverlay(){if(history.state&&history.state.ov)history.back();}
+// Which open panels should the Back button / backdrop close (overlays only; the desktop sidebar is docked)
+function anyOverlayOpen(){return searchOpen||ST.rpanelOpen||(isM()&&ST.sidebarOpen);}
+let navBack=false; // true while we programmatically history.back() to consume our own overlay entry
+function pushOverlay(){if(!(history.state&&history.state.ov))history.pushState({ov:1},"");}
+function consumeOverlay(){if(history.state&&history.state.ov){navBack=true;history.back();}}
+function updateBackdrop(){const b=document.getElementById("panelBackdrop");if(b)b.classList.toggle("show",ST.rpanelOpen||searchOpen);}
 function closeAllPanelsUI(){
   if(searchOpen){searchOpen=false;document.getElementById("searchPanel").classList.add("hidden");}
-  if(ST.sidebarOpen){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   if(ST.rpanelOpen){ST.rpanelOpen=false;document.getElementById("rpanel").classList.add("collapsed");}
+  if(isM()&&ST.sidebarOpen){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
+  updateBackdrop();
 }
+function panelBackdrop(){const ov=history.state&&history.state.ov;closeAllPanelsUI();if(ov)consumeOverlay();}
 function pushSurahHash(id){const h="#"+id;if(location.hash!==h)history.pushState({surah:id},"",h);}
 function applyHash(initial){
   const raw=decodeURIComponent((location.hash||"").replace(/^#/,"")).trim();
@@ -1114,15 +1198,17 @@ function scrollToAyah(ayah){
   })();
 }
 window.addEventListener("popstate",()=>{
-  if(isM()&&anyPanelOpen()){closeAllPanelsUI();return;}
+  if(navBack){navBack=false;return;}          // this back() was our own overlay consume
+  if(anyOverlayOpen()){closeAllPanelsUI();return;}
   applyHash(false);
 });
 
 // ============================================================
 // ACTIONS
 // ============================================================
-function toggleSidebar(){ST.sidebarOpen=!ST.sidebarOpen;document.getElementById("sidebar").classList.toggle("collapsed",!ST.sidebarOpen);if(ST.sidebarOpen)pushOverlay();else consumeOverlay();}
-function toggleRPanel(){ST.rpanelOpen=!ST.rpanelOpen;document.getElementById("rpanel").classList.toggle("collapsed",!ST.rpanelOpen);if(ST.rpanelOpen)pushOverlay();else consumeOverlay();}
+function toggleSidebar(){ST.sidebarOpen=!ST.sidebarOpen;document.getElementById("sidebar").classList.toggle("collapsed",!ST.sidebarOpen);updateBackdrop();if(isM()){if(ST.sidebarOpen)pushOverlay();else consumeOverlay();}}
+function toggleRPanel(){ST.rpanelOpen=!ST.rpanelOpen;document.getElementById("rpanel").classList.toggle("collapsed",!ST.rpanelOpen);if(ST.rpanelOpen){renderRP();pushOverlay();}else consumeOverlay();updateBackdrop();}
+function closeRPanel(){if(ST.rpanelOpen)toggleRPanel();}
 function onSearch(q){ST.search=q;renderSB();}
 function setSbTab(t){ST.sbTab=t;document.getElementById("sbTabSurahs").classList.toggle("active",t==="surahs");document.getElementById("sbTabTags").classList.toggle("active",t==="tags");renderSB();}
 function goSurah(id){ST.surah=id;ST.selectedTag=null;if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}pushSurahHash(id);render();}
