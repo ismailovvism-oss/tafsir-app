@@ -506,6 +506,8 @@ async function loadIndex(id){
 }
 
 function esc(t){const d=document.createElement("div");d.textContent=t;return d.innerHTML;}
+// Safe for a value placed inside a single-quoted JS string within a double-quoted on* attribute
+function escAttr(s){return String(s).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
 function isM(){return window.matchMedia("(max-width:768px)").matches;}
 
 // ============================================================
@@ -551,15 +553,15 @@ function renderTagPanel(el){
     const cnt=countTag(path);
     const sel=ST.selectedTag===path;
     let h=`<div class="tag-node">
-      <div class="tag-row ${sel?'selected':''}" onclick="selectTag('${esc(path)}')">
-        <span class="tag-arrow" onclick="event.stopPropagation();collapsedG['t_${esc(path)}']=!collapsedG['t_${esc(path)}'];renderSB();">${has?(isOpen?'▼':'▶'):' '}</span>
+      <div class="tag-row ${sel?'selected':''}" onclick="selectTag('${escAttr(path)}')">
+        <span class="tag-arrow" onclick="event.stopPropagation();collapsedG['t_${escAttr(path)}']=!collapsedG['t_${escAttr(path)}'];renderSB();">${has?(isOpen?'▼':'▶'):' '}</span>
         <span class="tag-name">${esc(node.name)}</span>
         ${cnt?`<span class="tag-cnt">${cnt}</span>`:''}
         <div class="tag-acts">
-          <button class="tag-ab" onclick="event.stopPropagation();renameTag('${esc(path)}')" title="Переименовать">✏</button>
-          <button class="tag-ab" onclick="event.stopPropagation();moveTag('${esc(path)}',-1)" title="Вверх">↑</button>
-          <button class="tag-ab" onclick="event.stopPropagation();moveTag('${esc(path)}',1)" title="Вниз">↓</button>
-          <button class="tag-ab" onclick="event.stopPropagation();deleteTag('${esc(path)}')" title="Удалить">×</button>
+          <button class="tag-ab" onclick="event.stopPropagation();renameTag('${escAttr(path)}')" title="Переименовать">✏</button>
+          <button class="tag-ab" onclick="event.stopPropagation();moveTag('${escAttr(path)}',-1)" title="Вверх">↑</button>
+          <button class="tag-ab" onclick="event.stopPropagation();moveTag('${escAttr(path)}',1)" title="Вниз">↓</button>
+          <button class="tag-ab" onclick="event.stopPropagation();deleteTag('${escAttr(path)}')" title="Удалить">×</button>
         </div>
       </div>`;
     if(has&&isOpen)h+=node.children.map(ch=>renderNode(ch,[...anc,node.name])).join("");
@@ -1140,6 +1142,22 @@ function saveNote(s,a,text){setNote(s,a,text);}
 
 let openPopupAyah=null;
 
+// Single source of truth for a tag-popup node (used by open + refresh)
+function popupNodeHTML(node,anc,aid,current){
+  const path=tagPath(anc,node.name);
+  const has=node.children?.length>0;
+  const isOn=current.includes(path);
+  const isOpen=!collapsedG["tp_"+path];
+  let h=`<div class="tp-node">
+    <div class="tp-row" onclick="popupToggleTag(${aid},'${escAttr(path)}')">
+      <span class="tp-arrow" onclick="event.stopPropagation();collapsedG['tp_${escAttr(path)}']=!collapsedG['tp_${escAttr(path)}'];refreshTagPopup(${aid})">${has?(isOpen?'▼':'▶'):' '}</span>
+      <span class="tp-check">${isOn?'☑':'☐'}</span>
+      <span style="flex:1">${esc(node.name)}</span>
+    </div>`;
+  if(has&&isOpen)h+=node.children.map(ch=>popupNodeHTML(ch,[...anc,node.name],aid,current)).join("");
+  return h+"</div>";
+}
+
 function openTagPopup(aid,btnEl){
   closeTagPopup();
   openPopupAyah=aid;
@@ -1149,21 +1167,6 @@ function openTagPopup(aid,btnEl){
 
   const current=getATList(ST.surah,aid);
 
-  function renderPopupNode(node,anc){
-    const path=tagPath(anc,node.name);
-    const has=node.children?.length>0;
-    const isOn=current.includes(path);
-    const isOpen=!collapsedG["tp_"+path];
-    let h=`<div class="tp-node">
-      <div class="tp-row" onclick="popupToggleTag(${aid},'${esc(path)}')">
-        <span class="tp-arrow" onclick="event.stopPropagation();collapsedG['tp_${esc(path)}']=!collapsedG['tp_${esc(path)}'];refreshTagPopup(${aid})">${has?(isOpen?'▼':'▶'):' '}</span>
-        <span class="tp-check">${isOn?'☑':'☐'}</span>
-        <span style="flex:1">${esc(node.name)}</span>
-      </div>`;
-    if(has&&isOpen)h+=node.children.map(ch=>renderPopupNode(ch,[...anc,node.name])).join("");
-    return h+"</div>";
-  }
-
   const rect=btnEl.getBoundingClientRect();
   const popup=document.createElement("div");
   popup.className="tag-popup";
@@ -1172,7 +1175,7 @@ function openTagPopup(aid,btnEl){
   popup.style.top=Math.min(rect.bottom+4,window.innerHeight-310)+"px";
   popup.style.left=Math.min(rect.left,window.innerWidth-270)+"px";
   popup.innerHTML=`<div class="tag-popup-head"><span>🏷 Теги · аят ${aid}</span><button class="tag-popup-close" onclick="closeTagPopup()">✕</button></div>
-    <div class="tag-popup-list">${tree.map(n=>renderPopupNode(n,[])).join("")}</div>`;
+    <div class="tag-popup-list">${tree.map(n=>popupNodeHTML(n,[],aid,current)).join("")}</div>`;
   document.body.appendChild(popup);
 
   setTimeout(()=>document.addEventListener("click",closeOnOutside),10);
@@ -1202,27 +1205,10 @@ function popupToggleTag(aid,path){
 function refreshTagPopup(aid){
   const popup=document.getElementById("tagPopup");
   if(!popup)return;
-  const rect=popup.getBoundingClientRect();
   const tree=getTagTree();
   const current=getATList(ST.surah,aid);
-
-  function renderPopupNode(node,anc){
-    const path=tagPath(anc,node.name);
-    const has=node.children?.length>0;
-    const isOn=current.includes(path);
-    const isOpen=!collapsedG["tp_"+path];
-    let h=`<div class="tp-node">
-      <div class="tp-row" onclick="popupToggleTag(${aid},'${esc(path)}')">
-        <span class="tp-arrow" onclick="event.stopPropagation();collapsedG['tp_${esc(path)}']=!collapsedG['tp_${esc(path)}'];refreshTagPopup(${aid})">${has?(isOpen?'▼':'▶'):' '}</span>
-        <span class="tp-check">${isOn?'☑':'☐'}</span>
-        <span style="flex:1">${esc(node.name)}</span>
-      </div>`;
-    if(has&&isOpen)h+=node.children.map(ch=>renderPopupNode(ch,[...anc,node.name])).join("");
-    return h+"</div>";
-  }
-
   const listEl=popup.querySelector(".tag-popup-list");
-  if(listEl)listEl.innerHTML=tree.map(n=>renderPopupNode(n,[])).join("");
+  if(listEl)listEl.innerHTML=tree.map(n=>popupNodeHTML(n,[],aid,current)).join("");
 }
 
 // Tag management
