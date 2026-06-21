@@ -436,6 +436,8 @@ async function loadConfig(){
   if(!CONFIG.tafsirs||!CONFIG.tafsirs.length)useFB();
   ST.enabled=getEnabled();
   if(ST.enabled._arabic===undefined)ST.enabled._arabic=true;
+  applyHash(true);                                   // deep-link: set surah (+ayah) from URL
+  history.replaceState({surah:ST.surah},"","#"+ST.surah);
   render();
 }
 function useFB(){
@@ -881,7 +883,8 @@ function toggleSearch(){
     document.getElementById("spInput").focus();
     document.getElementById("spResults").innerHTML=`<div class="sp-status">Введите запрос (минимум 2 символа)</div>`;
     document.getElementById("spCount").classList.add("hidden");
-  }
+    pushOverlay();
+  }else consumeOverlay();
 }
 
 function onSearchInput(){
@@ -1023,23 +1026,12 @@ function highlightMatch(text,query){
 }
 
 function goSearchResult(surah,ayah){
-  toggleSearch();
+  if(searchOpen)toggleSearch();
   ST.surah=surah;
   ST.selectedTag=null;
+  pushSurahHash(surah);
   render();
-  // Scroll to ayah after render
-  setTimeout(()=>{
-    const blocks=document.querySelectorAll(".ayah-block");
-    for(const b of blocks){
-      const num=b.querySelector(".ab-num");
-      if(num&&num.textContent==String(ayah)){
-        b.scrollIntoView({behavior:"smooth",block:"center"});
-        b.style.boxShadow="0 0 0 2px var(--accent)";
-        setTimeout(()=>b.style.boxShadow="",2000);
-        break;
-      }
-    }
-  },300);
+  scrollToAyah(ayah);
 }
 
 // Close search on Escape, open on Ctrl+F, block Ctrl+S/U
@@ -1049,13 +1041,55 @@ document.addEventListener("keydown",function(e){
 });
 
 // ============================================================
+// ROUTING — URL hash "#surah[:ayah]" + back button closes panels (mobile)
+// ============================================================
+let pendingAyah=null;
+function anyPanelOpen(){return searchOpen||ST.sidebarOpen||ST.rpanelOpen;}
+function pushOverlay(){if(isM()&&!(history.state&&history.state.ov))history.pushState({ov:1},"");}
+function consumeOverlay(){if(history.state&&history.state.ov)history.back();}
+function closeAllPanelsUI(){
+  if(searchOpen){searchOpen=false;document.getElementById("searchPanel").classList.add("hidden");}
+  if(ST.sidebarOpen){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
+  if(ST.rpanelOpen){ST.rpanelOpen=false;document.getElementById("rpanel").classList.add("collapsed");}
+}
+function pushSurahHash(id){const h="#"+id;if(location.hash!==h)history.pushState({surah:id},"",h);}
+function applyHash(initial){
+  const raw=decodeURIComponent((location.hash||"").replace(/^#/,"")).trim();
+  const m=raw.match(/^(\d+)(?::(\d+))?$/);
+  if(!m)return false;
+  const sid=+m[1];
+  if(!SURAHS.find(s=>s.id===sid))return false;
+  pendingAyah=m[2]?+m[2]:null;
+  if(ST.surah!==sid||ST.selectedTag){ST.surah=sid;ST.selectedTag=null;if(!initial)render();}
+  if(pendingAyah)scrollToAyah(pendingAyah);
+  return true;
+}
+function scrollToAyah(ayah){
+  let tries=0;
+  (function tryScroll(){
+    const area=document.getElementById("readingArea");
+    const blk=area&&area.querySelector(`.ayah-block[data-aid="${ayah}"]`);
+    if(blk){
+      blk.scrollIntoView({behavior:"smooth",block:"center"});
+      blk.style.boxShadow="0 0 0 2px var(--accent)";
+      setTimeout(()=>{blk.style.boxShadow="";},2000);
+      pendingAyah=null;
+    }else if(tries++<25){setTimeout(tryScroll,150);}
+  })();
+}
+window.addEventListener("popstate",()=>{
+  if(isM()&&anyPanelOpen()){closeAllPanelsUI();return;}
+  applyHash(false);
+});
+
+// ============================================================
 // ACTIONS
 // ============================================================
-function toggleSidebar(){ST.sidebarOpen=!ST.sidebarOpen;document.getElementById("sidebar").classList.toggle("collapsed",!ST.sidebarOpen);}
-function toggleRPanel(){ST.rpanelOpen=!ST.rpanelOpen;document.getElementById("rpanel").classList.toggle("collapsed",!ST.rpanelOpen);}
+function toggleSidebar(){ST.sidebarOpen=!ST.sidebarOpen;document.getElementById("sidebar").classList.toggle("collapsed",!ST.sidebarOpen);if(ST.sidebarOpen)pushOverlay();else consumeOverlay();}
+function toggleRPanel(){ST.rpanelOpen=!ST.rpanelOpen;document.getElementById("rpanel").classList.toggle("collapsed",!ST.rpanelOpen);if(ST.rpanelOpen)pushOverlay();else consumeOverlay();}
 function onSearch(q){ST.search=q;renderSB();}
 function setSbTab(t){ST.sbTab=t;document.getElementById("sbTabSurahs").classList.toggle("active",t==="surahs");document.getElementById("sbTabTags").classList.toggle("active",t==="tags");renderSB();}
-function goSurah(id){ST.surah=id;ST.selectedTag=null;if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}render();}
+function goSurah(id){ST.surah=id;ST.selectedTag=null;if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}pushSurahHash(id);render();}
 function toggleLayout(){ST.layout=ST.layout==="h"?"v":"h";render();}
 
 // Reading font scale (persisted)
