@@ -497,6 +497,14 @@ async function loadWhole(id,quiet){
   return quiet?null:{};
 }
 
+// Prebuilt inverted index for search: {word: "s:a s:a ..."}. null if unavailable.
+let indexCache={};
+async function loadIndex(id){
+  if(indexCache[id]!==undefined)return indexCache[id];
+  try{const r=await fetch(`${DATA_PATH}index/${id}.json`);indexCache[id]=r.ok?await r.json():null;}catch(e){indexCache[id]=null;}
+  return indexCache[id];
+}
+
 function esc(t){const d=document.createElement("div");d.textContent=t;return d.innerHTML;}
 function isM(){return window.matchMedia("(max-width:768px)").matches;}
 
@@ -813,16 +821,16 @@ function renderF(){
 // ============================================================
 
 // Arabic text normalization for search
-const AR_DIACRITICS=/[\u0610-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E8\u06EA-\u06ED\u08D3-\u08FF]/g;
+const AR_DIACRITICS=/[ؐ-ًؚ-ٰٟۖ-ۜ۟-۪ۨ-ۭ࣓-ࣿ]/g;
 const AR_TATWEEL=/\u0640/g; // Kashida/Tatweel
 
 function normalizeArabic(s){
   return s
-    .replace(AR_DIACRITICS,"")   // 1. Remove tashkeel
-    .replace(AR_TATWEEL,"")      // 5. Remove tatweel/kashida
-    .replace(/[أإآٱ]/g,"ا")      // 2. All alif forms → plain alif
-    .replace(/ة/g,"ه")           // 3. Ta marbuta → Ha
-    .replace(/ى/g,"ي");          // 4. Alif maqsura → Ya
+    .replace(AR_DIACRITICS,"")   // remove tashkeel
+    .replace(AR_TATWEEL,"")      // remove tatweel/kashida
+    .replace(/[أإآٱ]/g,"ا")  // alif forms -> alif
+    .replace(/ة/g,"ه")                      // ta marbuta -> ha
+    .replace(/ى/g,"ي");                     // alif maqsura -> ya
 }
 
 function normalizeSearch(s){return normalizeArabic(s).toLowerCase().trim();}
@@ -924,20 +932,46 @@ async function doSearch(){
   const results=[];
   const MAX=100;
 
-  // Search through all loaded tafsirs (including Arabic text)
+  // Query words (>=2 chars) for the inverted index (AND across tokens, substring on words)
+  const tokens=(query.match(/[\p{L}\p{N}_]+/gu)||[]).filter(w=>w.length>=2);
+
   for(const t of toSearch){
     if(results.length>=MAX)break;
-    const data=await loadWhole(t.id);
-    if(!data)continue;
-    for(const sid in data){
-      if(results.length>=MAX)break;
-      const surahData=data[sid];
-      for(const aid in surahData){
+    const idx=tokens.length?await loadIndex(t.id):null;
+    let refs=null; // Set of "s:a" satisfying ALL tokens — null means "no index, fall back"
+    if(idx){
+      for(const tok of tokens){
+        const set=new Set();
+        for(const w in idx){if(w.includes(tok))for(const ref of idx[w].split(" "))set.add(ref);}
+        if(refs===null)refs=set; else for(const r of [...refs])if(!set.has(r))refs.delete(r);
+        if(refs.size===0)break;
+      }
+    }
+    if(refs!==null){
+      // Index hit: pull display text only for matched ayahs, grouped by surah (chunked)
+      const bySurah={};
+      for(const ref of refs){const c=ref.indexOf(":");(bySurah[ref.slice(0,c)]=bySurah[ref.slice(0,c)]||[]).push(ref.slice(c+1));}
+      for(const sid of Object.keys(bySurah).sort((a,b)=>+a-+b)){
         if(results.length>=MAX)break;
-        const text=surahData[aid];
-        const normalized=normalizeSearch(text);
-        if(normalized.includes(query)){
-          results.push({surah:+sid,ayah:+aid,text:text,source:t.name,sourceAr:t.nameAr,lang:t.lang,tafsirId:t.id});
+        const chunk=await loadChunk(t.id,+sid);
+        for(const aid of bySurah[sid].sort((a,b)=>+a-+b)){
+          if(results.length>=MAX)break;
+          const text=chunk[aid];if(!text)continue;
+          results.push({surah:+sid,ayah:+aid,text,source:t.name,sourceAr:t.nameAr,lang:t.lang,tafsirId:t.id});
+        }
+      }
+    }else{
+      // No index — fall back to full-text scan
+      const data=await loadWhole(t.id);
+      if(!data)continue;
+      for(const sid in data){
+        if(results.length>=MAX)break;
+        const surahData=data[sid];
+        for(const aid in surahData){
+          if(results.length>=MAX)break;
+          if(normalizeSearch(surahData[aid]).includes(query)){
+            results.push({surah:+sid,ayah:+aid,text:surahData[aid],source:t.name,sourceAr:t.nameAr,lang:t.lang,tafsirId:t.id});
+          }
         }
       }
     }
