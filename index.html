@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>مكتبة التفاسير — Библиотека тафсиров</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Naskh+Arabic:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -126,10 +126,10 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 .ab-entry:last-child{border-bottom:none}
 .ab-entry-label{font-size:10px;font-weight:600;color:var(--accent);margin-bottom:3px;display:flex;align-items:center;gap:4px}
 .ab-entry-label .lbl-ar{font-family:'Amiri',serif;color:var(--text-muted);font-weight:400}
-.ab-entry-text{font-size:13px;line-height:1.85;color:var(--text-sec);white-space:pre-wrap}
+.ab-entry-text{font-size:calc(13px*var(--rs,1));line-height:1.85;color:var(--text-sec);white-space:pre-wrap}
 .ab-entry-text.selectable{-webkit-user-select:text;user-select:text}
-.ab-entry-text.rtl{direction:rtl;text-align:right;font-family:'Noto Naskh Arabic','Amiri',serif;font-size:17px;line-height:2;color:var(--text)}
-.ab-entry-text.arabic-main{font-family:'Noto Naskh Arabic','Amiri',serif;font-size:22px;line-height:2;direction:rtl;text-align:right;color:var(--text)}
+.ab-entry-text.rtl{direction:rtl;text-align:right;font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(17px*var(--rs,1));line-height:2;color:var(--text)}
+.ab-entry-text.arabic-main{font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(22px*var(--rs,1));line-height:2;direction:rtl;text-align:right;color:var(--text)}
 
 /* Notes inline */
 .ab-note-area{width:100%;border:1px solid var(--note-border);border-radius:5px;padding:6px 8px;font-family:inherit;font-size:12px;line-height:1.6;color:var(--text);background:var(--note-bg);resize:vertical;outline:none;min-height:40px;-webkit-user-select:text;user-select:text}
@@ -140,9 +140,9 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 .col-col{flex:1;min-width:250px;border-right:1px solid var(--border-light)}
 .col-col:last-child{border-right:none}
 .col-head{padding:6px 8px;background:var(--bg-alt);border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--accent);position:sticky;top:0;z-index:1;text-align:center}
-.col-ayah{padding:8px 10px;border-bottom:1px solid var(--border-light);font-size:13px;line-height:1.85;color:var(--text-sec);white-space:pre-wrap;min-height:50px}
-.col-ayah.rtl{direction:rtl;text-align:right;font-family:'Noto Naskh Arabic','Amiri',serif;font-size:16px;line-height:2;color:var(--text)}
-.col-ayah.arabic-main{font-family:'Noto Naskh Arabic','Amiri',serif;font-size:20px;line-height:2;direction:rtl;text-align:right;color:var(--text)}
+.col-ayah{padding:8px 10px;border-bottom:1px solid var(--border-light);font-size:calc(13px*var(--rs,1));line-height:1.85;color:var(--text-sec);white-space:pre-wrap;min-height:50px}
+.col-ayah.rtl{direction:rtl;text-align:right;font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(16px*var(--rs,1));line-height:2;color:var(--text)}
+.col-ayah.arabic-main{font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(20px*var(--rs,1));line-height:2;direction:rtl;text-align:right;color:var(--text)}
 .col-ayah-num{font-size:9px;font-weight:600;color:var(--accent);margin-bottom:2px}
 
 /* TAG RESULTS view */
@@ -190,9 +190,18 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
   .sidebar{left:0;transform:translateX(0)}.sidebar.collapsed{transform:translateX(-100%);margin-left:0}
   .rpanel{right:0;transform:translateX(0)}.rpanel.collapsed{transform:translateX(100%);margin-right:0}
   .header{padding:7px 8px}.reading{padding:8px}
-  .ab-entry-text.arabic-main{font-size:19px}
+  .ab-entry-text.arabic-main{font-size:calc(19px*var(--rs,1))}
   .col-col{min-width:200px}
+  .layout-btn{display:none}
   .search-panel{width:100%!important;left:0!important;right:0!important;border-radius:0!important;max-height:80vh!important}
+}
+
+/* Touch devices have no hover — keep action controls always visible & bigger tap targets */
+@media(hover:none){
+  .tag-acts{opacity:1!important}
+  .t-sort{opacity:1!important}
+  .tag-ab{font-size:13px;padding:3px 6px}
+  .sort-b{font-size:11px;padding:2px 5px}
 }
 
 /* SEARCH */
@@ -219,7 +228,7 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 @media print{body{display:none!important}}
 </style>
 </head>
-<body data-theme="green" oncontextmenu="return false;">
+<body data-theme="green">
 
 <header class="header">
   <div class="header-left">
@@ -375,6 +384,7 @@ let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,
   selectedTag:null,
   theme:"green",
   rpFilter:"",
+  fontScale:1,       // reading text scale (A−/A+)
   expandedGroups:{}, // which groups show all items (not just 5)
 };
 let CONFIG={groups:[],tafsirs:[]};
@@ -484,7 +494,7 @@ async function loadWhole(id,quiet){
 }
 
 function esc(t){const d=document.createElement("div");d.textContent=t;return d.innerHTML;}
-function isM(){return window.innerWidth<=768;}
+function isM(){return window.matchMedia("(max-width:768px)").matches;}
 
 // ============================================================
 // THEME
@@ -557,8 +567,9 @@ function renderCB(){
     return;
   }
   if(!su)return;
-  const layoutBtn=`<button class="btn-s ${ST.layout==='v'?'active':''}" onclick="toggleLayout()" title="Колонки / Список">${ST.layout==='h'?'▤ Колонки':'▥ Список'}</button>`;
-  bar.innerHTML=`<div class="cb-left"><h2>${su.ru} <span class="ar">${su.name}</span></h2></div><div class="cb-right">${layoutBtn}</div>`;
+  const layoutBtn=`<button class="btn-s layout-btn ${ST.layout==='v'?'active':''}" onclick="toggleLayout()" title="Колонки / Список">${ST.layout==='h'?'▤ Колонки':'▥ Список'}</button>`;
+  const fontBtns=`<button class="btn-s" onclick="bumpFont(-1)" title="Меньше шрифт">A−</button><button class="btn-s" onclick="bumpFont(1)" title="Больше шрифт">A+</button>`;
+  bar.innerHTML=`<div class="cb-left"><h2>${su.ru} <span class="ar">${su.name}</span></h2></div><div class="cb-right">${fontBtns}${layoutBtn}</div>`;
 }
 
 // -- CENTER BODY --
@@ -588,7 +599,9 @@ async function renderReading(el){
   const area=document.getElementById("readingArea");
   if(!area)return;
 
-  if(ST.layout==="h"){
+  // Columns layout is unusable on phones — always stack vertically there
+  const layout=isM()?"h":ST.layout;
+  if(layout==="h"){
     let html="";
     for(const aid of ayahIds){
       const hn=hasNote(ST.surah,aid);const ht=hasAT(ST.surah,aid);
@@ -998,7 +1011,6 @@ function goSearchResult(surah,ayah){
 document.addEventListener("keydown",function(e){
   if(e.key==="Escape"&&searchOpen)toggleSearch();
   if((e.ctrlKey||e.metaKey)&&e.key==="f"){e.preventDefault();if(!searchOpen)toggleSearch();}
-  if((e.ctrlKey||e.metaKey)&&(e.key==="s"||e.key==="S"||e.key==="u"||e.key==="U"))e.preventDefault();
 });
 
 // ============================================================
@@ -1010,6 +1022,14 @@ function onSearch(q){ST.search=q;renderSB();}
 function setSbTab(t){ST.sbTab=t;document.getElementById("sbTabSurahs").classList.toggle("active",t==="surahs");document.getElementById("sbTabTags").classList.toggle("active",t==="tags");renderSB();}
 function goSurah(id){ST.surah=id;ST.selectedTag=null;if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}render();}
 function toggleLayout(){ST.layout=ST.layout==="h"?"v":"h";render();}
+
+// Reading font scale (persisted)
+function applyFontScale(){document.body.style.setProperty("--rs",ST.fontScale);}
+function bumpFont(dir){
+  ST.fontScale=Math.min(1.8,Math.max(0.8,Math.round((ST.fontScale+dir*0.1)*10)/10));
+  ss("fontScale",ST.fontScale);
+  applyFontScale();
+}
 
 function toggleEn(id){ST.enabled[id]=!ST.enabled[id];setEnabled(ST.enabled);renderRP();renderCenter();}
 
@@ -1160,9 +1180,11 @@ function deleteTag(path){
   render();
 }
 
-// Init theme
+// Init theme + reading font scale
 const savedTheme=gs("theme","green");
 setTheme(savedTheme);
+ST.fontScale=gs("fontScale",1);
+applyFontScale();
 // Open sidebar by default on desktop
 if(!isM()){ST.sidebarOpen=true;document.getElementById("sidebar").classList.remove("collapsed");}
 loadConfig();
