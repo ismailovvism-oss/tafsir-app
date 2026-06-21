@@ -347,31 +347,21 @@ function getAyahIds(surahId){
   const arr=[];for(let i=1;i<=su.n;i++)arr.push(i);
   return arr;
 }
-// Get text for an ayah from loaded tafsir data
-function getTextFromCache(tafsirId,surahId,ayahId){
-  const d=tafsirCache[tafsirId];
-  return d?.[String(surahId)]?.[String(ayahId)]||"";
-}
-// Get Arabic text from the first loaded Arabic-language tafsir, or empty
+// --- chunk readers (sync; the surah chunk must already be loaded via loadChunk) ---
+function getChunk(id,surahId){return chunkCache[id+"|"+surahId];}
+// Arabic text for an ayah: dedicated _arabic, else any loaded Arabic tafsir
 function getArabicFromCache(surahId,ayahId){
-  // Try dedicated arabic file first
-  if(tafsirCache["_arabic"])return tafsirCache["_arabic"]?.[String(surahId)]?.[String(ayahId)]||"";
-  // Fallback: any loaded Arabic tafsir
+  const a=getChunk("_arabic",surahId);
+  if(a&&a[String(ayahId)])return a[String(ayahId)];
   for(const t of CONFIG.tafsirs){
-    if(t.lang==="ar"&&tafsirCache[t.id]){
-      const txt=tafsirCache[t.id]?.[String(surahId)]?.[String(ayahId)];
-      if(txt)return txt;
-    }
+    if(t.lang==="ar"){const c=getChunk(t.id,surahId);if(c?.[String(ayahId)])return c[String(ayahId)];}
   }
   return "";
 }
-// Get any translation for display in tag results etc.
+// Any translation for tag-results display
 function getAnyTranslation(surahId,ayahId){
   for(const t of CONFIG.tafsirs){
-    if(t.lang!=="ar"&&tafsirCache[t.id]){
-      const txt=tafsirCache[t.id]?.[String(surahId)]?.[String(ayahId)];
-      if(txt)return txt;
-    }
+    if(t.lang!=="ar"){const c=getChunk(t.id,surahId);if(c?.[String(ayahId)])return c[String(ayahId)];}
   }
   return "";
 }
@@ -388,7 +378,10 @@ let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,
   expandedGroups:{}, // which groups show all items (not just 5)
 };
 let CONFIG={groups:[],tafsirs:[]};
-let tafsirCache={};
+let chunkCache={};        // "id|surah" -> {ayah:text}  (lazy, LRU-evicted)
+let chunkLRU=[];          // chunk keys in recent-use order
+const MAX_CHUNKS=80;      // memory cap on cached surah chunks
+let wholeCache={};        // id -> full Quran (only used by search)
 let collapsedG={};
 
 // User order for enabled tafsirs: array of IDs
@@ -418,7 +411,7 @@ function tagPath(anc,name){return anc.length?anc.join("/")+"/"+name:name;}
 function countTag(path){const at=getAyahTags();let c=0;for(const k in at)for(const p of at[k])if(p===path||p.startsWith(path+"/"))c++;return c;}
 function ayahsForTag(path){const at=getAyahTags();const res=[];for(const k in at)for(const p of at[k])if(p===path){res.push(k);break;}return res;}
 
-function getEnabled(){return gs("enabled",{_arabic:true});}
+function getEnabled(){return gs("enabled",{_arabic:true,kuliev:true});}
 function setEnabled(e){ss("enabled",e);}
 
 // ============================================================
@@ -450,17 +443,44 @@ function useFB(){
   ]};
 }
 
-async function loadTafsir(id){
-  if(tafsirCache[id])return tafsirCache[id];
-  // Try JS preload first (offline mode)
-  if(window.TL_DATA&&window.TL_DATA[id]){tafsirCache[id]=window.TL_DATA[id];return tafsirCache[id];}
+function touchChunk(key){
+  const i=chunkLRU.indexOf(key);
+  if(i>=0)chunkLRU.splice(i,1);
+  chunkLRU.push(key);
+  while(chunkLRU.length>MAX_CHUNKS){const old=chunkLRU.shift();delete chunkCache[old];}
+}
+
+// Lazily load ONE surah of one tafsir. Returns {ayah:text}. Cached + LRU-evicted.
+async function loadChunk(id,surahId){
+  const key=id+"|"+surahId;
+  if(chunkCache[key]){touchChunk(key);return chunkCache[key];}
+  let chunk=null;
+  // 1. Offline preload (whole Quran in TL_DATA) -> slice the surah
+  if(window.TL_DATA&&window.TL_DATA[id])chunk=window.TL_DATA[id][String(surahId)]||{};
+  // 2. Per-surah chunk file (primary path)
+  if(chunk===null){try{const r=await fetch(`${DATA_PATH}tafsirs/${id}/${surahId}.json`);if(r.ok)chunk=await r.json();}catch(e){}}
+  // 3. Back-compat: monolithic file -> slice
+  if(chunk===null){const whole=await loadWhole(id,true);if(whole)chunk=whole[String(surahId)]||{};}
+  // 4. Placeholder for a real (not-yet-added) tafsir
+  if(chunk===null){
+    if(id==="_arabic"){chunk={};}
+    else{
+      const info=CONFIG.tafsirs.find(t=>t.id===id);const su=SURAHS.find(s=>s.id===surahId);chunk={};
+      if(su)for(let i=1;i<=su.n;i++)chunk[i]=`[${info?.name||id}] Сура ${surahId}, аят ${i}\n\n※ Тафсир ещё не добавлен.`;
+    }
+  }
+  chunkCache[key]=chunk;touchChunk(key);
+  return chunk;
+}
+
+// Load the full tafsir (all surahs) — only used by search. Cached separately.
+async function loadWhole(id,quiet){
+  if(wholeCache[id])return wholeCache[id];
+  if(window.TL_DATA&&window.TL_DATA[id]){wholeCache[id]=window.TL_DATA[id];return wholeCache[id];}
   const info=CONFIG.tafsirs.find(t=>t.id===id);
   const file=info?.file||`tafsirs/${id}.json`;
-  try{const r=await fetch(DATA_PATH+file);if(r.ok){tafsirCache[id]=await r.json();return tafsirCache[id];}}catch(e){}
-  // No placeholder for special _arabic — just return empty
-  if(id==="_arabic"){tafsirCache[id]={};return tafsirCache[id];}
-  const ph={};SURAHS.forEach(su=>{ph[su.id]={};for(let i=1;i<=su.n;i++)ph[su.id][i]=`[${info?.name||id}] Сура ${su.id}, аят ${i}\n\n※ Тафсир ещё не добавлен.`;});
-  tafsirCache[id]=ph;return ph;
+  try{const r=await fetch(DATA_PATH+file);if(r.ok){wholeCache[id]=await r.json();return wholeCache[id];}}catch(e){}
+  return quiet?null:{};
 }
 
 function esc(t){const d=document.createElement("div");d.textContent=t;return d.innerHTML;}
@@ -544,7 +564,7 @@ function renderCB(){
 // -- CENTER BODY --
 function renderCenter(){
   const el=document.getElementById("centerBody");
-  if(ST.selectedTag){renderTagResults(el);return Promise.resolve();}
+  if(ST.selectedTag)return renderTagResults(el);
   return renderReading(el);
 }
 
@@ -559,17 +579,11 @@ async function renderReading(el){
 
   el.innerHTML=`<div class="reading" id="readingArea"><div style="text-align:center;color:var(--text-muted);padding:30px">Загрузка...</div></div>`;
 
-  // Load all enabled tafsirs
+  // Load only the current surah's chunk for each enabled tafsir
   const loaded={};
-  for(const t of enabled){
-    if(t.id==="_notes")continue;
-    loaded[t.id]=await loadTafsir(t.id);
-  }
-  // Also preload arabic if enabled
-  if(ST.enabled._arabic){
-    // Try loading dedicated arabic file
-    await loadTafsir("_arabic").catch(()=>{});
-  }
+  await Promise.all(enabled.filter(t=>t.id!=="_notes").map(async t=>{loaded[t.id]=await loadChunk(t.id,ST.surah);}));
+  // Also preload arabic chunk if enabled
+  if(ST.enabled._arabic)await loadChunk("_arabic",ST.surah).catch(()=>{});
 
   const area=document.getElementById("readingArea");
   if(!area)return;
@@ -598,7 +612,7 @@ async function renderReading(el){
             <textarea class="ab-note-area" placeholder="Ваши мысли..." oninput="saveNote(${ST.surah},${aid},this.value)">${esc(note)}</textarea>
           </div>`;
         } else {
-          const text=loaded[t.id]?.[String(ST.surah)]?.[String(aid)]||null;
+          const text=loaded[t.id]?.[String(aid)]||null;
           const isAr=t.lang==="ar";
           html+=`<div class="ab-entry">
             <div class="ab-entry-label">${esc(t.name)} <span class="lbl-ar">${t.nameAr||''}</span></div>
@@ -634,7 +648,7 @@ async function renderReading(el){
           const note=getNote(ST.surah,aid);
           html+=`<div class="col-ayah" style="background:var(--note-bg);padding:4px 6px"><textarea class="ab-note-area" style="min-height:30px;font-size:11px" placeholder="..." oninput="saveNote(${ST.surah},${aid},this.value)">${esc(note)}</textarea></div>`;
         } else {
-          const text=col.data?.[String(ST.surah)]?.[String(aid)]||"";
+          const text=col.data?.[String(aid)]||"";
           const isAr=col.lang==="ar";
           html+=`<div class="col-ayah selectable ${isAr?'rtl':''}">${text?esc(text):'—'}</div>`;
         }
@@ -646,12 +660,20 @@ async function renderReading(el){
   }
 }
 
-function renderTagResults(el){
+async function renderTagResults(el){
   const ayahKeys=ayahsForTag(ST.selectedTag);
   if(!ayahKeys.length){
     el.innerHTML=`<div class="tag-results"><div class="tr-header">🏷 ${esc(ST.selectedTag)}</div><div style="color:var(--text-muted);padding:20px;text-align:center">Нет аятов с этим тегом</div></div>`;
     return;
   }
+  // Preload chunks for the surahs referenced by the tagged ayahs (Arabic + one translation)
+  const surahs=[...new Set(ayahKeys.map(k=>+k.split(":")[0]))];
+  const firstTrans=CONFIG.tafsirs.find(t=>t.lang!=="ar"&&ST.enabled[t.id])||CONFIG.tafsirs.find(t=>t.lang!=="ar");
+  await Promise.all(surahs.flatMap(s=>{
+    const ps=[loadChunk("_arabic",s).catch(()=>{})];
+    if(firstTrans)ps.push(loadChunk(firstTrans.id,s).catch(()=>{}));
+    return ps;
+  }));
   let html=`<div class="tag-results"><div class="tr-header">🏷 ${esc(ST.selectedTag)} — ${ayahKeys.length} аятов</div>`;
   for(const k of ayahKeys){
     const[s,a]=k.split(":");
@@ -854,7 +876,7 @@ async function doSearch(){
   // Search through all loaded tafsirs (including Arabic text)
   for(const t of toSearch){
     if(results.length>=MAX)break;
-    const data=await loadTafsir(t.id);
+    const data=await loadWhole(t.id);
     if(!data)continue;
     for(const sid in data){
       if(results.length>=MAX)break;

@@ -148,11 +148,22 @@ def convert(input_path, output_path):
 
     js_kb = os.path.getsize(js_path) / 1024
 
+    # Разрезаем на чанки по сурам (ленивая загрузка в приложении)
+    out_dir = os.path.join(os.path.dirname(output_path), tafsir_id)
+    os.makedirs(out_dir, exist_ok=True)
+    surahs = sorted((int(s) for s in data.keys()))
+    for s in surahs:
+        with open(os.path.join(out_dir, f"{s}.json"), 'w', encoding='utf-8') as f:
+            json.dump(data[str(s)], f, ensure_ascii=False, separators=(",", ":"))
+    with open(os.path.join(out_dir, "index.json"), 'w', encoding='utf-8') as f:
+        json.dump(surahs, f, separators=(",", ":"))
+
     print(f"Готово!")
     print(f"  Сур: {total_surahs}")
     print(f"  Аятов: {total_ayat}")
-    print(f"  JSON: {output_path} ({size_kb:.1f} КБ)")
-    print(f"  JS:   {js_path} ({js_kb:.1f} КБ) — для оффлайн-режима")
+    print(f"  JSON:   {output_path} ({size_kb:.1f} КБ)")
+    print(f"  JS:     {js_path} ({js_kb:.1f} КБ) — для оффлайн-режима")
+    print(f"  Чанки:  {out_dir}/ ({total_surahs} файлов по сурам) — для ленивой загрузки")
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
