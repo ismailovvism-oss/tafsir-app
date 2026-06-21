@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>مكتبة التفاسير — Библиотека тафсиров</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Naskh+Arabic:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Naskh+Arabic:wght@400;600;700&family=Reem+Kufi:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 
@@ -217,6 +217,11 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
   .sort-b{font-size:11px;padding:2px 5px}
 }
 
+/* Optional Kufi typeface for the Arabic reading text (toggle in the toolbar) */
+[data-arfont="kufi"] .arabic-main,
+[data-arfont="kufi"] .ab-entry-text.rtl,
+[data-arfont="kufi"] .col-ayah.rtl{font-family:'Reem Kufi','Noto Naskh Arabic','Amiri',serif}
+
 /* SEARCH */
 .search-panel{position:fixed;top:48px;left:50%;transform:translateX(-50%);width:600px;max-width:90vw;max-height:70vh;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 40px rgba(0,0,0,.2);z-index:50;display:flex;flex-direction:column;overflow:hidden}
 .search-panel.hidden{display:none}
@@ -401,6 +406,7 @@ let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,
   theme:"green",
   rpFilter:"",
   fontScale:1,       // reading text scale (A−/A+)
+  arFont:"naskh",    // Arabic typeface: "naskh" | "kufi"
   facets:{lang:[],kind:[],era:[],tags:[]}, // active facet filters in the right panel
   expandedGroups:{}, // which groups show all items (not just 5)
 };
@@ -600,7 +606,8 @@ function renderCB(){
   if(!su)return;
   const layoutBtn=`<button class="btn-s layout-btn ${ST.layout==='v'?'active':''}" onclick="toggleLayout()" title="Колонки / Список">${ST.layout==='h'?'▤ Колонки':'▥ Список'}</button>`;
   const fontBtns=`<button class="btn-s" onclick="bumpFont(-1)" title="Меньше шрифт">A−</button><button class="btn-s" onclick="bumpFont(1)" title="Больше шрифт">A+</button>`;
-  bar.innerHTML=`<div class="cb-left"><h2>${su.ru} <span class="ar">${su.name}</span></h2></div><div class="cb-right">${fontBtns}${layoutBtn}</div>`;
+  const arFontBtn=`<button class="btn-s ${ST.arFont==='kufi'?'active':''}" onclick="toggleArFont()" title="Шрифт арабского: насх / куфи" style="font-family:'Reem Kufi',serif">${ST.arFont==='kufi'?'كوفي':'نسخ'}</button>`;
+  bar.innerHTML=`<div class="cb-left"><h2>${su.ru} <span class="ar">${su.name}</span></h2></div><div class="cb-right">${arFontBtn}${fontBtns}${layoutBtn}</div>`;
 }
 
 // -- CENTER BODY --
@@ -1223,6 +1230,15 @@ function bumpFont(dir){
   applyFontScale();
 }
 
+// Arabic typeface: Naskh (default) / Kufi (persisted)
+function applyArFont(){document.body.setAttribute("data-arfont",ST.arFont);}
+function toggleArFont(){
+  ST.arFont=ST.arFont==="kufi"?"naskh":"kufi";
+  ss("arFont",ST.arFont);
+  applyArFont();
+  renderCB();
+}
+
 function toggleEn(id){ST.enabled[id]=!ST.enabled[id];setEnabled(ST.enabled);renderRP();renderCenter();}
 
 function saveNote(s,a,text){setNote(s,a,text);}
@@ -1361,6 +1377,8 @@ const savedTheme=gs("theme","green");
 setTheme(savedTheme);
 ST.fontScale=gs("fontScale",1);
 applyFontScale();
+ST.arFont=gs("arFont","naskh");
+applyArFont();
 // Open sidebar by default on desktop
 if(!isM()){ST.sidebarOpen=true;document.getElementById("sidebar").classList.remove("collapsed");}
 loadConfig();
