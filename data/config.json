@@ -70,6 +70,20 @@
       "year": ""
     },
     {
+      "id": "_arabic_rasm",
+      "file": "tafsirs/_arabic_rasm.json",
+      "name": "Без точек (расм)",
+      "nameAr": "رسم بلا إعجام",
+      "author": "",
+      "authorAr": "",
+      "group": "quran",
+      "kind": "quran",
+      "lang": "ar",
+      "era": "",
+      "tags": [],
+      "year": ""
+    },
+    {
       "id": "kuliev",
       "file": "tafsirs/kuliev.json",
       "name": "Перевод Кулиева",
