@@ -393,6 +393,8 @@ let chunkLRU=[];          // chunk keys in recent-use order
 const MAX_CHUNKS=80;      // memory cap on cached surah chunks
 let wholeCache={};        // id -> full Quran (only used by search)
 let collapsedG={};
+let hydrationObserver=null; // virtualization: lazily fills/empties ayah bodies
+let lastReadingSurah=null;  // to preserve scroll across same-surah re-render
 
 // User order for enabled tafsirs: array of IDs
 function getUserOrder(){return gs("userOrder",[]);}
@@ -579,6 +581,49 @@ function renderCenter(){
   return renderReading(el);
 }
 
+// Build the entries (Arabic + tafsirs + notes) for one ayah — used on demand by virtualization
+function buildAyahBody(aid,enabled,loaded){
+  let html="";
+  const arText=getArabicFromCache(ST.surah,aid);
+  if(ST.enabled._arabic&&arText)html+=`<div class="ab-entry"><div class="ab-entry-text arabic-main selectable">${arText}</div></div>`;
+  for(const t of enabled){
+    if(t.id==="_notes"){
+      const note=getNote(ST.surah,aid);
+      html+=`<div class="ab-entry" style="background:var(--note-bg)">
+        <div class="ab-entry-label" style="color:var(--note-color)">📝 Мои заметки</div>
+        <textarea class="ab-note-area" placeholder="Ваши мысли..." oninput="saveNote(${ST.surah},${aid},this.value)">${esc(note)}</textarea>
+      </div>`;
+    } else {
+      const text=loaded[t.id]?.[String(aid)]||null;
+      const isAr=t.lang==="ar";
+      html+=`<div class="ab-entry">
+        <div class="ab-entry-label">${esc(t.name)} <span class="lbl-ar">${t.nameAr||''}</span></div>
+        <div class="ab-entry-text selectable ${isAr?'rtl':''}">${text?esc(text):'<span style="color:var(--text-muted)">—</span>'}</div>
+      </div>`;
+    }
+  }
+  return html;
+}
+
+// Virtualization: hydrate ayah bodies near the viewport, empty those far away (cap DOM size)
+function setupHydration(area,enabled,loaded){
+  if(hydrationObserver){hydrationObserver.disconnect();hydrationObserver=null;}
+  const obs=new IntersectionObserver(entries=>{
+    for(const e of entries){
+      const el=e.target;
+      if(e.isIntersecting){
+        if(el.dataset.hyd!=="1"){el.innerHTML=buildAyahBody(+el.dataset.aid,enabled,loaded);el.dataset.hyd="1";el.style.minHeight="";}
+      }else if(el.dataset.hyd==="1"){
+        const h=el.offsetHeight;
+        if(h)el.style.minHeight=h+"px"; // freeze height so scroll position is preserved
+        el.innerHTML="";el.dataset.hyd="0";
+      }
+    }
+  },{root:area,rootMargin:"1200px 0px"});
+  area.querySelectorAll(".ab-body").forEach(b=>obs.observe(b));
+  hydrationObserver=obs;
+}
+
 async function renderReading(el){
   const ayahIds=getAyahIds(ST.surah);
   const enabled=getEnabledList();
@@ -602,41 +647,30 @@ async function renderReading(el){
   // Columns layout is unusable on phones — always stack vertically there
   const layout=isM()?"h":ST.layout;
   if(layout==="h"){
+    // Preserve the topmost visible ayah across a same-surah re-render (e.g. toggling a tafsir)
+    let anchorAid=null;
+    if(lastReadingSurah===ST.surah){
+      const top=area.getBoundingClientRect().top;
+      for(const b of area.querySelectorAll(".ayah-block")){
+        if(b.getBoundingClientRect().bottom>top+4){anchorAid=b.dataset.aid;break;}
+      }
+    }
+    // Lightweight skeleton: header + empty body per ayah; bodies hydrate on demand
     let html="";
     for(const aid of ayahIds){
       const hn=hasNote(ST.surah,aid);const ht=hasAT(ST.surah,aid);
-      const arText=getArabicFromCache(ST.surah,aid);
-      html+=`<div class="ayah-block"><div class="ab-head">
+      html+=`<div class="ayah-block" data-aid="${aid}"><div class="ab-head">
         <div style="display:flex;align-items:center;gap:8px"><span class="ab-num">${aid}</span>
           <button onclick="event.stopPropagation();openTagPopup(${aid},this)" style="background:${ht?'var(--tag-bg)':'var(--bg-card)'};border:1px solid ${ht?'var(--tag-color)':'var(--border)'};border-radius:4px;padding:1px 6px;cursor:pointer;font-size:11px;color:${ht?'var(--tag-color)':'var(--text-muted)'}" title="Теги">🏷${ht?' '+getATList(ST.surah,aid).length:''}</button>
         </div>
         <div class="ab-tag-dots">${hn?'<span class="ab-note-dot"></span>':''}</div>
-      </div>`;
-
-      if(ST.enabled._arabic&&arText){
-        html+=`<div class="ab-entry"><div class="ab-entry-text arabic-main selectable">${arText}</div></div>`;
-      }
-
-      for(const t of enabled){
-        if(t.id==="_notes"){
-          const note=getNote(ST.surah,aid);
-          html+=`<div class="ab-entry" style="background:var(--note-bg)">
-            <div class="ab-entry-label" style="color:var(--note-color)">📝 Мои заметки</div>
-            <textarea class="ab-note-area" placeholder="Ваши мысли..." oninput="saveNote(${ST.surah},${aid},this.value)">${esc(note)}</textarea>
-          </div>`;
-        } else {
-          const text=loaded[t.id]?.[String(aid)]||null;
-          const isAr=t.lang==="ar";
-          html+=`<div class="ab-entry">
-            <div class="ab-entry-label">${esc(t.name)} <span class="lbl-ar">${t.nameAr||''}</span></div>
-            <div class="ab-entry-text selectable ${isAr?'rtl':''}">${text?esc(text):'<span style="color:var(--text-muted)">—</span>'}</div>
-          </div>`;
-        }
-      }
-      html+=`</div>`;
+      </div><div class="ab-body" data-aid="${aid}" style="min-height:48px"></div></div>`;
     }
     area.innerHTML=html;
+    setupHydration(area,enabled,loaded);
+    if(anchorAid){const t=area.querySelector(`.ayah-block[data-aid="${anchorAid}"]`);if(t)t.scrollIntoView({block:"start"});}
   } else {
+    if(hydrationObserver){hydrationObserver.disconnect();hydrationObserver=null;}
     // Vertical columns
     const cols=[];
     if(ST.enabled._arabic)cols.push({id:"_arabic",name:"العربية",isArabic:true});
@@ -671,6 +705,7 @@ async function renderReading(el){
     html+=`</div>`;
     area.innerHTML=html;
   }
+  lastReadingSurah=ST.surah;
 }
 
 async function renderTagResults(el){
