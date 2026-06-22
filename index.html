@@ -1419,8 +1419,11 @@ function setNavUnit(u){ST.navUnit=u;ss("navUnit",u);renderBottomNav();}
 function navJumpValue(v){const u=ST.navUnit;
   if(u==="surah")navJumpSurah(v);else if(u==="page")navJumpPage(v);
   else if(u==="juz")navJumpJuz(v);else navJumpHizb(v);}
+// In mushaf mode only one page is shown, so the arrows always flip PAGES
+// regardless of the picker unit; the picker is for jumping to a surah/juz/etc.
+function stepUnit(){return ST.pageMode?"page":ST.navUnit;}
 function stepSection(dir){
-  const p=curPos(),u=ST.navUnit;
+  const p=curPos(),u=stepUnit();
   if(u==="surah")jumpTo({surah:Math.max(1,Math.min(114,p.surah+dir))});
   else if(u==="page")navJumpPage(p.page+dir);
   else if(u==="juz")navJumpJuz(Math.max(1,Math.min(30,p.juz+dir)));
@@ -1442,9 +1445,14 @@ function renderBottomNav(){
   else if(u==="juz"){opts=Array.from({length:30},(_,i)=>`<option value="${i+1}" ${i+1===p.juz?"selected":""}>Джуз ${i+1}</option>`).join("");idx=p.juz;max=30;}
   else{opts=Array.from({length:60},(_,i)=>`<option value="${i+1}" ${i+1===p.hizb?"selected":""}>Хизб ${i+1}</option>`).join("");idx=p.hizb;max=60;}
   const valSel=`<select class="bn-val" onchange="navJumpValue(this.value)">${opts}</select>`;
-  el.innerHTML=`<button class="bn-arrow" onclick="stepSection(-1)" ${idx<=1?"disabled":""} title="Предыдущий">‹</button>`+
+  // arrow bounds follow the STEP unit (page in mushaf mode), not the picker
+  const su=stepUnit();
+  const aidx=su==="surah"?p.surah:su==="page"?p.page:su==="juz"?p.juz:p.hizb;
+  const amax=su==="surah"?114:su==="page"?total:su==="juz"?30:60;
+  const tip=su==="page"?"страница":su==="surah"?"сура":su==="juz"?"джуз":"хизб";
+  el.innerHTML=`<button class="bn-arrow" onclick="stepSection(-1)" ${aidx<=1?"disabled":""} title="Предыдущая ${tip}">‹</button>`+
     `<span class="bn-mid">${unitSel}${valSel}</span>`+
-    `<button class="bn-arrow" onclick="stepSection(1)" ${idx>=max?"disabled":""} title="Следующий">›</button>`;
+    `<button class="bn-arrow" onclick="stepSection(1)" ${aidx>=amax?"disabled":""} title="Следующая ${tip}">›</button>`;
 }
 // horizontal swipe on the reading area → prev/next section (skip column layout's
 // own horizontal scrolling)
