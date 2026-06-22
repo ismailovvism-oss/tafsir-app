@@ -36,6 +36,7 @@ def main():
     pages = {}            # page -> {line -> [[glyph,page],...]}
     page_starts = {}      # page -> [{surah,ayah,line}]
     surah_start = {}      # surah -> {page,line}
+    surah_end = {}        # surah -> {page,line}  (last word of the last ayah)
     surah_index = []
 
     for s in range(1, 115):
@@ -62,6 +63,7 @@ def main():
                     surah_start[surah] = {"page": page, "line": line}
                     page_starts.setdefault(page, []).append(
                         {"surah": surah, "ayah": 1, "line": line})
+                surah_end[surah] = {"page": page, "line": line}  # keep last seen
             ayah_chunk[str(ayah)] = {"w": words, "e": end}
         with open(os.path.join(OUT, "surah", f"{s}.json"), "w", encoding="utf-8") as f:
             json.dump(ayah_chunk, f, ensure_ascii=False, separators=(",", ":"))
@@ -69,10 +71,16 @@ def main():
         print(f"surah {s:3d}: {len(verses)} ayat", flush=True)
         time.sleep(0.15)
 
+    # lines where a surah ends → rendered centered (not justified to full width)
+    center_lines = {}     # page -> set(lineNo)
+    for e in surah_end.values():
+        center_lines.setdefault(e["page"], set()).add(e["line"])
+
     # write page chunks
     for p, lines in pages.items():
         ordered = {str(ln): lines[ln] for ln in sorted(lines)}
-        out = {"lines": ordered, "starts": page_starts.get(p, [])}
+        out = {"lines": ordered, "starts": page_starts.get(p, []),
+               "center": sorted(center_lines.get(p, set()))}
         with open(os.path.join(OUT, "page", f"{p}.json"), "w", encoding="utf-8") as f:
             json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
 

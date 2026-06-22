@@ -243,7 +243,8 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 /* Mushaf page mode */
 .mushaf-shell{height:100%;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:18px 12px;background:var(--bg-alt)}
 .mushaf-page{width:100%;max-width:680px;background:#fdfcf5;color:#1a1a1a;border:1px solid #e6e0c8;border-radius:6px;box-shadow:0 2px 14px rgba(0,0,0,.08);padding:26px 30px}
-.mushaf-page .m-line{direction:rtl;text-align:justify;text-align-last:center;font-size:calc(28px*var(--rs,1));line-height:2.35}
+.mushaf-page .m-line{direction:rtl;text-align:justify;text-align-last:justify;font-size:calc(28px*var(--rs,1));line-height:2.35}
+.mushaf-page .m-line-c{text-align:center;text-align-last:center}
 .mushaf-page .m-line .qpc-w{display:inline-block}
 .m-empty{min-height:calc(28px*var(--rs,1)*1.2)}
 .m-surah-head{text-align:center;margin:10px 0;padding:6px 0;border-top:2px solid #c9a84c;border-bottom:2px solid #c9a84c}
@@ -1349,17 +1350,18 @@ async function loadQpcPage(p){
 async function togglePageMode(){
   ST.pageMode=!ST.pageMode;
   if(ST.pageMode){const meta=await loadQpcMeta();const st=meta?.surahStart?.[ST.surah];if(st)ST.mushafPage=st.page;}
-  renderCB();renderCenter();
+  renderCB();await renderCenter();
 }
 async function gotoPage(p){
   const meta=await loadQpcMeta();const total=meta?.pages||604;
   ST.mushafPage=Math.max(1,Math.min(total,p));
-  renderMushafPage(document.getElementById("centerBody"));
+  await renderMushafPage(document.getElementById("centerBody"));
 }
-// One physical mushaf line of glyphs (justified across the page like print)
-function mushafGlyphLine(pack,words){
+// One physical mushaf line of glyphs. Full lines justify edge-to-edge like the
+// printed page; surah-end (and framed pages 1-2) lines are centered, not stretched.
+function mushafGlyphLine(pack,words,centered){
   let h="";for(const wp of words){const g=wp[0],p=wp[1];ensurePageFont(pack,p);h+=`<span class="qpc-w" style="font-family:'${pack.fontFamily(p)}'">${g}</span> `;}
-  return `<div class="m-line selectable">${h}</div>`;
+  return `<div class="m-line${centered?' m-line-c':''} selectable">${h}</div>`;
 }
 async function renderMushafPage(el){
   const pack=PACKS.qpc1;
@@ -1377,6 +1379,8 @@ async function renderMushafPage(el){
       const hl=s.line-(hasB?2:1);if(hl>=1)headerAt[hl]=s.surah;
       if(hasB&&s.line-1>=1)basmalaAt[s.line-1]=s.surah;
     }
+    const centerSet=new Set(data.center||[]);
+    const framed=pg<=2; // first two pages are decorative/framed → centered, not justified
     let html="";
     for(let ln=1;ln<=15;ln++){
       if(headerAt[ln]!=null){
@@ -1385,7 +1389,7 @@ async function renderMushafPage(el){
       }else if(basmalaAt[ln]!=null){
         html+=`<div class="m-basmala">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>`;
       }else if(data.lines[String(ln)]){
-        html+=mushafGlyphLine(pack,data.lines[String(ln)]);
+        html+=mushafGlyphLine(pack,data.lines[String(ln)],framed||centerSet.has(ln));
       }else{
         html+=`<div class="m-line m-empty"></div>`;
       }
