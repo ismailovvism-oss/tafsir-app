@@ -243,8 +243,8 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 /* Mushaf page mode */
 .mushaf-shell{height:100%;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:18px 12px;background:var(--bg-alt)}
 .mushaf-page{width:100%;max-width:680px;background:#fdfcf5;color:#1a1a1a;border:1px solid #e6e0c8;border-radius:6px;box-shadow:0 2px 14px rgba(0,0,0,.08);padding:26px 30px}
-.mushaf-page .m-line{direction:rtl;text-align:justify;text-align-last:justify;font-size:calc(28px*var(--rs,1));line-height:2.35}
-.mushaf-page .m-line-c{text-align:center;text-align-last:center}
+.mushaf-page .m-line{direction:rtl;text-align:center;white-space:nowrap;font-size:calc(28px*var(--rs,1));line-height:2.35}
+.mushaf-page .m-inner{display:inline-block;white-space:nowrap}
 .mushaf-page .m-line .qpc-w{display:inline-block}
 .m-empty{min-height:calc(28px*var(--rs,1)*1.2)}
 .m-surah-head{text-align:center;margin:10px 0;padding:6px 0;border-top:2px solid #c9a84c;border-bottom:2px solid #c9a84c}
@@ -1357,11 +1357,33 @@ async function gotoPage(p){
   ST.mushafPage=Math.max(1,Math.min(total,p));
   await renderMushafPage(document.getElementById("centerBody"));
 }
-// One physical mushaf line of glyphs. Full lines justify edge-to-edge like the
-// printed page; surah-end (and framed pages 1-2) lines are centered, not stretched.
+// One physical mushaf line of glyphs. The glyphs carry no kashida, so a line at
+// a single size only fills ~80-95% of the column; instead of stretching the
+// SPACES (which makes "rivers"), fitMushafLines() scales each line's font-size up
+// to fill the column — words stay dense, spaces normal. Surah-end / framed lines
+// are centered and left unscaled.
 function mushafGlyphLine(pack,words,centered){
   let h="";for(const wp of words){const g=wp[0],p=wp[1];ensurePageFont(pack,p);h+=`<span class="qpc-w" style="font-family:'${pack.fontFamily(p)}'">${g}</span> `;}
-  return `<div class="m-line${centered?' m-line-c':''} selectable">${h}</div>`;
+  return `<div class="m-line${centered?' m-line-c':''} selectable"><span class="m-inner">${h}</span></div>`;
+}
+// Per-line fit-to-width: scale font-size so the line fills the column (no space
+// rivers, no letter-spacing). Cap the zoom so 2-3 word lines don't balloon;
+// lines that still fall short are centered as-is.
+const MUSHAF_MAX_FIT=1.5;
+function fitMushafLines(host){
+  for(const ln of host.querySelectorAll(".m-line:not(.m-line-c):not(.m-empty)")){
+    const inner=ln.querySelector(".m-inner");if(!inner)continue;
+    const colW=ln.clientWidth, natW=inner.scrollWidth;
+    if(!colW||!natW)continue;
+    const scale=colW/natW;
+    if(scale<=1.01)continue;                 // already ~full → leave
+    if(scale<=MUSHAF_MAX_FIT){
+      const cur=parseFloat(getComputedStyle(ln).fontSize);
+      ln.style.fontSize=(cur*scale*0.995)+"px"; // fill (tiny safety margin vs wrap)
+    }else{
+      ln.classList.add("m-line-c");           // too short to fill at cap → center
+    }
+  }
 }
 async function renderMushafPage(el){
   const pack=PACKS.qpc1;
@@ -1395,6 +1417,9 @@ async function renderMushafPage(el){
       }
     }
     host.innerHTML=html;
+    // measure & fit only after the page glyph font is actually loaded
+    try{await document.fonts.ready;}catch(e){}
+    fitMushafLines(host);
   }
   // page navigation (RTL: → previous page, ← next page, like a printed book)
   const nav=document.createElement("div");nav.className="mushaf-nav";
