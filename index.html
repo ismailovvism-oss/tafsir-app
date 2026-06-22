@@ -1312,7 +1312,7 @@ function toggleRPanel(){ST.rpanelOpen=!ST.rpanelOpen;document.getElementById("rp
 function closeRPanel(){if(ST.rpanelOpen)toggleRPanel();}
 function onSearch(q){ST.search=q;renderSB();}
 function setSbTab(t){ST.sbTab=t;document.getElementById("sbTabSurahs").classList.toggle("active",t==="surahs");document.getElementById("sbTabTags").classList.toggle("active",t==="tags");renderSB();}
-function goSurah(id){ST.surah=id;ST.selectedTag=null;if(ST.pageMode){const st=qpcMeta?.surahStart?.[id];if(st)ST.mushafPage=st.page;}if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}pushSurahHash(id);render();}
+function goSurah(id){ST.surah=id;ST.selectedTag=null;{const st=qpcMeta&&qpcMeta.surahStart&&qpcMeta.surahStart[id];if(st)ST.mushafPage=st.page;}if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}pushSurahHash(id);render();}
 function toggleLayout(){ST.layout=ST.layout==="h"?"v":"h";render();}
 
 // --- Reading display settings (⚙ Вид): sizes AR/RU, line spacing AR/RU, margins
@@ -1389,9 +1389,13 @@ function goAyah(surah,ayah){
   pushSurahHash(surah);render();
 }
 function jumpTo(t){ // {page?, surah?, ayah?}
+  // resolve a page for EVERY jump and keep ST.mushafPage as the position of
+  // record in both modes — otherwise prev/next loses where we are within a
+  // surah and juz/hizb/page stepping gets stuck
+  let pg=t.page;
+  if(pg==null&&t.surah){const st=qpcMeta&&qpcMeta.surahStart&&qpcMeta.surahStart[t.surah];pg=st?st.page:1;}
+  if(pg!=null)ST.mushafPage=pg;
   if(ST.pageMode){
-    let pg=t.page;
-    if(pg==null&&t.surah){const st=qpcMeta&&qpcMeta.surahStart&&qpcMeta.surahStart[t.surah];pg=st?st.page:1;}
     gotoPage(pg||1);
   }else{
     if(t.surah)goAyah(t.surah,t.ayah||1);
@@ -1407,8 +1411,8 @@ function setReadMode(toPage){if(!!ST.pageMode!==!!toPage)togglePageMode();}
 
 // --- bottom prev/next navigation by a chosen unit (+ swipe) ------------------
 function curPos(){
-  const page=ST.pageMode?ST.mushafPage:((qpcMeta&&qpcMeta.surahStart&&qpcMeta.surahStart[ST.surah]||{}).page||1);
-  const surah=ST.pageMode?((qpcMeta&&qpcMeta.pageStart&&qpcMeta.pageStart[ST.mushafPage]||{}).surah||1):ST.surah;
+  const page=ST.mushafPage||1; // tracked on every jump (both modes)
+  const surah=ST.pageMode?((qpcMeta&&qpcMeta.pageStart&&qpcMeta.pageStart[page]||{}).surah||1):ST.surah;
   return {page,surah,juz:juzForPage(page)||1,hizb:hizbForPage(page)||1};
 }
 function setNavUnit(u){ST.navUnit=u;ss("navUnit",u);renderBottomNav();}
