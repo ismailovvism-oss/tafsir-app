@@ -42,6 +42,7 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 .h-right{display:flex;align-items:center;gap:6px}
 .btn-i{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:inherit;border-radius:6px;padding:5px 9px;cursor:pointer;font-size:13px;transition:background .12s}
 .btn-i:hover{background:rgba(255,255,255,.15)}
+.btn-i.active{background:rgba(255,255,255,.22)}
 .theme-dots{display:flex;gap:4px;align-items:center}
 .theme-dot{width:18px;height:18px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border .15s}
 .theme-dot:hover,.theme-dot.active{border-color:rgba(255,255,255,.7)}
@@ -371,6 +372,7 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
     </div>
     <button class="btn-i" onclick="toggleSearch()" title="Поиск по текстам">🔍</button>
     <button class="btn-i" onclick="toggleRPanel()" title="Переводы и тафсиры">📚</button>
+    <button class="btn-i" id="fsBtn" onclick="toggleFullscreen()" title="Во весь экран">⛶</button>
   </div>
 </header>
 
@@ -1536,6 +1538,24 @@ window.addEventListener("popstate",()=>{
 // ============================================================
 function toggleSidebar(){ST.sidebarOpen=!ST.sidebarOpen;document.getElementById("sidebar").classList.toggle("collapsed",!ST.sidebarOpen);updateBackdrop();if(isM()){if(ST.sidebarOpen)pushOverlay();else consumeOverlay();}}
 function toggleRPanel(){ST.rpanelOpen=!ST.rpanelOpen;document.getElementById("rpanel").classList.toggle("collapsed",!ST.rpanelOpen);if(ST.rpanelOpen){renderRP();pushOverlay();}else consumeOverlay();updateBackdrop();}
+// Fullscreen reading (Fullscreen API; webkit-prefixed fallback for older WebKit)
+function toggleFullscreen(){
+  const d=document,el=d.documentElement;
+  const cur=d.fullscreenElement||d.webkitFullscreenElement;
+  if(!cur){
+    const req=el.requestFullscreen||el.webkitRequestFullscreen;
+    if(req)req.call(el);else alert("Полноэкранный режим не поддерживается этим браузером");
+  }else{
+    const exit=d.exitFullscreen||d.webkitExitFullscreen;
+    if(exit)exit.call(d);
+  }
+}
+function syncFsBtn(){
+  const b=document.getElementById("fsBtn");if(!b)return;
+  const on=!!(document.fullscreenElement||document.webkitFullscreenElement);
+  b.classList.toggle("active",on);
+  b.title=on?"Выйти из полноэкранного режима":"Во весь экран";
+}
 function closeRPanel(){if(ST.rpanelOpen)toggleRPanel();}
 function onSearch(q){ST.search=q;renderSB();}
 function setSbTab(t){ST.sbTab=t;document.getElementById("sbTabSurahs").classList.toggle("active",t==="surahs");document.getElementById("sbTabTags").classList.toggle("active",t==="tags");renderSB();}
@@ -1799,30 +1819,32 @@ function mushafGlyphLine(pack,words,centered){
   let h="";for(const wp of words){const g=wp[0],p=wp[1];ensurePageFont(pack,p);h+=`<span class="qpc-w" style="font-family:'${pack.fontFamily(p)}'">${g}</span> `;}
   return `<div class="m-line${centered?' m-line-c':''} selectable"><span class="m-inner">${h}</span></div>`;
 }
-// Per-line fit-to-width: scale font-size so the line exactly fits the column
-// (no space rivers, no letter-spacing). The scale runs BOTH ways — grow lines
-// that fall short, and SHRINK lines that are wider than the column (narrow /
-// portrait), so nothing overflows and gets clipped at the RTL (left) edge.
-// Growth is capped so 2-3 word lines don't balloon; shrink is never capped.
-// Recomputed from the live column width on every render and on resize.
+// Uniform page fit: every line on a page is scaled by the SAME factor, so all
+// glyphs are one size (no per-line "ballooning"). The factor is chosen so the
+// widest line exactly fills the column; shorter lines stay narrower and are
+// centered. Shrink (narrow screens) is uncapped; growth is capped so a page of
+// short lines doesn't balloon. Recomputed from the live column width on resize.
 const MUSHAF_MAX_FIT=1.5;
 const MUSHAF_FIT_SAFE=0.99; // keep final width strictly inside the column
 function fitMushafLines(host){
   const lines=host.querySelectorAll(".m-line:not(.m-empty)");
-  // reset to the CSS base size first, so each (re)fit measures the true natural
-  // width under the CURRENT column width — never a previously-scaled value
+  // reset to the CSS base size first, so we measure true natural widths under
+  // the CURRENT column width — never a previously-scaled value
   for(const ln of lines)ln.style.fontSize="";
   void host.offsetWidth; // force one reflow before measuring
+  // the widest (tightest) line dictates the single page-wide scale
+  let minRatio=Infinity;
   for(const ln of lines){
     const inner=ln.querySelector(".m-inner");if(!inner)continue;
     const colW=ln.clientWidth, natW=inner.scrollWidth;
     if(!colW||!natW)continue;
-    // regular lines may grow to fill (capped); surah-end/centered lines never
-    // grow — but ALL lines shrink if they would overflow the column
-    const maxGrow=ln.classList.contains("m-line-c")?1:MUSHAF_MAX_FIT;
-    const scale=Math.min(colW/natW,maxGrow)*MUSHAF_FIT_SAFE;
+    minRatio=Math.min(minRatio,colW/natW);
+  }
+  if(!isFinite(minRatio))return;
+  const scale=Math.min(minRatio,MUSHAF_MAX_FIT)*MUSHAF_FIT_SAFE;
+  for(const ln of lines){
     const base=parseFloat(getComputedStyle(ln).fontSize);
-    ln.style.fontSize=(base*scale)+"px"; // width = natW*scale ≤ colW*SAFE < colW
+    ln.style.fontSize=(base*scale)+"px"; // same kegl for every line on the page
   }
 }
 async function renderMushafPage(el){
@@ -2066,6 +2088,13 @@ ST.navUnit=gs("navUnit","surah");
 ST.wbwMode=gs("wbwMode",false); // word-by-word reading layer (пословный перевод)
 loadQpcMeta(); // preload mushaf page index (surah → page) for page-mode jumps
 setupSwipe();  // horizontal swipe → prev/next section
+// Fullscreen: hide the button where the API is unavailable (e.g. iOS Safari),
+// and keep its state in sync when the user exits via the system gesture/Esc.
+if(!(document.fullscreenEnabled||document.webkitFullscreenEnabled)){
+  const fb=document.getElementById("fsBtn");if(fb)fb.style.display="none";
+}
+document.addEventListener("fullscreenchange",syncFsBtn);
+document.addEventListener("webkitfullscreenchange",syncFsBtn);
 // word/grammar cards: open on tap of a [[…]] word OR a word with data-loc
 // (corpus card), dismiss on outside tap/scroll
 document.addEventListener("click",e=>{
