@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
 """Build the word-by-word translation + morphology layers for the tafsir app.
 
-Two data layers, both keyed by the SAME word address "surah:ayah:word"
-(e.g. "2:4:10"), so a clickable word only needs to carry its address and the
-card / gloss are pulled from these files on the fly:
+Two data layers, both keyed by the word address "surah:ayah:word" (e.g.
+"2:4:10") and split PER SURAH (like data/qpc/v1/surah/<s>.json) so a phone
+only loads the surah being read. A clickable word carries only its address;
+the card / gloss are pulled from these chunks on the fly. Shape {ayah:{word:..}}:
 
-  data/wbw/words.json  -> per word: {"en": <gloss>, "ru": <gloss>}
-  data/wbw/morph.json  -> per word: [ {segment}, {segment}, ... ]
+  data/wbw/words/<s>.json  -> per word: {"en": <gloss>, "ru_ref"?: <ref gloss>}
+  data/wbw/morph/<s>.json  -> per word: [ {segment}, {segment}, ... ]
+
+"en"     is shown verbatim under each word (display-only, CC BY-NC-ND).
+"ru_ref" is the data-quran Russian gloss kept ONLY as a hidden cross-check
+         reference (low quality) — never shown as our translation.
+"ru"     (our real Russian gloss) is a SEPARATE later pipeline (Step 4) and is
+         intentionally NOT produced here; "ru" and "ru_ref" are never mixed.
 
 A segment looks like (stem carries lemma/root/grammar, affixes are lean):
 
@@ -58,10 +65,16 @@ Morphology (segments, part of speech, root, lemma, grammar):
   Arabic-script edition: https://github.com/mustafa0x/quran-morphology
   Licensed under the GNU General Public License.
 
-Word-by-word translation (English & Russian glosses):
+Word-by-word translation (English gloss shown under each word):
   data-quran — https://github.com/hablullah/data-quran
   Collected by the Hablullah team from quran.com / Tanzil / QuranEnc.
   Licensed under CC BY-NC-ND 4.0.
+  The English gloss is displayed VERBATIM (no modifications), non-commercially,
+  with attribution — as required by the No-Derivatives term.
+
+  The Russian gloss from this source is kept only as a hidden reference field
+  ("ru_ref") for cross-checking; it is NOT shown to users and NOT redistributed
+  as a modified/derivative dataset.
 
 This attribution must be kept and shown to users (corpus.quran.com requires a
 link back to the source).
@@ -197,30 +210,52 @@ def main():
     assert n == len(en) == len(ru) == 77429, \
         f"word count mismatch: corpus={n} en={len(en)} ru={len(ru)}"
 
-    # global index (1-based) -> address, to attach the aligned glosses.
-    # data-quran marks gaps (mostly in the Russian set) with "[[MISSING]]";
-    # blank them so the UI can fall back to the English gloss.
+    # --- attach glosses ----------------------------------------------------
+    # The English gloss is shown verbatim (CC BY-NC-ND: display only, no edits).
+    # The Russian gloss from data-quran is LOW QUALITY (translated via English,
+    # no cases, no settled Quranic terminology) — it is kept ONLY as a hidden
+    # reference field "ru_ref" for cross-checking, never shown as "our" Russian.
+    # Our real Russian gloss ("ru") is a SEPARATE later pipeline (Step 4) and is
+    # intentionally left out here — "ru" and "ru_ref" must never be mixed.
+    # data-quran marks gaps with "[[MISSING]]"; drop those so nothing leaks.
     def clean(v):
         return "" if v == "[[MISSING]]" else v
     words = {}
     for i, key in enumerate(order, start=1):
-        words[key] = {"en": clean(en[str(i)]), "ru": clean(ru[str(i)])}
+        rec = {"en": clean(en[str(i)])}
+        ru_ref = clean(ru[str(i)])
+        if ru_ref:
+            rec["ru_ref"] = ru_ref
+        words[key] = rec
 
-    os.makedirs(OUT_DIR, exist_ok=True)
-    with open(os.path.join(OUT_DIR, "words.json"), "w", encoding="utf-8") as f:
-        json.dump(words, f, ensure_ascii=False, separators=(",", ":"))
-    with open(os.path.join(OUT_DIR, "morph.json"), "w", encoding="utf-8") as f:
-        json.dump(morph, f, ensure_ascii=False, separators=(",", ":"))
+    # --- split per surah (like data/qpc/v1/surah/<s>.json) -----------------
+    # Single-file morph.json was ~12.6 MB; per-surah chunks load lazily so a
+    # phone only fetches the surah being read. Shape: {ayah:{word:value}}.
+    words_by_surah, morph_by_surah = {}, {}
+    for key in order:
+        s, a, w = key.split(":")
+        words_by_surah.setdefault(s, {}).setdefault(a, {})[w] = words[key]
+        morph_by_surah.setdefault(s, {}).setdefault(a, {})[w] = morph[key]
+
+    words_dir = os.path.join(OUT_DIR, "words")
+    morph_dir = os.path.join(OUT_DIR, "morph")
+    os.makedirs(words_dir, exist_ok=True)
+    os.makedirs(morph_dir, exist_ok=True)
+    for s in words_by_surah:
+        with open(os.path.join(words_dir, f"{s}.json"), "w", encoding="utf-8") as f:
+            json.dump(words_by_surah[s], f, ensure_ascii=False, separators=(",", ":"))
+        with open(os.path.join(morph_dir, f"{s}.json"), "w", encoding="utf-8") as f:
+            json.dump(morph_by_surah[s], f, ensure_ascii=False, separators=(",", ":"))
     with open(os.path.join(OUT_DIR, "ATTRIBUTION.txt"), "w", encoding="utf-8") as f:
         f.write(ATTRIBUTION)
 
     # --- verification ------------------------------------------------------
     assert len(words) == len(morph) == 77429
-    print(f"wrote data/wbw/words.json  ({len(words)} keys)")
-    print(f"wrote data/wbw/morph.json  ({len(morph)} keys)")
+    print(f"wrote {len(words_by_surah)} surah chunks to data/wbw/words/ and data/wbw/morph/")
+    print(f"total words: {len(words)}  (== {len(morph)} == 77429)")
     print("\nsample 2:4:10")
-    print("  en:", words["2:4:10"]["en"])
-    print("  ru:", words["2:4:10"]["ru"])
+    print("  en:    ", words["2:4:10"]["en"])
+    print("  ru_ref:", words["2:4:10"].get("ru_ref", ""))
     for seg in morph["2:4:10"]:
         print("  seg:", json.dumps(seg, ensure_ascii=False))
 

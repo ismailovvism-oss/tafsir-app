@@ -694,21 +694,24 @@ function hideWordCard(){const el=document.getElementById("wordCard");if(el)el.st
 
 // ============================================================
 // WORD-BY-WORD LAYER + MORPHOLOGY CARD (from the Quranic corpus)
-// Two data layers keyed by word address "surah:ayah:word":
-//   data/wbw/words.json -> {"2:4:10":{"en":..,"ru":..}}   (gloss)
-//   data/wbw/morph.json -> {"2:4:10":[{segment},...]}      (grammar card)
+// Two PER-SURAH data layers, addressed by word "surah:ayah:word":
+//   data/wbw/words/<s>.json -> {ayah:{word:{"en":..,"ru_ref"?:..}}}  (gloss)
+//   data/wbw/morph/<s>.json -> {ayah:{word:[{segment},...]}}         (grammar)
 // A clickable word carries only its address (data-loc); content is pulled here.
+// Chunks load lazily per surah (single 12.6 MB file was too heavy on mobile).
+//   "en"     — shown verbatim under each word (display-only, CC BY-NC-ND)
+//   "ru_ref" — hidden cross-check reference only; NOT shown, NOT our translation
 // ============================================================
-let wbwWords=null,wbwMorph=null,_wbwWordsP=null,_wbwMorphP=null;
-function loadWbwWords(){
-  if(wbwWords)return Promise.resolve(wbwWords);
-  if(!_wbwWordsP)_wbwWordsP=fetch(`${DATA_PATH}wbw/words.json`).then(r=>r.ok?r.json():{}).then(d=>wbwWords=d).catch(()=>wbwWords={});
-  return _wbwWordsP;
+const wbwWordsCache={},wbwMorphCache={}; // surah -> {ayah:{word:...}}
+function loadWbwWords(surah){
+  if(wbwWordsCache[surah]!==undefined)return Promise.resolve(wbwWordsCache[surah]);
+  return fetch(`${DATA_PATH}wbw/words/${surah}.json`).then(r=>r.ok?r.json():null)
+    .then(d=>wbwWordsCache[surah]=d).catch(()=>wbwWordsCache[surah]=null);
 }
-function loadWbwMorph(){
-  if(wbwMorph)return Promise.resolve(wbwMorph);
-  if(!_wbwMorphP)_wbwMorphP=fetch(`${DATA_PATH}wbw/morph.json`).then(r=>r.ok?r.json():{}).then(d=>wbwMorph=d).catch(()=>wbwMorph={});
-  return _wbwMorphP;
+function loadWbwMorph(surah){
+  if(wbwMorphCache[surah]!==undefined)return Promise.resolve(wbwMorphCache[surah]);
+  return fetch(`${DATA_PATH}wbw/morph/${surah}.json`).then(r=>r.ok?r.json():null)
+    .then(d=>wbwMorphCache[surah]=d).catch(()=>wbwMorphCache[surah]=null);
 }
 // Part-of-speech labels (Russian). Основные теги корпуса; терминологию проверит
 // Исмаил. Неизвестный тег показывается как есть.
@@ -749,14 +752,14 @@ const VOICE_RU={ACT:"действ. залог",PASS:"страд. залог"};
 const PERSON_RU={"1":"1-е лицо","2":"2-е лицо","3":"3-е лицо"};
 const ROMAN=["","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII"];
 function posLabel(pos){return POS_RU[pos]||pos;}
-// Build the grammar card HTML for a word address from the loaded corpus.
-function renderMorphCard(loc){
-  const segs=wbwMorph&&wbwMorph[loc];
+// Build the grammar card HTML from a word's segments. The header shows the
+// VERBATIM English gloss (display-only, CC BY-NC-ND); the body is Russian
+// grammar from the corpus. The data-quran "ru_ref" is never shown here.
+function renderMorphCard(segs,gloss){
   if(!segs||!segs.length)return "";
-  const gloss=wbwWords&&wbwWords[loc];
   let h="";
-  if(gloss&&(gloss.en||gloss.ru))
-    h+=`<div style="font-size:12px;color:var(--text-sec);margin-bottom:6px">${esc(gloss.ru||gloss.en)}</div>`;
+  if(gloss&&gloss.en)
+    h+=`<div style="font-size:12px;color:var(--text-sec);margin-bottom:6px">${esc(gloss.en)}</div>`;
   for(const s of segs){
     const gram=[];
     if(s.aspect)gram.push(ASPECT_RU[s.aspect]||s.aspect);
@@ -785,11 +788,15 @@ function renderMorphCard(loc){
   h+=`<div class="mcard-foot">Разбор: <a href="http://corpus.quran.com" target="_blank" rel="noopener">Quranic Arabic Corpus</a></div>`;
   return h;
 }
-// Open the corpus card for a word element (data-loc); loads morph lazily.
+// Open the corpus card for a word element (data-loc="surah:ayah:word"); loads
+// that surah's morph/words chunks lazily (cached after first use).
 async function openMorphCard(el){
   const loc=el.dataset.loc;if(!loc)return;
-  await loadWbwMorph();await loadWbwWords();
-  const html=renderMorphCard(loc);
+  const[s,a,w]=loc.split(":");
+  const[morph,words]=await Promise.all([loadWbwMorph(s),loadWbwWords(s)]);
+  const segs=morph&&morph[a]&&morph[a][w];
+  const gloss=words&&words[a]&&words[a][w];
+  const html=renderMorphCard(segs,gloss);
   if(html)showWordCardEl(el,html);
 }
 
@@ -1870,26 +1877,28 @@ async function renderMushafPage(el){
 
 // --- Word-by-word mode: grid of words + per-word gloss ----------------------
 // Each word is a QPC glyph (reused from the per-surah pack data, aligned 1:1
-// with the corpus by position) carrying data-loc="surah:ayah:word"; the English
-// gloss comes from words.json. Tapping a word opens the corpus grammar card.
+// with the corpus by position) carrying data-loc="surah:ayah:word". The gloss
+// shown is the VERBATIM English gloss (display-only); tapping a word opens the
+// corpus grammar card (Russian). data/wbw chunks load lazily per surah.
 async function renderWbw(el){
   const surah=ST.surah;
   const ayahIds=getAyahIds(surah);
   el.innerHTML=`<div class="wbw" id="wbwArea"><div style="text-align:center;color:var(--text-muted);padding:30px">Загрузка…</div></div>`;
-  loadWbwMorph(); // warm the grammar-card data so the first tap is instant
+  loadWbwMorph(surah); // warm this surah's grammar data so the first tap is instant
   const pack=PACKS.qpc1;
-  const [qpc]=await Promise.all([loadPackSurah("qpc1",surah),loadWbwWords()]);
+  const [qpc,words]=await Promise.all([loadPackSurah("qpc1",surah),loadWbwWords(surah)]);
   const area=document.getElementById("wbwArea");
   if(!area)return;
   if(!qpc){area.innerHTML=`<div style="text-align:center;color:var(--text-muted);padding:30px">Нет пословных данных для этой суры</div>`;return;}
   let html="";
   for(const aid of ayahIds){
     const entry=qpc[String(aid)];if(!entry)continue;
+    const wg=words&&words[String(aid)];
     let cells="";
     entry.w.forEach((wp,i)=>{
       const pos=i+1,loc=`${surah}:${aid}:${pos}`,g=wp[0],p=wp[1];
       ensurePageFont(pack,p);
-      const gl=(wbwWords&&wbwWords[loc]&&wbwWords[loc].en)||"";
+      const gl=(wg&&wg[String(pos)]&&wg[String(pos)].en)||"";
       cells+=`<span class="wbw-cell" data-loc="${loc}">
         <span class="wbw-ar" style="font-family:'${pack.fontFamily(p)}'">${g}</span>
         <span class="wbw-gl">${esc(gl)}</span></span>`;
@@ -1900,7 +1909,7 @@ async function renderWbw(el){
       <div class="wbw-head"><span class="wbw-num">${surah}:${aid}</span></div>
       <div class="wbw-grid">${cells}${endG}</div></div>`;
   }
-  html+=`<div class="wbw-attr">Пословный перевод: <a href="https://github.com/hablullah/data-quran" target="_blank" rel="noopener">data-quran</a> (CC BY-NC-ND). Грамматический разбор: <a href="http://corpus.quran.com" target="_blank" rel="noopener">Quranic Arabic Corpus</a>.</div>`;
+  html+=`<div class="wbw-attr">Пословный глосс (английский, дословно): <a href="https://github.com/hablullah/data-quran" target="_blank" rel="noopener">data-quran</a> (CC BY-NC-ND, без изменений). Грамматический разбор: <a href="http://corpus.quran.com" target="_blank" rel="noopener">Quranic Arabic Corpus</a> (GPL).</div>`;
   area.innerHTML=html;
   if(ST.scrollToAyah!=null){const t=area.querySelector(`.wbw-ayah[data-aid="${ST.scrollToAyah}"]`);if(t)t.scrollIntoView({block:"start"});ST.scrollToAyah=null;}
 }
