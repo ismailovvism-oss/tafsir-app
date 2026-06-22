@@ -235,6 +235,23 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 [data-arfont="amiri"] .arabic-main,
 [data-arfont="amiri"] .ab-entry-text.rtl,
 [data-arfont="amiri"] .col-ayah.rtl{font-family:'Amiri Quran','Noto Naskh Arabic',serif;line-height:2.1}
+/* QPC v1 — постраничные глифы печатного мусхафа Мадани (per-page fonts, lazy) */
+.qpc-line{direction:rtl;text-align:justify;text-align-last:center;line-height:2.3;font-size:calc(30px*var(--rs,1));color:var(--text)}
+.qpc-w{display:inline-block}
+.qpc-end{display:inline-block;margin:0 1px}
+@media(max-width:768px){.qpc-line{font-size:calc(25px*var(--rs,1))}}
+/* Mushaf page mode */
+.mushaf-shell{height:100%;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:18px 12px;background:var(--bg-alt)}
+.mushaf-page{width:100%;max-width:680px;background:#fdfcf5;color:#1a1a1a;border:1px solid #e6e0c8;border-radius:6px;box-shadow:0 2px 14px rgba(0,0,0,.08);padding:26px 30px}
+.mushaf-page .m-line{direction:rtl;text-align:justify;text-align-last:justify;font-size:calc(28px*var(--rs,1));line-height:2.35}
+.mushaf-page .m-line .qpc-w{display:inline-block}
+.m-empty{min-height:calc(28px*var(--rs,1)*1.2)}
+.m-surah-head{text-align:center;margin:10px 0;padding:6px 0;border-top:2px solid #c9a84c;border-bottom:2px solid #c9a84c}
+.m-surah-name{font-family:'KFGQPC Uthmanic','Amiri Quran',serif;font-size:calc(24px*var(--rs,1));color:#7a5c12;direction:rtl}
+.m-basmala{text-align:center;direction:rtl;font-family:'KFGQPC Uthmanic','Amiri Quran',serif;font-size:calc(24px*var(--rs,1));line-height:2;color:#1a1a1a;margin:4px 0}
+.mushaf-nav{display:flex;align-items:center;justify-content:center;gap:14px;padding:14px;flex:none}
+.m-pageno{font-size:12px;color:var(--text-sec)}
+@media(max-width:768px){.mushaf-page{padding:18px 14px}.mushaf-page .m-line,.m-surah-name,.m-basmala{font-size:calc(22px*var(--rs,1))}}
 
 /* SEARCH */
 .search-panel{position:fixed;top:48px;left:50%;transform:translateX(-50%);width:600px;max-width:90vw;max-height:70vh;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 40px rgba(0,0,0,.2);z-index:50;display:flex;flex-direction:column;overflow:hidden}
@@ -420,7 +437,9 @@ let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,
   theme:"green",
   rpFilter:"",
   fontScale:1,       // reading text scale (A−/A+)
-  arFont:"naskh",    // Arabic typeface: "naskh" | "kufi"
+  arFont:"naskh",    // Arabic typeface: "naskh" | "hafs" | "amiri" | "qpc1" | "kufi"
+  pageMode:false,    // mushaf page view (faithful page-by-page QPC layout)
+  mushafPage:1,      // current page in mushaf page mode (1..604)
   facets:{lang:[],kind:[],era:[],tags:[]}, // active facet filters in the right panel
   expandedGroups:{}, // which groups show all items (not just 5)
 };
@@ -621,13 +640,16 @@ function renderCB(){
   const layoutBtn=`<button class="btn-s layout-btn ${ST.layout==='v'?'active':''}" onclick="toggleLayout()" title="Колонки / Список">${ST.layout==='h'?'▤ Колонки':'▥ Список'}</button>`;
   const fontBtns=`<button class="btn-s" onclick="bumpFont(-1)" title="Меньше шрифт">A−</button><button class="btn-s" onclick="bumpFont(1)" title="Больше шрифт">A+</button>`;
   const arFontBtn=`<button class="btn-s ${ST.arFont!=='naskh'?'active':''}" onclick="toggleArFont()" title="Шрифт арабского — ${AR_FONT_TITLES[ST.arFont]||''} (нажмите, чтобы сменить)" style="font-family:'Amiri',serif;font-size:14px">${AR_FONT_LABELS[ST.arFont]||'نسخ'}</button>`;
-  bar.innerHTML=`<div class="cb-left"><h2>${su.ru} <span class="ar">${su.name}</span></h2></div><div class="cb-right">${arFontBtn}${fontBtns}${layoutBtn}</div>`;
+  const pageBtn=`<button class="btn-s ${ST.pageMode?'active':''}" onclick="togglePageMode()" title="Режим страницы мусхафа (печатный вид)">📖 Мусхаф</button>`;
+  if(ST.pageMode){bar.innerHTML=`<div class="cb-left"><h2>📖 Мусхаф Мадани</h2></div><div class="cb-right">${pageBtn}</div>`;return;}
+  bar.innerHTML=`<div class="cb-left"><h2>${su.ru} <span class="ar">${su.name}</span></h2></div><div class="cb-right">${arFontBtn}${pageBtn}${fontBtns}${layoutBtn}</div>`;
 }
 
 // -- CENTER BODY --
 function renderCenter(){
   const el=document.getElementById("centerBody");
   if(ST.selectedTag)return renderTagResults(el);
+  if(ST.pageMode)return renderMushafPage(el);
   return renderReading(el);
 }
 
@@ -637,10 +659,16 @@ function buildAyahBody(aid,enabled,loaded){
   // Arabic Quran-text variants (с огласовками / без огласовок / …) — each as its own line
   const qts=getEnabledQuranTexts();
   const multiQ=qts.length>1;
+  const pack=activePack();const qpcData=loaded["__qpc"];
   for(const qt of qts){
+    const lbl=multiQ?`<div class="ab-entry-label">${esc(qt.name)} <span class="lbl-ar">${qt.nameAr||''}</span></div>`:"";
+    // Печатный мусхаф (QPC): главный огласованный текст рисуем глифами страницы
+    if(pack&&qt.id==="_arabic"&&qpcData&&qpcData[String(aid)]){
+      html+=`<div class="ab-entry">${lbl}${renderPackAyah(pack,qpcData[String(aid)])}</div>`;
+      continue;
+    }
     const at=loaded[qt.id]?.[String(aid)];
     if(!at)continue;
-    const lbl=multiQ?`<div class="ab-entry-label">${esc(qt.name)} <span class="lbl-ar">${qt.nameAr||''}</span></div>`:"";
     html+=`<div class="ab-entry">${lbl}<div class="ab-entry-text arabic-main selectable">${at}</div></div>`;
   }
   for(const t of enabled){
@@ -697,6 +725,8 @@ async function renderReading(el){
   const loaded={};
   const toLoad=[...enabled.filter(t=>t.id!=="_notes"),...quranTexts];
   await Promise.all(toLoad.map(async t=>{loaded[t.id]=await loadChunk(t.id,ST.surah);}));
+  // Mushaf pack glyphs (QPC v1 …) for the main Arabic line, if a pack font is active
+  if(activePack())loaded["__qpc"]=await loadPackSurah(ST.arFont,ST.surah);
 
   const area=document.getElementById("readingArea");
   if(!area)return;
@@ -746,8 +776,13 @@ async function renderReading(el){
       html+=`<div class="col-col"><div class="col-head">${esc(col.name)}</div>`;
       for(const aid of ayahIds){
         if(col.isArabic){
-          const arText=col.data?.[String(aid)]||"";
-          html+=`<div class="col-ayah arabic-main selectable">${arText||'—'}</div>`;
+          const pk=activePack();const qd=loaded["__qpc"];
+          if(pk&&col.id==="_arabic"&&qd&&qd[String(aid)]){
+            html+=`<div class="col-ayah">${renderPackAyah(pk,qd[String(aid)])}</div>`;
+          }else{
+            const arText=col.data?.[String(aid)]||"";
+            html+=`<div class="col-ayah arabic-main selectable">${arText||'—'}</div>`;
+          }
         } else if(col.isNote){
           const note=getNote(ST.surah,aid);
           html+=`<div class="col-ayah" style="background:var(--note-bg);padding:4px 6px"><textarea class="ab-note-area" style="min-height:30px;font-size:11px" placeholder="..." oninput="saveNote(${ST.surah},${aid},this.value)">${esc(note)}</textarea></div>`;
@@ -1233,7 +1268,7 @@ function toggleRPanel(){ST.rpanelOpen=!ST.rpanelOpen;document.getElementById("rp
 function closeRPanel(){if(ST.rpanelOpen)toggleRPanel();}
 function onSearch(q){ST.search=q;renderSB();}
 function setSbTab(t){ST.sbTab=t;document.getElementById("sbTabSurahs").classList.toggle("active",t==="surahs");document.getElementById("sbTabTags").classList.toggle("active",t==="tags");renderSB();}
-function goSurah(id){ST.surah=id;ST.selectedTag=null;if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}pushSurahHash(id);render();}
+function goSurah(id){ST.surah=id;ST.selectedTag=null;if(ST.pageMode){const st=qpcMeta?.surahStart?.[id];if(st)ST.mushafPage=st.page;}if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}pushSurahHash(id);render();}
 function toggleLayout(){ST.layout=ST.layout==="h"?"v":"h";render();}
 
 // Reading font scale (persisted)
@@ -1246,16 +1281,123 @@ function bumpFont(dir){
 
 // Arabic typeface: Naskh (default) / Kufi (persisted)
 function applyArFont(){document.body.setAttribute("data-arfont",ST.arFont);}
-// Cycle: naskh → hafs (мусхаф Мадани) → amiri (мусхафный насх) → kufi → naskh
-const AR_FONTS=["naskh","hafs","amiri","kufi"];
-const AR_FONT_LABELS={naskh:"نسخ",hafs:"مصحف",amiri:"أميري",kufi:"كوفي"};
-const AR_FONT_TITLES={naskh:"Насх (по умолчанию)",hafs:"Мусхаф Мадани (Усман Таха)",amiri:"Мусхафный насх (Amiri Quran)",kufi:"Куфи"};
+// Cycle: naskh → hafs (мусхаф Мадани) → amiri (мусхафный насх) → qpc1 (печатный мусхаф) → kufi → naskh
+const AR_FONTS=["naskh","hafs","amiri","qpc1","kufi"];
+const AR_FONT_LABELS={naskh:"نسخ",hafs:"مصحف",amiri:"أميري",qpc1:"المصحف",kufi:"كوفي"};
+const AR_FONT_TITLES={naskh:"Насх (по умолчанию)",hafs:"Мусхаф Мадани (Усман Таха)",amiri:"Мусхафный насх (Amiri Quran)",qpc1:"Печатный мусхаф Мадани (QPC v1 — постраничные глифы)",kufi:"Куфи"};
 function toggleArFont(){
+  const prev=ST.arFont;
   const i=AR_FONTS.indexOf(ST.arFont);
   ST.arFont=AR_FONTS[(i+1)%AR_FONTS.length];
   ss("arFont",ST.arFont);
   applyArFont();
   renderCB();
+  // QPC packs swap content (glyphs + per-page fonts), not just a CSS font-family → re-render
+  if(prev==="qpc1"||ST.arFont==="qpc1")renderCenter();
+}
+
+// --- Mushaf packs: page-based glyph fonts (e.g. QPC v1) ---------------------
+// A "pack" renders each word as a Private Use Area glyph that only displays with
+// that page's own font. Registry is extensible: add Indopak / Warsh / v2 here.
+const PACKS={
+  qpc1:{id:"qpc1",type:"page-font",dataDir:"qpc/v1/surah",pageDir:"qpc/v1/page",meta:"qpc/v1/meta.json",
+    fontFamily:p=>`qpc1-p${p}`,fontUrl:p=>`fonts/qpc-v1/p${p}.woff2`}
+};
+function activePack(){return PACKS[ST.arFont]||null;}
+// Lazily inject one @font-face per page the first time that page is shown.
+const _packFontsLoaded=new Set();
+function ensurePageFont(pack,page){
+  const key=pack.id+":"+page;
+  if(_packFontsLoaded.has(key))return;
+  _packFontsLoaded.add(key);
+  const st=document.createElement("style");
+  st.textContent=`@font-face{font-family:'${pack.fontFamily(page)}';src:url('${pack.fontUrl(page)}') format('woff2');font-display:swap}`;
+  document.head.appendChild(st);
+}
+// Per-surah glyph data: {ayah:{"w":[[glyph,page],...],"e":[glyph,page]|null}}
+const qpcCache={};
+async function loadPackSurah(packId,surah){
+  const k=packId+"|"+surah;
+  if(qpcCache[k]!==undefined)return qpcCache[k];
+  const pack=PACKS[packId];
+  try{const r=await fetch(`${DATA_PATH}${pack.dataDir}/${surah}.json`);qpcCache[k]=r.ok?await r.json():null;}
+  catch(e){qpcCache[k]=null;}
+  return qpcCache[k];
+}
+// Build the glyph HTML for one ayah; words stay individually selectable.
+function renderPackAyah(pack,entry){
+  if(!entry)return "";
+  let html="";
+  for(const wp of entry.w){const g=wp[0],p=wp[1];ensurePageFont(pack,p);html+=`<span class="qpc-w" style="font-family:'${pack.fontFamily(p)}'">${g}</span> `;}
+  if(entry.e){const g=entry.e[0],p=entry.e[1];ensurePageFont(pack,p);html+=`<span class="qpc-end" style="font-family:'${pack.fontFamily(p)}'">${g}</span>`;}
+  return `<div class="qpc-line selectable">${html}</div>`;
+}
+
+// --- Mushaf page mode: faithful page-by-page layout (QPC v1) ----------------
+let qpcMeta=null;
+async function loadQpcMeta(){
+  if(qpcMeta)return qpcMeta;
+  try{const r=await fetch(`${DATA_PATH}qpc/v1/meta.json`);qpcMeta=r.ok?await r.json():null;}catch(e){qpcMeta=null;}
+  return qpcMeta;
+}
+const qpcPageCache={};
+async function loadQpcPage(p){
+  if(qpcPageCache[p]!==undefined)return qpcPageCache[p];
+  try{const r=await fetch(`${DATA_PATH}qpc/v1/page/${p}.json`);qpcPageCache[p]=r.ok?await r.json():null;}catch(e){qpcPageCache[p]=null;}
+  return qpcPageCache[p];
+}
+async function togglePageMode(){
+  ST.pageMode=!ST.pageMode;
+  if(ST.pageMode){const meta=await loadQpcMeta();const st=meta?.surahStart?.[ST.surah];if(st)ST.mushafPage=st.page;}
+  renderCB();renderCenter();
+}
+async function gotoPage(p){
+  const meta=await loadQpcMeta();const total=meta?.pages||604;
+  ST.mushafPage=Math.max(1,Math.min(total,p));
+  renderMushafPage(document.getElementById("centerBody"));
+}
+// One physical mushaf line of glyphs (justified across the page like print)
+function mushafGlyphLine(pack,words){
+  let h="";for(const wp of words){const g=wp[0],p=wp[1];ensurePageFont(pack,p);h+=`<span class="qpc-w" style="font-family:'${pack.fontFamily(p)}'">${g}</span> `;}
+  return `<div class="m-line selectable">${h}</div>`;
+}
+async function renderMushafPage(el){
+  const pack=PACKS.qpc1;
+  const meta=await loadQpcMeta();const total=meta?.pages||604;
+  let pg=Math.max(1,Math.min(total,ST.mushafPage||1));ST.mushafPage=pg;
+  el.innerHTML=`<div class="mushaf-shell"><div id="mushafPage" class="mushaf-page"><div style="text-align:center;color:var(--text-muted);padding:40px">Загрузка страницы ${pg}…</div></div></div>`;
+  const data=await loadQpcPage(pg);
+  const host=document.getElementById("mushafPage");if(!host)return;
+  if(!data){host.innerHTML=`<div style="padding:40px;text-align:center;color:var(--text-muted)">Нет данных для страницы ${pg}</div>`;}
+  else{
+    // header & basmala occupy their own lines above each surah's first ayah line
+    const headerAt={},basmalaAt={};
+    for(const s of (data.starts||[])){
+      const hasB=s.surah!==1&&s.surah!==9;
+      const hl=s.line-(hasB?2:1);if(hl>=1)headerAt[hl]=s.surah;
+      if(hasB&&s.line-1>=1)basmalaAt[s.line-1]=s.surah;
+    }
+    let html="";
+    for(let ln=1;ln<=15;ln++){
+      if(headerAt[ln]!=null){
+        const su=SURAHS.find(x=>x.id===headerAt[ln]);
+        html+=`<div class="m-surah-head"><span class="m-surah-name">سورة ${su?su.name:''}</span></div>`;
+      }else if(basmalaAt[ln]!=null){
+        html+=`<div class="m-basmala">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>`;
+      }else if(data.lines[String(ln)]){
+        html+=mushafGlyphLine(pack,data.lines[String(ln)]);
+      }else{
+        html+=`<div class="m-line m-empty"></div>`;
+      }
+    }
+    host.innerHTML=html;
+  }
+  // page navigation (RTL: → previous page, ← next page, like a printed book)
+  const nav=document.createElement("div");nav.className="mushaf-nav";
+  nav.innerHTML=`<button class="btn-s" onclick="gotoPage(${pg+1})" ${pg>=total?'disabled':''}>← дальше</button>
+    <span class="m-pageno">страница ${pg} / ${total}</span>
+    <button class="btn-s" onclick="gotoPage(${pg-1})" ${pg<=1?'disabled':''}>назад →</button>`;
+  el.querySelector(".mushaf-shell").appendChild(nav);
 }
 
 function toggleEn(id){ST.enabled[id]=!ST.enabled[id];setEnabled(ST.enabled);renderRP();renderCenter();}
@@ -1398,6 +1540,7 @@ ST.fontScale=gs("fontScale",1);
 applyFontScale();
 ST.arFont=gs("arFont","naskh");
 applyArFont();
+loadQpcMeta(); // preload mushaf page index (surah → page) for page-mode jumps
 // Open sidebar by default on desktop
 if(!isM()){ST.sidebarOpen=true;document.getElementById("sidebar").classList.remove("collapsed");}
 loadConfig();
