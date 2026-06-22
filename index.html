@@ -257,6 +257,8 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 /* QPC v1 — постраничные глифы печатного мусхафа Мадани (per-page fonts, lazy) */
 .qpc-line{direction:rtl;text-align:justify;text-align-last:center;line-height:calc(2.3*var(--lh-ar,1));font-size:calc(30px*var(--rs-ar,1));color:var(--text)}
 .qpc-w{display:inline-block}
+.qpc-w[data-loc]{cursor:pointer;border-radius:4px;transition:background .12s}
+.qpc-w[data-loc]:hover{background:var(--accent-bg)}
 .qpc-end{display:inline-block;margin:0 1px}
 @media(max-width:768px){.qpc-line{font-size:calc(25px*var(--rs-ar,1))}}
 /* Mushaf page mode */
@@ -272,6 +274,32 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 .mushaf-nav{display:flex;align-items:center;justify-content:center;gap:14px;padding:14px;flex:none}
 .m-pageno{font-size:12px;color:var(--text-sec)}
 @media(max-width:768px){.mushaf-page{padding:18px 14px}.mushaf-page .m-line{font-size:calc(22px*var(--rs-ar,1))}.m-surah-name,.m-basmala{font-size:21px}}
+/* Word-by-word layer: grid of words, each with its gloss underneath */
+.wbw{max-width:900px;margin:0 auto;padding:6px 4px 60px}
+.wbw-ayah{margin:6px 0 16px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.wbw-head{display:flex;align-items:center;gap:8px;margin:6px 2px 10px}
+.wbw-num{min-width:24px;height:24px;padding:0 7px;border-radius:12px;background:var(--accent);color:#fff;font-size:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center}
+.wbw-grid{display:flex;flex-wrap:wrap;direction:rtl;gap:6px 4px}
+.wbw-cell{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:5px 8px;border-radius:8px;border:1px solid transparent;transition:background .12s,border-color .12s}
+.wbw-cell:hover{background:var(--bg-alt);border-color:var(--border)}
+.wbw-cell:active{background:var(--accent);color:#fff}
+.wbw-ar{font-size:calc(30px*var(--rs-ar,1));line-height:1.7;color:var(--text)}
+.wbw-gl{direction:ltr;font-size:calc(11.5px*var(--rs-ru,1));color:var(--text-sec);max-width:130px;text-align:center;line-height:1.3}
+.wbw-end{display:inline-flex;align-items:flex-start;font-size:calc(30px*var(--rs-ar,1));line-height:1.7;color:var(--accent);padding:5px 4px}
+.wbw-attr{max-width:900px;margin:0 auto;padding:10px 6px 40px;font-size:11px;color:var(--text-muted);line-height:1.5}
+.wbw-attr a{color:var(--text-sec)}
+@media(max-width:768px){.wbw-ar,.wbw-end{font-size:calc(25px*var(--rs-ar,1))}}
+/* Morphology card (built from the corpus by word address) */
+.mcard-seg{display:flex;align-items:baseline;gap:8px;padding:6px 0;border-top:1px solid var(--border)}
+.mcard-seg:first-child{border-top:none}
+.mcard-ar{font-size:21px;direction:rtl;min-width:34px}
+.mcard-info{flex:1;direction:ltr;text-align:left}
+.mcard-pos{font-weight:600;font-size:12.5px}
+.mcard-gram{font-size:11.5px;color:var(--text-sec);margin-top:1px}
+.mcard-lex{font-size:11.5px;color:var(--text-sec);margin-top:1px;direction:rtl;text-align:right}
+.mcard-lex b{color:var(--text);font-weight:600}
+.mcard-foot{margin-top:8px;padding-top:6px;border-top:1px solid var(--border);font-size:10px;color:var(--text-muted);line-height:1.4}
+.mcard-foot a{color:var(--text-muted)}
 /* ⚙ Вид settings popover */
 .view-panel{position:fixed;top:46px;right:10px;z-index:60;width:284px;max-width:92vw;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 40px rgba(0,0,0,.22);padding:6px 12px 12px;max-height:82vh;overflow:auto}
 .vp-group{padding:8px 0;border-bottom:1px solid var(--border-light)}
@@ -498,6 +526,7 @@ let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,
   scrollToAyah:null, // pending ayah to scroll to after a jump (ayah mode)
   arFont:"qpc1",     // Arabic typeface: "naskh" | "hafs" | "amiri" | "qpc1" | "kufi"
   pageMode:false,    // mushaf page view (faithful page-by-page QPC layout)
+  wbwMode:false,     // word-by-word view: grid of words + per-word gloss + grammar card
   mushafPage:1,      // current page in mushaf page mode (1..604)
   facets:{lang:[],kind:[],era:[],tags:[]}, // active facet filters in the right panel
   expandedGroups:{}, // which groups show all items (not just 5)
@@ -647,17 +676,123 @@ function mdInline(t){
 }
 // grammar/word card: render the payload (inline md, || = line break)
 function renderCardText(raw){return mdInlineBasic(esc(String(raw||""))).replace(/\|\|/g,"<br>");}
-function showWordCard(btn){
+// Show a popup card with arbitrary HTML, positioned next to an anchor element.
+// (Positioning/dismiss mechanics are shared by the legacy [[::]] card and the
+// corpus-driven morphology card — only the content source differs.)
+function showWordCardEl(anchor,html){
   let el=document.getElementById("wordCard");
   if(!el){el=document.createElement("div");el.id="wordCard";el.className="word-card";document.body.appendChild(el);}
-  el.innerHTML=renderCardText(btn.dataset.card);
+  el.innerHTML=html;
   el.style.display="block";
-  const r=btn.getBoundingClientRect(),cw=el.offsetWidth,ch=el.offsetHeight,W=window.innerWidth,H=window.innerHeight;
+  const r=anchor.getBoundingClientRect(),cw=el.offsetWidth,ch=el.offsetHeight,W=window.innerWidth,H=window.innerHeight;
   let left=Math.max(8,Math.min(r.left+r.width/2-cw/2,W-cw-8));
   let top=r.bottom+6; if(top+ch>H-8)top=Math.max(8,r.top-ch-6);
   el.style.left=left+"px";el.style.top=top+"px";
 }
+function showWordCard(btn){showWordCardEl(btn,renderCardText(btn.dataset.card));}
 function hideWordCard(){const el=document.getElementById("wordCard");if(el)el.style.display="none";}
+
+// ============================================================
+// WORD-BY-WORD LAYER + MORPHOLOGY CARD (from the Quranic corpus)
+// Two data layers keyed by word address "surah:ayah:word":
+//   data/wbw/words.json -> {"2:4:10":{"en":..,"ru":..}}   (gloss)
+//   data/wbw/morph.json -> {"2:4:10":[{segment},...]}      (grammar card)
+// A clickable word carries only its address (data-loc); content is pulled here.
+// ============================================================
+let wbwWords=null,wbwMorph=null,_wbwWordsP=null,_wbwMorphP=null;
+function loadWbwWords(){
+  if(wbwWords)return Promise.resolve(wbwWords);
+  if(!_wbwWordsP)_wbwWordsP=fetch(`${DATA_PATH}wbw/words.json`).then(r=>r.ok?r.json():{}).then(d=>wbwWords=d).catch(()=>wbwWords={});
+  return _wbwWordsP;
+}
+function loadWbwMorph(){
+  if(wbwMorph)return Promise.resolve(wbwMorph);
+  if(!_wbwMorphP)_wbwMorphP=fetch(`${DATA_PATH}wbw/morph.json`).then(r=>r.ok?r.json():{}).then(d=>wbwMorph=d).catch(()=>wbwMorph={});
+  return _wbwMorphP;
+}
+// Part-of-speech labels (Russian). Основные теги корпуса; терминологию проверит
+// Исмаил. Неизвестный тег показывается как есть.
+const POS_RU={
+  N:"имя существительное",PN:"имя собственное",ADJ:"имя прилагательное",
+  V:"глагол",VN:"отглагольное имя (масдар)",ACT_PCPL:"действительное причастие",
+  PASS_PCPL:"страдательное причастие",IMPN:"имя действия (повелит.)",
+  PRON:"местоимение",DEM:"указательное местоимение",REL:"относительное местоимение",
+  T:"обстоятельство времени",LOC:"обстоятельство места",
+  P:"предлог",DET:"определитель (артикль)",CONJ:"союз",REM:"частица возобновления",
+  NEG:"отрицательная частица",ACC:"частица насб",EMPH:"частица усиления",
+  COND:"условная частица",INTG:"вопросительная частица",SUB:"подчинительная частица",
+  VOC:"звательная частица",RES:"ограничительная частица",CIRC:"частица обстоятельства",
+  CAUS:"частица причины",AMD:"частица дополнения",EXP:"частица разъяснения",
+  EXL:"частица исключения",RSLT:"частица результата",SUP:"избыточная частица",
+  PRO:"запретительная частица",PREV:"частица предотвращения",ATT:"частица внимания",
+  ANS:"частица ответа",RET:"частица отступления",EXH:"частица побуждения",
+  INT:"частица истолкования",COM:"частица сопровождения",INC:"частица начинания",
+  SUR:"частица удивления",AVR:"частица отвращения",CERT:"частица уверенности",
+  FUT:"частица будущего времени",PRP:"частица цели",EQ:"уравнивающая частица",
+  INL:"вступительные буквы (мукатта'ат)",DIST:"частица отдаления",ADDR:"частица обращения",
+};
+const POS_COLOR={ // цвет по части речи (как в гринтехе)
+  noun:"#2e7d57",verb:"#b3431f",pron:"#1565a8",part:"#8a6d1f",def:"#6a6a6a"};
+function posGroup(pos){
+  if(pos==="V")return "verb";
+  if(["N","PN","ADJ","VN","ACT_PCPL","PASS_PCPL","IMPN","T","LOC"].includes(pos))return "noun";
+  if(["PRON","DEM","REL"].includes(pos))return "pron";
+  if(pos==="DET")return "def";
+  return "part";
+}
+function posColor(pos){return POS_COLOR[posGroup(pos)];}
+const GENDER_RU={M:"муж. род",F:"жен. род"};
+const NUMBER_RU={S:"ед. число",D:"дв. число",P:"мн. число"};
+const CASE_RU={NOM:"именит. падеж",ACC:"винит. падеж",GEN:"родит. падеж"};
+const ASPECT_RU={PERF:"прош. время",IMPF:"наст./буд. время",IMPV:"повелит. накл."};
+const VOICE_RU={ACT:"действ. залог",PASS:"страд. залог"};
+const PERSON_RU={"1":"1-е лицо","2":"2-е лицо","3":"3-е лицо"};
+const ROMAN=["","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII"];
+function posLabel(pos){return POS_RU[pos]||pos;}
+// Build the grammar card HTML for a word address from the loaded corpus.
+function renderMorphCard(loc){
+  const segs=wbwMorph&&wbwMorph[loc];
+  if(!segs||!segs.length)return "";
+  const gloss=wbwWords&&wbwWords[loc];
+  let h="";
+  if(gloss&&(gloss.en||gloss.ru))
+    h+=`<div style="font-size:12px;color:var(--text-sec);margin-bottom:6px">${esc(gloss.ru||gloss.en)}</div>`;
+  for(const s of segs){
+    const gram=[];
+    if(s.aspect)gram.push(ASPECT_RU[s.aspect]||s.aspect);
+    if(s.voice)gram.push(VOICE_RU[s.voice]||s.voice);
+    if(s.form&&ROMAN[+s.form])gram.push("порода "+ROMAN[+s.form]);
+    if(s.person)gram.push(PERSON_RU[s.person]||s.person);
+    if(s.gender)gram.push(GENDER_RU[s.gender]||s.gender);
+    if(s.number)gram.push(NUMBER_RU[s.number]||s.number);
+    if(s.case)gram.push(CASE_RU[s.case]||s.case);
+    if(s.indef)gram.push("неопредел.");
+    let lex="";
+    if(s.root||s.lemma){
+      const parts=[];
+      if(s.lemma)parts.push(`лемма <b>${esc(s.lemma)}</b>`);
+      if(s.root)parts.push(`корень <b>${esc(s.root)}</b>`);
+      lex=`<div class="mcard-lex">${parts.join(" · ")}</div>`;
+    }
+    h+=`<div class="mcard-seg">
+      <span class="mcard-ar" style="color:${posColor(s.pos)}">${esc(s.ar)}</span>
+      <span class="mcard-info">
+        <span class="mcard-pos" style="color:${posColor(s.pos)}">${esc(posLabel(s.pos))}</span>
+        ${gram.length?`<div class="mcard-gram">${esc(gram.join(" · "))}</div>`:""}
+        ${lex}
+      </span></div>`;
+  }
+  h+=`<div class="mcard-foot">Разбор: <a href="http://corpus.quran.com" target="_blank" rel="noopener">Quranic Arabic Corpus</a></div>`;
+  return h;
+}
+// Open the corpus card for a word element (data-loc); loads morph lazily.
+async function openMorphCard(el){
+  const loc=el.dataset.loc;if(!loc)return;
+  await loadWbwMorph();await loadWbwWords();
+  const html=renderMorphCard(loc);
+  if(html)showWordCardEl(el,html);
+}
+
 function mdTableStart(L,i){return L[i].includes("|")&&i+1<L.length&&L[i+1].includes("|")&&/^[\s:|-]*-[\s:|-]*$/.test(L[i+1]);}
 function mdBlockStart(L,i){const l=L[i];
   return /^\s*$/.test(l)||/^\s*---+\s*$/.test(l)||/^\s*#{1,4}\s/.test(l)||/^\s*&gt;\s?/.test(l)||/^\s*[-*]\s+/.test(l)||/^\s*\d+\.\s+/.test(l)||mdTableStart(L,i);}
@@ -760,7 +895,7 @@ function renderCB(){
   const layoutBtn=`<button class="btn-s layout-btn ${ST.layout==='v'?'active':''}" onclick="toggleLayout()" title="Колонки / Список">${ST.layout==='h'?'▤ Колонки':'▥ Список'}</button>`;
   const viewBtn=`<button class="btn-s ${ST.viewOpen?'active':''}" onclick="toggleViewPanel()" title="Вид: шрифт, размеры, интервал, поля">⚙ Вид</button>`;
   // explicit two-mode segmented switch (clearer than a lone "Мусхаф" toggle)
-  const modeSeg=`<span class="seg seg-sm"><button class="${!ST.pageMode?'on':''}" onclick="setReadMode(false)" title="Аяты + перевод">Аяты</button><button class="${ST.pageMode?'on':''}" onclick="setReadMode(true)" title="Постраничный мусхаф">Мусхаф</button></span>`;
+  const modeSeg=`<span class="seg seg-sm"><button class="${!ST.pageMode&&!ST.wbwMode?'on':''}" onclick="setMode('ayat')" title="Аяты + перевод">Аяты</button><button class="${!ST.pageMode&&ST.wbwMode?'on':''}" onclick="setMode('words')" title="Пословный перевод + грамматика">Слова</button><button class="${ST.pageMode?'on':''}" onclick="setMode('page')" title="Постраничный мусхаф">Мусхаф</button></span>`;
   if(ST.pageMode){
     const loc=pageLocation(ST.mushafPage);
     bar.innerHTML=`<div class="cb-left"><h2>${loc}</h2></div><div class="cb-right">${modeSeg}${viewBtn}</div>`;return;
@@ -773,6 +908,7 @@ function renderCenter(){
   const el=document.getElementById("centerBody");
   if(ST.selectedTag)return renderTagResults(el);
   if(ST.pageMode)return renderMushafPage(el);
+  if(ST.wbwMode)return renderWbw(el);
   return renderReading(el);
 }
 
@@ -787,7 +923,7 @@ function buildAyahBody(aid,enabled,loaded){
     const lbl=multiQ?`<div class="ab-entry-label">${esc(qt.name)} <span class="lbl-ar">${qt.nameAr||''}</span></div>`:"";
     // Печатный мусхаф (QPC): главный огласованный текст рисуем глифами страницы
     if(pack&&qt.id==="_arabic"&&qpcData&&qpcData[String(aid)]){
-      html+=`<div class="ab-entry">${lbl}${renderPackAyah(pack,qpcData[String(aid)])}</div>`;
+      html+=`<div class="ab-entry">${lbl}${renderPackAyah(pack,qpcData[String(aid)],`${ST.surah}:${aid}`)}</div>`;
       continue;
     }
     const at=loaded[qt.id]?.[String(aid)];
@@ -908,7 +1044,7 @@ async function renderReading(el){
         if(col.isArabic){
           const pk=activePack();const qd=loaded["__qpc"];
           if(pk&&col.id==="_arabic"&&qd&&qd[String(aid)]){
-            html+=`<div class="col-ayah">${renderPackAyah(pk,qd[String(aid)])}</div>`;
+            html+=`<div class="col-ayah">${renderPackAyah(pk,qd[String(aid)],`${ST.surah}:${aid}`)}</div>`;
           }else{
             const arText=col.data?.[String(aid)]||"";
             html+=`<div class="col-ayah arabic-main selectable">${arText||'—'}</div>`;
@@ -1495,6 +1631,14 @@ function navJumpHizb(v){const s=hizbStart(Math.max(1,Math.min(60,+v||1)));if(s)j
 function navJumpPage(v){const total=qpcMeta&&qpcMeta.pages||604;v=Math.max(1,Math.min(total,+v||1));jumpTo({page:v});}
 // Switch reading mode (Аяты ↔ Мусхаф); keeps your place via togglePageMode.
 function setReadMode(toPage){if(!!ST.pageMode!==!!toPage)togglePageMode();}
+// Three-way reading mode: 'ayat' | 'words' (пословный) | 'page' (мусхаф).
+function setMode(mode){
+  if(mode==="page"){ if(!ST.pageMode){ST.wbwMode=false;ss("wbwMode",false);togglePageMode();} return; }
+  // 'ayat' or 'words': both live outside page mode
+  ST.wbwMode=(mode==="words");ss("wbwMode",ST.wbwMode);
+  if(ST.pageMode){togglePageMode();return;} // leaving page mode re-renders for us
+  renderCB();renderBottomNav();renderCenter();
+}
 
 // --- bottom prev/next navigation by a chosen unit (+ swipe) ------------------
 function curPos(){
@@ -1597,10 +1741,14 @@ async function loadPackSurah(packId,surah){
   return qpcCache[k];
 }
 // Build the glyph HTML for one ayah; words stay individually selectable.
-function renderPackAyah(pack,entry){
+// When loc ("surah:ayah") is given, each word carries data-loc="surah:ayah:pos"
+// so tapping it opens the corpus grammar card (positions are aligned 1:1).
+function renderPackAyah(pack,entry,loc){
   if(!entry)return "";
   let html="";
-  for(const wp of entry.w){const g=wp[0],p=wp[1];ensurePageFont(pack,p);html+=`<span class="qpc-w" style="font-family:'${pack.fontFamily(p)}'">${g}</span> `;}
+  entry.w.forEach((wp,i)=>{const g=wp[0],p=wp[1];ensurePageFont(pack,p);
+    const dl=loc?` data-loc="${loc}:${i+1}"`:"";
+    html+=`<span class="qpc-w"${dl} style="font-family:'${pack.fontFamily(p)}'">${g}</span> `;});
   if(entry.e){const g=entry.e[0],p=entry.e[1];ensurePageFont(pack,p);html+=`<span class="qpc-end" style="font-family:'${pack.fontFamily(p)}'">${g}</span>`;}
   return `<div class="qpc-line selectable">${html}</div>`;
 }
@@ -1718,6 +1866,43 @@ async function renderMushafPage(el){
     mushafResizeObs.observe(host);
   }
   // prev/next handled by the shared bottom navigation bar
+}
+
+// --- Word-by-word mode: grid of words + per-word gloss ----------------------
+// Each word is a QPC glyph (reused from the per-surah pack data, aligned 1:1
+// with the corpus by position) carrying data-loc="surah:ayah:word"; the English
+// gloss comes from words.json. Tapping a word opens the corpus grammar card.
+async function renderWbw(el){
+  const surah=ST.surah;
+  const ayahIds=getAyahIds(surah);
+  el.innerHTML=`<div class="wbw" id="wbwArea"><div style="text-align:center;color:var(--text-muted);padding:30px">Загрузка…</div></div>`;
+  loadWbwMorph(); // warm the grammar-card data so the first tap is instant
+  const pack=PACKS.qpc1;
+  const [qpc]=await Promise.all([loadPackSurah("qpc1",surah),loadWbwWords()]);
+  const area=document.getElementById("wbwArea");
+  if(!area)return;
+  if(!qpc){area.innerHTML=`<div style="text-align:center;color:var(--text-muted);padding:30px">Нет пословных данных для этой суры</div>`;return;}
+  let html="";
+  for(const aid of ayahIds){
+    const entry=qpc[String(aid)];if(!entry)continue;
+    let cells="";
+    entry.w.forEach((wp,i)=>{
+      const pos=i+1,loc=`${surah}:${aid}:${pos}`,g=wp[0],p=wp[1];
+      ensurePageFont(pack,p);
+      const gl=(wbwWords&&wbwWords[loc]&&wbwWords[loc].en)||"";
+      cells+=`<span class="wbw-cell" data-loc="${loc}">
+        <span class="wbw-ar" style="font-family:'${pack.fontFamily(p)}'">${g}</span>
+        <span class="wbw-gl">${esc(gl)}</span></span>`;
+    });
+    let endG="";
+    if(entry.e){ensurePageFont(pack,entry.e[1]);endG=`<span class="wbw-end" style="font-family:'${pack.fontFamily(entry.e[1])}'">${entry.e[0]}</span>`;}
+    html+=`<div class="wbw-ayah" data-aid="${aid}">
+      <div class="wbw-head"><span class="wbw-num">${surah}:${aid}</span></div>
+      <div class="wbw-grid">${cells}${endG}</div></div>`;
+  }
+  html+=`<div class="wbw-attr">Пословный перевод: <a href="https://github.com/hablullah/data-quran" target="_blank" rel="noopener">data-quran</a> (CC BY-NC-ND). Грамматический разбор: <a href="http://corpus.quran.com" target="_blank" rel="noopener">Quranic Arabic Corpus</a>.</div>`;
+  area.innerHTML=html;
+  if(ST.scrollToAyah!=null){const t=area.querySelector(`.wbw-ayah[data-aid="${ST.scrollToAyah}"]`);if(t)t.scrollIntoView({block:"start"});ST.scrollToAyah=null;}
 }
 
 function toggleEn(id){ST.enabled[id]=!ST.enabled[id];setEnabled(ST.enabled);renderRP();renderCenter();}
@@ -1869,13 +2054,20 @@ applyView();
 ST.arFont=gs("arFont","qpc1"); // default: печатный мусхаф
 applyArFont();
 ST.navUnit=gs("navUnit","surah");
+ST.wbwMode=gs("wbwMode",false); // word-by-word reading layer (пословный перевод)
 loadQpcMeta(); // preload mushaf page index (surah → page) for page-mode jumps
 setupSwipe();  // horizontal swipe → prev/next section
-// word/grammar cards: open on tap of a [[…]] word, dismiss on outside tap/scroll
+// word/grammar cards: open on tap of a [[…]] word OR a word with data-loc
+// (corpus card), dismiss on outside tap/scroll
 document.addEventListener("click",e=>{
-  const w=e.target.closest&&e.target.closest(".wcard");
+  if(!(e.target.closest))return;
+  // a word carrying an address → grammar card from the corpus (lazy-loaded).
+  // skip when the user is selecting text so copying isn't interrupted.
+  const loc=e.target.closest("[data-loc]");
+  if(loc&&(window.getSelection?window.getSelection().isCollapsed:true)){openMorphCard(loc);return;}
+  const w=e.target.closest(".wcard");
   if(w){showWordCard(w);return;}
-  if(!(e.target.closest&&e.target.closest("#wordCard")))hideWordCard();
+  if(!e.target.closest("#wordCard"))hideWordCard();
 });
 document.addEventListener("scroll",hideWordCard,true);
 // Open sidebar by default on desktop

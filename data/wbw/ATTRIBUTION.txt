@@ -1,0 +1,15 @@
+Word-by-word data sources
+=========================
+
+Morphology (segments, part of speech, root, lemma, grammar):
+  Quranic Arabic Corpus — http://corpus.quran.com
+  Arabic-script edition: https://github.com/mustafa0x/quran-morphology
+  Licensed under the GNU General Public License.
+
+Word-by-word translation (English & Russian glosses):
+  data-quran — https://github.com/hablullah/data-quran
+  Collected by the Hablullah team from quran.com / Tanzil / QuranEnc.
+  Licensed under CC BY-NC-ND 4.0.
+
+This attribution must be kept and shown to users (corpus.quran.com requires a
+link back to the source).

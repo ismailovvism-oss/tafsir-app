@@ -12,3 +12,7 @@ __pycache__/
 # Temp
 *.log
 *.tmp
+
+# Raw build sources (large; re-fetched by build scripts). The built runtime
+# data under data/wbw/ IS committed.
+data/_sources/
