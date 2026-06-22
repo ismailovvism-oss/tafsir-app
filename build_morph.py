@@ -6,7 +6,8 @@ Two data layers, both keyed by the word address "surah:ayah:word" (e.g.
 only loads the surah being read. A clickable word carries only its address;
 the card / gloss are pulled from these chunks on the fly. Shape {ayah:{word:..}}:
 
-  data/wbw/words/<s>.json  -> per word: {"en": <gloss>, "ru_ref"?: <ref gloss>}
+  data/wbw/words/<s>.json  -> per word: {"en": <gloss>, "ru_ref"?: <ref>, "ru"?: <our gloss>}
+                              ("ru" merged from data/wbw/ru_gloss.json, Step 4)
   data/wbw/morph/<s>.json  -> per word: [ {segment}, {segment}, ... ]
 
 "en"     is shown verbatim under each word (display-only, CC BY-NC-ND).
@@ -220,12 +221,23 @@ def main():
     # data-quran marks gaps with "[[MISSING]]"; drop those so nothing leaks.
     def clean(v):
         return "" if v == "[[MISSING]]" else v
+    # Step 4: our own Russian word-by-word gloss (hand-translated from the
+    # English gloss, cross-checked against Kuliev for case/wording). Lives in
+    # data/wbw/ru_gloss.json as {"s:a:w": "<ru>"} so it survives rebuilds.
+    ru_gloss = {}
+    rg_path = os.path.join(OUT_DIR, "ru_gloss.json")
+    if os.path.exists(rg_path):
+        with open(rg_path, encoding="utf-8") as f:
+            ru_gloss = json.load(f)
+
     words = {}
     for i, key in enumerate(order, start=1):
         rec = {"en": clean(en[str(i)])}
         ru_ref = clean(ru[str(i)])
         if ru_ref:
             rec["ru_ref"] = ru_ref
+        if ru_gloss.get(key):
+            rec["ru"] = ru_gloss[key]
         words[key] = rec
 
     # --- split per surah (like data/qpc/v1/surah/<s>.json) -----------------

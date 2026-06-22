@@ -760,8 +760,10 @@ function posLabel(pos){return POS_RU[pos]||pos;}
 function renderMorphCard(segs,gloss){
   if(!segs||!segs.length)return "";
   let h="";
-  if(gloss&&gloss.en)
-    h+=`<div style="font-size:12px;color:var(--text-sec);margin-bottom:6px">${esc(gloss.en)}</div>`;
+  if(gloss&&(gloss.ru||gloss.en)){
+    if(gloss.ru)h+=`<div style="font-size:14px;color:var(--text);font-weight:600;margin-bottom:2px">${esc(gloss.ru)}</div>`;
+    if(gloss.en)h+=`<div style="font-size:11.5px;color:var(--text-muted);margin-bottom:6px">${esc(gloss.en)}</div>`;
+  }
   for(const s of segs){
     const gram=[];
     if(s.aspect)gram.push(ASPECT_RU[s.aspect]||s.aspect);
@@ -1920,7 +1922,7 @@ async function renderWbw(el){
     entry.w.forEach((wp,i)=>{
       const pos=i+1,loc=`${surah}:${aid}:${pos}`,g=wp[0],p=wp[1];
       ensurePageFont(pack,p);
-      const gl=(wg&&wg[String(pos)]&&wg[String(pos)].en)||"";
+      const wn=wg&&wg[String(pos)];const gl=(wn&&(wn.ru||wn.en))||"";
       cells+=`<span class="wbw-cell" data-loc="${loc}">
         <span class="wbw-ar" style="font-family:'${pack.fontFamily(p)}'">${g}</span>
         <span class="wbw-gl">${esc(gl)}</span></span>`;
@@ -1931,7 +1933,7 @@ async function renderWbw(el){
       <div class="wbw-head"><span class="wbw-num">${surah}:${aid}</span></div>
       <div class="wbw-grid">${cells}${endG}</div></div>`;
   }
-  html+=`<div class="wbw-attr">Пословный глосс (английский, дословно): <a href="https://github.com/hablullah/data-quran" target="_blank" rel="noopener">data-quran</a> (CC BY-NC-ND, без изменений). Грамматический разбор: <a href="http://corpus.quran.com" target="_blank" rel="noopener">Quranic Arabic Corpus</a> (GPL).</div>`;
+  html+=`<div class="wbw-attr">Русский пословный глосс — наш черновой перевод (сверка по смыслу с переводом Э. Кулиева; сам перевод Кулиева не распространяется). Английский глосс: <a href="https://github.com/hablullah/data-quran" target="_blank" rel="noopener">data-quran</a> (CC BY-NC-ND, без изменений). Грамматический разбор: <a href="http://corpus.quran.com" target="_blank" rel="noopener">Quranic Arabic Corpus</a> (GPL).</div>`;
   area.innerHTML=html;
   if(ST.scrollToAyah!=null){const t=area.querySelector(`.wbw-ayah[data-aid="${ST.scrollToAyah}"]`);if(t)t.scrollIntoView({block:"start"});ST.scrollToAyah=null;}
 }
