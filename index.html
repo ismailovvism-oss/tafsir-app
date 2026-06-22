@@ -1336,6 +1336,7 @@ function renderPackAyah(pack,entry){
 
 // --- Mushaf page mode: faithful page-by-page layout (QPC v1) ----------------
 let qpcMeta=null;
+let mushafResizeObs=null; // re-fits line scaling when the column width changes
 async function loadQpcMeta(){
   if(qpcMeta)return qpcMeta;
   try{const r=await fetch(`${DATA_PATH}qpc/v1/meta.json`);qpcMeta=r.ok?await r.json():null;}catch(e){qpcMeta=null;}
@@ -1366,23 +1367,30 @@ function mushafGlyphLine(pack,words,centered){
   let h="";for(const wp of words){const g=wp[0],p=wp[1];ensurePageFont(pack,p);h+=`<span class="qpc-w" style="font-family:'${pack.fontFamily(p)}'">${g}</span> `;}
   return `<div class="m-line${centered?' m-line-c':''} selectable"><span class="m-inner">${h}</span></div>`;
 }
-// Per-line fit-to-width: scale font-size so the line fills the column (no space
-// rivers, no letter-spacing). Cap the zoom so 2-3 word lines don't balloon;
-// lines that still fall short are centered as-is.
+// Per-line fit-to-width: scale font-size so the line exactly fits the column
+// (no space rivers, no letter-spacing). The scale runs BOTH ways — grow lines
+// that fall short, and SHRINK lines that are wider than the column (narrow /
+// portrait), so nothing overflows and gets clipped at the RTL (left) edge.
+// Growth is capped so 2-3 word lines don't balloon; shrink is never capped.
+// Recomputed from the live column width on every render and on resize.
 const MUSHAF_MAX_FIT=1.5;
+const MUSHAF_FIT_SAFE=0.99; // keep final width strictly inside the column
 function fitMushafLines(host){
-  for(const ln of host.querySelectorAll(".m-line:not(.m-line-c):not(.m-empty)")){
+  const lines=host.querySelectorAll(".m-line:not(.m-empty)");
+  // reset to the CSS base size first, so each (re)fit measures the true natural
+  // width under the CURRENT column width — never a previously-scaled value
+  for(const ln of lines)ln.style.fontSize="";
+  void host.offsetWidth; // force one reflow before measuring
+  for(const ln of lines){
     const inner=ln.querySelector(".m-inner");if(!inner)continue;
     const colW=ln.clientWidth, natW=inner.scrollWidth;
     if(!colW||!natW)continue;
-    const scale=colW/natW;
-    if(scale<=1.01)continue;                 // already ~full → leave
-    if(scale<=MUSHAF_MAX_FIT){
-      const cur=parseFloat(getComputedStyle(ln).fontSize);
-      ln.style.fontSize=(cur*scale*0.995)+"px"; // fill (tiny safety margin vs wrap)
-    }else{
-      ln.classList.add("m-line-c");           // too short to fill at cap → center
-    }
+    // regular lines may grow to fill (capped); surah-end/centered lines never
+    // grow — but ALL lines shrink if they would overflow the column
+    const maxGrow=ln.classList.contains("m-line-c")?1:MUSHAF_MAX_FIT;
+    const scale=Math.min(colW/natW,maxGrow)*MUSHAF_FIT_SAFE;
+    const base=parseFloat(getComputedStyle(ln).fontSize);
+    ln.style.fontSize=(base*scale)+"px"; // width = natW*scale ≤ colW*SAFE < colW
   }
 }
 async function renderMushafPage(el){
@@ -1420,6 +1428,17 @@ async function renderMushafPage(el){
     // measure & fit only after the page glyph font is actually loaded
     try{await document.fonts.ready;}catch(e){}
     fitMushafLines(host);
+    // re-fit when the column width changes (orientation / window resize), so the
+    // scale always matches the CURRENT column and never overflows
+    if(mushafResizeObs){mushafResizeObs.disconnect();mushafResizeObs=null;}
+    let lastFitW=host.clientWidth;
+    mushafResizeObs=new ResizeObserver(()=>{
+      if(!document.body.contains(host)){mushafResizeObs.disconnect();mushafResizeObs=null;return;}
+      const w=host.clientWidth;
+      if(Math.abs(w-lastFitW)<1)return; // ignore height-only changes
+      lastFitW=w;fitMushafLines(host);
+    });
+    mushafResizeObs.observe(host);
   }
   // page navigation (RTL: → previous page, ← next page, like a printed book)
   const nav=document.createElement("div");nav.className="mushaf-nav";
