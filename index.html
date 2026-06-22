@@ -300,6 +300,7 @@ body.mushaf-full .mushaf-page{max-width:none;border:none;border-radius:0;box-sha
 .mcard-ar{font-size:21px;direction:rtl;min-width:34px}
 .mcard-info{flex:1;direction:ltr;text-align:left}
 .mcard-pos{font-weight:600;font-size:12.5px}
+.mcard-pos-ar{color:var(--text-muted);font-weight:400;font-size:13px;direction:rtl;margin-inline-start:6px;font-family:'Noto Naskh Arabic','Amiri',serif}
 .mcard-gram{font-size:11.5px;color:var(--text-sec);margin-top:1px}
 .mcard-lex{font-size:11.5px;color:var(--text-sec);margin-top:1px;direction:rtl;text-align:right}
 .mcard-lex b{color:var(--text);font-weight:600}
@@ -753,6 +754,19 @@ const POS_RU={
   ATT:"частица привлечения внимания",DIST:"лям дальности",
   ADDR:"частица обращения / каф обращения",
 };
+// Arabic part-of-speech term, shown faint next to the Russian label.
+const POS_AR={
+  N:"اسم",PN:"علم",ADJ:"نعت",V:"فعل",PRON:"ضمير",DEM:"اسم اشارة",REL:"اسم موصول",T:"ظرف زمان",
+  LOC:"ظرف مكان",ACT_PCPL:"اسم فاعل",PASS_PCPL:"اسم مفعول",VN:"مصدر",NV:"اسم فعل",P:"حرف جر",
+  DET:"ال",CONJ:"حرف عطف",NEG:"حرف نفي",INTG:"استفهامية",COND:"شرطية",VOC:"حرف نداء",
+  PRO:"حرف نهي",FUT:"حرف استقبال",EMPH:"لام التوكيد",ACC:"حرف نصب",INL:"حروف مقطعة",
+  SUB:"حرف مصدري",REM:"حرف استئنافية",RES:"أداة حصر",RSLT:"حرف واقع في جواب الشرط",
+  AMD:"حرف استدراك",CIRC:"حرف حال",EXP:"أداة استثناء",INC:"حرف ابتداء",CAUS:"حرف سببية",
+  CERT:"حرف تحقيق",PREV:"حرف كاف",RET:"حرف اضراب",SUR:"حرف فجاءة",AVR:"حرف ردع",EQ:"حرف تسوية",
+  COM:"واو المعية",EXL:"حرف تفصيل",ANS:"حرف جواب",EXH:"حرف تحضيض",INT:"حرف تفسير",
+  PRP:"لام التعليل",SUP:"حرف زائد",IMPV:"لام الامر",ATT:"حرف تنبيه",DIST:"لام البعد",
+  ADDR:"حرف خطاب",
+};
 const POS_COLOR={ // цвет по части речи (как в гринтехе)
   noun:"#2e7d57",verb:"#b3431f",pron:"#1565a8",part:"#8a6d1f",def:"#6a6a6a"};
 function posGroup(pos){
@@ -799,7 +813,7 @@ function renderMorphCard(segs,gloss){
     h+=`<div class="mcard-seg">
       <span class="mcard-ar" style="color:${posColor(s.pos)}">${esc(s.ar)}</span>
       <span class="mcard-info">
-        <span class="mcard-pos" style="color:${posColor(s.pos)}">${esc(posLabel(s.pos))}</span>
+        <span class="mcard-pos" style="color:${posColor(s.pos)}">${esc(posLabel(s.pos))}</span>${POS_AR[s.pos]?`<span class="mcard-pos-ar">${esc(POS_AR[s.pos])}</span>`:""}
         ${gram.length?`<div class="mcard-gram">${esc(gram.join(" · "))}</div>`:""}
         ${lex}
       </span></div>`;
