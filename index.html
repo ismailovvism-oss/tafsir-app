@@ -132,7 +132,7 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 .t-item.arabic-item{border-left:3px solid var(--accent);padding-left:11px}
 
 /* READING AREA */
-.reading{flex:1;overflow-y:auto;padding:12px 16px}
+.reading{flex:1;overflow-y:auto;padding:12px calc(16px + var(--mar,0px))}
 
 /* Horizontal layout */
 .ayah-block{margin-bottom:14px;border:1px solid var(--border-light);border-radius:8px;overflow:hidden;background:var(--bg-card)}
@@ -146,10 +146,10 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 .ab-entry:last-child{border-bottom:none}
 .ab-entry-label{font-size:10px;font-weight:600;color:var(--accent);margin-bottom:3px;display:flex;align-items:center;gap:4px}
 .ab-entry-label .lbl-ar{font-family:'Amiri',serif;color:var(--text-muted);font-weight:400}
-.ab-entry-text{font-size:calc(13px*var(--rs,1));line-height:1.85;color:var(--text-sec);white-space:pre-wrap}
+.ab-entry-text{font-size:calc(13px*var(--rs-ru,1));line-height:calc(1.85*var(--lh,1));color:var(--text-sec);white-space:pre-wrap}
 .ab-entry-text.selectable{-webkit-user-select:text;user-select:text}
-.ab-entry-text.rtl{direction:rtl;text-align:right;font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(17px*var(--rs,1));line-height:2;color:var(--text)}
-.ab-entry-text.arabic-main{font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(22px*var(--rs,1));line-height:2;direction:rtl;text-align:right;color:var(--text)}
+.ab-entry-text.rtl{direction:rtl;text-align:right;font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(17px*var(--rs-ar,1));line-height:calc(2*var(--lh,1));color:var(--text)}
+.ab-entry-text.arabic-main{font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(22px*var(--rs-ar,1));line-height:calc(2*var(--lh,1));direction:rtl;text-align:right;color:var(--text)}
 
 /* Notes inline */
 .ab-note-area{width:100%;border:1px solid var(--note-border);border-radius:5px;padding:6px 8px;font-family:inherit;font-size:12px;line-height:1.6;color:var(--text);background:var(--note-bg);resize:vertical;outline:none;min-height:40px;-webkit-user-select:text;user-select:text}
@@ -160,9 +160,9 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 .col-col{flex:1;min-width:250px;border-right:1px solid var(--border-light)}
 .col-col:last-child{border-right:none}
 .col-head{padding:6px 8px;background:var(--bg-alt);border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--accent);position:sticky;top:0;z-index:1;text-align:center}
-.col-ayah{padding:8px 10px;border-bottom:1px solid var(--border-light);font-size:calc(13px*var(--rs,1));line-height:1.85;color:var(--text-sec);white-space:pre-wrap;min-height:50px}
-.col-ayah.rtl{direction:rtl;text-align:right;font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(16px*var(--rs,1));line-height:2;color:var(--text)}
-.col-ayah.arabic-main{font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(20px*var(--rs,1));line-height:2;direction:rtl;text-align:right;color:var(--text)}
+.col-ayah{padding:8px 10px;border-bottom:1px solid var(--border-light);font-size:calc(13px*var(--rs-ru,1));line-height:calc(1.85*var(--lh,1));color:var(--text-sec);white-space:pre-wrap;min-height:50px}
+.col-ayah.rtl{direction:rtl;text-align:right;font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(16px*var(--rs-ar,1));line-height:calc(2*var(--lh,1));color:var(--text)}
+.col-ayah.arabic-main{font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(20px*var(--rs-ar,1));line-height:calc(2*var(--lh,1));direction:rtl;text-align:right;color:var(--text)}
 .col-ayah-num{font-size:9px;font-weight:600;color:var(--accent);margin-bottom:2px}
 
 /* TAG RESULTS view */
@@ -209,7 +209,7 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
   .sidebar{position:absolute;top:0;height:100%;width:100%;z-index:10;transition:transform .25s}
   .sidebar{left:0;transform:translateX(0)}.sidebar.collapsed{transform:translateX(-100%);margin-left:0}
   .header{padding:7px 8px}.reading{padding:8px}
-  .ab-entry-text.arabic-main{font-size:calc(19px*var(--rs,1))}
+  .ab-entry-text.arabic-main{font-size:calc(19px*var(--rs-ar,1))}
   .col-col{min-width:200px}
   .layout-btn{display:none}
   .search-panel{width:100%!important;left:0!important;right:0!important;border-radius:0!important;max-height:80vh!important}
@@ -236,23 +236,37 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 [data-arfont="amiri"] .ab-entry-text.rtl,
 [data-arfont="amiri"] .col-ayah.rtl{font-family:'Amiri Quran','Noto Naskh Arabic',serif;line-height:2.1}
 /* QPC v1 — постраничные глифы печатного мусхафа Мадани (per-page fonts, lazy) */
-.qpc-line{direction:rtl;text-align:justify;text-align-last:center;line-height:2.3;font-size:calc(30px*var(--rs,1));color:var(--text)}
+.qpc-line{direction:rtl;text-align:justify;text-align-last:center;line-height:calc(2.3*var(--lh,1));font-size:calc(30px*var(--rs-ar,1));color:var(--text)}
 .qpc-w{display:inline-block}
 .qpc-end{display:inline-block;margin:0 1px}
-@media(max-width:768px){.qpc-line{font-size:calc(25px*var(--rs,1))}}
+@media(max-width:768px){.qpc-line{font-size:calc(25px*var(--rs-ar,1))}}
 /* Mushaf page mode */
 .mushaf-shell{height:100%;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:18px 12px;background:var(--bg-alt)}
-.mushaf-page{width:100%;max-width:680px;background:#fdfcf5;color:#1a1a1a;border:1px solid #e6e0c8;border-radius:6px;box-shadow:0 2px 14px rgba(0,0,0,.08);padding:26px 30px}
-.mushaf-page .m-line{direction:rtl;text-align:center;white-space:nowrap;font-size:calc(28px*var(--rs,1));line-height:2.35}
+.mushaf-page{width:100%;max-width:680px;background:#fdfcf5;color:#1a1a1a;border:1px solid #e6e0c8;border-radius:6px;box-shadow:0 2px 14px rgba(0,0,0,.08);padding:26px calc(30px + var(--mar,0px))}
+.mushaf-page .m-line{direction:rtl;text-align:center;white-space:nowrap;font-size:calc(28px*var(--rs-ar,1));line-height:calc(2.35*var(--lh,1))}
 .mushaf-page .m-inner{display:inline-block;white-space:nowrap}
 .mushaf-page .m-line .qpc-w{display:inline-block}
-.m-empty{min-height:calc(28px*var(--rs,1)*1.2)}
+.m-empty{min-height:calc(28px*var(--rs-ar,1)*1.2)}
 .m-surah-head{text-align:center;margin:10px 0;padding:6px 0;border-top:2px solid #c9a84c;border-bottom:2px solid #c9a84c}
-.m-surah-name{font-family:'KFGQPC Uthmanic','Amiri Quran',serif;font-size:calc(24px*var(--rs,1));color:#7a5c12;direction:rtl}
-.m-basmala{text-align:center;direction:rtl;font-family:'KFGQPC Uthmanic','Amiri Quran',serif;font-size:calc(24px*var(--rs,1));line-height:2;color:#1a1a1a;margin:4px 0}
+.m-surah-name{font-family:'KFGQPC Uthmanic','Amiri Quran',serif;font-size:calc(24px*var(--rs-ar,1));color:#7a5c12;direction:rtl}
+.m-basmala{text-align:center;direction:rtl;font-family:'KFGQPC Uthmanic','Amiri Quran',serif;font-size:calc(24px*var(--rs-ar,1));line-height:2;color:#1a1a1a;margin:4px 0}
 .mushaf-nav{display:flex;align-items:center;justify-content:center;gap:14px;padding:14px;flex:none}
 .m-pageno{font-size:12px;color:var(--text-sec)}
-@media(max-width:768px){.mushaf-page{padding:18px 14px}.mushaf-page .m-line,.m-surah-name,.m-basmala{font-size:calc(22px*var(--rs,1))}}
+@media(max-width:768px){.mushaf-page{padding:18px 14px}.mushaf-page .m-line,.m-surah-name,.m-basmala{font-size:calc(22px*var(--rs-ar,1))}}
+/* ⚙ Вид settings popover */
+.view-panel{position:fixed;top:46px;right:10px;z-index:60;width:284px;max-width:92vw;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 40px rgba(0,0,0,.22);padding:6px 12px 12px;max-height:82vh;overflow:auto}
+.vp-group{padding:8px 0;border-bottom:1px solid var(--border-light)}
+.vp-group:last-of-type{border-bottom:none}
+.vp-label{font-size:10px;font-weight:600;letter-spacing:.3px;color:var(--text-sec);text-transform:uppercase;margin-bottom:6px}
+.vp-check{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);padding:3px 0;cursor:pointer}
+.vp-fonts{display:flex;flex-wrap:wrap;gap:5px}
+.vp-font{font-family:inherit;font-size:12px;padding:5px 9px;border:1px solid var(--border);border-radius:14px;background:var(--bg);color:var(--text-sec);cursor:pointer}
+.vp-font.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.vp-row{display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--text);padding:4px 0}
+.vp-step{display:flex;align-items:center;gap:8px}
+.vp-step button{width:26px;height:26px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:15px;cursor:pointer;line-height:1}
+.vp-step b{min-width:48px;text-align:center;font-size:12px;font-weight:600}
+.vp-close{width:100%;margin-top:8px;padding:8px;border:none;border-radius:7px;background:var(--accent);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer}
 
 /* SEARCH */
 .search-panel{position:fixed;top:48px;left:50%;transform:translateX(-50%);width:600px;max-width:90vw;max-height:70vh;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 40px rgba(0,0,0,.2);z-index:50;display:flex;flex-direction:column;overflow:hidden}
@@ -437,7 +451,11 @@ let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,
   selectedTag:null,
   theme:"green",
   rpFilter:"",
-  fontScale:1,       // reading text scale (A−/A+)
+  fsAr:1,            // Arabic reading text size (⚙ Вид)
+  fsRu:1,            // Russian reading text size (⚙ Вид)
+  lh:1,              // line-spacing multiplier (⚙ Вид)
+  mar:0,             // extra reading margins in px (⚙ Вид)
+  viewOpen:false,    // ⚙ Вид panel open
   arFont:"naskh",    // Arabic typeface: "naskh" | "hafs" | "amiri" | "qpc1" | "kufi"
   pageMode:false,    // mushaf page view (faithful page-by-page QPC layout)
   mushafPage:1,      // current page in mushaf page mode (1..604)
@@ -639,11 +657,10 @@ function renderCB(){
   }
   if(!su)return;
   const layoutBtn=`<button class="btn-s layout-btn ${ST.layout==='v'?'active':''}" onclick="toggleLayout()" title="Колонки / Список">${ST.layout==='h'?'▤ Колонки':'▥ Список'}</button>`;
-  const fontBtns=`<button class="btn-s" onclick="bumpFont(-1)" title="Меньше шрифт">A−</button><button class="btn-s" onclick="bumpFont(1)" title="Больше шрифт">A+</button>`;
-  const arFontBtn=`<button class="btn-s ${ST.arFont!=='naskh'?'active':''}" onclick="toggleArFont()" title="Шрифт арабского — ${AR_FONT_TITLES[ST.arFont]||''} (нажмите, чтобы сменить)" style="font-family:'Amiri',serif;font-size:14px">${AR_FONT_LABELS[ST.arFont]||'نسخ'}</button>`;
+  const viewBtn=`<button class="btn-s ${ST.viewOpen?'active':''}" onclick="toggleViewPanel()" title="Вид: шрифт, размеры, интервал, поля">⚙ Вид</button>`;
   const pageBtn=`<button class="btn-s ${ST.pageMode?'active':''}" onclick="togglePageMode()" title="Режим страницы мусхафа (печатный вид)">📖 Мусхаф</button>`;
-  if(ST.pageMode){bar.innerHTML=`<div class="cb-left"><h2>📖 Мусхаф Мадани</h2></div><div class="cb-right">${pageBtn}</div>`;return;}
-  bar.innerHTML=`<div class="cb-left"><h2>${su.ru} <span class="ar">${su.name}</span></h2></div><div class="cb-right">${arFontBtn}${pageBtn}${fontBtns}${layoutBtn}</div>`;
+  if(ST.pageMode){bar.innerHTML=`<div class="cb-left"><h2>📖 Мусхаф Мадани</h2></div><div class="cb-right">${pageBtn}${viewBtn}</div>`;return;}
+  bar.innerHTML=`<div class="cb-left"><h2>${su.ru} <span class="ar">${su.name}</span></h2></div><div class="cb-right">${pageBtn}${layoutBtn}${viewBtn}</div>`;
 }
 
 // -- CENTER BODY --
@@ -903,13 +920,11 @@ function renderRP(){
   const q=ST.rpFilter||"";
   let html=renderFacetBar();
 
-  // 1. Enabled (pinned, reorderable) — Quran texts first, then user-ordered tafsirs
-  const enQ=getEnabledQuranTexts();
-  const enRest=getEnabledList().filter(t=>t.id!=="_notes");
-  const enAll=[...enQ,...enRest];
+  // 1. Enabled (pinned, reorderable). Quran-text variants live in ⚙ Вид, not here.
+  const enAll=getEnabledList().filter(t=>t.id!=="_notes");
   if(enAll.length){
     html+=`<div class="rp-sec-head">✓ Включено · ${enAll.length}</div>`;
-    enAll.forEach(t=>{html+=tItem(t,true,!isQuranText(t.id));});
+    enAll.forEach(t=>{html+=tItem(t,true,true);});
   }
 
   // 2. Notes toggle (standalone special)
@@ -923,7 +938,7 @@ function renderRP(){
   html+=`<div class="rp-sec-head" style="border-top:1px solid var(--border);margin-top:4px;padding-top:8px">Каталог</div>`;
   let anyShown=false;
   CONFIG.groups.forEach(g=>{
-    let items=CONFIG.tafsirs.filter(t=>t.group===g.id&&!ST.enabled[t.id]).filter(passFacets);
+    let items=CONFIG.tafsirs.filter(t=>t.group===g.id&&t.kind!=="quran"&&!ST.enabled[t.id]).filter(passFacets);
     if(q)items=items.filter(t=>(t.name||"").toLowerCase().includes(q)||(t.nameAr||"").includes(q)||(t.author||"").toLowerCase().includes(q));
     if(!items.length)return;
     anyShown=true;
@@ -1272,29 +1287,59 @@ function setSbTab(t){ST.sbTab=t;document.getElementById("sbTabSurahs").classList
 function goSurah(id){ST.surah=id;ST.selectedTag=null;if(ST.pageMode){const st=qpcMeta?.surahStart?.[id];if(st)ST.mushafPage=st.page;}if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}pushSurahHash(id);render();}
 function toggleLayout(){ST.layout=ST.layout==="h"?"v":"h";render();}
 
-// Reading font scale (persisted)
-function applyFontScale(){document.body.style.setProperty("--rs",ST.fontScale);}
-function bumpFont(dir){
-  ST.fontScale=Math.min(1.8,Math.max(0.8,Math.round((ST.fontScale+dir*0.1)*10)/10));
-  ss("fontScale",ST.fontScale);
-  applyFontScale();
+// --- Reading display settings (⚙ Вид): sizes AR/RU, line spacing, margins ----
+function applyView(){
+  const s=document.body.style;
+  s.setProperty("--rs-ar",ST.fsAr);
+  s.setProperty("--rs-ru",ST.fsRu);
+  s.setProperty("--lh",ST.lh);
+  s.setProperty("--mar",ST.mar+"px");
+}
+const VIEW_LIMITS={fsAr:[0.7,2.2,0.1],fsRu:[0.7,2.0,0.1],lh:[0.8,1.8,0.1],mar:[0,160,16]};
+function bumpView(key,dir){
+  const[lo,hi,step]=VIEW_LIMITS[key];
+  ST[key]=Math.min(hi,Math.max(lo,Math.round((ST[key]+dir*step)*100)/100));
+  ss(key,ST[key]);applyView();
+  // page mode: changing the base size/margins changes the column → re-fit glyph lines
+  if(ST.pageMode){const host=document.getElementById("mushafPage");if(host)fitMushafLines(host);}
+  renderViewPanel();
+}
+function toggleViewPanel(){ST.viewOpen=!ST.viewOpen;renderCB();renderViewPanel();}
+function renderViewPanel(){
+  let el=document.getElementById("viewPanel");
+  if(!el){el=document.createElement("div");el.id="viewPanel";el.className="view-panel";document.body.appendChild(el);}
+  if(!ST.viewOpen){el.style.display="none";return;}
+  el.style.display="block";
+  const pct=k=>Math.round(ST[k]*100)+"%";
+  const step=(label,key,val)=>`<div class="vp-row"><span>${label}</span><span class="vp-step"><button onclick="bumpView('${key}',-1)">−</button><b>${val}</b><button onclick="bumpView('${key}',1)">+</button></span></div>`;
+  // Original Quran-text variants + Arabic typeface only apply outside page mode
+  // (page mode always shows the vowelled printed glyphs).
+  let top="";
+  if(!ST.pageMode){
+    const variants=[["_arabic","С огласовками"],["_arabic_clean","Без огласовок"],["_arabic_rasm","Без точек (расм)"]];
+    top+=`<div class="vp-group"><div class="vp-label">Оригинал (текст Корана)</div>`+
+      variants.map(([id,name])=>`<label class="vp-check"><input type="checkbox" ${ST.enabled[id]?"checked":""} onchange="toggleEn('${id}')"> ${name}</label>`).join("")+`</div>`;
+    top+=`<div class="vp-group"><div class="vp-label">Шрифт арабского</div><div class="vp-fonts">`+
+      AR_FONTS.map(f=>`<button class="vp-font ${ST.arFont===f?"on":""}" title="${AR_FONT_TITLES[f]}" onclick="setArFont('${f}')">${AR_FONT_NAMES[f]}</button>`).join("")+`</div></div>`;
+  }
+  el.innerHTML=top+
+    `<div class="vp-group"><div class="vp-label">Размер шрифта</div>${step("Арабский","fsAr",pct("fsAr"))}${step("Русский","fsRu",pct("fsRu"))}</div>`+
+    `<div class="vp-group"><div class="vp-label">Отступы</div>${step("Межстрочный","lh",pct("lh"))}${step("Поля","mar",ST.mar+"px")}</div>`+
+    `<button class="vp-close" onclick="toggleViewPanel()">Готово</button>`;
 }
 
-// Arabic typeface: Naskh (default) / Kufi (persisted)
+// Arabic typeface (chosen in the ⚙ Вид panel; persisted). Names are russified.
 function applyArFont(){document.body.setAttribute("data-arfont",ST.arFont);}
-// Cycle: naskh → hafs (мусхаф Мадани) → amiri (мусхафный насх) → qpc1 (печатный мусхаф) → kufi → naskh
 const AR_FONTS=["naskh","hafs","amiri","qpc1","kufi"];
-const AR_FONT_LABELS={naskh:"نسخ",hafs:"عثماني",amiri:"أميري",qpc1:"المصحف",kufi:"كوفي"};
-const AR_FONT_TITLES={naskh:"Насх (по умолчанию)",hafs:"Каллиграфический насх (Усман Таха)",amiri:"Каллиграфия Amiri Quran",qpc1:"Печатный мусхаф Мадани (QPC v1 — постраничные глифы)",kufi:"Куфи"};
-function toggleArFont(){
+const AR_FONT_NAMES={naskh:"Насх",hafs:"Каллиграфический",amiri:"Амири",qpc1:"Печатный",kufi:"Куфи"};
+const AR_FONT_TITLES={naskh:"Обычный насх (по умолчанию)",hafs:"Каллиграфический насх (Усман Таха)",amiri:"Амири (каллиграфия)",qpc1:"Печатный мусхаф — постраничные глифы (QPC v1)",kufi:"Куфи (Reem Kufi)"};
+function setArFont(id){
+  if(!AR_FONTS.includes(id)||id===ST.arFont)return;
   const prev=ST.arFont;
-  const i=AR_FONTS.indexOf(ST.arFont);
-  ST.arFont=AR_FONTS[(i+1)%AR_FONTS.length];
-  ss("arFont",ST.arFont);
-  applyArFont();
-  renderCB();
-  // QPC packs swap content (glyphs + per-page fonts), not just a CSS font-family → re-render
-  if(prev==="qpc1"||ST.arFont==="qpc1")renderCenter();
+  ST.arFont=id;ss("arFont",id);applyArFont();
+  // QPC packs swap content (glyphs + per-page fonts), not just a CSS font-family
+  if(prev==="qpc1"||id==="qpc1")renderCenter();
+  renderViewPanel();
 }
 
 // --- Mushaf packs: page-based glyph fonts (e.g. QPC v1) ---------------------
@@ -1584,8 +1629,13 @@ function deleteTag(path){
 // Init theme + reading font scale
 const savedTheme=gs("theme","green");
 setTheme(savedTheme);
-ST.fontScale=gs("fontScale",1);
-applyFontScale();
+// migrate the old single font scale → separate AR/RU sizes
+const _oldScale=gs("fontScale",null);
+ST.fsAr=gs("fsAr",_oldScale!=null?_oldScale:1);
+ST.fsRu=gs("fsRu",_oldScale!=null?_oldScale:1);
+ST.lh=gs("lh",1);
+ST.mar=gs("mar",0);
+applyView();
 ST.arFont=gs("arFont","naskh");
 applyArFont();
 loadQpcMeta(); // preload mushaf page index (surah → page) for page-mode jumps
