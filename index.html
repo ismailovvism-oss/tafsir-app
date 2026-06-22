@@ -243,7 +243,7 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 /* Mushaf page mode */
 .mushaf-shell{height:100%;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:18px 12px;background:var(--bg-alt)}
 .mushaf-page{width:100%;max-width:680px;background:#fdfcf5;color:#1a1a1a;border:1px solid #e6e0c8;border-radius:6px;box-shadow:0 2px 14px rgba(0,0,0,.08);padding:26px 30px}
-.mushaf-page .m-line{direction:rtl;text-align:justify;text-align-last:justify;font-size:calc(28px*var(--rs,1));line-height:2.35}
+.mushaf-page .m-line{direction:rtl;text-align:justify;text-align-last:center;font-size:calc(28px*var(--rs,1));line-height:2.35}
 .mushaf-page .m-line .qpc-w{display:inline-block}
 .m-empty{min-height:calc(28px*var(--rs,1)*1.2)}
 .m-surah-head{text-align:center;margin:10px 0;padding:6px 0;border-top:2px solid #c9a84c;border-bottom:2px solid #c9a84c}
@@ -1283,8 +1283,8 @@ function bumpFont(dir){
 function applyArFont(){document.body.setAttribute("data-arfont",ST.arFont);}
 // Cycle: naskh → hafs (мусхаф Мадани) → amiri (мусхафный насх) → qpc1 (печатный мусхаф) → kufi → naskh
 const AR_FONTS=["naskh","hafs","amiri","qpc1","kufi"];
-const AR_FONT_LABELS={naskh:"نسخ",hafs:"مصحف",amiri:"أميري",qpc1:"المصحف",kufi:"كوفي"};
-const AR_FONT_TITLES={naskh:"Насх (по умолчанию)",hafs:"Мусхаф Мадани (Усман Таха)",amiri:"Мусхафный насх (Amiri Quran)",qpc1:"Печатный мусхаф Мадани (QPC v1 — постраничные глифы)",kufi:"Куфи"};
+const AR_FONT_LABELS={naskh:"نسخ",hafs:"عثماني",amiri:"أميري",qpc1:"المصحف",kufi:"كوفي"};
+const AR_FONT_TITLES={naskh:"Насх (по умолчанию)",hafs:"Каллиграфический насх (Усман Таха)",amiri:"Каллиграфия Amiri Quran",qpc1:"Печатный мусхаф Мадани (QPC v1 — постраничные глифы)",kufi:"Куфи"};
 function toggleArFont(){
   const prev=ST.arFont;
   const i=AR_FONTS.indexOf(ST.arFont);
