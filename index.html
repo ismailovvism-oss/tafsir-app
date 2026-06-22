@@ -265,6 +265,10 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 /* Mushaf page mode */
 .mushaf-shell{height:100%;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:18px 12px;background:var(--bg-alt)}
 .mushaf-page{width:100%;max-width:680px;background:#fdfcf5;color:#1a1a1a;border:1px solid #e6e0c8;border-radius:6px;box-shadow:0 2px 14px rgba(0,0,0,.08);padding:26px calc(30px + var(--mar,0px))}
+/* «На всю ширину экрана»: убираем рамку/поля страницы, чтобы строки получили
+   максимальную ширину → fit-to-width делает глифы крупнее (без гор. прокрутки) */
+body.mushaf-full .mushaf-shell{padding-left:0;padding-right:0}
+body.mushaf-full .mushaf-page{max-width:none;border:none;border-radius:0;box-shadow:none;padding-left:5px;padding-right:5px}
 .mushaf-page .m-line{direction:rtl;text-align:center;white-space:nowrap;font-size:calc(28px*var(--rs-ar,1));line-height:calc(2.35*var(--lh-ar,1))}
 .mushaf-page .m-inner{display:inline-block;white-space:nowrap}
 .mushaf-page .m-line .qpc-w{display:inline-block}
@@ -1575,6 +1579,10 @@ function applyView(){
   s.setProperty("--sb",ST.sbScale);
 }
 function refitIfPage(){if(ST.pageMode){const host=document.getElementById("mushafPage");if(host)fitMushafLines(host);}}
+// «Мусхаф на всю ширину»: только в режиме «Мусхаф»; off by default (поведение
+// по умолчанию не меняется). Шире страница → fit-to-width даёт крупнее кегль.
+function applyMushafFull(){document.body.classList.toggle("mushaf-full",!!ST.mushafFull);}
+function setMushafFull(){ST.mushafFull=!ST.mushafFull;ss("mushafFull",ST.mushafFull);applyMushafFull();refitIfPage();renderViewPanel();}
 function bumpView(key,dir){
   const[lo,hi,step]=VIEW_LIMITS[key];
   ST[key]=Math.min(hi,Math.max(lo,Math.round((ST[key]+dir*step)*100)/100));
@@ -1599,8 +1607,10 @@ function renderViewPanel(){
   if(ST.pageMode){
     // page mode = printed vowelled glyphs at a fixed column fit: only line spacing
     // is meaningful (size/margins are absorbed by the fit; font is fixed)
-    el.innerHTML=`<div class="vp-group"><div class="vp-label">Отступы</div>${step("Межстрочный","lhAr",pct("lhAr"))}</div>`+
-      `<div class="vp-note">Размер и поля в режиме «Мусхаф» подстраиваются автоматически под страницу.</div>`+
+    el.innerHTML=`<div class="vp-group"><div class="vp-label">Страница</div>`+
+        `<label class="vp-check"><input type="checkbox" ${ST.mushafFull?"checked":""} onchange="setMushafFull()"> На всю ширину экрана (крупнее)</label></div>`+
+      `<div class="vp-group"><div class="vp-label">Отступы</div>${step("Межстрочный","lhAr",pct("lhAr"))}</div>`+
+      `<div class="vp-note">Размер строк в «Мусхафе» подстраивается автоматически под ширину страницы.</div>`+
       `<div class="vp-group"><div class="vp-label">Боковая панель (суры, теги)</div>${step("Размер","sbScale",pct("sbScale"))}</div>`+
       resetBtn+`<button class="vp-close" onclick="toggleViewPanel()">Готово</button>`;
     return;
@@ -2081,7 +2091,9 @@ ST.lhAr=gs("lhAr",_oldLh);
 ST.lhRu=gs("lhRu",_oldLh);
 ST.mar=gs("mar",0);
 ST.sbScale=gs("sbScale",1);
+ST.mushafFull=gs("mushafFull",false); // «Мусхаф на всю ширину» (off by default)
 applyView();
+applyMushafFull();
 ST.arFont=gs("arFont","qpc1"); // default: печатный мусхаф
 applyArFont();
 ST.navUnit=gs("navUnit","surah");
