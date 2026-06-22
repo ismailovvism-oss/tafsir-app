@@ -9,6 +9,10 @@
 <style>
 /* Reem Kufi (SIL OFL) — self-hosted for offline; see fonts/ReemKufi-OFL.txt */
 @font-face{font-family:'Reem Kufi';font-style:normal;font-weight:400 700;font-display:swap;src:url('fonts/ReemKufi.woff2') format('woff2')}
+/* KFGQPC Uthmanic Hafs — почерк Усмана Таха из мусхафа Мадани (self-hosted) */
+@font-face{font-family:'KFGQPC Uthmanic';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/UthmanicHafs.woff2') format('woff2')}
+/* Amiri Quran (SIL OFL) — открытый мусхафный насх (self-hosted) */
+@font-face{font-family:'Amiri Quran';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/AmiriQuran.woff2') format('woff2')}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 
 /* ===== THEMES ===== */
@@ -219,10 +223,18 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
   .sort-b{font-size:11px;padding:2px 5px}
 }
 
-/* Optional Kufi typeface for the Arabic reading text (toggle in the toolbar) */
+/* Optional Arabic typefaces for the reading text (toggle in the toolbar) */
 [data-arfont="kufi"] .arabic-main,
 [data-arfont="kufi"] .ab-entry-text.rtl,
 [data-arfont="kufi"] .col-ayah.rtl{font-family:'Reem Kufi','Noto Naskh Arabic','Amiri',serif}
+/* Мусхаф Мадани — почерк Усмана Таха (KFGQPC Uthmanic Hafs) */
+[data-arfont="hafs"] .arabic-main,
+[data-arfont="hafs"] .ab-entry-text.rtl,
+[data-arfont="hafs"] .col-ayah.rtl{font-family:'KFGQPC Uthmanic','Amiri Quran','Noto Naskh Arabic',serif;line-height:2.1}
+/* Мусхафный насх (Amiri Quran) */
+[data-arfont="amiri"] .arabic-main,
+[data-arfont="amiri"] .ab-entry-text.rtl,
+[data-arfont="amiri"] .col-ayah.rtl{font-family:'Amiri Quran','Noto Naskh Arabic',serif;line-height:2.1}
 
 /* SEARCH */
 .search-panel{position:fixed;top:48px;left:50%;transform:translateX(-50%);width:600px;max-width:90vw;max-height:70vh;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 40px rgba(0,0,0,.2);z-index:50;display:flex;flex-direction:column;overflow:hidden}
@@ -608,7 +620,7 @@ function renderCB(){
   if(!su)return;
   const layoutBtn=`<button class="btn-s layout-btn ${ST.layout==='v'?'active':''}" onclick="toggleLayout()" title="Колонки / Список">${ST.layout==='h'?'▤ Колонки':'▥ Список'}</button>`;
   const fontBtns=`<button class="btn-s" onclick="bumpFont(-1)" title="Меньше шрифт">A−</button><button class="btn-s" onclick="bumpFont(1)" title="Больше шрифт">A+</button>`;
-  const arFontBtn=`<button class="btn-s ${ST.arFont==='kufi'?'active':''}" onclick="toggleArFont()" title="Шрифт арабского: насх / куфи" style="font-family:'Reem Kufi',serif">${ST.arFont==='kufi'?'كوفي':'نسخ'}</button>`;
+  const arFontBtn=`<button class="btn-s ${ST.arFont!=='naskh'?'active':''}" onclick="toggleArFont()" title="Шрифт арабского — ${AR_FONT_TITLES[ST.arFont]||''} (нажмите, чтобы сменить)" style="font-family:'Amiri',serif;font-size:14px">${AR_FONT_LABELS[ST.arFont]||'نسخ'}</button>`;
   bar.innerHTML=`<div class="cb-left"><h2>${su.ru} <span class="ar">${su.name}</span></h2></div><div class="cb-right">${arFontBtn}${fontBtns}${layoutBtn}</div>`;
 }
 
@@ -1234,8 +1246,13 @@ function bumpFont(dir){
 
 // Arabic typeface: Naskh (default) / Kufi (persisted)
 function applyArFont(){document.body.setAttribute("data-arfont",ST.arFont);}
+// Cycle: naskh → hafs (мусхаф Мадани) → amiri (мусхафный насх) → kufi → naskh
+const AR_FONTS=["naskh","hafs","amiri","kufi"];
+const AR_FONT_LABELS={naskh:"نسخ",hafs:"مصحف",amiri:"أميري",kufi:"كوفي"};
+const AR_FONT_TITLES={naskh:"Насх (по умолчанию)",hafs:"Мусхаф Мадани (Усман Таха)",amiri:"Мусхафный насх (Amiri Quran)",kufi:"Куфи"};
 function toggleArFont(){
-  ST.arFont=ST.arFont==="kufi"?"naskh":"kufi";
+  const i=AR_FONTS.indexOf(ST.arFont);
+  ST.arFont=AR_FONTS[(i+1)%AR_FONTS.length];
   ss("arFont",ST.arFont);
   applyArFont();
   renderCB();
