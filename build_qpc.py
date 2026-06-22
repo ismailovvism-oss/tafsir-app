@@ -14,7 +14,7 @@ QPC v1 font (fonts/qpc-v1/p<page>.woff2). Run: python3 build_qpc.py
 """
 import json, os, sys, time, urllib.request, urllib.error
 
-API = "https://api.quran.com/api/v4/verses/by_chapter/{s}?words=true&per_page=300&word_fields=code_v1,page_number,line_number,char_type_name"
+API = "https://api.quran.com/api/v4/verses/by_chapter/{s}?words=true&per_page=300&word_fields=code_v1,page_number,line_number,char_type_name&fields=juz_number,rub_el_hizb_number"
 OUT = os.path.join(os.path.dirname(__file__), "data", "qpc", "v1")
 SURAH_AYAH_COUNT = None  # filled from API responses
 
@@ -37,6 +37,9 @@ def main():
     page_starts = {}      # page -> [{surah,ayah,line}]
     surah_start = {}      # surah -> {page,line}
     surah_end = {}        # surah -> {page,line}  (last word of the last ayah)
+    page_first = {}       # page -> {surah,ayah}  (first ayah appearing on the page)
+    juz_start = {}        # juz  -> {page,surah,ayah}
+    rub_start = {}        # rub_el_hizb (1..240) -> {page,surah,ayah}
     surah_index = []
 
     for s in range(1, 115):
@@ -45,6 +48,15 @@ def main():
         ayah_chunk = {}
         for v in verses:
             surah, ayah = map(int, v["verse_key"].split(":"))
+            vpage = v.get("page_number")
+            juz = v.get("juz_number")
+            rub = v.get("rub_el_hizb_number")
+            if vpage is not None and vpage not in page_first:
+                page_first[vpage] = {"surah": surah, "ayah": ayah}
+            if juz is not None and juz not in juz_start:
+                juz_start[juz] = {"page": vpage, "surah": surah, "ayah": ayah}
+            if rub is not None and rub not in rub_start:
+                rub_start[rub] = {"page": vpage, "surah": surah, "ayah": ayah}
             words, end = [], None
             for w in v["words"]:
                 glyph = w.get("code_v1")
@@ -88,6 +100,9 @@ def main():
         "pages": max(pages) if pages else 0,
         "surahStart": {str(k): v for k, v in surah_start.items()},
         "surahIndex": surah_index,
+        "pageStart": {str(k): page_first[k] for k in sorted(page_first)},
+        "juzStart": {str(k): juz_start[k] for k in sorted(juz_start)},
+        "rubStart": {str(k): rub_start[k] for k in sorted(rub_start)},
     }
     with open(os.path.join(OUT, "meta.json"), "w", encoding="utf-8") as f:
         json.dump(meta, f, ensure_ascii=False, separators=(",", ":"))

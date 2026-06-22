@@ -146,23 +146,23 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 .ab-entry:last-child{border-bottom:none}
 .ab-entry-label{font-size:10px;font-weight:600;color:var(--accent);margin-bottom:3px;display:flex;align-items:center;gap:4px}
 .ab-entry-label .lbl-ar{font-family:'Amiri',serif;color:var(--text-muted);font-weight:400}
-.ab-entry-text{font-size:calc(13px*var(--rs-ru,1));line-height:calc(1.85*var(--lh,1));color:var(--text-sec);white-space:pre-wrap}
+.ab-entry-text{font-size:calc(13px*var(--rs-ru,1));line-height:calc(1.85*var(--lh-ru,1));color:var(--text-sec);white-space:pre-wrap}
 .ab-entry-text.selectable{-webkit-user-select:text;user-select:text}
-.ab-entry-text.rtl{direction:rtl;text-align:right;font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(17px*var(--rs-ar,1));line-height:calc(2*var(--lh,1));color:var(--text)}
-.ab-entry-text.arabic-main{font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(22px*var(--rs-ar,1));line-height:calc(2*var(--lh,1));direction:rtl;text-align:right;color:var(--text)}
+.ab-entry-text.rtl{direction:rtl;text-align:right;font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(17px*var(--rs-ar,1));line-height:calc(2*var(--lh-ar,1));color:var(--text)}
+.ab-entry-text.arabic-main{font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(22px*var(--rs-ar,1));line-height:calc(2*var(--lh-ar,1));direction:rtl;text-align:right;color:var(--text)}
 
 /* Notes inline */
 .ab-note-area{width:100%;border:1px solid var(--note-border);border-radius:5px;padding:6px 8px;font-family:inherit;font-size:12px;line-height:1.6;color:var(--text);background:var(--note-bg);resize:vertical;outline:none;min-height:40px;-webkit-user-select:text;user-select:text}
 .ab-note-area:focus{border-color:var(--note-color)}
 
 /* Vertical/column layout */
-.col-layout{display:flex;overflow-x:auto;gap:0}
+.col-layout{display:flex;overflow-x:auto;gap:0;padding:0 var(--mar,0px)}
 .col-col{flex:1;min-width:250px;border-right:1px solid var(--border-light)}
 .col-col:last-child{border-right:none}
 .col-head{padding:6px 8px;background:var(--bg-alt);border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--accent);position:sticky;top:0;z-index:1;text-align:center}
-.col-ayah{padding:8px 10px;border-bottom:1px solid var(--border-light);font-size:calc(13px*var(--rs-ru,1));line-height:calc(1.85*var(--lh,1));color:var(--text-sec);white-space:pre-wrap;min-height:50px}
-.col-ayah.rtl{direction:rtl;text-align:right;font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(16px*var(--rs-ar,1));line-height:calc(2*var(--lh,1));color:var(--text)}
-.col-ayah.arabic-main{font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(20px*var(--rs-ar,1));line-height:calc(2*var(--lh,1));direction:rtl;text-align:right;color:var(--text)}
+.col-ayah{padding:8px 10px;border-bottom:1px solid var(--border-light);font-size:calc(13px*var(--rs-ru,1));line-height:calc(1.85*var(--lh-ru,1));color:var(--text-sec);white-space:pre-wrap;min-height:50px}
+.col-ayah.rtl{direction:rtl;text-align:right;font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(16px*var(--rs-ar,1));line-height:calc(2*var(--lh-ar,1));color:var(--text)}
+.col-ayah.arabic-main{font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(20px*var(--rs-ar,1));line-height:calc(2*var(--lh-ar,1));direction:rtl;text-align:right;color:var(--text)}
 .col-ayah-num{font-size:9px;font-weight:600;color:var(--accent);margin-bottom:2px}
 
 /* TAG RESULTS view */
@@ -236,23 +236,23 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 [data-arfont="amiri"] .ab-entry-text.rtl,
 [data-arfont="amiri"] .col-ayah.rtl{font-family:'Amiri Quran','Noto Naskh Arabic',serif;line-height:2.1}
 /* QPC v1 — постраничные глифы печатного мусхафа Мадани (per-page fonts, lazy) */
-.qpc-line{direction:rtl;text-align:justify;text-align-last:center;line-height:calc(2.3*var(--lh,1));font-size:calc(30px*var(--rs-ar,1));color:var(--text)}
+.qpc-line{direction:rtl;text-align:justify;text-align-last:center;line-height:calc(2.3*var(--lh-ar,1));font-size:calc(30px*var(--rs-ar,1));color:var(--text)}
 .qpc-w{display:inline-block}
 .qpc-end{display:inline-block;margin:0 1px}
 @media(max-width:768px){.qpc-line{font-size:calc(25px*var(--rs-ar,1))}}
 /* Mushaf page mode */
 .mushaf-shell{height:100%;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:18px 12px;background:var(--bg-alt)}
 .mushaf-page{width:100%;max-width:680px;background:#fdfcf5;color:#1a1a1a;border:1px solid #e6e0c8;border-radius:6px;box-shadow:0 2px 14px rgba(0,0,0,.08);padding:26px calc(30px + var(--mar,0px))}
-.mushaf-page .m-line{direction:rtl;text-align:center;white-space:nowrap;font-size:calc(28px*var(--rs-ar,1));line-height:calc(2.35*var(--lh,1))}
+.mushaf-page .m-line{direction:rtl;text-align:center;white-space:nowrap;font-size:calc(28px*var(--rs-ar,1));line-height:calc(2.35*var(--lh-ar,1))}
 .mushaf-page .m-inner{display:inline-block;white-space:nowrap}
 .mushaf-page .m-line .qpc-w{display:inline-block}
 .m-empty{min-height:calc(28px*var(--rs-ar,1)*1.2)}
 .m-surah-head{text-align:center;margin:10px 0;padding:6px 0;border-top:2px solid #c9a84c;border-bottom:2px solid #c9a84c}
-.m-surah-name{font-family:'KFGQPC Uthmanic','Amiri Quran',serif;font-size:calc(24px*var(--rs-ar,1));color:#7a5c12;direction:rtl}
-.m-basmala{text-align:center;direction:rtl;font-family:'KFGQPC Uthmanic','Amiri Quran',serif;font-size:calc(24px*var(--rs-ar,1));line-height:2;color:#1a1a1a;margin:4px 0}
+.m-surah-name{font-family:'KFGQPC Uthmanic','Amiri Quran',serif;font-size:24px;color:#7a5c12;direction:rtl}
+.m-basmala{text-align:center;direction:rtl;font-family:'KFGQPC Uthmanic','Amiri Quran',serif;font-size:24px;line-height:2;color:#1a1a1a;margin:4px 0}
 .mushaf-nav{display:flex;align-items:center;justify-content:center;gap:14px;padding:14px;flex:none}
 .m-pageno{font-size:12px;color:var(--text-sec)}
-@media(max-width:768px){.mushaf-page{padding:18px 14px}.mushaf-page .m-line,.m-surah-name,.m-basmala{font-size:calc(22px*var(--rs-ar,1))}}
+@media(max-width:768px){.mushaf-page{padding:18px 14px}.mushaf-page .m-line{font-size:calc(22px*var(--rs-ar,1))}.m-surah-name,.m-basmala{font-size:21px}}
 /* ⚙ Вид settings popover */
 .view-panel{position:fixed;top:46px;right:10px;z-index:60;width:284px;max-width:92vw;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 40px rgba(0,0,0,.22);padding:6px 12px 12px;max-height:82vh;overflow:auto}
 .vp-group{padding:8px 0;border-bottom:1px solid var(--border-light)}
@@ -266,7 +266,11 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 .vp-step{display:flex;align-items:center;gap:8px}
 .vp-step button{width:26px;height:26px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:15px;cursor:pointer;line-height:1}
 .vp-step b{min-width:48px;text-align:center;font-size:12px;font-weight:600}
-.vp-close{width:100%;margin-top:8px;padding:8px;border:none;border-radius:7px;background:var(--accent);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.vp-note{font-size:11px;color:var(--text-muted);line-height:1.4;padding:6px 0 2px}
+.vp-reset{width:100%;margin-top:8px;padding:7px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text-sec);font-family:inherit;font-size:12px;cursor:pointer}
+.vp-reset:hover{color:var(--text)}
+.vp-close{width:100%;margin-top:6px;padding:8px;border:none;border-radius:7px;background:var(--accent);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.np-sel,.np-num{width:100%;padding:7px 8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:var(--bg);color:var(--text);outline:none}
 
 /* SEARCH */
 .search-panel{position:fixed;top:48px;left:50%;transform:translateX(-50%);width:600px;max-width:90vw;max-height:70vh;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 40px rgba(0,0,0,.2);z-index:50;display:flex;flex-direction:column;overflow:hidden}
@@ -453,10 +457,13 @@ let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,
   rpFilter:"",
   fsAr:1,            // Arabic reading text size (⚙ Вид)
   fsRu:1,            // Russian reading text size (⚙ Вид)
-  lh:1,              // line-spacing multiplier (⚙ Вид)
+  lhAr:1,            // Arabic line-spacing multiplier (⚙ Вид)
+  lhRu:1,            // Russian line-spacing multiplier (⚙ Вид)
   mar:0,             // extra reading margins in px (⚙ Вид)
   viewOpen:false,    // ⚙ Вид panel open
-  arFont:"naskh",    // Arabic typeface: "naskh" | "hafs" | "amiri" | "qpc1" | "kufi"
+  navOpen:false,     // 📑 Переход panel open
+  scrollToAyah:null, // pending ayah to scroll to after a jump (ayah mode)
+  arFont:"qpc1",     // Arabic typeface: "naskh" | "hafs" | "amiri" | "qpc1" | "kufi"
   pageMode:false,    // mushaf page view (faithful page-by-page QPC layout)
   mushafPage:1,      // current page in mushaf page mode (1..604)
   facets:{lang:[],kind:[],era:[],tags:[]}, // active facet filters in the right panel
@@ -600,7 +607,7 @@ function setTheme(t){
 // ============================================================
 // RENDER
 // ============================================================
-function render(){renderSB();renderCB();renderCenter();renderRP();renderF();}
+function render(){renderSB();renderCB();renderCenter();renderRP();renderF();renderViewPanel();renderNavPanel();}
 
 // -- SIDEBAR --
 function renderSB(){
@@ -658,9 +665,13 @@ function renderCB(){
   if(!su)return;
   const layoutBtn=`<button class="btn-s layout-btn ${ST.layout==='v'?'active':''}" onclick="toggleLayout()" title="Колонки / Список">${ST.layout==='h'?'▤ Колонки':'▥ Список'}</button>`;
   const viewBtn=`<button class="btn-s ${ST.viewOpen?'active':''}" onclick="toggleViewPanel()" title="Вид: шрифт, размеры, интервал, поля">⚙ Вид</button>`;
+  const navBtn=`<button class="btn-s ${ST.navOpen?'active':''}" onclick="toggleNavPanel()" title="Переход: сура · джуз · руб · страница">📑 Переход</button>`;
   const pageBtn=`<button class="btn-s ${ST.pageMode?'active':''}" onclick="togglePageMode()" title="Режим страницы мусхафа (печатный вид)">📖 Мусхаф</button>`;
-  if(ST.pageMode){bar.innerHTML=`<div class="cb-left"><h2>📖 Мусхаф Мадани</h2></div><div class="cb-right">${pageBtn}${viewBtn}</div>`;return;}
-  bar.innerHTML=`<div class="cb-left"><h2>${su.ru} <span class="ar">${su.name}</span></h2></div><div class="cb-right">${pageBtn}${layoutBtn}${viewBtn}</div>`;
+  if(ST.pageMode){
+    const loc=pageLocation(ST.mushafPage);
+    bar.innerHTML=`<div class="cb-left"><h2>${loc}</h2></div><div class="cb-right">${navBtn}${pageBtn}${viewBtn}</div>`;return;
+  }
+  bar.innerHTML=`<div class="cb-left"><h2>${su.ru} <span class="ar">${su.name}</span></h2></div><div class="cb-right">${navBtn}${pageBtn}${layoutBtn}${viewBtn}</div>`;
 }
 
 // -- CENTER BODY --
@@ -773,7 +784,11 @@ async function renderReading(el){
     }
     area.innerHTML=html;
     setupHydration(area,enabled,loaded);
-    if(anchorAid){const t=area.querySelector(`.ayah-block[data-aid="${anchorAid}"]`);if(t)t.scrollIntoView({block:"start"});}
+    // a pending jump (📑 Переход) wins over scroll-anchor preservation
+    if(ST.scrollToAyah!=null){
+      const t=area.querySelector(`.ayah-block[data-aid="${ST.scrollToAyah}"]`);if(t)t.scrollIntoView({block:"start"});
+      ST.scrollToAyah=null;
+    }else if(anchorAid){const t=area.querySelector(`.ayah-block[data-aid="${anchorAid}"]`);if(t)t.scrollIntoView({block:"start"});}
   } else {
     if(hydrationObserver){hydrationObserver.disconnect();hydrationObserver=null;}
     // Vertical columns
@@ -1287,24 +1302,31 @@ function setSbTab(t){ST.sbTab=t;document.getElementById("sbTabSurahs").classList
 function goSurah(id){ST.surah=id;ST.selectedTag=null;if(ST.pageMode){const st=qpcMeta?.surahStart?.[id];if(st)ST.mushafPage=st.page;}if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}pushSurahHash(id);render();}
 function toggleLayout(){ST.layout=ST.layout==="h"?"v":"h";render();}
 
-// --- Reading display settings (⚙ Вид): sizes AR/RU, line spacing, margins ----
+// --- Reading display settings (⚙ Вид): sizes AR/RU, line spacing AR/RU, margins
+const VIEW_DEFAULTS={fsAr:1,fsRu:1,lhAr:1,lhRu:1,mar:0};
+const VIEW_LIMITS={fsAr:[0.7,2.4,0.1],fsRu:[0.7,2.2,0.1],lhAr:[0.7,2.0,0.1],lhRu:[0.7,2.0,0.1],mar:[0,160,16]};
 function applyView(){
   const s=document.body.style;
   s.setProperty("--rs-ar",ST.fsAr);
   s.setProperty("--rs-ru",ST.fsRu);
-  s.setProperty("--lh",ST.lh);
+  s.setProperty("--lh-ar",ST.lhAr);
+  s.setProperty("--lh-ru",ST.lhRu);
   s.setProperty("--mar",ST.mar+"px");
 }
-const VIEW_LIMITS={fsAr:[0.7,2.2,0.1],fsRu:[0.7,2.0,0.1],lh:[0.8,1.8,0.1],mar:[0,160,16]};
+function refitIfPage(){if(ST.pageMode){const host=document.getElementById("mushafPage");if(host)fitMushafLines(host);}}
 function bumpView(key,dir){
   const[lo,hi,step]=VIEW_LIMITS[key];
   ST[key]=Math.min(hi,Math.max(lo,Math.round((ST[key]+dir*step)*100)/100));
-  ss(key,ST[key]);applyView();
-  // page mode: changing the base size/margins changes the column → re-fit glyph lines
-  if(ST.pageMode){const host=document.getElementById("mushafPage");if(host)fitMushafLines(host);}
-  renderViewPanel();
+  ss(key,ST[key]);applyView();refitIfPage();renderViewPanel();
 }
-function toggleViewPanel(){ST.viewOpen=!ST.viewOpen;renderCB();renderViewPanel();}
+function resetView(){
+  for(const k in VIEW_DEFAULTS){ST[k]=VIEW_DEFAULTS[k];ss(k,ST[k]);}
+  applyView();
+  // "исходные = печатный": also reset the typeface to the printed mushaf
+  if(ST.arFont!=="qpc1"){ST.arFont="qpc1";ss("arFont","qpc1");applyArFont();renderCenter();}
+  refitIfPage();renderViewPanel();
+}
+function toggleViewPanel(){ST.viewOpen=!ST.viewOpen;if(ST.viewOpen)ST.navOpen=false;renderCB();renderViewPanel();renderNavPanel();}
 function renderViewPanel(){
   let el=document.getElementById("viewPanel");
   if(!el){el=document.createElement("div");el.id="viewPanel";el.className="view-panel";document.body.appendChild(el);}
@@ -1312,20 +1334,76 @@ function renderViewPanel(){
   el.style.display="block";
   const pct=k=>Math.round(ST[k]*100)+"%";
   const step=(label,key,val)=>`<div class="vp-row"><span>${label}</span><span class="vp-step"><button onclick="bumpView('${key}',-1)">−</button><b>${val}</b><button onclick="bumpView('${key}',1)">+</button></span></div>`;
-  // Original Quran-text variants + Arabic typeface only apply outside page mode
-  // (page mode always shows the vowelled printed glyphs).
-  let top="";
-  if(!ST.pageMode){
-    const variants=[["_arabic","С огласовками"],["_arabic_clean","Без огласовок"],["_arabic_rasm","Без точек (расм)"]];
-    top+=`<div class="vp-group"><div class="vp-label">Оригинал (текст Корана)</div>`+
-      variants.map(([id,name])=>`<label class="vp-check"><input type="checkbox" ${ST.enabled[id]?"checked":""} onchange="toggleEn('${id}')"> ${name}</label>`).join("")+`</div>`;
-    top+=`<div class="vp-group"><div class="vp-label">Шрифт арабского</div><div class="vp-fonts">`+
-      AR_FONTS.map(f=>`<button class="vp-font ${ST.arFont===f?"on":""}" title="${AR_FONT_TITLES[f]}" onclick="setArFont('${f}')">${AR_FONT_NAMES[f]}</button>`).join("")+`</div></div>`;
+  const resetBtn=`<button class="vp-reset" onclick="resetView()">↺ По умолчанию</button>`;
+  if(ST.pageMode){
+    // page mode = printed vowelled glyphs at a fixed column fit: only line spacing
+    // is meaningful (size/margins are absorbed by the fit; font is fixed)
+    el.innerHTML=`<div class="vp-group"><div class="vp-label">Отступы</div>${step("Межстрочный","lhAr",pct("lhAr"))}</div>`+
+      `<div class="vp-note">Размер и поля в режиме «Мусхаф» подстраиваются автоматически под страницу.</div>`+
+      resetBtn+`<button class="vp-close" onclick="toggleViewPanel()">Готово</button>`;
+    return;
   }
-  el.innerHTML=top+
+  const variants=[["_arabic","С огласовками"],["_arabic_clean","Без огласовок"],["_arabic_rasm","Без точек (расм)"]];
+  el.innerHTML=
+    `<div class="vp-group"><div class="vp-label">Оригинал (текст Корана)</div>`+
+      variants.map(([id,name])=>`<label class="vp-check"><input type="checkbox" ${ST.enabled[id]?"checked":""} onchange="toggleEn('${id}')"> ${name}</label>`).join("")+`</div>`+
+    `<div class="vp-group"><div class="vp-label">Шрифт арабского</div><div class="vp-fonts">`+
+      AR_FONTS.map(f=>`<button class="vp-font ${ST.arFont===f?"on":""}" title="${AR_FONT_TITLES[f]}" onclick="setArFont('${f}')">${AR_FONT_NAMES[f]}</button>`).join("")+`</div></div>`+
     `<div class="vp-group"><div class="vp-label">Размер шрифта</div>${step("Арабский","fsAr",pct("fsAr"))}${step("Русский","fsRu",pct("fsRu"))}</div>`+
-    `<div class="vp-group"><div class="vp-label">Отступы</div>${step("Межстрочный","lh",pct("lh"))}${step("Поля","mar",ST.mar+"px")}</div>`+
-    `<button class="vp-close" onclick="toggleViewPanel()">Готово</button>`;
+    `<div class="vp-group"><div class="vp-label">Межстрочный интервал</div>${step("Арабский","lhAr",pct("lhAr"))}${step("Русский","lhRu",pct("lhRu"))}</div>`+
+    `<div class="vp-group"><div class="vp-label">Поля</div>${step("Отступы по краям","mar",ST.mar+"px")}</div>`+
+    resetBtn+`<button class="vp-close" onclick="toggleViewPanel()">Готово</button>`;
+}
+
+// --- 📑 Переход: jump by surah / juz / rub al-hizb / page (both modes) -------
+function juzForPage(pg){
+  const js=qpcMeta&&qpcMeta.juzStart;if(!js)return null;
+  let cur=1;for(let j=1;j<=30;j++){if(js[j]&&js[j].page<=pg)cur=j;else break;}return cur;
+}
+function pageLocation(pg){
+  const total=qpcMeta&&qpcMeta.pages||604;
+  const pf=qpcMeta&&qpcMeta.pageStart&&qpcMeta.pageStart[pg];
+  const su=pf?SURAHS.find(s=>s.id===pf.surah):null;
+  const juz=juzForPage(pg);
+  return `${su?esc(su.ru):"Мусхаф"}${juz?` · Джуз ${juz}`:""} · стр. ${pg}/${total}`;
+}
+function goAyah(surah,ayah){
+  ST.surah=surah;ST.selectedTag=null;ST.scrollToAyah=ayah||1;
+  if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
+  pushSurahHash(surah);render();
+}
+function jumpTo(t){ // {page?, surah?, ayah?}
+  if(ST.pageMode){
+    let pg=t.page;
+    if(pg==null&&t.surah){const st=qpcMeta&&qpcMeta.surahStart&&qpcMeta.surahStart[t.surah];pg=st?st.page:1;}
+    gotoPage(pg||1);
+  }else{
+    if(t.surah)goAyah(t.surah,t.ayah||1);
+    else if(t.page){const pf=qpcMeta&&qpcMeta.pageStart&&qpcMeta.pageStart[t.page];if(pf)goAyah(pf.surah,pf.ayah);}
+  }
+}
+function navJumpSurah(v){jumpTo({surah:+v});}
+function navJumpJuz(v){const j=qpcMeta&&qpcMeta.juzStart&&qpcMeta.juzStart[+v];if(j)jumpTo(j);}
+function navJumpRub(v){v=Math.max(1,Math.min(240,+v||1));const r=qpcMeta&&qpcMeta.rubStart&&qpcMeta.rubStart[v];if(r)jumpTo(r);}
+function navJumpPage(v){const total=qpcMeta&&qpcMeta.pages||604;v=Math.max(1,Math.min(total,+v||1));jumpTo({page:v});}
+function toggleNavPanel(){ST.navOpen=!ST.navOpen;if(ST.navOpen)ST.viewOpen=false;renderCB();renderNavPanel();renderViewPanel();}
+function renderNavPanel(){
+  let el=document.getElementById("navPanel");
+  if(!el){el=document.createElement("div");el.id="navPanel";el.className="view-panel";document.body.appendChild(el);}
+  if(!ST.navOpen){el.style.display="none";return;}
+  el.style.display="block";
+  const total=qpcMeta&&qpcMeta.pages||604;
+  const curPage=ST.pageMode?ST.mushafPage:((qpcMeta&&qpcMeta.surahStart&&qpcMeta.surahStart[ST.surah]||{}).page||1);
+  const curSurah=ST.pageMode?((qpcMeta&&qpcMeta.pageStart&&qpcMeta.pageStart[ST.mushafPage]||{}).surah||1):ST.surah;
+  const curJuz=juzForPage(curPage)||1;
+  const surahOpts=SURAHS.map(s=>`<option value="${s.id}" ${s.id===curSurah?"selected":""}>${s.id}. ${esc(s.ru)} — ${s.name}</option>`).join("");
+  const juzOpts=Array.from({length:30},(_,i)=>`<option value="${i+1}" ${i+1===curJuz?"selected":""}>Джуз ${i+1}</option>`).join("");
+  el.innerHTML=
+    `<div class="vp-group"><div class="vp-label">Сура</div><select class="np-sel" onchange="navJumpSurah(this.value)">${surahOpts}</select></div>`+
+    `<div class="vp-group"><div class="vp-label">Джуз</div><select class="np-sel" onchange="navJumpJuz(this.value)">${juzOpts}</select></div>`+
+    `<div class="vp-group"><div class="vp-label">Руб аль-хизб (1–240)</div><input class="np-num" type="number" min="1" max="240" placeholder="напр. 120" onchange="navJumpRub(this.value)"></div>`+
+    `<div class="vp-group"><div class="vp-label">Страница (1–${total})</div><input class="np-num" type="number" min="1" max="${total}" value="${curPage}" onchange="navJumpPage(this.value)"></div>`+
+    `<button class="vp-close" onclick="toggleNavPanel()">Готово</button>`;
 }
 
 // Arabic typeface (chosen in the ⚙ Вид panel; persisted). Names are russified.
@@ -1401,6 +1479,7 @@ async function togglePageMode(){
 async function gotoPage(p){
   const meta=await loadQpcMeta();const total=meta?.pages||604;
   ST.mushafPage=Math.max(1,Math.min(total,p));
+  renderCB();renderNavPanel(); // refresh location title + nav panel values
   await renderMushafPage(document.getElementById("centerBody"));
 }
 // One physical mushaf line of glyphs. The glyphs carry no kashida, so a line at
@@ -1633,10 +1712,12 @@ setTheme(savedTheme);
 const _oldScale=gs("fontScale",null);
 ST.fsAr=gs("fsAr",_oldScale!=null?_oldScale:1);
 ST.fsRu=gs("fsRu",_oldScale!=null?_oldScale:1);
-ST.lh=gs("lh",1);
+const _oldLh=gs("lh",1);
+ST.lhAr=gs("lhAr",_oldLh);
+ST.lhRu=gs("lhRu",_oldLh);
 ST.mar=gs("mar",0);
 applyView();
-ST.arFont=gs("arFont","naskh");
+ST.arFont=gs("arFont","qpc1"); // default: печатный мусхаф
 applyArFont();
 loadQpcMeta(); // preload mushaf page index (surah → page) for page-mode jumps
 // Open sidebar by default on desktop
