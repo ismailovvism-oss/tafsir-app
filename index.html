@@ -150,6 +150,21 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 .ab-entry-text.selectable{-webkit-user-select:text;user-select:text}
 .ab-entry-text.rtl{direction:rtl;text-align:right;font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(17px*var(--rs-ar,1));line-height:calc(2*var(--lh-ar,1));color:var(--text)}
 .ab-entry-text.arabic-main{font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(22px*var(--rs-ar,1));line-height:calc(2*var(--lh-ar,1));direction:rtl;text-align:right;color:var(--text)}
+/* Markdown-rendered tafsir/translation (tables, bold, quotes, lists) */
+.md{white-space:normal}
+.md .md-p{margin:.15em 0;white-space:pre-line}
+.md .md-h{font-weight:600;margin:.45em 0 .2em;color:var(--text)}
+.md .md-h1{font-size:1.2em}.md .md-h2{font-size:1.1em}.md .md-h3,.md .md-h4{font-size:1.03em}
+.md .md-q{border-inline-start:3px solid var(--accent);padding-inline-start:9px;margin:.35em 0;color:var(--text-muted)}
+.md .md-ul,.md .md-ol{margin:.3em 0;padding-inline-start:1.3em}
+.md .md-ul li,.md .md-ol li{margin:.1em 0}
+.md .md-tbl{border-collapse:collapse;margin:.45em 0;width:auto;max-width:100%}
+.md .md-tbl th,.md .md-tbl td{border:1px solid var(--border);padding:3px 8px;text-align:start;vertical-align:top}
+.md .md-tbl th{background:var(--bg-alt);font-weight:600}
+.md code{background:var(--bg-alt);border-radius:3px;padding:0 4px;font-size:.92em}
+.md hr{border:none;border-top:1px solid var(--border);margin:.5em 0}
+.clamped{max-height:calc(9em*var(--lh-ru,1));overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 70%,transparent);mask-image:linear-gradient(180deg,#000 70%,transparent)}
+.more-btn{background:none;border:none;color:var(--accent);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;padding:4px 0 2px}
 
 /* Notes inline */
 .ab-note-area{width:100%;border:1px solid var(--note-border);border-radius:5px;padding:6px 8px;font-family:inherit;font-size:12px;line-height:1.6;color:var(--text);background:var(--note-bg);resize:vertical;outline:none;min-height:40px;-webkit-user-select:text;user-select:text}
@@ -606,6 +621,43 @@ function esc(t){const d=document.createElement("div");d.textContent=t;return d.i
 function escAttr(s){return String(s).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
 function isM(){return window.matchMedia("(max-width:768px)").matches;}
 
+// Lightweight Markdown for tafsir/translation segments: headings, bold/italic,
+// `code`, > quote, -/1. lists, | tables |, --- rule. Plain text (with blank-line
+// paragraphs / single-line breaks) renders unchanged. Always HTML-escaped first.
+function mdInline(t){
+  return t.replace(/\*\*([^*]+?)\*\*/g,"<strong>$1</strong>")
+          .replace(/__([^_]+?)__/g,"<strong>$1</strong>")
+          .replace(/(^|[^*])\*([^*\s][^*]*?)\*/g,"$1<em>$2</em>")
+          .replace(/`([^`]+?)`/g,"<code>$1</code>");
+}
+function mdTableStart(L,i){return L[i].includes("|")&&i+1<L.length&&L[i+1].includes("|")&&/^[\s:|-]*-[\s:|-]*$/.test(L[i+1]);}
+function mdBlockStart(L,i){const l=L[i];
+  return /^\s*$/.test(l)||/^\s*---+\s*$/.test(l)||/^\s*#{1,4}\s/.test(l)||/^\s*&gt;\s?/.test(l)||/^\s*[-*]\s+/.test(l)||/^\s*\d+\.\s+/.test(l)||mdTableStart(L,i);}
+function mdRender(src){
+  if(src==null||src==="")return "";
+  const L=esc(String(src)).split("\n"),out=[];let i=0;
+  const row=r=>r.replace(/^\s*\|/,"").replace(/\|\s*$/,"").split("|").map(c=>c.trim());
+  while(i<L.length){
+    const ln=L[i];
+    if(/^\s*$/.test(ln)){i++;continue;}
+    if(/^\s*---+\s*$/.test(ln)){out.push("<hr>");i++;continue;}
+    const h=ln.match(/^\s*(#{1,4})\s+(.*)$/);
+    if(h){const n=h[1].length;out.push(`<div class="md-h md-h${n}">${mdInline(h[2])}</div>`);i++;continue;}
+    if(mdTableStart(L,i)){
+      const head=row(ln);i+=2;let body="";
+      while(i<L.length&&!/^\s*$/.test(L[i])&&L[i].includes("|")){body+="<tr>"+row(L[i]).map(c=>`<td>${mdInline(c)}</td>`).join("")+"</tr>";i++;}
+      out.push(`<table class="md-tbl"><thead><tr>${head.map(c=>`<th>${mdInline(c)}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table>`);continue;
+    }
+    if(/^\s*&gt;\s?/.test(ln)){const q=[];while(i<L.length&&/^\s*&gt;\s?/.test(L[i])){q.push(L[i].replace(/^\s*&gt;\s?/,""));i++;}out.push(`<blockquote class="md-q">${mdInline(q.join("<br>"))}</blockquote>`);continue;}
+    if(/^\s*[-*]\s+/.test(ln)){const it=[];while(i<L.length&&/^\s*[-*]\s+/.test(L[i])){it.push(L[i].replace(/^\s*[-*]\s+/,""));i++;}out.push("<ul class='md-ul'>"+it.map(x=>`<li>${mdInline(x)}</li>`).join("")+"</ul>");continue;}
+    if(/^\s*\d+\.\s+/.test(ln)){const it=[];while(i<L.length&&/^\s*\d+\.\s+/.test(L[i])){it.push(L[i].replace(/^\s*\d+\.\s+/,""));i++;}out.push("<ol class='md-ol'>"+it.map(x=>`<li>${mdInline(x)}</li>`).join("")+"</ol>");continue;}
+    const para=[];while(i<L.length&&!mdBlockStart(L,i)){para.push(L[i]);i++;}
+    out.push(`<p class="md-p">${mdInline(para.join("<br>"))}</p>`);
+  }
+  return out.join("");
+}
+function toggleClamp(btn){const d=btn.previousElementSibling;const on=d.classList.toggle("clamped");btn.textContent=on?"Развернуть ▾":"Свернуть ▴";}
+
 // ============================================================
 // THEME
 // ============================================================
@@ -724,9 +776,12 @@ function buildAyahBody(aid,enabled,loaded){
     } else {
       const text=loaded[t.id]?.[String(aid)]||null;
       const isAr=t.lang==="ar";
+      const inner=text?mdRender(text):'<span style="color:var(--text-muted)">—</span>';
+      const long=text&&text.length>600; // collapse very long tafsirs
       html+=`<div class="ab-entry">
         <div class="ab-entry-label">${esc(t.name)} <span class="lbl-ar">${t.nameAr||''}</span></div>
-        <div class="ab-entry-text selectable ${isAr?'rtl':''}">${text?esc(text):'<span style="color:var(--text-muted)">—</span>'}</div>
+        <div class="ab-entry-text md selectable ${isAr?'rtl':''} ${long?'clamped':''}">${inner}</div>
+        ${long?'<button class="more-btn" onclick="toggleClamp(this)">Развернуть ▾</button>':''}
       </div>`;
     }
   }
@@ -836,7 +891,7 @@ async function renderReading(el){
         } else {
           const text=col.data?.[String(aid)]||"";
           const isAr=col.lang==="ar";
-          html+=`<div class="col-ayah selectable ${isAr?'rtl':''}">${text?esc(text):'—'}</div>`;
+          html+=`<div class="col-ayah md selectable ${isAr?'rtl':''}">${text?mdRender(text):'—'}</div>`;
         }
       }
       html+=`</div>`;
