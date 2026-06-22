@@ -165,6 +165,10 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 .md hr{border:none;border-top:1px solid var(--border);margin:.5em 0}
 .clamped{max-height:calc(9em*var(--lh-ru,1));overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 70%,transparent);mask-image:linear-gradient(180deg,#000 70%,transparent)}
 .more-btn{background:none;border:none;color:var(--accent);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;padding:4px 0 2px}
+/* tap-to-open word/grammar cards */
+.wcard{display:inline;font:inherit;color:inherit;background:none;border:none;padding:0;cursor:pointer;border-bottom:1px dotted var(--accent)}
+.wcard:active{background:var(--accent);color:#fff}
+.word-card{position:fixed;z-index:80;max-width:300px;background:var(--bg-card);border:1px solid var(--border);border-radius:9px;box-shadow:0 8px 34px rgba(0,0,0,.28);padding:9px 12px;font-size:13px;line-height:1.5;color:var(--text);display:none}
 
 /* Notes inline */
 .ab-note-area{width:100%;border:1px solid var(--note-border);border-radius:5px;padding:6px 8px;font-family:inherit;font-size:12px;line-height:1.6;color:var(--text);background:var(--note-bg);resize:vertical;outline:none;min-height:40px;-webkit-user-select:text;user-select:text}
@@ -624,12 +628,36 @@ function isM(){return window.matchMedia("(max-width:768px)").matches;}
 // Lightweight Markdown for tafsir/translation segments: headings, bold/italic,
 // `code`, > quote, -/1. lists, | tables |, --- rule. Plain text (with blank-line
 // paragraphs / single-line breaks) renders unchanged. Always HTML-escaped first.
-function mdInline(t){
+function mdInlineBasic(t){
   return t.replace(/\*\*([^*]+?)\*\*/g,"<strong>$1</strong>")
           .replace(/__([^_]+?)__/g,"<strong>$1</strong>")
           .replace(/(^|[^*])\*([^*\s][^*]*?)\*/g,"$1<em>$2</em>")
           .replace(/`([^`]+?)`/g,"<code>$1</code>");
 }
+function mdInline(t){
+  // tap-to-open cards: [[видимое::текст карточки]] -> clickable word + grammar card.
+  // Stash payloads behind sentinels (U+FFF9..B) so formatting/spaces never touch them.
+  const cards=[];
+  t=t.replace(/\[\[([^\]]+?)::([^\]]+?)\]\]/g,(m,lab,card)=>{
+    cards.push(card);return "\uFFF9"+(cards.length-1)+"\uFFFA"+lab+"\uFFFB";
+  });
+  t=mdInlineBasic(t);
+  return t.replace(/\uFFF9(\d+)\uFFFA([\s\S]*?)\uFFFB/g,(m,i,lab)=>
+    `<button type="button" class="wcard" data-card="${cards[+i].replace(/"/g,"&quot;")}">${lab}</button>`);
+}
+// grammar/word card: render the payload (inline md, || = line break)
+function renderCardText(raw){return mdInlineBasic(esc(String(raw||""))).replace(/\|\|/g,"<br>");}
+function showWordCard(btn){
+  let el=document.getElementById("wordCard");
+  if(!el){el=document.createElement("div");el.id="wordCard";el.className="word-card";document.body.appendChild(el);}
+  el.innerHTML=renderCardText(btn.dataset.card);
+  el.style.display="block";
+  const r=btn.getBoundingClientRect(),cw=el.offsetWidth,ch=el.offsetHeight,W=window.innerWidth,H=window.innerHeight;
+  let left=Math.max(8,Math.min(r.left+r.width/2-cw/2,W-cw-8));
+  let top=r.bottom+6; if(top+ch>H-8)top=Math.max(8,r.top-ch-6);
+  el.style.left=left+"px";el.style.top=top+"px";
+}
+function hideWordCard(){const el=document.getElementById("wordCard");if(el)el.style.display="none";}
 function mdTableStart(L,i){return L[i].includes("|")&&i+1<L.length&&L[i+1].includes("|")&&/^[\s:|-]*-[\s:|-]*$/.test(L[i+1]);}
 function mdBlockStart(L,i){const l=L[i];
   return /^\s*$/.test(l)||/^\s*---+\s*$/.test(l)||/^\s*#{1,4}\s/.test(l)||/^\s*&gt;\s?/.test(l)||/^\s*[-*]\s+/.test(l)||/^\s*\d+\.\s+/.test(l)||mdTableStart(L,i);}
@@ -1843,6 +1871,13 @@ applyArFont();
 ST.navUnit=gs("navUnit","surah");
 loadQpcMeta(); // preload mushaf page index (surah → page) for page-mode jumps
 setupSwipe();  // horizontal swipe → prev/next section
+// word/grammar cards: open on tap of a [[…]] word, dismiss on outside tap/scroll
+document.addEventListener("click",e=>{
+  const w=e.target.closest&&e.target.closest(".wcard");
+  if(w){showWordCard(w);return;}
+  if(!(e.target.closest&&e.target.closest("#wordCard")))hideWordCard();
+});
+document.addEventListener("scroll",hideWordCard,true);
 // Open sidebar by default on desktop
 if(!isM()){ST.sidebarOpen=true;document.getElementById("sidebar").classList.remove("collapsed");}
 loadConfig();
