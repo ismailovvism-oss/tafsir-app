@@ -271,6 +271,18 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 .vp-reset:hover{color:var(--text)}
 .vp-close{width:100%;margin-top:6px;padding:8px;border:none;border-radius:7px;background:var(--accent);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer}
 .np-sel,.np-num{width:100%;padding:7px 8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:var(--bg);color:var(--text);outline:none}
+/* segmented mode switch (Аяты | Мусхаф) */
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:7px;overflow:hidden}
+.seg button{border:none;background:var(--bg);color:var(--text-sec);font-family:inherit;cursor:pointer;padding:6px 11px;font-size:12px}
+.seg button.on{background:var(--accent);color:#fff}
+.seg-sm button{padding:5px 9px;font-size:11px}
+/* shared bottom prev/next navigation bar */
+.bottom-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 12px;border-top:1px solid var(--border);background:var(--bg-card);flex-shrink:0}
+.bn-arrow{background:var(--bg-alt);border:1px solid var(--border);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:inherit;font-size:13px;color:var(--text);white-space:nowrap}
+.bn-arrow:disabled{opacity:.4;cursor:default}
+.bn-mid{display:flex;align-items:center;gap:8px;min-width:0}
+.bn-unit{padding:5px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-family:inherit;font-size:12px;outline:none}
+.bn-cur{font-size:12px;color:var(--text-sec);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* SEARCH */
 .search-panel{position:fixed;top:48px;left:50%;transform:translateX(-50%);width:600px;max-width:90vw;max-height:70vh;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 40px rgba(0,0,0,.2);z-index:50;display:flex;flex-direction:column;overflow:hidden}
@@ -342,6 +354,7 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
   <main class="center">
     <div class="center-bar" id="centerBar"></div>
     <div id="centerBody" style="flex:1;overflow:hidden;display:flex;flex-direction:column;"></div>
+    <div id="bottomNav" class="bottom-nav"></div>
   </main>
 
   <aside class="rpanel collapsed" id="rpanel">
@@ -462,6 +475,7 @@ let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,
   mar:0,             // extra reading margins in px (⚙ Вид)
   viewOpen:false,    // ⚙ Вид panel open
   navOpen:false,     // 📑 Переход panel open
+  navUnit:"surah",   // bottom prev/next step unit: surah|page|juz|hizb
   scrollToAyah:null, // pending ayah to scroll to after a jump (ayah mode)
   arFont:"qpc1",     // Arabic typeface: "naskh" | "hafs" | "amiri" | "qpc1" | "kufi"
   pageMode:false,    // mushaf page view (faithful page-by-page QPC layout)
@@ -607,7 +621,7 @@ function setTheme(t){
 // ============================================================
 // RENDER
 // ============================================================
-function render(){renderSB();renderCB();renderCenter();renderRP();renderF();renderViewPanel();renderNavPanel();}
+function render(){renderSB();renderCB();renderCenter();renderRP();renderF();renderViewPanel();renderNavPanel();renderBottomNav();}
 
 // -- SIDEBAR --
 function renderSB(){
@@ -665,13 +679,14 @@ function renderCB(){
   if(!su)return;
   const layoutBtn=`<button class="btn-s layout-btn ${ST.layout==='v'?'active':''}" onclick="toggleLayout()" title="Колонки / Список">${ST.layout==='h'?'▤ Колонки':'▥ Список'}</button>`;
   const viewBtn=`<button class="btn-s ${ST.viewOpen?'active':''}" onclick="toggleViewPanel()" title="Вид: шрифт, размеры, интервал, поля">⚙ Вид</button>`;
-  const navBtn=`<button class="btn-s ${ST.navOpen?'active':''}" onclick="toggleNavPanel()" title="Переход: сура · джуз · руб · страница">📑 Переход</button>`;
-  const pageBtn=`<button class="btn-s ${ST.pageMode?'active':''}" onclick="togglePageMode()" title="Режим страницы мусхафа (печатный вид)">📖 Мусхаф</button>`;
+  const navBtn=`<button class="btn-s ${ST.navOpen?'active':''}" onclick="toggleNavPanel()" title="Переход: сура · джуз · хизб · страница">📑 Переход</button>`;
+  // explicit two-mode segmented switch (clearer than a lone "Мусхаф" toggle)
+  const modeSeg=`<span class="seg seg-sm"><button class="${!ST.pageMode?'on':''}" onclick="setReadMode(false)" title="Аяты + перевод">Аяты</button><button class="${ST.pageMode?'on':''}" onclick="setReadMode(true)" title="Постраничный мусхаф">Мусхаф</button></span>`;
   if(ST.pageMode){
     const loc=pageLocation(ST.mushafPage);
-    bar.innerHTML=`<div class="cb-left"><h2>${loc}</h2></div><div class="cb-right">${navBtn}${pageBtn}${viewBtn}</div>`;return;
+    bar.innerHTML=`<div class="cb-left"><h2>${loc}</h2></div><div class="cb-right">${modeSeg}${navBtn}${viewBtn}</div>`;return;
   }
-  bar.innerHTML=`<div class="cb-left"><h2>${su.ru} <span class="ar">${su.name}</span></h2></div><div class="cb-right">${navBtn}${pageBtn}${layoutBtn}${viewBtn}</div>`;
+  bar.innerHTML=`<div class="cb-left"><h2>${su.ru} <span class="ar">${su.name}</span></h2></div><div class="cb-right">${modeSeg}${navBtn}${layoutBtn}${viewBtn}</div>`;
 }
 
 // -- CENTER BODY --
@@ -1360,6 +1375,9 @@ function juzForPage(pg){
   const js=qpcMeta&&qpcMeta.juzStart;if(!js)return null;
   let cur=1;for(let j=1;j<=30;j++){if(js[j]&&js[j].page<=pg)cur=j;else break;}return cur;
 }
+// Hizb (60) derives from the rub al-hizb index (4 rubs per hizb): hizb h → rub (h-1)*4+1
+function hizbStart(h){const r=qpcMeta&&qpcMeta.rubStart;return r?r[(h-1)*4+1]||null:null;}
+function hizbForPage(pg){let cur=1;for(let h=1;h<=60;h++){const s=hizbStart(h);if(s&&s.page<=pg)cur=h;else break;}return cur;}
 function pageLocation(pg){
   const total=qpcMeta&&qpcMeta.pages||604;
   const pf=qpcMeta&&qpcMeta.pageStart&&qpcMeta.pageStart[pg];
@@ -1384,9 +1402,11 @@ function jumpTo(t){ // {page?, surah?, ayah?}
 }
 function navJumpSurah(v){jumpTo({surah:+v});}
 function navJumpJuz(v){const j=qpcMeta&&qpcMeta.juzStart&&qpcMeta.juzStart[+v];if(j)jumpTo(j);}
-function navJumpRub(v){v=Math.max(1,Math.min(240,+v||1));const r=qpcMeta&&qpcMeta.rubStart&&qpcMeta.rubStart[v];if(r)jumpTo(r);}
+function navJumpHizb(v){const s=hizbStart(Math.max(1,Math.min(60,+v||1)));if(s)jumpTo(s);}
 function navJumpPage(v){const total=qpcMeta&&qpcMeta.pages||604;v=Math.max(1,Math.min(total,+v||1));jumpTo({page:v});}
 function toggleNavPanel(){ST.navOpen=!ST.navOpen;if(ST.navOpen)ST.viewOpen=false;renderCB();renderNavPanel();renderViewPanel();}
+// Switch reading mode (Аяты ↔ Мусхаф); keeps your place via togglePageMode.
+function setReadMode(toPage){if(!!ST.pageMode!==!!toPage)togglePageMode();}
 function renderNavPanel(){
   let el=document.getElementById("navPanel");
   if(!el){el=document.createElement("div");el.id="navPanel";el.className="view-panel";document.body.appendChild(el);}
@@ -1395,15 +1415,67 @@ function renderNavPanel(){
   const total=qpcMeta&&qpcMeta.pages||604;
   const curPage=ST.pageMode?ST.mushafPage:((qpcMeta&&qpcMeta.surahStart&&qpcMeta.surahStart[ST.surah]||{}).page||1);
   const curSurah=ST.pageMode?((qpcMeta&&qpcMeta.pageStart&&qpcMeta.pageStart[ST.mushafPage]||{}).surah||1):ST.surah;
-  const curJuz=juzForPage(curPage)||1;
-  const surahOpts=SURAHS.map(s=>`<option value="${s.id}" ${s.id===curSurah?"selected":""}>${s.id}. ${esc(s.ru)} — ${s.name}</option>`).join("");
+  const curJuz=juzForPage(curPage)||1, curHizb=hizbForPage(curPage)||1;
   const juzOpts=Array.from({length:30},(_,i)=>`<option value="${i+1}" ${i+1===curJuz?"selected":""}>Джуз ${i+1}</option>`).join("");
-  el.innerHTML=
-    `<div class="vp-group"><div class="vp-label">Сура</div><select class="np-sel" onchange="navJumpSurah(this.value)">${surahOpts}</select></div>`+
-    `<div class="vp-group"><div class="vp-label">Джуз</div><select class="np-sel" onchange="navJumpJuz(this.value)">${juzOpts}</select></div>`+
-    `<div class="vp-group"><div class="vp-label">Руб аль-хизб (1–240)</div><input class="np-num" type="number" min="1" max="240" placeholder="напр. 120" onchange="navJumpRub(this.value)"></div>`+
-    `<div class="vp-group"><div class="vp-label">Страница (1–${total})</div><input class="np-num" type="number" min="1" max="${total}" value="${curPage}" onchange="navJumpPage(this.value)"></div>`+
-    `<button class="vp-close" onclick="toggleNavPanel()">Готово</button>`;
+  const hizbOpts=Array.from({length:60},(_,i)=>`<option value="${i+1}" ${i+1===curHizb?"selected":""}>Хизб ${i+1}</option>`).join("");
+  // mode selector at the top — the single clear "по сурам vs по страницам" switch
+  const mode=`<div class="vp-group"><div class="vp-label">Режим чтения</div><div class="seg">
+    <button class="${!ST.pageMode?"on":""}" onclick="setReadMode(false)">Аяты + перевод</button>
+    <button class="${ST.pageMode?"on":""}" onclick="setReadMode(true)">Мусхаф (страницы)</button></div></div>`;
+  // units relevant to the active mode only (surahs hidden in page mode, pages hidden in surah mode)
+  let units;
+  if(ST.pageMode){
+    units=`<div class="vp-group"><div class="vp-label">Страница (1–${total})</div><input class="np-num" type="number" min="1" max="${total}" value="${curPage}" onchange="navJumpPage(this.value)"></div>`;
+  }else{
+    const surahOpts=SURAHS.map(s=>`<option value="${s.id}" ${s.id===curSurah?"selected":""}>${s.id}. ${esc(s.ru)} — ${s.name}</option>`).join("");
+    units=`<div class="vp-group"><div class="vp-label">Сура</div><select class="np-sel" onchange="navJumpSurah(this.value)">${surahOpts}</select></div>`;
+  }
+  units+=`<div class="vp-group"><div class="vp-label">Джуз</div><select class="np-sel" onchange="navJumpJuz(this.value)">${juzOpts}</select></div>`+
+    `<div class="vp-group"><div class="vp-label">Хизб</div><select class="np-sel" onchange="navJumpHizb(this.value)">${hizbOpts}</select></div>`;
+  el.innerHTML=mode+units+`<button class="vp-close" onclick="toggleNavPanel()">Готово</button>`;
+}
+
+// --- bottom prev/next navigation by a chosen unit (+ swipe) ------------------
+function curPos(){
+  const page=ST.pageMode?ST.mushafPage:((qpcMeta&&qpcMeta.surahStart&&qpcMeta.surahStart[ST.surah]||{}).page||1);
+  const surah=ST.pageMode?((qpcMeta&&qpcMeta.pageStart&&qpcMeta.pageStart[ST.mushafPage]||{}).surah||1):ST.surah;
+  return {page,surah,juz:juzForPage(page)||1,hizb:hizbForPage(page)||1};
+}
+function effUnit(){let u=ST.navUnit;if(ST.pageMode&&u==="surah")u="page";if(!ST.pageMode&&u==="page")u="surah";return u;}
+function setNavUnit(u){ST.navUnit=u;ss("navUnit",u);renderBottomNav();}
+function stepSection(dir){
+  const p=curPos(),u=effUnit();
+  if(u==="surah")jumpTo({surah:Math.max(1,Math.min(114,p.surah+dir))});
+  else if(u==="page")navJumpPage(p.page+dir);
+  else if(u==="juz")navJumpJuz(Math.max(1,Math.min(30,p.juz+dir)));
+  else if(u==="hizb")navJumpHizb(Math.max(1,Math.min(60,p.hizb+dir)));
+}
+function renderBottomNav(){
+  const el=document.getElementById("bottomNav");if(!el)return;
+  if(ST.selectedTag){el.style.display="none";return;}
+  el.style.display="flex";
+  const p=curPos(),u=effUnit();
+  const units=ST.pageMode?[["page","Страница"],["juz","Джуз"],["hizb","Хизб"]]:[["surah","Сура"],["juz","Джуз"],["hizb","Хизб"]];
+  const sel=`<select class="bn-unit" onchange="setNavUnit(this.value)" title="Шаг перехода">`+
+    units.map(([v,n])=>`<option value="${v}" ${v===u?"selected":""}>${n}</option>`).join("")+`</select>`;
+  const cur=u==="surah"?((SURAHS.find(s=>s.id===p.surah)||{}).ru||""):u==="page"?("стр. "+p.page):u==="juz"?("Джуз "+p.juz):("Хизб "+p.hizb);
+  const total=u==="surah"?114:u==="page"?(qpcMeta&&qpcMeta.pages||604):u==="juz"?30:60;
+  const idx=u==="surah"?p.surah:u==="page"?p.page:u==="juz"?p.juz:p.hizb;
+  el.innerHTML=`<button class="bn-arrow" onclick="stepSection(-1)" ${idx<=1?"disabled":""} title="Предыдущий">‹ пред.</button>`+
+    `<span class="bn-mid">${sel}<span class="bn-cur">${esc(String(cur))}</span></span>`+
+    `<button class="bn-arrow" onclick="stepSection(1)" ${idx>=total?"disabled":""} title="Следующий">след. ›</button>`;
+}
+// horizontal swipe on the reading area → prev/next section (skip column layout's
+// own horizontal scrolling)
+let _swipeX=0,_swipeY=0,_swipeOk=false;
+function setupSwipe(){
+  const c=document.getElementById("centerBody");if(!c)return;
+  c.addEventListener("touchstart",e=>{const t=e.changedTouches[0];_swipeX=t.clientX;_swipeY=t.clientY;
+    _swipeOk=!(!ST.pageMode&&ST.layout==="v"&&!isM());},{passive:true});
+  c.addEventListener("touchend",e=>{
+    if(!_swipeOk)return;const t=e.changedTouches[0];const dx=t.clientX-_swipeX,dy=t.clientY-_swipeY;
+    if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5)stepSection(dx<0?1:-1); // swipe left → next
+  },{passive:true});
 }
 
 // Arabic typeface (chosen in the ⚙ Вид panel; persisted). Names are russified.
@@ -1472,14 +1544,19 @@ async function loadQpcPage(p){
   return qpcPageCache[p];
 }
 async function togglePageMode(){
+  const meta=await loadQpcMeta();
   ST.pageMode=!ST.pageMode;
-  if(ST.pageMode){const meta=await loadQpcMeta();const st=meta?.surahStart?.[ST.surah];if(st)ST.mushafPage=st.page;}
-  renderCB();await renderCenter();
+  if(ST.pageMode){ // entering: open the page that holds the current surah
+    const st=meta&&meta.surahStart&&meta.surahStart[ST.surah];if(st)ST.mushafPage=st.page;
+  }else{ // leaving: continue from the surah/ayah shown on the current page
+    const pf=meta&&meta.pageStart&&meta.pageStart[ST.mushafPage];if(pf){ST.surah=pf.surah;ST.scrollToAyah=pf.ayah;}
+  }
+  renderCB();renderNavPanel();renderBottomNav();await renderCenter();
 }
 async function gotoPage(p){
   const meta=await loadQpcMeta();const total=meta?.pages||604;
   ST.mushafPage=Math.max(1,Math.min(total,p));
-  renderCB();renderNavPanel(); // refresh location title + nav panel values
+  renderCB();renderNavPanel();renderBottomNav(); // refresh title + nav + bottom bar
   await renderMushafPage(document.getElementById("centerBody"));
 }
 // One physical mushaf line of glyphs. The glyphs carry no kashida, so a line at
@@ -1564,12 +1641,7 @@ async function renderMushafPage(el){
     });
     mushafResizeObs.observe(host);
   }
-  // page navigation (RTL: → previous page, ← next page, like a printed book)
-  const nav=document.createElement("div");nav.className="mushaf-nav";
-  nav.innerHTML=`<button class="btn-s" onclick="gotoPage(${pg+1})" ${pg>=total?'disabled':''}>← дальше</button>
-    <span class="m-pageno">страница ${pg} / ${total}</span>
-    <button class="btn-s" onclick="gotoPage(${pg-1})" ${pg<=1?'disabled':''}>назад →</button>`;
-  el.querySelector(".mushaf-shell").appendChild(nav);
+  // prev/next handled by the shared bottom navigation bar
 }
 
 function toggleEn(id){ST.enabled[id]=!ST.enabled[id];setEnabled(ST.enabled);renderRP();renderCenter();}
@@ -1719,7 +1791,9 @@ ST.mar=gs("mar",0);
 applyView();
 ST.arFont=gs("arFont","qpc1"); // default: печатный мусхаф
 applyArFont();
+ST.navUnit=gs("navUnit","surah");
 loadQpcMeta(); // preload mushaf page index (surah → page) for page-mode jumps
+setupSwipe();  // horizontal swipe → prev/next section
 // Open sidebar by default on desktop
 if(!isM()){ST.sidebarOpen=true;document.getElementById("sidebar").classList.remove("collapsed");}
 loadConfig();
