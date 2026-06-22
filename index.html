@@ -62,10 +62,10 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 
 .surah-btn{width:100%;display:flex;align-items:center;gap:7px;padding:6px 7px;margin:1px 0;border:none;border-radius:5px;cursor:pointer;background:transparent;color:var(--text);text-align:left;font-family:inherit;font-size:12px;transition:background .12s}
 .surah-btn:hover{background:rgba(128,128,128,.08)}.surah-btn.active{background:var(--accent);color:#fff}
-.s-n{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;background:rgba(128,128,128,.1);flex-shrink:0}
+.s-n{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:calc(9px*var(--sb,1));font-weight:600;background:rgba(128,128,128,.1);flex-shrink:0}
 .surah-btn.active .s-n{background:rgba(255,255,255,.18)}
-.s-ar{font-family:'Amiri',serif;font-size:13px;direction:rtl;line-height:1.3}
-.s-meta{font-size:9px;opacity:.5;margin-top:1px}
+.s-ar{font-family:'Amiri',serif;font-size:calc(13px*var(--sb,1));direction:rtl;line-height:1.3}
+.s-meta{font-size:calc(9px*var(--sb,1));opacity:.5;margin-top:1px}
 
 /* TAG TREE in sidebar */
 .tag-node{padding-left:10px}
@@ -125,9 +125,9 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 .t-check{width:15px;height:15px;border-radius:3px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;transition:all .12s;color:transparent}
 .t-item.checked .t-check{background:var(--accent);border-color:var(--accent);color:#fff}
 .t-info{flex:1;min-width:0}
-.t-name{font-size:11px;font-weight:500;color:var(--text);line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.t-name{font-size:calc(11px*var(--sb,1));font-weight:500;color:var(--text);line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .t-item.checked .t-name{color:var(--accent);font-weight:600}
-.t-ar{font-family:'Amiri',serif;font-size:11px;color:var(--text-muted);direction:rtl;line-height:1.1}
+.t-ar{font-family:'Amiri',serif;font-size:calc(11px*var(--sb,1));color:var(--text-muted);direction:rtl;line-height:1.1}
 .t-item.special{border-left:3px solid var(--note-color);padding-left:11px}
 .t-item.arabic-item{border-left:3px solid var(--accent);padding-left:11px}
 
@@ -473,6 +473,7 @@ let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,
   lhAr:1,            // Arabic line-spacing multiplier (⚙ Вид)
   lhRu:1,            // Russian line-spacing multiplier (⚙ Вид)
   mar:0,             // extra reading margins in px (⚙ Вид)
+  sbScale:1,         // sidebar (surah list / tags) text size (⚙ Вид)
   viewOpen:false,    // ⚙ Вид panel open
   navUnit:"surah",   // bottom nav step/jump unit: surah|page|juz|hizb
   scrollToAyah:null, // pending ayah to scroll to after a jump (ayah mode)
@@ -1316,8 +1317,8 @@ function goSurah(id){ST.surah=id;ST.selectedTag=null;{const st=qpcMeta&&qpcMeta.
 function toggleLayout(){ST.layout=ST.layout==="h"?"v":"h";render();}
 
 // --- Reading display settings (⚙ Вид): sizes AR/RU, line spacing AR/RU, margins
-const VIEW_DEFAULTS={fsAr:1,fsRu:1,lhAr:1,lhRu:1,mar:0};
-const VIEW_LIMITS={fsAr:[0.7,2.4,0.1],fsRu:[0.7,2.2,0.1],lhAr:[0.7,2.0,0.1],lhRu:[0.7,2.0,0.1],mar:[0,160,16]};
+const VIEW_DEFAULTS={fsAr:1,fsRu:1,lhAr:1,lhRu:1,mar:0,sbScale:1};
+const VIEW_LIMITS={fsAr:[0.7,2.4,0.1],fsRu:[0.7,2.2,0.1],lhAr:[0.7,2.0,0.1],lhRu:[0.7,2.0,0.1],mar:[0,160,16],sbScale:[0.8,1.8,0.1]};
 function applyView(){
   const s=document.body.style;
   s.setProperty("--rs-ar",ST.fsAr);
@@ -1325,6 +1326,7 @@ function applyView(){
   s.setProperty("--lh-ar",ST.lhAr);
   s.setProperty("--lh-ru",ST.lhRu);
   s.setProperty("--mar",ST.mar+"px");
+  s.setProperty("--sb",ST.sbScale);
 }
 function refitIfPage(){if(ST.pageMode){const host=document.getElementById("mushafPage");if(host)fitMushafLines(host);}}
 function bumpView(key,dir){
@@ -1353,6 +1355,7 @@ function renderViewPanel(){
     // is meaningful (size/margins are absorbed by the fit; font is fixed)
     el.innerHTML=`<div class="vp-group"><div class="vp-label">Отступы</div>${step("Межстрочный","lhAr",pct("lhAr"))}</div>`+
       `<div class="vp-note">Размер и поля в режиме «Мусхаф» подстраиваются автоматически под страницу.</div>`+
+      `<div class="vp-group"><div class="vp-label">Боковая панель (суры, теги)</div>${step("Размер","sbScale",pct("sbScale"))}</div>`+
       resetBtn+`<button class="vp-close" onclick="toggleViewPanel()">Готово</button>`;
     return;
   }
@@ -1365,6 +1368,7 @@ function renderViewPanel(){
     `<div class="vp-group"><div class="vp-label">Размер шрифта</div>${step("Арабский","fsAr",pct("fsAr"))}${step("Русский","fsRu",pct("fsRu"))}</div>`+
     `<div class="vp-group"><div class="vp-label">Межстрочный интервал</div>${step("Арабский","lhAr",pct("lhAr"))}${step("Русский","lhRu",pct("lhRu"))}</div>`+
     `<div class="vp-group"><div class="vp-label">Поля</div>${step("Отступы по краям","mar",ST.mar+"px")}</div>`+
+    `<div class="vp-group"><div class="vp-label">Боковая панель (суры, теги)</div>${step("Размер","sbScale",pct("sbScale"))}</div>`+
     resetBtn+`<button class="vp-close" onclick="toggleViewPanel()">Готово</button>`;
 }
 
@@ -1777,6 +1781,7 @@ const _oldLh=gs("lh",1);
 ST.lhAr=gs("lhAr",_oldLh);
 ST.lhRu=gs("lhRu",_oldLh);
 ST.mar=gs("mar",0);
+ST.sbScale=gs("sbScale",1);
 applyView();
 ST.arFont=gs("arFont","qpc1"); // default: печатный мусхаф
 applyArFont();
