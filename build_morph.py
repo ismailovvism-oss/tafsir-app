@@ -221,23 +221,31 @@ def main():
     # data-quran marks gaps with "[[MISSING]]"; drop those so nothing leaks.
     def clean(v):
         return "" if v == "[[MISSING]]" else v
-    # Step 4: our own Russian word-by-word gloss (hand-translated from the
-    # English gloss, cross-checked against Kuliev for case/wording). Lives in
-    # data/wbw/ru_gloss.json as {"s:a:w": "<ru>"} so it survives rebuilds.
+    # Step 4: our own Russian word-by-word gloss (literal, Krachkovsky-leaning).
+    # Two sources, per-token override wins over the phrase dictionary:
+    #   data/wbw/ru_gloss.json    {"s:a:w": "<ru>"}  hand-checked, verse-specific
+    #   data/wbw/ru_phrases.json  {"<en>": "<ru>"}   literal phrase dictionary
     ru_gloss = {}
     rg_path = os.path.join(OUT_DIR, "ru_gloss.json")
     if os.path.exists(rg_path):
         with open(rg_path, encoding="utf-8") as f:
             ru_gloss = json.load(f)
+    ru_phrases = {}
+    rp_path = os.path.join(OUT_DIR, "ru_phrases.json")
+    if os.path.exists(rp_path):
+        with open(rp_path, encoding="utf-8") as f:
+            ru_phrases = json.load(f)
 
     words = {}
     for i, key in enumerate(order, start=1):
-        rec = {"en": clean(en[str(i)])}
+        en_v = clean(en[str(i)])
+        rec = {"en": en_v}
         ru_ref = clean(ru[str(i)])
         if ru_ref:
             rec["ru_ref"] = ru_ref
-        if ru_gloss.get(key):
-            rec["ru"] = ru_gloss[key]
+        ru_val = ru_gloss.get(key) or ru_phrases.get(en_v.strip())
+        if ru_val:
+            rec["ru"] = ru_val
         words[key] = rec
 
     # --- split per surah (like data/qpc/v1/surah/<s>.json) -----------------
