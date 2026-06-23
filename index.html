@@ -113,6 +113,27 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 .rp-sec-head{padding:7px 12px 3px;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-muted)}
 .t-meta{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px}
 .t-pill{font-size:8px;line-height:1.4;padding:0 5px;border-radius:6px;background:var(--tag-bg);color:var(--tag-color);white-space:nowrap}
+.t-pill.warn{background:var(--note-bg);color:var(--note-color);border:1px solid var(--note-border);font-weight:600}
+.t-pill.ok{background:var(--accent-bg);color:var(--accent);border:1px solid var(--accent);font-weight:600}
+.t-fill{height:3px;border-radius:2px;background:var(--border-light);margin-top:5px;overflow:hidden}
+.t-fill>i{display:block;height:100%;background:var(--accent);border-radius:2px;opacity:.65}
+/* Скан-читалка: отдельная постраничная читалка (kind:image), не смешивается с режимом «Аяты» */
+.scan-reader{display:flex;flex-direction:column;height:100%}
+.scan-bar{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--bg-card);flex-wrap:wrap;flex:none}
+.scan-title{font-size:13px;font-weight:600;color:var(--accent)}
+.scan-title .scan-su{color:var(--text-sec);font-weight:500}
+.scan-tabs{display:flex;gap:4px}
+.scan-tab{background:var(--bg-alt);border:1px solid var(--border);border-radius:6px;padding:2px 9px;font:inherit;font-size:11px;cursor:pointer;color:var(--text-sec)}
+.scan-tab.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.scan-close{margin-left:auto;background:var(--bg-alt);border:1px solid var(--border);border-radius:6px;padding:3px 10px;font:inherit;font-size:11px;cursor:pointer;color:var(--text-sec)}
+.scan-close:hover{background:var(--border-light)}
+.scan-pages{flex:1;overflow:auto;padding:12px;text-align:center;background:var(--bg-alt)}
+.scan-pages img.scan-pg{max-width:min(100%,820px);height:auto;border:1px solid var(--border);border-radius:4px;margin:0 auto 12px;box-shadow:0 2px 8px rgba(0,0,0,.12);display:block}
+.scan-empty{color:var(--text-muted);font-size:13px;padding:40px 18px;text-align:center}
+.scan-empty span{font-size:11px;opacity:.8}
+/* пометка скан-источника в каталоге */
+.t-item.scan .t-check{color:var(--accent)}
+.t-badge{display:inline-block;font-size:10px;font-weight:600;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:0 5px;margin-left:6px;vertical-align:middle;opacity:.85}
 
 .tg-head{display:flex;align-items:center;gap:5px;padding:6px 8px 4px;font-size:10px;font-weight:600;color:var(--text-sec);letter-spacing:.3px;cursor:pointer;background:var(--bg);border:none;width:100%;text-align:left;font-family:inherit;position:sticky;top:0;z-index:1}
 .tg-head:hover{background:var(--border-light)}
@@ -165,10 +186,29 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 .md hr{border:none;border-top:1px solid var(--border);margin:.5em 0}
 .clamped{max-height:calc(9em*var(--lh-ru,1));overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 70%,transparent);mask-image:linear-gradient(180deg,#000 70%,transparent)}
 .more-btn{background:none;border:none;color:var(--accent);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;padding:4px 0 2px}
+/* Footnotes: superscript refs in text + numbered list below the ayah */
+.ab-fnref{font-size:.66em;vertical-align:.42em;line-height:0;color:var(--accent);font-weight:700;padding-left:1px}
+.ab-notes{margin-top:7px;padding-top:6px;border-top:1px dashed var(--border);font-size:calc(12px*var(--rs-ru,1));color:var(--text-muted);white-space:normal}
+.ab-fn{display:flex;gap:6px;line-height:calc(1.6*var(--lh-ru,1));margin:2px 0}
+.ab-fn-num{color:var(--accent);font-weight:700;font-size:.82em;flex-shrink:0;min-width:1.1em;text-align:right;padding-top:.15em}
+.ab-fn-t{flex:1;min-width:0}
+.ab-fn-t.md>:first-child{margin-top:0}.ab-fn-t.md>:last-child{margin-bottom:0}
 /* tap-to-open word/grammar cards */
 .wcard{display:inline;font:inherit;color:inherit;background:none;border:none;padding:0;cursor:pointer;border-bottom:1px dotted var(--accent)}
 .wcard:active{background:var(--accent);color:#fff}
 .word-card{position:fixed;z-index:80;max-width:300px;background:var(--bg-card);border:1px solid var(--border);border-radius:9px;box-shadow:0 8px 34px rgba(0,0,0,.28);padding:9px 12px;font-size:13px;line-height:1.5;color:var(--text);display:none}
+/* "О переводе/тафсире" info button + modal */
+.ab-info,.t-info-btn{background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:12px;line-height:1;padding:1px 3px;border-radius:4px;flex-shrink:0}
+.ab-info:hover,.t-info-btn:hover{color:var(--accent);background:var(--accent-bg)}
+.about-ovl{position:fixed;inset:0;z-index:120;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:20px}
+.about-box{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 48px rgba(0,0,0,.34);max-width:640px;width:100%;max-height:85vh;overflow:auto;padding:20px 22px;position:relative}
+.about-close{position:absolute;top:10px;right:12px;background:none;border:none;font-size:22px;line-height:1;color:var(--text-muted);cursor:pointer;padding:2px 6px;border-radius:6px}
+.about-close:hover{color:var(--text);background:var(--bg-alt)}
+.about-title{font-size:17px;font-weight:700;color:var(--text);padding-right:28px}
+.about-title .about-ar{font-family:'Amiri',serif;font-weight:400;color:var(--text-muted);font-size:15px}
+.about-meta{font-size:11px;color:var(--text-muted);margin:4px 0 12px;border-bottom:1px solid var(--border);padding-bottom:10px}
+.about-body{font-size:14px;line-height:1.7;color:var(--text-sec)}
+.about-warn{background:var(--note-bg);border:1px solid var(--note-border);color:var(--note-color);border-radius:8px;padding:9px 12px;font-size:12.5px;line-height:1.55;margin:0 0 12px}
 
 /* Notes inline */
 .ab-note-area{width:100%;border:1px solid var(--note-border);border-radius:5px;padding:6px 8px;font-family:inherit;font-size:12px;line-height:1.6;color:var(--text);background:var(--note-bg);resize:vertical;outline:none;min-height:40px;-webkit-user-select:text;user-select:text}
@@ -400,6 +440,14 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 <script src="data/tafsirs/kuliev.js"></script>
 <script src="data/tafsirs/krachkovsky.js"></script>
 <script src="data/tafsirs/osmanov.js"></script>
+<script src="data/tafsirs/abuadel.js"></script>
+<script src="data/tafsirs/kalam.js"></script>
+<script src="data/tafsirs/porokhova.js"></script>
+<script src="data/tafsirs/sablukov.js"></script>
+<script src="data/tafsirs/muntahab.js"></script>
+<script src="data/tafsirs/rysjanov.js"></script>
+<script src="data/tafsirs/isaeva.js"></script>
+<script src="data/tafsirs/djumagaliev.js"></script>
 <script src="data/tafsirs/tabari.js"></script>
 <script src="data/tafsirs/kathir.js"></script>
 <script src="data/tafsirs/qurtubi.js"></script>
@@ -658,6 +706,38 @@ function showWordCard(btn){
   el.style.left=left+"px";el.style.top=top+"px";
 }
 function hideWordCard(){const el=document.getElementById("wordCard");if(el)el.style.display="none";}
+
+// "О переводе/тафсире" — source-level intro/preface, lazy-loaded from data/about/<id>.md
+let aboutCache={};
+async function openAbout(id){
+  const t=CONFIG.tafsirs.find(x=>x.id===id);if(!t)return;
+  let bodyHtml;
+  if(t.kind==="image"){                              // скан-источник: предисловие картинками
+    let ab=aboutCache["imgabout_"+id];
+    if(ab===undefined){ab=null;try{const r=await fetch(`${DATA_PATH}${t.imgdir||("img/"+id)}/_about.json`);if(r.ok)ab=await r.json();}catch(e){}aboutCache["imgabout_"+id]=ab;}
+    const dir=imgDir(t);
+    const imgs=((ab&&ab.images)||[]).map(f=>`<img loading="lazy" src="${dir}${esc(f)}" style="max-width:100%;border:1px solid var(--border);border-radius:4px;margin-bottom:10px;display:block">`).join("");
+    bodyHtml=imgs||'<span style="color:var(--text-muted)">Предисловие пока не добавлено.</span>';
+  }else{
+    let md=aboutCache[id];
+    if(md===undefined){md=null;try{const r=await fetch(`${DATA_PATH}about/${id}.md`);if(r.ok)md=await r.text();}catch(e){}aboutCache[id]=md;}
+    bodyHtml=md?mdRender(md):'<span style="color:var(--text-muted)">Описание пока не добавлено.</span>';
+  }
+  let ov=document.getElementById("aboutOvl");
+  if(!ov){ov=document.createElement("div");ov.id="aboutOvl";ov.className="about-ovl";ov.onclick=e=>{if(e.target===ov)closeAbout();};document.body.appendChild(ov);}
+  const meta=[t.author&&"Автор: "+esc(t.author),t.year&&"Год: "+esc(t.year)].filter(Boolean).join(" · ");
+  const warn=t.caution?`<div class="about-warn">⚠️ Приводится <b>только в ознакомительных целях</b>, «как есть». Точность не гарантируется — в тексте возможны ошибки и вероучительные отклонения. Относитесь с осторожностью и сверяйтесь с авторитетными переводами.</div>`:'';
+  ov.innerHTML=`<div class="about-box" role="dialog" aria-modal="true">
+    <button class="about-close" onclick="closeAbout()" aria-label="Закрыть">×</button>
+    <div class="about-title">${esc(t.name)}${t.nameAr?` <span class="about-ar">${esc(t.nameAr)}</span>`:''}</div>
+    ${meta?`<div class="about-meta">${meta}</div>`:''}
+    ${warn}
+    <div class="about-body md">${bodyHtml}</div>
+  </div>`;
+  ov.style.display="flex";ov.scrollTop=0;
+}
+function closeAbout(){const ov=document.getElementById("aboutOvl");if(ov)ov.style.display="none";}
+function aboutOpen(){const ov=document.getElementById("aboutOvl");return ov&&ov.style.display!=="none";}
 function mdTableStart(L,i){return L[i].includes("|")&&i+1<L.length&&L[i+1].includes("|")&&/^[\s:|-]*-[\s:|-]*$/.test(L[i+1]);}
 function mdBlockStart(L,i){const l=L[i];
   return /^\s*$/.test(l)||/^\s*---+\s*$/.test(l)||/^\s*#{1,4}\s/.test(l)||/^\s*&gt;\s?/.test(l)||/^\s*[-*]\s+/.test(l)||/^\s*\d+\.\s+/.test(l)||mdTableStart(L,i);}
@@ -685,6 +765,28 @@ function mdRender(src){
   return out.join("");
 }
 function toggleClamp(btn){const d=btn.previousElementSibling;const on=d.classList.toggle("clamped");btn.textContent=on?"Развернуть ▾":"Свернуть ▴";}
+
+// Footnotes inside a translation/tafsir entry. Data convention: inline reference
+// markers [^N] in the text, and definitions "[^N]: …" (one per note) at the end.
+// Refs render as superscript indices; the notes list below the ayah (no label word).
+function splitNotes(text){
+  const i=text.search(/\n*\[\^\w+\]:/);
+  if(i<0)return{body:text,notes:[]};
+  const body=text.slice(0,i).replace(/\s+$/,"");
+  const tail=text.slice(i);const notes=[];
+  const re=/\[\^(\w+)\]:[ \t]*([\s\S]*?)(?=\n\[\^\w+\]:|$)/g;let m;
+  while((m=re.exec(tail)))notes.push({n:m[1],t:m[2].trim()});
+  return{body,notes};
+}
+function renderRefs(md){ // protect [^N] from markdown, then make them superscripts
+  return mdRender(md.replace(/\[\^(\w+)\]/g,"￶$1￷"))
+    .replace(/￶(\w+)￷/g,'<sup class="ab-fnref">$1</sup>');
+}
+function renderFootnotes(notes){
+  const long=notes.reduce((s,n)=>s+n.t.length,0)>360;
+  const list=notes.map(n=>`<div class="ab-fn"><span class="ab-fn-num">${esc(n.n)}</span><div class="ab-fn-t md">${mdRender(n.t)}</div></div>`).join("");
+  return `<div class="ab-notes ${long?'clamped':''}">${list}</div>`+(long?`<button class="more-btn" onclick="toggleClamp(this)">Развернуть ▾</button>`:"");
+}
 
 // ============================================================
 // THEME
@@ -757,6 +859,11 @@ function renderCB(){
     return;
   }
   if(!su)return;
+  if(ST.scanSource){ // скан-читалка: своя панель, режимы Аяты/Мусхаф скрыты
+    const ts=CONFIG.tafsirs.find(x=>x.id===ST.scanSource);
+    bar.innerHTML=`<div class="cb-left"><h2>${su.ru} <span class="ar">${su.name}</span></h2></div><div class="cb-right"><span class="t-badge">📖 ${esc(ts?ts.name:'Скан')}</span><button class="btn-s" onclick="openScan('${ST.scanSource}')" title="Вернуться к тексту">✕ К тексту</button></div>`;
+    return;
+  }
   const layoutBtn=`<button class="btn-s layout-btn ${ST.layout==='v'?'active':''}" onclick="toggleLayout()" title="Колонки / Список">${ST.layout==='h'?'▤ Колонки':'▥ Список'}</button>`;
   const viewBtn=`<button class="btn-s ${ST.viewOpen?'active':''}" onclick="toggleViewPanel()" title="Вид: шрифт, размеры, интервал, поля">⚙ Вид</button>`;
   // explicit two-mode segmented switch (clearer than a lone "Мусхаф" toggle)
@@ -771,6 +878,7 @@ function renderCB(){
 // -- CENTER BODY --
 function renderCenter(){
   const el=document.getElementById("centerBody");
+  if(ST.scanSource)return renderScanReader(el);
   if(ST.selectedTag)return renderTagResults(el);
   if(ST.pageMode)return renderMushafPage(el);
   return renderReading(el);
@@ -804,12 +912,14 @@ function buildAyahBody(aid,enabled,loaded){
     } else {
       const text=loaded[t.id]?.[String(aid)]||null;
       const isAr=t.lang==="ar";
-      const inner=text?mdRender(text):'<span style="color:var(--text-muted)">—</span>';
-      const long=text&&text.length>600; // collapse very long tafsirs
+      const {body,notes}=text?splitNotes(text):{body:null,notes:[]};
+      const inner=body?renderRefs(body):'<span style="color:var(--text-muted)">—</span>';
+      const long=body&&body.length>600; // collapse very long tafsirs
       html+=`<div class="ab-entry">
-        <div class="ab-entry-label">${esc(t.name)} <span class="lbl-ar">${t.nameAr||''}</span></div>
+        <div class="ab-entry-label">${esc(t.name)} <span class="lbl-ar">${t.nameAr||''}</span>${t.about?`<button class="ab-info" onclick="openAbout('${t.id}')" title="О переводе/тафсире">ℹ</button>`:''}</div>
         <div class="ab-entry-text md selectable ${isAr?'rtl':''} ${long?'clamped':''}">${inner}</div>
         ${long?'<button class="more-btn" onclick="toggleClamp(this)">Развернуть ▾</button>':''}
+        ${notes.length?renderFootnotes(notes):''}
       </div>`;
     }
   }
@@ -837,7 +947,8 @@ function setupHydration(area,enabled,loaded){
 
 async function renderReading(el){
   const ayahIds=getAyahIds(ST.surah);
-  const enabled=getEnabledList();
+  const enabledAll=getEnabledList();
+  const enabled=enabledAll.filter(t=>t.kind!=="image");   // per-ayah text sources (scans are a separate reader)
   const quranTexts=getEnabledQuranTexts();
   if(!enabled.length&&!quranTexts.length){
     el.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:13px;text-align:center;padding:40px">
@@ -1009,16 +1120,74 @@ function renderFacetBar(){
   if(anyFacetActive())h+=`<button class="facet-reset" onclick="clearFacets()">× сбросить фильтры</button>`;
   return h+`</div>`;
 }
+const TAG_RU={draft:"неполный"};
 function tafsirMeta(t){
   const bits=[];
   if(t.era==="classical")bits.push("классич.");else if(t.era==="modern")bits.push("совр.");
-  (t.tags||[]).forEach(tag=>bits.push(tagLabel(tag)));
-  return bits.length?`<div class="t-meta">${bits.map(b=>`<span class="t-pill">${esc(b)}</span>`).join("")}</div>`:"";
+  (t.tags||[]).forEach(tag=>bits.push(TAG_RU[tag]||tagLabel(tag)));
+  let pills=bits.map(b=>`<span class="t-pill">${esc(b)}</span>`).join("");
+  if(t.caution)pills=`<span class="t-pill warn" title="Не проверено — давайте только для ознакомления">⚠ не проверено</span>`+pills;
+  if(t.approved)pills=`<span class="t-pill ok" title="Полностью проверено и одобрено">✓ одобрено</span>`+pills;
+  return pills?`<div class="t-meta">${pills}</div>`:"";
+}
+// Скан-источник (kind:image): отдельная постраничная читалка, по-сурно.
+// Не смешивается с режимом «Аяты» — единственное общее это выбор суры.
+function imgDir(t){return DATA_PATH+(t.imgdir||("img/"+t.id))+"/";}
+// Открыть/закрыть скан-читалку (взаимоисключающе — один скан за раз).
+function openScan(id){
+  ST.scanSource=(ST.scanSource===id)?null:id;
+  if(ST.scanSource)ST.selectedTag=null;
+  renderRP();renderCB();renderCenter();renderBottomNav();
+}
+function scanTab(btn,view){
+  const box=btn.closest(".scan-reader");
+  box.querySelectorAll(".scan-tab").forEach(b=>b.classList.toggle("on",b===btn));
+  box.querySelectorAll(".scan-pages").forEach(p=>p.style.display=p.dataset.view===view?"":"none");
+}
+async function renderScanReader(el){
+  const t=CONFIG.tafsirs.find(x=>x.id===ST.scanSource);
+  if(!t){ST.scanSource=null;return renderReading(el);}
+  el.innerHTML=`<div class="scan-reader"><div style="text-align:center;color:var(--text-muted);padding:30px">Загрузка...</div></div>`;
+  let map=null;
+  try{const r=await fetch(`${imgDir(t)}${ST.surah}.json`);if(r.ok)map=await r.json();}catch(e){}
+  const dir=imgDir(t);
+  const text=(map&&map.text)||[], notes=(map&&map.notes)||[];
+  const hasN=notes.length>0;
+  const pics=arr=>arr.map(f=>`<img class="scan-pg" loading="lazy" src="${dir}${esc(f)}" alt="">`).join("");
+  const su=SURAHS.find(s=>s.id===ST.surah);
+  const body=text.length?pics(text)
+    :`<div class="scan-empty">Скан этой суры пока не добавлен.<br><span>Перейдите к суре с доступным факсимиле или см. ℹ.</span></div>`;
+  el.innerHTML=`<div class="scan-reader">
+    <div class="scan-bar">
+      <span class="scan-title">📖 ${esc(t.name)} <span class="scan-su">· ${su?esc(su.ru):''}</span></span>
+      ${hasN?`<span class="scan-tabs"><button class="scan-tab on" onclick="scanTab(this,'text')">Текст</button><button class="scan-tab" onclick="scanTab(this,'notes')">Примечания</button></span>`:''}
+      ${t.about?`<button class="ab-info" onclick="openAbout('${t.id}')" title="О переводе">ℹ</button>`:''}
+      <button class="scan-close" onclick="openScan('${t.id}')" title="Вернуться к тексту">✕ К тексту</button>
+    </div>
+    <div class="scan-pages" data-view="text">${body}</div>
+    ${hasN?`<div class="scan-pages" data-view="notes" style="display:none">${pics(notes)}</div>`:''}
+  </div>`;
+}
+// Полоса наполненности источника (доля реальных аятов). Показываем только для неполных.
+function fillBar(t){
+  const f=t.fill;
+  if(f==null||f>=0.999)return"";
+  const pct=Math.round(f*100);
+  return `<div class="t-fill" title="Заполнено: ${pct}% Корана"><i style="width:${Math.max(3,pct)}%"></i></div>`;
 }
 function tItem(t,on,reorder){
+  if(t.kind==="image"){ // скан-источник: открывает отдельную читалку, не вплетается
+    const act=ST.scanSource===t.id;
+    return `<div class="t-item scan ${act?'checked':''}" onclick="openScan('${t.id}')">
+      <div class="t-check">${act?'✓':'📖'}</div>
+      <div class="t-info"><div class="t-name">${esc(t.name)}<span class="t-badge">скан</span></div>${t.nameAr?`<div class="t-ar">${esc(t.nameAr)}</div>`:''}${tafsirMeta(t)}${fillBar(t)}</div>
+      ${t.about?`<button class="t-info-btn" onclick="event.stopPropagation();openAbout('${t.id}')" title="О источнике">ℹ</button>`:''}
+    </div>`;
+  }
   return `<div class="t-item ${on?'checked':''}" onclick="toggleEn('${t.id}')">
     <div class="t-check">${on?'✓':''}</div>
-    <div class="t-info"><div class="t-name">${esc(t.name)}</div>${t.nameAr?`<div class="t-ar">${esc(t.nameAr)}</div>`:''}${tafsirMeta(t)}</div>
+    <div class="t-info"><div class="t-name">${esc(t.name)}</div>${t.nameAr?`<div class="t-ar">${esc(t.nameAr)}</div>`:''}${tafsirMeta(t)}${fillBar(t)}</div>
+    ${t.about?`<button class="t-info-btn" onclick="event.stopPropagation();openAbout('${t.id}')" title="О переводе/тафсире">ℹ</button>`:''}
     ${on&&reorder?`<div class="t-sort" onclick="event.stopPropagation()">
       <button class="sort-b" onclick="moveEnabled('${t.id}',-1)" title="Выше">▲</button>
       <button class="sort-b" onclick="moveEnabled('${t.id}',1)" title="Ниже">▼</button>
@@ -1050,12 +1219,12 @@ function renderRP(){
   html+=`<div class="rp-sec-head" style="border-top:1px solid var(--border);margin-top:4px;padding-top:8px">Каталог</div>`;
   let anyShown=false;
   CONFIG.groups.forEach(g=>{
-    let items=CONFIG.tafsirs.filter(t=>t.group===g.id&&t.kind!=="quran"&&!ST.enabled[t.id]).filter(passFacets);
+    let items=CONFIG.tafsirs.filter(t=>t.group===g.id&&t.kind!=="quran"&&(t.kind==="image"||!ST.enabled[t.id])).filter(passFacets);
     if(q)items=items.filter(t=>(t.name||"").toLowerCase().includes(q)||(t.nameAr||"").includes(q)||(t.author||"").toLowerCase().includes(q));
     if(!items.length)return;
     anyShown=true;
     const col=collapsedG["rg_"+g.id];
-    const LIMIT=6;
+    const LIMIT=12;
     const expanded=ST.expandedGroups[g.id];
     const showItems=(!expanded&&items.length>LIMIT)?items.slice(0,LIMIT):items;
     html+=`<div class="tg ${col?'collapsed':''}"><button class="tg-head" onclick="collapsedG['rg_${g.id}']=!collapsedG['rg_${g.id}'];renderRP();">
@@ -1106,7 +1275,7 @@ function getEnabledList(){
 
   // Collect enabled tafsirs/translations (Quran-text variants are handled separately)
   CONFIG.groups.forEach(g=>{
-    CONFIG.tafsirs.filter(t=>t.group===g.id&&t.kind!=="quran").forEach(t=>{
+    CONFIG.tafsirs.filter(t=>t.group===g.id&&t.kind!=="quran"&&t.kind!=="image").forEach(t=>{
       if(ST.enabled[t.id]){allTafsirs.push(t);allIds.add(t.id);}
     });
   });
@@ -1335,7 +1504,8 @@ function goSearchResult(surah,ayah){
 
 // Close search on Escape, open on Ctrl+F, block Ctrl+S/U
 document.addEventListener("keydown",function(e){
-  if(e.key==="Escape"&&searchOpen)toggleSearch();
+  if(e.key==="Escape"&&aboutOpen())closeAbout();
+  else if(e.key==="Escape"&&searchOpen)toggleSearch();
   else if(e.key==="Escape"&&ST.rpanelOpen)closeRPanel();
   if((e.ctrlKey||e.metaKey)&&e.key==="f"){e.preventDefault();if(!searchOpen)toggleSearch();}
 });
