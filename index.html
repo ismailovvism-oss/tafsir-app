@@ -613,6 +613,32 @@ function setUserOrder(o){ss("userOrder",o);}
 // ============================================================
 function gs(k,d){try{const v=localStorage.getItem("tl_"+k);return v?JSON.parse(v):d;}catch(e){return d;}}
 function ss(k,v){try{localStorage.setItem("tl_"+k,JSON.stringify(v));}catch(e){}}
+// --- Последняя позиция чтения (одна автоточка возврата; НЕ закладки) ---
+// Тем же механизмом (ss/gs). Запоминает суру, аят, страницу мусхафа и активный режим.
+function curTopAyah(){
+  const area=document.getElementById("readingArea");
+  if(area){const top=area.getBoundingClientRect().top;
+    for(const b of area.querySelectorAll(".ayah-block,.wbw-ayah")){
+      if(b.getBoundingClientRect().bottom>top+4)return +b.dataset.aid||1;
+    }
+  }
+  return ST.scrollToAyah||1;
+}
+function saveLastPos(){
+  if(ST.selectedTag||ST.scanSource)return;          // теги/скан-читалка — не позиция чтения
+  const mode=ST.pageMode?"page":(ST.wbwMode?"words":"ayat");
+  ss("lastPos",{surah:ST.surah,ayah:curTopAyah(),page:ST.mushafPage||1,mode});
+}
+let _lastPosT=null;
+function saveLastPosSoon(){clearTimeout(_lastPosT);_lastPosT=setTimeout(saveLastPos,500);}
+function restoreLastPos(){
+  const lp=gs("lastPos",null);
+  if(!lp||!lp.surah||!SURAHS.find(s=>s.id===lp.surah))return false;
+  ST.surah=lp.surah;
+  if(lp.mode==="page"){ST.pageMode=true;ST.wbwMode=false;ST.mushafPage=lp.page||1;}
+  else{ST.pageMode=false;ST.wbwMode=(lp.mode==="words");if(lp.ayah)ST.scrollToAyah=lp.ayah;}
+  return true;
+}
 
 function getNotes(){return gs("notes",{});}
 function getNote(s,a){return getNotes()[s+":"+a]||"";}
@@ -661,7 +687,7 @@ async function loadConfig(){
   if(!CONFIG.tafsirs||!CONFIG.tafsirs.length)useFB();
   ST.enabled=getEnabled();
   if(ST.enabled._arabic===undefined)ST.enabled._arabic=true;
-  applyHash(true);                                   // deep-link: set surah (+ayah) from URL
+  if(!applyHash(true))restoreLastPos();              // deep-link из URL ИЛИ последняя позиция
   history.replaceState({surah:ST.surah},"","#"+ST.surah);
   render();
 }
@@ -1005,7 +1031,7 @@ function setTheme(t){
 // ============================================================
 // RENDER
 // ============================================================
-function render(){renderSB();renderCB();renderCenter();renderRP();renderF();renderViewPanel();renderBottomNav();}
+function render(){renderSB();renderCB();renderCenter();renderRP();renderF();renderViewPanel();renderBottomNav();saveLastPosSoon();}
 
 // -- SIDEBAR --
 function renderSB(){
@@ -2366,6 +2392,7 @@ document.addEventListener("click",e=>{
   if(!e.target.closest("#wordCard"))hideWordCard();
 });
 document.addEventListener("scroll",hideWordCard,true);
+document.addEventListener("scroll",saveLastPosSoon,true);  // обновлять последнюю позицию по мере чтения
 // Open sidebar by default on desktop
 if(!isM()){ST.sidebarOpen=true;document.getElementById("sidebar").classList.remove("collapsed");}
 loadConfig();
