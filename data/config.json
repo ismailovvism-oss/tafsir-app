@@ -282,12 +282,10 @@
       "kind": "image",
       "lang": "ru",
       "era": "classical",
-      "tags": [
-        "draft"
-      ],
+      "tags": [],
       "year": "1871",
       "about": true,
-      "fill": 0.047,
+      "fill": 1.0,
       "imgdir": "img/boguslawski"
     },
     {
