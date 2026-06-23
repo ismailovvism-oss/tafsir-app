@@ -170,6 +170,16 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 .ab-peek-lbl{display:block;font-size:9px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
 .ab-peek-t{font-size:calc(13px*var(--rs-ru,1));line-height:calc(1.85*var(--lh-ru,1));color:var(--text-sec);white-space:pre-wrap}
 .ab-peek-t.rtl{direction:rtl;text-align:right;font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(17px*var(--rs-ar,1));line-height:calc(2*var(--lh-ar,1));color:var(--text);white-space:normal}
+/* Закладка: кнопка в панели аята + строки в панели-списке */
+.ab-bm-btn{background:var(--bg-card);border:1px solid var(--border);border-radius:4px;padding:1px 6px;cursor:pointer;font-size:12px;line-height:1.3;color:var(--text-muted)}
+.ab-bm-btn.on{color:#e0a800;border-color:#e0a800}
+.bm-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--border-light);cursor:pointer}
+.bm-row:hover{background:var(--bg-alt)}
+.bm-info{flex:1;min-width:0}
+.bm-name{font-size:12px;color:var(--text);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bm-ref{font-size:10px;color:var(--text-muted)}
+.bm-del{background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:16px;padding:0 4px;line-height:1}
+.bm-del:hover{color:#c0392b}
 
 .ab-entry{padding:8px 12px;border-bottom:1px solid var(--border-light)}
 .ab-entry:last-child{border-bottom:none}
@@ -456,6 +466,7 @@ body.mushaf-full .mushaf-page{max-width:none;border:none;border-radius:0;box-sha
     <div class="sb-tabs">
       <button class="sb-tab active" onclick="setSbTab('surahs')" id="sbTabSurahs">Суры</button>
       <button class="sb-tab" onclick="setSbTab('tags')" id="sbTabTags">🏷 Теги</button>
+      <button class="sb-tab" onclick="setSbTab('bookmarks')" id="sbTabBookmarks">★ Закл.</button>
     </div>
     <div class="sb-content" id="sbContent"></div>
   </aside>
@@ -658,6 +669,10 @@ function getAyahTags(){return gs("ayahTags",{});}
 function setAyahTags(a){ss("ayahTags",a);}
 function getATList(s,a){return(getAyahTags()[s+":"+a])||[];}
 function hasAT(s,a){return getATList(s,a).length>0;}
+// Закладки (ручные, именованные; тем же ss/gs-механизмом, что теги/заметки). {"s:a":"имя"}
+function getBookmarks(){return gs("bookmarks",{});}
+function setBookmarks(b){ss("bookmarks",b);}
+function isBookmarked(s,a){return (s+":"+a) in getBookmarks();}
 function toggleAT(s,a,path){const at=getAyahTags();const k=s+":"+a;if(!at[k])at[k]=[];const i=at[k].indexOf(path);if(i>=0)at[k].splice(i,1);else at[k].push(path);if(!at[k].length)delete at[k];setAyahTags(at);}
 
 function tagPath(anc,name){return anc.length?anc.join("/")+"/"+name:name;}
@@ -1044,6 +1059,7 @@ function render(){renderSB();renderCB();renderCenter();renderRP();renderF();rend
 function renderSB(){
   const el=document.getElementById("sbContent");
   if(ST.sbTab==="surahs")renderSurahList(el);
+  else if(ST.sbTab==="bookmarks")renderBookmarkPanel(el);
   else renderTagPanel(el);
 }
 
@@ -1082,6 +1098,36 @@ function renderTagPanel(el){
   }
   el.innerHTML=(tree.length?tree.map(n=>renderNode(n,[])).join(""):'<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:11px">Нет тегов</div>')
     +`<div class="tag-add-row"><input id="tagInput" placeholder="Новый тег (/ = вложенность)" onkeydown="if(event.key==='Enter'){addTag(this.value);this.value='';}"><div class="tag-add-hint">Пр: Акыда/Таухид/Рубубия</div></div>`;
+}
+
+// Закладки: добавить/убрать на текущем аяте (кнопка ★ в панели аята).
+function toggleBookmark(aid,btn){
+  const s=ST.surah,b=getBookmarks(),k=s+":"+aid;
+  if(k in b){delete b[k];}
+  else{
+    const su=SURAHS.find(x=>x.id==s);const def=(su?su.ru:s)+" "+s+":"+aid;
+    const name=prompt("Название закладки (необязательно):",def);
+    if(name===null)return;                          // отмена
+    b[k]=name.trim()||def;
+  }
+  setBookmarks(b);
+  const on=k in b;
+  if(btn){btn.classList.toggle("on",on);btn.textContent=on?"★":"☆";}
+  if(ST.sbTab==="bookmarks")renderSB();             // обновить список, если открыт
+}
+function removeBookmark(k){const b=getBookmarks();delete b[k];setBookmarks(b);renderSB();}
+// Панель-список всех закладок (по образцу панели тегов); тап → переход к аяту.
+function renderBookmarkPanel(el){
+  const b=getBookmarks();
+  const keys=Object.keys(b).sort((x,y)=>{const[xs,xa]=x.split(":").map(Number),[ys,ya]=y.split(":").map(Number);return xs-ys||xa-ya;});
+  if(!keys.length){el.innerHTML='<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:11px">Нет закладок.<br>Откройте аят и нажмите ☆ в его панели.</div>';return;}
+  el.innerHTML=keys.map(k=>{
+    const[s,a]=k.split(":");const su=SURAHS.find(x=>x.id==+s);
+    return `<div class="bm-row" onclick="jumpTo({surah:${+s},ayah:${+a}})">
+      <div class="bm-info"><div class="bm-name">${esc(b[k])}</div><div class="bm-ref">${su?esc(su.ru):s} · ${s}:${a}</div></div>
+      <button class="bm-del" onclick="event.stopPropagation();removeBookmark('${escAttr(k)}')" title="Убрать закладку">×</button>
+    </div>`;
+  }).join("");
 }
 
 // -- CENTER BAR --
@@ -1253,6 +1299,7 @@ async function renderReading(el){
       html+=`<div class="ayah-block" data-aid="${aid}"><div class="ab-head">
         <div style="display:flex;align-items:center;gap:8px"><span class="ab-num">${aid}</span>
           <button onclick="event.stopPropagation();openTagPopup(${aid},this)" style="background:${ht?'var(--tag-bg)':'var(--bg-card)'};border:1px solid ${ht?'var(--tag-color)':'var(--border)'};border-radius:4px;padding:1px 6px;cursor:pointer;font-size:11px;color:${ht?'var(--tag-color)':'var(--text-muted)'}" title="Теги">🏷${ht?' '+getATList(ST.surah,aid).length:''}</button>
+          <button class="ab-bm-btn ${isBookmarked(ST.surah,aid)?'on':''}" onclick="event.stopPropagation();toggleBookmark(${aid},this)" title="Закладка">${isBookmarked(ST.surah,aid)?'★':'☆'}</button>
           ${peekKind?`<button class="ab-peek-btn" data-peek="${peekKind}" onclick="event.stopPropagation();togglePeek(${aid},this)" title="${peekKind==='ru'?'Показать перевод этого аята':'Показать оригинал этого аята'}">${peekKind}</button>`:''}
         </div>
         <div class="ab-tag-dots">${hn?'<span class="ab-note-dot"></span>':''}</div>
@@ -1876,7 +1923,7 @@ function onFsChange(){
 }
 function closeRPanel(){if(ST.rpanelOpen)toggleRPanel();}
 function onSearch(q){ST.search=q;renderSB();}
-function setSbTab(t){ST.sbTab=t;document.getElementById("sbTabSurahs").classList.toggle("active",t==="surahs");document.getElementById("sbTabTags").classList.toggle("active",t==="tags");renderSB();}
+function setSbTab(t){ST.sbTab=t;document.getElementById("sbTabSurahs").classList.toggle("active",t==="surahs");document.getElementById("sbTabTags").classList.toggle("active",t==="tags");document.getElementById("sbTabBookmarks").classList.toggle("active",t==="bookmarks");renderSB();}
 function goSurah(id){ST.surah=id;ST.selectedTag=null;{const st=qpcMeta&&qpcMeta.surahStart&&qpcMeta.surahStart[id];if(st)ST.mushafPage=st.page;}if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}pushSurahHash(id);render();}
 function toggleLayout(){ST.layout=ST.layout==="h"?"v":"h";render();}
 
