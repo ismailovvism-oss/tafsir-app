@@ -163,6 +163,13 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 .ab-tag-dots{display:flex;gap:3px}
 .ab-tag-dot{width:6px;height:6px;border-radius:50%;background:var(--tag-color)}
 .ab-note-dot{width:6px;height:6px;border-radius:50%;background:var(--note-color)}
+/* Разовый показ перевода/оригинала одного аята */
+.ab-peek-btn{background:var(--bg-card);border:1px solid var(--border);border-radius:4px;padding:1px 7px;cursor:pointer;font-size:11px;font-family:inherit;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px}
+.ab-peek-btn.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.ab-peek{margin:0 12px 10px;padding:7px 10px;border-left:3px solid var(--accent);background:var(--bg-alt);border-radius:0 6px 6px 0}
+.ab-peek-lbl{display:block;font-size:9px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+.ab-peek-t{font-size:calc(13px*var(--rs-ru,1));line-height:calc(1.85*var(--lh-ru,1));color:var(--text-sec);white-space:pre-wrap}
+.ab-peek-t.rtl{direction:rtl;text-align:right;font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(17px*var(--rs-ar,1));line-height:calc(2*var(--lh-ar,1));color:var(--text);white-space:normal}
 
 .ab-entry{padding:8px 12px;border-bottom:1px solid var(--border-light)}
 .ab-entry:last-child{border-bottom:none}
@@ -1174,6 +1181,32 @@ function setupHydration(area,enabled,loaded){
   hydrationObserver=obs;
 }
 
+// Разовый показ перевода/оригинала ОДНОГО аята (кнопка ru/ar в панели аята).
+// Блок вставляется в .ayah-block (рядом с .ab-body), переживает виртуализацию;
+// при смене суры/режима всё перерисовывается заново — состояние само сбрасывается.
+async function togglePeek(aid,btn){
+  const block=btn.closest(".ayah-block");if(!block)return;
+  const ex=block.querySelector(".ab-peek");
+  if(ex){ex.remove();btn.classList.remove("on");return;}
+  btn.classList.add("on");
+  const kind=btn.dataset.peek;
+  const lbl=kind==="ru"?"Перевод":"Оригинал";
+  const div=document.createElement("div");div.className="ab-peek";
+  div.innerHTML=`<span class="ab-peek-lbl">${lbl}</span><span style="color:var(--text-muted)">…</span>`;
+  block.appendChild(div);
+  let text="";
+  if(kind==="ru"){
+    const tid=(CONFIG.tafsirs.find(t=>t.lang!=="ar"&&t.group==="translations")||{}).id||"kuliev";
+    await loadChunk(tid,ST.surah);text=getChunk(tid,ST.surah)?.[String(aid)]||getAnyTranslation(ST.surah,aid);
+  }else{
+    await loadChunk("_arabic",ST.surah);text=getArabicFromCache(ST.surah,aid);
+  }
+  if(!block.contains(div))return;
+  div.innerHTML=`<span class="ab-peek-lbl">${lbl}</span>`+
+    (kind==="ru"?`<div class="ab-peek-t md selectable">${text?mdRender(text):'—'}</div>`
+                :`<div class="ab-peek-t rtl selectable">${text||'—'}</div>`);
+}
+
 async function renderReading(el){
   const ayahIds=getAyahIds(ST.surah);
   const enabledAll=getEnabledList();
@@ -1208,6 +1241,11 @@ async function renderReading(el){
         if(b.getBoundingClientRect().bottom>top+4){anchorAid=b.dataset.aid;break;}
       }
     }
+    // Разовый показ второй стороны одного аята: «ru» если включён только арабский,
+    // «ar» если только перевод (когда есть и то и то — кнопка не нужна).
+    const hasAr=quranTexts.length>0;
+    const hasTr=enabled.some(t=>t.id!=="_notes"&&t.lang!=="ar");
+    const peekKind=hasAr&&!hasTr?"ru":(hasTr&&!hasAr?"ar":null);
     // Lightweight skeleton: header + empty body per ayah; bodies hydrate on demand
     let html="";
     for(const aid of ayahIds){
@@ -1215,6 +1253,7 @@ async function renderReading(el){
       html+=`<div class="ayah-block" data-aid="${aid}"><div class="ab-head">
         <div style="display:flex;align-items:center;gap:8px"><span class="ab-num">${aid}</span>
           <button onclick="event.stopPropagation();openTagPopup(${aid},this)" style="background:${ht?'var(--tag-bg)':'var(--bg-card)'};border:1px solid ${ht?'var(--tag-color)':'var(--border)'};border-radius:4px;padding:1px 6px;cursor:pointer;font-size:11px;color:${ht?'var(--tag-color)':'var(--text-muted)'}" title="Теги">🏷${ht?' '+getATList(ST.surah,aid).length:''}</button>
+          ${peekKind?`<button class="ab-peek-btn" data-peek="${peekKind}" onclick="event.stopPropagation();togglePeek(${aid},this)" title="${peekKind==='ru'?'Показать перевод этого аята':'Показать оригинал этого аята'}">${peekKind}</button>`:''}
         </div>
         <div class="ab-tag-dots">${hn?'<span class="ab-note-dot"></span>':''}</div>
       </div><div class="ab-body" data-aid="${aid}" style="min-height:48px"></div></div>`;
