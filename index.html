@@ -1072,7 +1072,7 @@ function buildAyahBody(aid,enabled,loaded){
     const lbl=multiQ?`<div class="ab-entry-label">${esc(qt.name)} <span class="lbl-ar">${qt.nameAr||''}</span></div>`:"";
     // Печатный мусхаф (QPC): главный огласованный текст рисуем глифами страницы
     if(pack&&qt.id==="_arabic"&&qpcData&&qpcData[String(aid)]){
-      html+=`<div class="ab-entry">${lbl}${renderPackAyah(pack,qpcData[String(aid)],`${ST.surah}:${aid}`)}</div>`;
+      html+=`<div class="ab-entry">${lbl}${renderPackAyah(pack,qpcData[String(aid)])}</div>`;
       continue;
     }
     const at=loaded[qt.id]?.[String(aid)];
@@ -1196,7 +1196,7 @@ async function renderReading(el){
         if(col.isArabic){
           const pk=activePack();const qd=loaded["__qpc"];
           if(pk&&col.id==="_arabic"&&qd&&qd[String(aid)]){
-            html+=`<div class="col-ayah">${renderPackAyah(pk,qd[String(aid)],`${ST.surah}:${aid}`)}</div>`;
+            html+=`<div class="col-ayah">${renderPackAyah(pk,qd[String(aid)])}</div>`;
           }else{
             const arText=col.data?.[String(aid)]||"";
             html+=`<div class="col-ayah arabic-main selectable">${arText||'—'}</div>`;
@@ -1684,6 +1684,7 @@ document.addEventListener("keydown",function(e){
   if(e.key==="Escape"&&aboutOpen())closeAbout();
   else if(e.key==="Escape"&&searchOpen)toggleSearch();
   else if(e.key==="Escape"&&ST.rpanelOpen)closeRPanel();
+  else if(e.key==="Escape"&&ST.viewOpen)toggleViewPanel();
   if((e.ctrlKey||e.metaKey)&&e.key==="f"){e.preventDefault();if(!searchOpen)toggleSearch();}
 });
 
@@ -1692,14 +1693,15 @@ document.addEventListener("keydown",function(e){
 // ============================================================
 let pendingAyah=null;
 // Which open panels should the Back button / backdrop close (overlays only; the desktop sidebar is docked)
-function anyOverlayOpen(){return searchOpen||ST.rpanelOpen||(isM()&&ST.sidebarOpen);}
+function anyOverlayOpen(){return searchOpen||ST.rpanelOpen||ST.viewOpen||(isM()&&ST.sidebarOpen);}
 let navBack=false; // true while we programmatically history.back() to consume our own overlay entry
 function pushOverlay(){if(!(history.state&&history.state.ov))history.pushState({ov:1},"");}
 function consumeOverlay(){if(history.state&&history.state.ov){navBack=true;history.back();}}
-function updateBackdrop(){const b=document.getElementById("panelBackdrop");if(b)b.classList.toggle("show",ST.rpanelOpen||searchOpen);}
+function updateBackdrop(){const b=document.getElementById("panelBackdrop");if(b)b.classList.toggle("show",ST.rpanelOpen||searchOpen||ST.viewOpen);}
 function closeAllPanelsUI(){
   if(searchOpen){searchOpen=false;document.getElementById("searchPanel").classList.add("hidden");}
   if(ST.rpanelOpen){ST.rpanelOpen=false;document.getElementById("rpanel").classList.add("collapsed");}
+  if(ST.viewOpen){ST.viewOpen=false;renderViewPanel();renderCB();}
   if(isM()&&ST.sidebarOpen){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   updateBackdrop();
 }
@@ -1793,7 +1795,7 @@ function resetView(){
   if(ST.arFont!=="qpc1"){ST.arFont="qpc1";ss("arFont","qpc1");applyArFont();renderCenter();}
   refitIfPage();renderViewPanel();
 }
-function toggleViewPanel(){ST.viewOpen=!ST.viewOpen;renderCB();renderViewPanel();}
+function toggleViewPanel(){ST.viewOpen=!ST.viewOpen;renderCB();renderViewPanel();if(ST.viewOpen)pushOverlay();else consumeOverlay();updateBackdrop();}
 function renderViewPanel(){
   let el=document.getElementById("viewPanel");
   if(!el){el=document.createElement("div");el.id="viewPanel";el.className="view-panel";document.body.appendChild(el);}
