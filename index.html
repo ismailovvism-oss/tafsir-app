@@ -61,6 +61,14 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 .sb-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
 .sb-content{flex:1;overflow-y:auto;padding:4px 5px 10px}
 
+/* Группировка списка сур по джузам */
+.juz-head{display:flex;align-items:center;gap:6px;padding:7px 8px 5px;background:var(--bg-alt);border-top:1px solid var(--border-light);border-bottom:1px solid var(--border-light);position:sticky;top:0;z-index:1}
+.juz-arrow{cursor:pointer;font-size:9px;color:var(--text-muted);width:12px;text-align:center;flex-shrink:0}
+.juz-jump{background:none;border:none;cursor:pointer;font-family:inherit;font-size:calc(11px*var(--sb,1));font-weight:700;color:var(--accent);padding:0;white-space:nowrap}
+.juz-jump:hover{text-decoration:underline}
+.juz-ref{font-size:calc(10px*var(--sb,1));color:var(--text-muted);margin-left:auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.juz-grp.collapsed .juz-items{display:none}
+.juz-items{padding:2px 0}
 .surah-btn{width:100%;display:flex;align-items:center;gap:7px;padding:6px 7px;margin:1px 0;border:none;border-radius:5px;cursor:pointer;background:transparent;color:var(--text);text-align:left;font-family:inherit;font-size:12px;transition:background .12s}
 .surah-btn:hover{background:rgba(128,128,128,.08)}.surah-btn.active{background:var(--accent);color:#fff}
 .s-n{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:calc(9px*var(--sb,1));font-weight:600;background:rgba(128,128,128,.1);flex-shrink:0}
@@ -711,6 +719,7 @@ async function loadConfig(){
   if(ST.enabled._arabic===undefined)ST.enabled._arabic=true;
   if(!applyHash(true))restoreLastPos();              // deep-link из URL ИЛИ последняя позиция
   history.replaceState({surah:ST.surah},"","#"+ST.surah);
+  await loadQpcMeta();                               // для группировки списка сур по джузам (и мусхафа)
   render();
 }
 function useFB(){
@@ -1063,14 +1072,48 @@ function renderSB(){
   else renderTagPanel(el);
 }
 
-function renderSurahList(el){
-  const q=ST.search.toLowerCase();
-  el.innerHTML=SURAHS.filter(s=>s.name.includes(q)||s.ru.toLowerCase().includes(q)||String(s.id).includes(q)).map(s=>
-    `<button class="surah-btn ${ST.surah===s.id?'active':''}" onclick="goSurah(${s.id})">
+// Джуз, в котором НАЧИНАЕТСЯ сура (джуз может начинаться в середине суры — группируем по началу суры).
+function juzOfSurah(s){
+  const js=qpcMeta&&qpcMeta.juzStart;if(!js)return 1;let best=1;
+  for(let J=1;J<=30;J++){const j=js[J];if(j&&(j.surah<s||(j.surah===s&&j.ayah<=1)))best=J;}
+  return best;
+}
+function surahBtnHTML(s){
+  return `<button class="surah-btn ${ST.surah===s.id?'active':''}" onclick="goSurah(${s.id})">
       <span class="s-n">${s.id}</span>
       <div style="flex:1"><div class="s-ar">${s.name}</div><div class="s-meta">${s.ru} · ${s.n}</div></div>
-    </button>`
-  ).join("");
+    </button>`;
+}
+function renderSurahList(el){
+  const q=ST.search.toLowerCase();
+  if(q){ // при поиске — плоский список (группировка мешала бы)
+    el.innerHTML=SURAHS.filter(s=>s.name.includes(q)||s.ru.toLowerCase().includes(q)||String(s.id).includes(q)).map(surahBtnHTML).join("")
+      ||'<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:11px">Ничего не найдено</div>';
+    return;
+  }
+  if(!qpcMeta){ // мета ещё не загружена — плоский, и перерисуем после загрузки
+    loadQpcMeta().then(()=>{if(ST.sbTab==="surahs")renderSB();});
+    el.innerHTML=SURAHS.map(surahBtnHTML).join("");
+    return;
+  }
+  // Группировка по джузам: заголовок «Джуз N» (клик → переход к началу джуза) + свёртка
+  // Показываем все 30 джузов (полный набор ссылок). Под джузом — суры, которые в нём
+  // НАЧИНАЮТСЯ; у джузов, начинающихся в середине суры, сур под собой не будет.
+  let html="";
+  for(let J=1;J<=30;J++){
+    const sin=SURAHS.filter(s=>juzOfSurah(s.id)===J);
+    const col=collapsedG["jz_"+J];
+    const js=qpcMeta.juzStart[J];const su=js&&SURAHS.find(x=>x.id===js.surah);
+    html+=`<div class="juz-grp ${col?'collapsed':''}">
+      <div class="juz-head">
+        <span class="juz-arrow" onclick="event.stopPropagation();collapsedG['jz_${J}']=!collapsedG['jz_${J}'];renderSB();" title="Свернуть/развернуть">${sin.length?(col?'▶':'▼'):'·'}</span>
+        <button class="juz-jump" onclick="navJumpJuz(${J})" title="Перейти к началу джуза ${J}">Джуз ${J}</button>
+        ${su?`<span class="juz-ref">${esc(su.ru)}${js.ayah>1?' : '+js.ayah:''}</span>`:''}
+      </div>
+      ${sin.length?`<div class="juz-items">${sin.map(surahBtnHTML).join("")}</div>`:''}
+    </div>`;
+  }
+  el.innerHTML=html;
 }
 
 function renderTagPanel(el){
@@ -2069,7 +2112,16 @@ function renderBottomNav(){
   const unitSel=`<select class="bn-unit" onchange="setNavUnit(this.value)" title="Что листать">`+
     units.map(([v,n])=>`<option value="${v}" ${v===u?"selected":""}>${n}</option>`).join("")+`</select>`;
   let opts,idx,max;
-  if(u==="surah"){opts=SURAHS.map(s=>`<option value="${s.id}" ${s.id===p.surah?"selected":""}>${s.id}. ${esc(s.ru)}</option>`).join("");idx=p.surah;max=114;}
+  if(u==="surah"){
+    const opt=s=>`<option value="${s.id}" ${s.id===p.surah?"selected":""}>${s.id}. ${esc(s.ru)}</option>`;
+    if(qpcMeta){ // группируем суры по джузам (правильная мусхафная очередность)
+      let o="";
+      for(let J=1;J<=30;J++){const sin=SURAHS.filter(s=>juzOfSurah(s.id)===J);if(!sin.length)continue;
+        o+=`<optgroup label="Джуз ${J}">`+sin.map(opt).join("")+`</optgroup>`;}
+      opts=o;
+    }else opts=SURAHS.map(opt).join("");
+    idx=p.surah;max=114;
+  }
   else if(u==="page"){opts=Array.from({length:total},(_,i)=>`<option value="${i+1}" ${i+1===p.page?"selected":""}>Страница ${i+1}</option>`).join("");idx=p.page;max=total;}
   else if(u==="juz"){opts=Array.from({length:30},(_,i)=>`<option value="${i+1}" ${i+1===p.juz?"selected":""}>Джуз ${i+1}</option>`).join("");idx=p.juz;max=30;}
   else{opts=Array.from({length:60},(_,i)=>`<option value="${i+1}" ${i+1===p.hizb?"selected":""}>Хизб ${i+1}</option>`).join("");idx=p.hizb;max=60;}
