@@ -409,6 +409,13 @@ body.mushaf-full .mushaf-page{max-width:none;border:none;border-radius:0;box-sha
 .bn-mid{display:flex;align-items:center;gap:6px;flex:1;min-width:0}
 .bn-unit{flex:none;padding:6px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-family:inherit;font-size:12px;outline:none}
 .bn-val{flex:1;min-width:0;padding:6px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-family:inherit;font-size:13px;outline:none}
+/* Режим без касания: кнопочная панель вне области текста + блокировка касаний текста */
+.notouch-nav{display:flex;align-items:stretch;gap:6px;padding:6px 8px}
+.nt-btn{flex:1;min-height:48px;border:1px solid var(--border);border-radius:8px;background:var(--bg-alt);color:var(--text);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-user-select:none;user-select:none;touch-action:none;-webkit-tap-highlight-color:transparent}
+.nt-btn:active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.nt-side{flex:1.4}
+.nt-scroll{flex:1;font-size:18px}
+body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
 
 /* SEARCH */
 .search-panel{position:fixed;top:48px;left:50%;transform:translateX(-50%);width:600px;max-width:90vw;max-height:70vh;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 40px rgba(0,0,0,.2);z-index:50;display:flex;flex-direction:column;overflow:hidden}
@@ -617,6 +624,8 @@ let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,imme
   arFont:"qpc1",     // Arabic typeface: "naskh" | "hafs" | "amiri" | "qpc1" | "kufi"
   pageMode:false,    // mushaf page view (faithful page-by-page QPC layout)
   wbwMode:false,     // word-by-word view: grid of words + per-word gloss + grammar card
+  noTouch:false,     // «Режим без касания»: чтение/листание без касания текста (кнопочная панель)
+  ntH:60,            // высота нижней панели режима без касания (px)
   mushafPage:1,      // current page in mushaf page mode (1..604)
   facets:{lang:[],kind:[],era:[],tags:[]}, // active facet filters in the right panel
   expandedGroups:{}, // which groups show all items (not just 5)
@@ -1042,7 +1051,7 @@ function renderRefs(md){ // protect [^N] from markdown, then make them superscri
     .replace(/￶(\w+)￷/g,'<sup class="ab-fnref">$1</sup>');
 }
 function renderFootnotes(notes){
-  const long=notes.reduce((s,n)=>s+n.t.length,0)>360;
+  const long=!ST.noTouch&&notes.reduce((s,n)=>s+n.t.length,0)>360;  // в режиме без касания — без свёртки
   const list=notes.map(n=>`<div class="ab-fn"><span class="ab-fn-num">${esc(n.n)}</span><div class="ab-fn-t md">${mdRender(n.t)}</div></div>`).join("");
   return `<div class="ab-notes ${long?'clamped':''}">${list}</div>`+(long?`<button class="more-btn" onclick="toggleClamp(this)">Развернуть ▾</button>`:"");
 }
@@ -1145,6 +1154,7 @@ function renderTagPanel(el){
 
 // Закладки: добавить/убрать на текущем аяте (кнопка ★ в панели аята).
 function toggleBookmark(aid,btn){
+  if(ST.noTouch)return;
   const s=ST.surah,b=getBookmarks(),k=s+":"+aid;
   if(k in b){delete b[k];}
   else{
@@ -1190,13 +1200,14 @@ function renderCB(){
   }
   const layoutBtn=`<button class="btn-s layout-btn ${ST.layout==='v'?'active':''}" onclick="toggleLayout()" title="Колонки / Список">${ST.layout==='h'?'▤ Колонки':'▥ Список'}</button>`;
   const viewBtn=`<button class="btn-s ${ST.viewOpen?'active':''}" onclick="toggleViewPanel()" title="Вид: шрифт, размеры, интервал, поля">⚙ Вид</button>`;
+  const ntBtn=`<button class="btn-s ${ST.noTouch?'active':''}" onclick="toggleNoTouch()" title="Режим без касания — чтение и листание без касания текста">✋</button>`;
   // explicit two-mode segmented switch (clearer than a lone "Мусхаф" toggle)
-  const modeSeg=`<span class="seg seg-sm"><button class="${!ST.pageMode&&!ST.wbwMode?'on':''}" onclick="setMode('ayat')" title="Аяты + перевод">Аяты</button><button class="${!ST.pageMode&&ST.wbwMode?'on':''}" onclick="setMode('words')" title="Пословный перевод + грамматика">Слова</button><button class="${ST.pageMode?'on':''}" onclick="setMode('page')" title="Постраничный мусхаф">Мусхаф</button></span>`;
+  const modeSeg=`<span class="seg seg-sm"><button class="${!ST.pageMode&&!ST.wbwMode?'on':''}" onclick="setMode('ayat')" title="Аяты + перевод">Аяты</button>${ST.noTouch?'':`<button class="${!ST.pageMode&&ST.wbwMode?'on':''}" onclick="setMode('words')" title="Пословный перевод + грамматика">Слова</button>`}<button class="${ST.pageMode?'on':''}" onclick="setMode('page')" title="Постраничный мусхаф">Мусхаф</button></span>`;
   if(ST.pageMode){
     const loc=pageLocation(ST.mushafPage);
-    bar.innerHTML=`<div class="cb-left"><h2>${loc}</h2></div><div class="cb-right">${modeSeg}${viewBtn}</div>`;return;
+    bar.innerHTML=`<div class="cb-left"><h2>${loc}</h2></div><div class="cb-right">${modeSeg}${ntBtn}${viewBtn}</div>`;return;
   }
-  bar.innerHTML=`<div class="cb-left"><h2>${su.ru} <span class="ar">${su.name}</span></h2></div><div class="cb-right">${modeSeg}${layoutBtn}${viewBtn}</div>`;
+  bar.innerHTML=`<div class="cb-left"><h2>${su.ru} <span class="ar">${su.name}</span></h2></div><div class="cb-right">${modeSeg}${ntBtn}${layoutBtn}${viewBtn}</div>`;
 }
 
 // -- CENTER BODY --
@@ -1239,7 +1250,7 @@ function buildAyahBody(aid,enabled,loaded){
       const isAr=t.lang==="ar";
       const {body,notes}=text?splitNotes(text):{body:null,notes:[]};
       const inner=body?renderRefs(body):'<span style="color:var(--text-muted)">—</span>';
-      const long=body&&body.length>600; // collapse very long tafsirs
+      const long=!ST.noTouch&&body&&body.length>600; // в режиме без касания — сразу развёрнуто, без кнопки
       html+=`<div class="ab-entry">
         <div class="ab-entry-label">${esc(t.name)} <span class="lbl-ar">${t.nameAr||''}</span>${t.about?`<button class="ab-info" onclick="openAbout('${t.id}')" title="О переводе/тафсире">ℹ</button>`:''}</div>
         <div class="ab-entry-text md selectable ${isAr?'rtl':''} ${long?'clamped':''}">${inner}</div>
@@ -1274,6 +1285,7 @@ function setupHydration(area,enabled,loaded){
 // Блок вставляется в .ayah-block (рядом с .ab-body), переживает виртуализацию;
 // при смене суры/режима всё перерисовывается заново — состояние само сбрасывается.
 async function togglePeek(aid,btn){
+  if(ST.noTouch)return;
   const block=btn.closest(".ayah-block");if(!block)return;
   const ex=block.querySelector(".ab-peek");
   if(ex){ex.remove();btn.classList.remove("on");return;}
@@ -1987,6 +1999,38 @@ function refitIfPage(){if(ST.pageMode){const host=document.getElementById("musha
 // по умолчанию не меняется). Шире страница → fit-to-width даёт крупнее кегль.
 function applyMushafFull(){document.body.classList.toggle("mushaf-full",!!ST.mushafFull);}
 function setMushafFull(){ST.mushafFull=!ST.mushafFull;ss("mushafFull",ST.mushafFull);applyMushafFull();refitIfPage();renderViewPanel();}
+// «Режим без касания»: линейное чтение (прокрутка + листание кнопками), без касания текста.
+function applyNoTouch(){document.body.classList.toggle("notouch",!!ST.noTouch);}
+function toggleNoTouch(){
+  ST.noTouch=!ST.noTouch;ss("noTouch",ST.noTouch);
+  if(ST.noTouch&&ST.wbwMode){ST.wbwMode=false;ss("wbwMode",false);} // режим «Слова» требует касания слов
+  applyNoTouch();
+  renderCB();renderViewPanel();renderCenter();renderBottomNav();
+}
+function setNtH(dir){ST.ntH=Math.max(48,Math.min(96,(ST.ntH||60)+dir*8));ss("ntH",ST.ntH);renderBottomNav();renderViewPanel();}
+// Активный контейнер прокрутки (поаятный режим или мусхаф).
+function ntScrollEl(){return document.getElementById("readingArea")||document.querySelector(".mushaf-shell");}
+let _ntHoldT=null,_ntRAF=null,_ntMoved=false;
+function ntStopScroll(){if(_ntHoldT){clearTimeout(_ntHoldT);_ntHoldT=null;}if(_ntRAF){cancelAnimationFrame(_ntRAF);_ntRAF=null;}}
+function bindNoTouchScroll(panel){
+  panel.querySelectorAll(".nt-scroll").forEach(b=>{
+    const dir=+b.dataset.dir;
+    b.addEventListener("pointerdown",e=>{
+      e.preventDefault();_ntMoved=false;
+      _ntHoldT=setTimeout(()=>{               // удержание → плавная непрерывная прокрутка
+        _ntMoved=true;
+        const loop=()=>{const sc=ntScrollEl();if(sc)sc.scrollTop+=dir*10;_ntRAF=requestAnimationFrame(loop);};loop();
+      },280);
+    });
+    const end=()=>{
+      const moved=_ntMoved;ntStopScroll();_ntMoved=false;
+      if(!moved){const sc=ntScrollEl();if(sc)sc.scrollBy({top:dir*Math.round(sc.clientHeight*0.85),behavior:"smooth"});} // одиночный тап ≈ экран
+    };
+    b.addEventListener("pointerup",end);
+    b.addEventListener("pointercancel",ntStopScroll);
+    b.addEventListener("pointerleave",()=>{if(_ntMoved)ntStopScroll();});
+  });
+}
 function bumpView(key,dir){
   const[lo,hi,step]=VIEW_LIMITS[key];
   ST[key]=Math.min(hi,Math.max(lo,Math.round((ST[key]+dir*step)*100)/100));
@@ -2008,6 +2052,10 @@ function renderViewPanel(){
   const pct=k=>Math.round(ST[k]*100)+"%";
   const step=(label,key,val)=>`<div class="vp-row"><span>${label}</span><span class="vp-step"><button onclick="bumpView('${key}',-1)">−</button><b>${val}</b><button onclick="bumpView('${key}',1)">+</button></span></div>`;
   const resetBtn=`<button class="vp-reset" onclick="resetView()">↺ По умолчанию</button>`;
+  const ntGroup=`<div class="vp-group"><div class="vp-label">Режим без касания</div>`+
+    `<label class="vp-check"><input type="checkbox" ${ST.noTouch?"checked":""} onchange="toggleNoTouch()"> Чтение и листание без касания текста</label>`+
+    `<div class="vp-row"><span>Высота панели</span><span class="vp-step"><button onclick="setNtH(-1)">−</button><b>${ST.ntH||60}px</b><button onclick="setNtH(1)">+</button></span></div>`+
+    `<div class="vp-note">Внизу появятся кнопки: ‹ / › листают, ▲ / ▼ прокручивают (удержание — плавно). Касание текста отключается.</div></div>`;
   if(ST.pageMode){
     // page mode = printed vowelled glyphs at a fixed column fit: only line spacing
     // is meaningful (size/margins are absorbed by the fit; font is fixed)
@@ -2016,7 +2064,7 @@ function renderViewPanel(){
       `<div class="vp-group"><div class="vp-label">Отступы</div>${step("Межстрочный","lhAr",pct("lhAr"))}</div>`+
       `<div class="vp-note">Размер строк в «Мусхафе» подстраивается автоматически под ширину страницы.</div>`+
       `<div class="vp-group"><div class="vp-label">Боковая панель (суры, теги)</div>${step("Размер","sbScale",pct("sbScale"))}</div>`+
-      resetBtn+`<button class="vp-close" onclick="toggleViewPanel()">Готово</button>`;
+      ntGroup+resetBtn+`<button class="vp-close" onclick="toggleViewPanel()">Готово</button>`;
     return;
   }
   const variants=[["_arabic","С огласовками"],["_arabic_clean","Без огласовок"],["_arabic_rasm","Без точек (расм)"]];
@@ -2029,7 +2077,7 @@ function renderViewPanel(){
     `<div class="vp-group"><div class="vp-label">Межстрочный интервал</div>${step("Арабский","lhAr",pct("lhAr"))}${step("Русский","lhRu",pct("lhRu"))}</div>`+
     `<div class="vp-group"><div class="vp-label">Поля</div>${step("Отступы по краям","mar",ST.mar+"px")}</div>`+
     `<div class="vp-group"><div class="vp-label">Боковая панель (суры, теги)</div>${step("Размер","sbScale",pct("sbScale"))}</div>`+
-    resetBtn+`<button class="vp-close" onclick="toggleViewPanel()">Готово</button>`;
+    ntGroup+resetBtn+`<button class="vp-close" onclick="toggleViewPanel()">Готово</button>`;
 }
 
 // --- 📑 Переход: jump by surah / juz / rub al-hizb / page (both modes) -------
@@ -2107,8 +2155,20 @@ function stepSection(dir){
 // that unit + prev/next arrows. All four units always available.
 function renderBottomNav(){
   const el=document.getElementById("bottomNav");if(!el)return;
+  ntStopScroll();                                    // на всякий случай гасим непрерывную прокрутку
+  el.className="bottom-nav";el.style.height="";       // сброс к обычному виду
   if(ST.selectedTag){el.style.display="none";return;}
   el.style.display="flex";
+  if(ST.noTouch){                                     // кнопочная панель вне области текста
+    el.classList.add("notouch-nav");el.style.height=(ST.ntH||60)+"px";
+    el.innerHTML=
+      `<button class="nt-btn nt-side" onclick="stepSection(-1)" title="Предыдущий раздел/страница">‹ пред.</button>`+
+      `<button class="nt-btn nt-scroll" data-dir="-1" title="Вверх (тап — экран, удержание — плавно)">▲</button>`+
+      `<button class="nt-btn nt-scroll" data-dir="1" title="Вниз (тап — экран, удержание — плавно)">▼</button>`+
+      `<button class="nt-btn nt-side" onclick="stepSection(1)" title="Следующий раздел/страница">след. ›</button>`;
+    bindNoTouchScroll(el);
+    return;
+  }
   const p=curPos(),u=ST.navUnit,total=qpcMeta&&qpcMeta.pages||604;
   const units=[["surah","Сура"],["page","Страница"],["juz","Джуз"],["hizb","Хизб"]];
   const unitSel=`<select class="bn-unit" onchange="setNavUnit(this.value)" title="Что листать">`+
@@ -2149,7 +2209,7 @@ let _swipeX=0,_swipeY=0,_swipeOk=false;
 function setupSwipe(){
   const c=document.getElementById("centerBody");if(!c)return;
   c.addEventListener("touchstart",e=>{const t=e.changedTouches[0];_swipeX=t.clientX;_swipeY=t.clientY;
-    _swipeOk=!(!ST.pageMode&&ST.layout==="v"&&!isM());},{passive:true});
+    _swipeOk=!ST.noTouch&&!(!ST.pageMode&&ST.layout==="v"&&!isM());},{passive:true});
   c.addEventListener("touchend",e=>{
     if(!_swipeOk)return;const t=e.changedTouches[0];const dx=t.clientX-_swipeX,dy=t.clientY-_swipeY;
     if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5)stepSection(dx<0?1:-1); // swipe left → next
@@ -2390,6 +2450,7 @@ function popupNodeHTML(node,anc,aid,current){
 }
 
 function openTagPopup(aid,btnEl){
+  if(ST.noTouch)return;
   closeTagPopup();
   openPopupAyah=aid;
 
@@ -2519,6 +2580,9 @@ ST.arFont=gs("arFont","qpc1"); // default: печатный мусхаф
 applyArFont();
 ST.navUnit=gs("navUnit","surah");
 ST.wbwMode=gs("wbwMode",false); // word-by-word reading layer (пословный перевод)
+ST.noTouch=gs("noTouch",false); ST.ntH=gs("ntH",60); // «Режим без касания»
+if(ST.noTouch&&ST.wbwMode){ST.wbwMode=false;ss("wbwMode",false);} // «Слова» недоступен в режиме без касания
+applyNoTouch();
 loadQpcMeta(); // preload mushaf page index (surah → page) for page-mode jumps
 setupSwipe();  // horizontal swipe → prev/next section
 // Keep immersive state in sync if the user leaves browser fullscreen via Esc/F11/gesture.
@@ -2528,6 +2592,7 @@ document.addEventListener("webkitfullscreenchange",onFsChange);
 // word/grammar cards: open on tap of a [[…]] word OR a word with data-loc
 // (corpus card), dismiss on outside tap/scroll
 document.addEventListener("click",e=>{
+  if(ST.noTouch)return;                              // режим без касания: точечные действия по тексту отключены
   if(!(e.target.closest))return;
   // a word carrying an address → grammar card from the corpus (lazy-loaded).
   // skip when the user is selecting text so copying isn't interrupted.
