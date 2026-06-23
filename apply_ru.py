@@ -23,8 +23,8 @@ for fn in glob.glob(os.path.join(W, "words", "*.json")):
             ru = ov.get(key) or ph.get((rec.get("en") or "").strip())
             if ru:
                 rec["ru"] = ru; done += 1
-            elif "ru" in rec and key not in ov:
-                # keep nothing stale that no longer resolves
-                pass
+            elif "ru" in rec:
+                # больше не резолвится ни из override, ни из словаря — убираем устаревший глосс
+                del rec["ru"]
     json.dump(d, open(fn, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
 print(f"ru filled: {done}/{tot} = {done*100//tot}%   (overrides {len(ov)}, phrases {len(ph)})")
