@@ -2088,7 +2088,9 @@ function curPos(){
   return {page,surah,juz:juzForPage(page)||1,hizb:hizbForPage(page)||1};
 }
 function setNavUnit(u){ST.navUnit=u;ss("navUnit",u);renderBottomNav();}
-function navJumpValue(v){const u=ST.navUnit;
+function navJumpValue(v){
+  if(typeof v==="string"&&v[0]==="j"){navJumpJuz(+v.slice(1));return;}  // «▸ Джуз N» из объединённого пикера
+  const u=ST.navUnit;
   if(u==="surah")navJumpSurah(v);else if(u==="page")navJumpPage(v);
   else if(u==="juz")navJumpJuz(v);else navJumpHizb(v);}
 // In mushaf mode only one page is shown, so the arrows always flip PAGES
@@ -2114,10 +2116,16 @@ function renderBottomNav(){
   let opts,idx,max;
   if(u==="surah"){
     const opt=s=>`<option value="${s.id}" ${s.id===p.surah?"selected":""}>${s.id}. ${esc(s.ru)}</option>`;
-    if(qpcMeta){ // группируем суры по джузам (правильная мусхафная очередность)
+    if(qpcMeta){ // объединённый пикер: «▸ Джуз N (начало)» как ссылка + суры джуза, в мусхафной очередности
       let o="";
-      for(let J=1;J<=30;J++){const sin=SURAHS.filter(s=>juzOfSurah(s.id)===J);if(!sin.length)continue;
-        o+=`<optgroup label="Джуз ${J}">`+sin.map(opt).join("")+`</optgroup>`;}
+      for(let J=1;J<=30;J++){
+        const sin=SURAHS.filter(s=>juzOfSurah(s.id)===J);
+        const js=qpcMeta.juzStart[J];const su=js&&SURAHS.find(x=>x.id===js.surah);
+        const ref=su?` — ${esc(su.ru)}${js.ayah>1?" : "+js.ayah:""}`:"";
+        o+=`<optgroup label="Джуз ${J}">`
+          +`<option value="j${J}">▸ Джуз ${J} (начало)${ref}</option>`
+          +sin.map(opt).join("")+`</optgroup>`;
+      }
       opts=o;
     }else opts=SURAHS.map(opt).join("");
     idx=p.surah;max=114;
