@@ -248,6 +248,13 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 
 /* FOOTER */
 .footer{padding:3px 12px;border-top:1px solid var(--border);background:var(--bg-alt);font-size:9px;color:var(--text-muted);display:flex;justify-content:space-between;flex-shrink:0}
+/* Иммерсивный режим чтения: скрыть весь интерфейс, оставить только поле чтения. Выход — «Назад»/Esc/✕ */
+body.immersive .header,body.immersive .footer,body.immersive .search-panel,
+body.immersive .sidebar,body.immersive .rpanel,body.immersive .center-bar,
+body.immersive .bottom-nav,body.immersive .panel-backdrop{display:none!important}
+.immersive-exit{display:none}
+body.immersive .immersive-exit{display:flex;position:fixed;top:10px;right:10px;z-index:200;width:34px;height:34px;align-items:center;justify-content:center;border:none;border-radius:50%;background:rgba(0,0,0,.18);color:var(--text);font-size:15px;cursor:pointer;opacity:.3;transition:opacity .15s,background .15s}
+body.immersive .immersive-exit:hover{opacity:1;background:rgba(0,0,0,.32)}
 
 /* RIGHT PANEL extras */
 .rp-search{padding:4px 8px;border-bottom:1px solid var(--border)}
@@ -459,6 +466,7 @@ body.mushaf-full .mushaf-page{max-width:none;border:none;border-radius:0;box-sha
   </aside>
 </div>
 <div class="panel-backdrop" id="panelBackdrop" onclick="panelBackdrop()"></div>
+<button class="immersive-exit" onclick="exitImmersive()" title="Выйти из режима чтения (или кнопка «Назад»)">✕</button>
 
 <footer class="footer"><span id="footerInfo"></span><span>v4.4</span></footer>
 
@@ -565,7 +573,7 @@ function getAnyTranslation(surahId,ayahId){
 // ============================================================
 // STATE
 // ============================================================
-let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,
+let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,immersive:false,
   layout:"h",
   enabled:{_arabic:true,kuliev:true},
   selectedTag:null,
@@ -1709,6 +1717,7 @@ document.addEventListener("keydown",function(e){
   else if(e.key==="Escape"&&searchOpen)toggleSearch();
   else if(e.key==="Escape"&&ST.rpanelOpen)closeRPanel();
   else if(e.key==="Escape"&&ST.viewOpen)toggleViewPanel();
+  else if(e.key==="Escape"&&ST.immersive)exitImmersive();
   if((e.ctrlKey||e.metaKey)&&e.key==="f"){e.preventDefault();if(!searchOpen)toggleSearch();}
 });
 
@@ -1717,7 +1726,7 @@ document.addEventListener("keydown",function(e){
 // ============================================================
 let pendingAyah=null;
 // Which open panels should the Back button / backdrop close (overlays only; the desktop sidebar is docked)
-function anyOverlayOpen(){return searchOpen||ST.rpanelOpen||ST.viewOpen||(isM()&&ST.sidebarOpen);}
+function anyOverlayOpen(){return searchOpen||ST.rpanelOpen||ST.viewOpen||ST.immersive||(isM()&&ST.sidebarOpen);}
 let navBack=false; // true while we programmatically history.back() to consume our own overlay entry
 function pushOverlay(){if(!(history.state&&history.state.ov))history.pushState({ov:1},"");}
 function consumeOverlay(){if(history.state&&history.state.ov){navBack=true;history.back();}}
@@ -1726,6 +1735,7 @@ function closeAllPanelsUI(){
   if(searchOpen){searchOpen=false;document.getElementById("searchPanel").classList.add("hidden");}
   if(ST.rpanelOpen){ST.rpanelOpen=false;document.getElementById("rpanel").classList.add("collapsed");}
   if(ST.viewOpen){ST.viewOpen=false;renderViewPanel();renderCB();}
+  if(ST.immersive)exitImmersive(true);   // Back button leaves immersive (entry already popped)
   if(isM()&&ST.sidebarOpen){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   updateBackdrop();
 }
@@ -1766,23 +1776,38 @@ window.addEventListener("popstate",()=>{
 // ============================================================
 function toggleSidebar(){ST.sidebarOpen=!ST.sidebarOpen;document.getElementById("sidebar").classList.toggle("collapsed",!ST.sidebarOpen);updateBackdrop();if(isM()){if(ST.sidebarOpen)pushOverlay();else consumeOverlay();}}
 function toggleRPanel(){ST.rpanelOpen=!ST.rpanelOpen;document.getElementById("rpanel").classList.toggle("collapsed",!ST.rpanelOpen);if(ST.rpanelOpen){renderRP();pushOverlay();}else consumeOverlay();updateBackdrop();}
-// Fullscreen reading (Fullscreen API; webkit-prefixed fallback for older WebKit)
-function toggleFullscreen(){
-  const d=document,el=d.documentElement;
-  const cur=d.fullscreenElement||d.webkitFullscreenElement;
-  if(!cur){
-    const req=el.requestFullscreen||el.webkitRequestFullscreen;
-    if(req)req.call(el);else alert("Полноэкранный режим не поддерживается этим браузером");
-  }else{
-    const exit=d.exitFullscreen||d.webkitExitFullscreen;
-    if(exit)exit.call(d);
-  }
+// Immersive reading: hide ALL app chrome (header, surah nav, picker, search, footer),
+// leave only the reading field. Class-based so it works everywhere (incl. iOS); also
+// requests browser fullscreen as a bonus where supported. Exit via Back / Esc / ✕.
+function toggleFullscreen(){if(ST.immersive)exitImmersive();else enterImmersive();}
+function enterImmersive(){
+  if(ST.immersive)return;
+  ST.immersive=true;
+  document.body.classList.add("immersive");
+  pushOverlay();                                   // so the Back button leaves immersive
+  const el=document.documentElement,req=el.requestFullscreen||el.webkitRequestFullscreen;
+  if(req)try{req.call(el);}catch(e){}              // best-effort true fullscreen (desktop)
+  syncFsBtn();refitIfPage();
+}
+function exitImmersive(viaBack){
+  if(!ST.immersive)return;
+  ST.immersive=false;
+  document.body.classList.remove("immersive");
+  const d=document,ex=d.exitFullscreen||d.webkitExitFullscreen;
+  if((d.fullscreenElement||d.webkitFullscreenElement)&&ex)try{ex.call(d);}catch(e){}
+  if(!viaBack)consumeOverlay();                    // pop our history entry (Back path already popped it)
+  syncFsBtn();refitIfPage();
 }
 function syncFsBtn(){
   const b=document.getElementById("fsBtn");if(!b)return;
+  b.classList.toggle("active",ST.immersive);
+  b.title=ST.immersive?"Выйти из режима чтения":"Режим чтения (скрыть интерфейс)";
+}
+// If browser fullscreen is left via system gesture/Esc/F11, also leave immersive.
+function onFsChange(){
   const on=!!(document.fullscreenElement||document.webkitFullscreenElement);
-  b.classList.toggle("active",on);
-  b.title=on?"Выйти из полноэкранного режима":"Во весь экран";
+  if(!on&&ST.immersive)exitImmersive();
+  syncFsBtn();
 }
 function closeRPanel(){if(ST.rpanelOpen)toggleRPanel();}
 function onSearch(q){ST.search=q;renderSB();}
@@ -2324,13 +2349,10 @@ ST.navUnit=gs("navUnit","surah");
 ST.wbwMode=gs("wbwMode",false); // word-by-word reading layer (пословный перевод)
 loadQpcMeta(); // preload mushaf page index (surah → page) for page-mode jumps
 setupSwipe();  // horizontal swipe → prev/next section
-// Fullscreen: hide the button where the API is unavailable (e.g. iOS Safari),
-// and keep its state in sync when the user exits via the system gesture/Esc.
-if(!(document.fullscreenEnabled||document.webkitFullscreenEnabled)){
-  const fb=document.getElementById("fsBtn");if(fb)fb.style.display="none";
-}
-document.addEventListener("fullscreenchange",syncFsBtn);
-document.addEventListener("webkitfullscreenchange",syncFsBtn);
+// Keep immersive state in sync if the user leaves browser fullscreen via Esc/F11/gesture.
+// (⛶ всегда доступна: иммерсивный режим работает без Fullscreen API, в т.ч. на iOS)
+document.addEventListener("fullscreenchange",onFsChange);
+document.addEventListener("webkitfullscreenchange",onFsChange);
 // word/grammar cards: open on tap of a [[…]] word OR a word with data-loc
 // (corpus card), dismiss on outside tap/scroll
 document.addEventListener("click",e=>{
