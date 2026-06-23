@@ -242,6 +242,7 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 .tr-ayah{padding:10px 12px;margin-bottom:8px;border:1px solid var(--border-light);border-radius:7px;background:var(--bg-card);cursor:pointer;transition:background .12s}
 .tr-ayah:hover{background:var(--bg-alt)}
 .tr-ayah-ref{font-size:11px;font-weight:600;color:var(--accent);margin-bottom:4px}
+.tr-origins{display:inline-flex;gap:4px;flex-wrap:wrap;margin-left:8px;vertical-align:middle}
 .tr-ayah-ar{font-family:'Noto Naskh Arabic','Amiri',serif;font-size:18px;line-height:1.8;direction:rtl;text-align:right;color:var(--text);margin-bottom:4px}
 .tr-ayah-tr{font-size:12px;color:var(--text-sec);line-height:1.5}
 
@@ -620,7 +621,24 @@ function toggleAT(s,a,path){const at=getAyahTags();const k=s+":"+a;if(!at[k])at[
 
 function tagPath(anc,name){return anc.length?anc.join("/")+"/"+name:name;}
 function countTag(path){const at=getAyahTags();let c=0;for(const k in at)for(const p of at[k])if(p===path||p.startsWith(path+"/"))c++;return c;}
-function ayahsForTag(path){const at=getAyahTags();const res=[];for(const k in at)for(const p of at[k])if(p===path){res.push(k);break;}return res;}
+// Аяты, у которых выбранный тег есть в цепочке: точное совпадение ИЛИ предок (префикс пути).
+// Цепочка уже хранится в самом пути ("Акыда/Таухид" содержит "Акыда"), ничего не достраиваем.
+// Возвращает [{key,origins}] где origins — листовые имена фактических тегов аята, по которым он
+// попал ("Акыда"→"Таухид"/"Сыфаты"; помеченный самой "Акыда" напрямую → "Акыда"). Рекурсивно.
+function ayahsForTag(path){
+  const at=getAyahTags();const pref=path+"/";const res=[];
+  for(const k in at){
+    const origins=[];
+    for(const p of at[k]){
+      if(p===path||p.startsWith(pref)){
+        const leaf=p.split("/").pop();           // фактический (листовой) тег аята
+        if(!origins.includes(leaf))origins.push(leaf);
+      }
+    }
+    if(origins.length)res.push({key:k,origins});
+  }
+  return res;
+}
 
 function getEnabled(){return gs("enabled",{_arabic:true,kuliev:true});}
 function setEnabled(e){ss("enabled",e);}
@@ -1219,27 +1237,33 @@ async function renderReading(el){
 }
 
 async function renderTagResults(el){
-  const ayahKeys=ayahsForTag(ST.selectedTag);
-  if(!ayahKeys.length){
+  const matches=ayahsForTag(ST.selectedTag);
+  if(!matches.length){
     el.innerHTML=`<div class="tag-results"><div class="tr-header">🏷 ${esc(ST.selectedTag)}</div><div style="color:var(--text-muted);padding:20px;text-align:center">Нет аятов с этим тегом</div></div>`;
     return;
   }
   // Preload chunks for the surahs referenced by the tagged ayahs (Arabic + one translation)
-  const surahs=[...new Set(ayahKeys.map(k=>+k.split(":")[0]))];
+  const surahs=[...new Set(matches.map(m=>+m.key.split(":")[0]))];
   const firstTrans=CONFIG.tafsirs.find(t=>t.lang!=="ar"&&ST.enabled[t.id])||CONFIG.tafsirs.find(t=>t.lang!=="ar");
   await Promise.all(surahs.flatMap(s=>{
     const ps=[loadChunk("_arabic",s).catch(()=>{})];
     if(firstTrans)ps.push(loadChunk(firstTrans.id,s).catch(()=>{}));
     return ps;
   }));
-  let html=`<div class="tag-results"><div class="tr-header">🏷 ${esc(ST.selectedTag)} — ${ayahKeys.length} аятов</div>`;
-  for(const k of ayahKeys){
-    const[s,a]=k.split(":");
+  const sel=ST.selectedTag;
+  let html=`<div class="tag-results"><div class="tr-header">🏷 ${esc(sel)} — ${matches.length} аятов</div>`;
+  for(const m of matches){
+    const[s,a]=m.key.split(":");
     const su=SURAHS.find(x=>x.id==+s);
     const arText=getArabicFromCache(+s,+a);
     const trText=getAnyTranslation(+s,+a);
+    // метка происхождения: по какому фактическому (листовому) тегу аят попал в этот список
+    const pills=m.origins.map(o=>{
+      const direct=o===sel.split("/").pop();       // помечен самим выбранным тегом напрямую
+      return `<span class="t-pill" title="${direct?'Помечен этим тегом напрямую':'По подтегу «'+esc(o)+'»'}">${esc(o)}</span>`;
+    }).join("");
     html+=`<div class="tr-ayah" onclick="ST.selectedTag=null;goSurah(${s})">
-      <div class="tr-ayah-ref">${su?su.ru:s} : ${a}</div>
+      <div class="tr-ayah-ref">${su?su.ru:s} : ${a}<span class="tr-origins">${pills}</span></div>
       ${arText?`<div class="tr-ayah-ar">${arText}</div>`:''}
       ${trText?`<div class="tr-ayah-tr">${trText}</div>`:''}
     </div>`;
