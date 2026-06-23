@@ -32,13 +32,41 @@
     }
   ],
   "facetTags": [
-    { "id": "aqida", "name": "Акыда", "nameAr": "العقيدة" },
-    { "id": "fiqh", "name": "Фикх", "nameAr": "الأحكام" },
-    { "id": "lang", "name": "Язык", "nameAr": "اللغة" },
-    { "id": "hadith", "name": "Предания", "nameAr": "بالمأثور" },
-    { "id": "rational", "name": "Рациональный", "nameAr": "بالرأي" },
-    { "id": "sufi", "name": "Суфийский", "nameAr": "إشاري" },
-    { "id": "history", "name": "История", "nameAr": "القصص" }
+    {
+      "id": "aqida",
+      "name": "Акыда",
+      "nameAr": "العقيدة"
+    },
+    {
+      "id": "fiqh",
+      "name": "Фикх",
+      "nameAr": "الأحكام"
+    },
+    {
+      "id": "lang",
+      "name": "Язык",
+      "nameAr": "اللغة"
+    },
+    {
+      "id": "hadith",
+      "name": "Предания",
+      "nameAr": "بالمأثور"
+    },
+    {
+      "id": "rational",
+      "name": "Рациональный",
+      "nameAr": "بالرأي"
+    },
+    {
+      "id": "sufi",
+      "name": "Суфийский",
+      "nameAr": "إشاري"
+    },
+    {
+      "id": "history",
+      "name": "История",
+      "nameAr": "القصص"
+    }
   ],
   "tafsirs": [
     {
@@ -53,7 +81,8 @@
       "lang": "ar",
       "era": "",
       "tags": [],
-      "year": ""
+      "year": "",
+      "fill": 1.0
     },
     {
       "id": "_arabic_clean",
@@ -67,7 +96,8 @@
       "lang": "ar",
       "era": "",
       "tags": [],
-      "year": ""
+      "year": "",
+      "fill": 1.0
     },
     {
       "id": "_arabic_rasm",
@@ -81,7 +111,8 @@
       "lang": "ar",
       "era": "",
       "tags": [],
-      "year": ""
+      "year": "",
+      "fill": 1.0
     },
     {
       "id": "kuliev",
@@ -95,7 +126,9 @@
       "lang": "ru",
       "era": "modern",
       "tags": [],
-      "year": ""
+      "year": "",
+      "about": true,
+      "fill": 1.0
     },
     {
       "id": "krachkovsky",
@@ -109,7 +142,8 @@
       "lang": "ru",
       "era": "modern",
       "tags": [],
-      "year": "1963"
+      "year": "1963",
+      "fill": 1.0
     },
     {
       "id": "osmanov",
@@ -123,7 +157,138 @@
       "lang": "ru",
       "era": "modern",
       "tags": [],
-      "year": "1995"
+      "year": "1995",
+      "fill": 1.0
+    },
+    {
+      "id": "abuadel",
+      "file": "tafsirs/abuadel.json",
+      "name": "Перевод Абу Аделя",
+      "nameAr": "ترجمة أبو عادل",
+      "author": "Абу Адель",
+      "authorAr": "",
+      "group": "translations",
+      "kind": "translation",
+      "lang": "ru",
+      "era": "modern",
+      "tags": [],
+      "year": "",
+      "fill": 1.0
+    },
+    {
+      "id": "kalam",
+      "file": "tafsirs/kalam.json",
+      "name": "Калям Шариф",
+      "nameAr": "كلام شريف",
+      "author": "ДУМ Республики Татарстан",
+      "authorAr": "",
+      "group": "translations",
+      "kind": "translation",
+      "lang": "ru",
+      "era": "modern",
+      "tags": [],
+      "year": "",
+      "fill": 1.0
+    },
+    {
+      "id": "porokhova",
+      "file": "tafsirs/porokhova.json",
+      "name": "Перевод Пороховой",
+      "nameAr": "ترجمة بوروخوفا",
+      "author": "Валерия (Иман) Порохова",
+      "authorAr": "",
+      "group": "translations",
+      "kind": "translation",
+      "lang": "ru",
+      "era": "modern",
+      "tags": [],
+      "year": "1997",
+      "fill": 1.0
+    },
+    {
+      "id": "sablukov",
+      "file": "tafsirs/sablukov.json",
+      "name": "Перевод Саблукова",
+      "nameAr": "ترجمة سابلوكوف",
+      "author": "Гордий Саблуков",
+      "authorAr": "",
+      "group": "translations",
+      "kind": "translation",
+      "lang": "ru",
+      "era": "classical",
+      "tags": [],
+      "year": "1878",
+      "fill": 1.0
+    },
+    {
+      "id": "rysjanov",
+      "file": "tafsirs/rysjanov.json",
+      "name": "Перевод Рысжанова",
+      "nameAr": "ترجمة ريسجانوف",
+      "author": "Серик Рысжанов",
+      "authorAr": "",
+      "group": "translations",
+      "kind": "translation",
+      "lang": "ru",
+      "era": "modern",
+      "tags": [
+        "draft"
+      ],
+      "year": "",
+      "fill": 0.1464
+    },
+    {
+      "id": "isaeva",
+      "file": "tafsirs/isaeva.json",
+      "name": "Перевод Исаевой",
+      "nameAr": "ترجمة إيساييفا",
+      "author": "Маиса Исаева",
+      "authorAr": "",
+      "group": "translations",
+      "kind": "translation",
+      "lang": "ru",
+      "era": "modern",
+      "tags": [],
+      "year": "2026",
+      "about": true,
+      "caution": true,
+      "fill": 1.0
+    },
+    {
+      "id": "djumagaliev",
+      "file": "tafsirs/djumagaliev.json",
+      "name": "Джумагалиев (ритмико-дословный)",
+      "nameAr": "ترجمة جوماغالييف",
+      "author": "Тимур Джумагалиев",
+      "authorAr": "",
+      "group": "translations",
+      "kind": "translation",
+      "lang": "ru",
+      "era": "modern",
+      "tags": [
+        "draft"
+      ],
+      "year": "",
+      "about": true,
+      "fill": 0.0993
+    },
+    {
+      "id": "boguslawski",
+      "name": "Богуславский (скан)",
+      "nameAr": "ترجمة بوغوسلافسكي",
+      "author": "Д. Н. Богуславский",
+      "authorAr": "",
+      "group": "translations",
+      "kind": "image",
+      "lang": "ru",
+      "era": "classical",
+      "tags": [
+        "draft"
+      ],
+      "year": "1871",
+      "about": true,
+      "fill": 0.047,
+      "imgdir": "img/boguslawski"
     },
     {
       "id": "saadi_ru",
@@ -136,8 +301,27 @@
       "kind": "tafsir",
       "lang": "ru",
       "era": "modern",
-      "tags": ["aqida", "fiqh"],
-      "year": ""
+      "tags": [
+        "aqida",
+        "fiqh"
+      ],
+      "year": "",
+      "fill": 1.0
+    },
+    {
+      "id": "muntahab",
+      "file": "tafsirs/muntahab.json",
+      "name": "Тафсир аль-Мунтахаб",
+      "nameAr": "المنتخب في تفسير القرآن",
+      "author": "Мин. вакфов Египта",
+      "authorAr": "",
+      "group": "russian",
+      "kind": "tafsir",
+      "lang": "ru",
+      "era": "modern",
+      "tags": [],
+      "year": "",
+      "fill": 1.0
     },
     {
       "id": "saadi",
@@ -150,8 +334,12 @@
       "kind": "tafsir",
       "lang": "ar",
       "era": "modern",
-      "tags": ["aqida", "fiqh"],
-      "year": "1376 х."
+      "tags": [
+        "aqida",
+        "fiqh"
+      ],
+      "year": "1376 х.",
+      "fill": 0.0026
     },
     {
       "id": "tabari",
@@ -164,8 +352,13 @@
       "kind": "tafsir",
       "lang": "ar",
       "era": "classical",
-      "tags": ["hadith", "lang", "history"],
-      "year": "310 х."
+      "tags": [
+        "hadith",
+        "lang",
+        "history"
+      ],
+      "year": "310 х.",
+      "fill": 0.0026
     },
     {
       "id": "kathir",
@@ -178,8 +371,13 @@
       "kind": "tafsir",
       "lang": "ar",
       "era": "classical",
-      "tags": ["hadith", "history", "aqida"],
-      "year": "774 х."
+      "tags": [
+        "hadith",
+        "history",
+        "aqida"
+      ],
+      "year": "774 х.",
+      "fill": 0.0026
     },
     {
       "id": "qurtubi",
@@ -192,8 +390,13 @@
       "kind": "tafsir",
       "lang": "ar",
       "era": "classical",
-      "tags": ["fiqh", "hadith", "lang"],
-      "year": "671 х."
+      "tags": [
+        "fiqh",
+        "hadith",
+        "lang"
+      ],
+      "year": "671 х.",
+      "fill": 0.0026
     },
     {
       "id": "baghawi",
@@ -206,8 +409,12 @@
       "kind": "tafsir",
       "lang": "ar",
       "era": "classical",
-      "tags": ["hadith", "history"],
-      "year": "516 х."
+      "tags": [
+        "hadith",
+        "history"
+      ],
+      "year": "516 х.",
+      "fill": 0.0026
     }
   ]
 }
