@@ -181,6 +181,42 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 /* Закладка: кнопка в панели аята + строки в панели-списке */
 .ab-bm-btn{background:var(--bg-card);border:1px solid var(--border);border-radius:4px;padding:1px 6px;cursor:pointer;font-size:12px;line-height:1.3;color:var(--text-muted)}
 .ab-bm-btn.on{color:#e0a800;border-color:#e0a800}
+.ab-note-btn{background:var(--bg-card);border:1px solid var(--border);border-radius:4px;padding:1px 6px;cursor:pointer;font-size:12px;line-height:1.3;filter:grayscale(1) opacity(.55)}
+.ab-note-btn.has,.ab-note-btn.on{filter:none;border-color:var(--note-color)}
+.ab-note-inline{margin-top:6px;background:var(--note-bg);border:1px solid var(--note-border);border-radius:8px;padding:8px 10px}
+.ab-note-inline .ab-note-area{width:100%;box-sizing:border-box;min-height:64px;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:7px 9px;font:inherit;font-size:13px;color:var(--text);resize:vertical}
+.ab-note-bar{display:flex;justify-content:flex-end;margin-bottom:6px}
+.ab-note-expand{background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:3px 9px;font:inherit;font-size:11px;font-weight:600;color:var(--note-color);cursor:pointer}
+.ab-note-expand:hover{background:var(--note-bg);border-color:var(--note-color)}
+/* Большой редактор заметки (модал на весь экран) */
+.ne-ovl{position:fixed;inset:0;z-index:140;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:20px}
+.ne-box{display:flex;flex-direction:column;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 48px rgba(0,0,0,.4);width:100%;max-width:920px;height:85vh;max-height:85vh;overflow:hidden}
+.ne-head{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border)}
+.ne-title{font-size:14px;font-weight:700;color:var(--text);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ne-modes{display:none;gap:4px}
+.ne-mode{background:var(--bg-alt);border:1px solid var(--border);border-radius:6px;padding:4px 9px;font:inherit;font-size:11px;font-weight:600;color:var(--text-sec);cursor:pointer}
+.ne-mode.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.ne-close{background:none;border:none;font-size:24px;line-height:1;color:var(--text-muted);cursor:pointer;padding:0 4px;border-radius:6px}
+.ne-close:hover{color:var(--text);background:var(--bg-alt)}
+.ne-toolbar{display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--bg-alt)}
+.ne-btn{min-width:30px;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font:inherit;font-size:13px;line-height:1;color:var(--text-sec);cursor:pointer}
+.ne-btn:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-bg)}
+.ne-sep{width:1px;align-self:stretch;background:var(--border);margin:2px 3px}
+.ne-body{display:flex;gap:0;flex:1;min-height:0}
+.ne-pane{flex:1;min-width:0;display:flex;flex-direction:column}
+.ne-pane.preview{border-left:1px solid var(--border)}
+.ne-area{flex:1;width:100%;box-sizing:border-box;resize:none;border:none;outline:none;background:var(--bg-card);color:var(--text);padding:14px 16px;font:inherit;font-size:14px;line-height:1.6}
+.ne-preview{flex:1;min-width:0;overflow:auto;padding:14px 16px;font-size:14px;line-height:1.7;color:var(--text-sec)}
+@media(max-width:760px){
+  .ne-ovl{padding:0}
+  .ne-box{max-width:none;height:100%;max-height:100%;border-radius:0;border:none}
+  .ne-modes{display:flex}
+  .ne-body{display:block}
+  .ne-pane{display:none;height:100%}
+  .ne-box[data-m="edit"] .ne-pane.edit{display:flex}
+  .ne-box[data-m="preview"] .ne-pane.preview{display:block}
+  .ne-pane.preview{border-left:none}
+}
 .bm-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--border-light);cursor:pointer}
 .bm-row:hover{background:var(--bg-alt)}
 .bm-info{flex:1;min-width:0}
@@ -223,17 +259,42 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 .wcard{display:inline;font:inherit;color:inherit;background:none;border:none;padding:0;cursor:pointer;border-bottom:1px dotted var(--accent)}
 .wcard:active{background:var(--accent);color:#fff}
 .word-card{position:fixed;z-index:80;max-width:300px;background:var(--bg-card);border:1px solid var(--border);border-radius:9px;box-shadow:0 8px 34px rgba(0,0,0,.28);padding:9px 12px;font-size:13px;line-height:1.5;color:var(--text);display:none}
-/* "О переводе/тафсире" info button + modal */
-.ab-info,.t-info-btn{background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:12px;line-height:1;padding:1px 3px;border-radius:4px;flex-shrink:0}
-.ab-info:hover,.t-info-btn:hover{color:var(--accent);background:var(--accent-bg)}
+/* "О переводе/тафсире" info button + source passport modal */
+.ab-info{display:inline-flex;align-items:center;gap:3px;background:var(--accent-bg);border:1px solid var(--accent);cursor:pointer;color:var(--accent);font-size:10px;font-weight:600;line-height:1;padding:2px 7px;border-radius:999px;flex-shrink:0;vertical-align:middle}
+.ab-info:hover{color:#fff;background:var(--accent)}
+.ab-info::after{content:"паспорт"}
+/* Вступление к суре (ключ "0" в чанке суры) — блок над аятом 1 */
+.sura-intro{border:1px solid var(--accent);background:var(--accent-bg);border-radius:8px;padding:10px 12px;margin-bottom:14px}
+.sura-intro-head{font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+.intro-tag{font-size:10px;color:var(--accent);font-weight:600}
+/* Мукаддима книги (вступление целого тафсира — отдельный режим) */
+.bi-wrap{max-width:760px;margin:0 auto;padding:24px 20px 80px}
+.bi-title{font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px}
+.bi-sub{font-size:12px;color:var(--text-muted);margin-bottom:18px}
+.bi-src{margin:0 0 26px}
+.bi-src-head{font-size:13px;font-weight:700;color:var(--accent);border-bottom:1px solid var(--border);padding-bottom:5px;margin-bottom:10px}
+.bi-sec{font-size:15px;line-height:1.7;color:var(--text-sec);margin-bottom:14px}
+.t-info-btn{border:1px solid var(--border);background:var(--bg-alt);color:var(--text-sec);border-radius:999px;padding:3px 7px;font:inherit;font-size:10px;line-height:1.1;cursor:pointer;flex-shrink:0;white-space:nowrap}
+.t-info-btn:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-bg)}
 .about-ovl{position:fixed;inset:0;z-index:120;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:20px}
-.about-box{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 48px rgba(0,0,0,.34);max-width:640px;width:100%;max-height:85vh;overflow:auto;padding:20px 22px;position:relative}
+.about-box{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 48px rgba(0,0,0,.34);max-width:720px;width:100%;max-height:85vh;overflow:auto;padding:20px 22px;position:relative}
 .about-close{position:absolute;top:10px;right:12px;background:none;border:none;font-size:22px;line-height:1;color:var(--text-muted);cursor:pointer;padding:2px 6px;border-radius:6px}
 .about-close:hover{color:var(--text);background:var(--bg-alt)}
 .about-title{font-size:17px;font-weight:700;color:var(--text);padding-right:28px}
 .about-title .about-ar{font-family:'Amiri',serif;font-weight:400;color:var(--text-muted);font-size:15px}
-.about-meta{font-size:11px;color:var(--text-muted);margin:4px 0 12px;border-bottom:1px solid var(--border);padding-bottom:10px}
+.about-meta{font-size:11px;color:var(--text-muted);margin:4px 0 10px}
+.about-status{display:flex;flex-wrap:wrap;gap:5px;margin:0 0 10px}
+.about-pill{font-size:10px;line-height:1.35;padding:2px 7px;border-radius:999px;background:var(--bg-alt);border:1px solid var(--border);color:var(--text-sec)}
+.about-pill.ok{background:var(--accent-bg);border-color:var(--accent);color:var(--accent);font-weight:600}
+.about-pill.warn{background:var(--note-bg);border-color:var(--note-border);color:var(--note-color);font-weight:600}
+.about-passport{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:10px 0;margin:0 0 12px}
+.about-row{min-width:0}
+.about-k{display:block;font-size:9px;font-weight:700;letter-spacing:.35px;text-transform:uppercase;color:var(--text-muted);margin-bottom:1px}
+.about-v{display:block;font-size:12px;color:var(--text);line-height:1.45;overflow-wrap:anywhere}
+.about-v a{color:var(--accent);text-decoration:none}.about-v a:hover{text-decoration:underline}
+.about-section-title{font-size:10px;font-weight:700;letter-spacing:.45px;text-transform:uppercase;color:var(--text-muted);margin:12px 0 5px}
 .about-body{font-size:14px;line-height:1.7;color:var(--text-sec)}
+.about-empty{color:var(--text-muted)}
 .about-warn{background:var(--note-bg);border:1px solid var(--note-border);color:var(--note-color);border-radius:8px;padding:9px 12px;font-size:12.5px;line-height:1.55;margin:0 0 12px}
 
 /* Notes inline */
@@ -609,7 +670,7 @@ function getAnyTranslation(surahId,ayahId){
 let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,immersive:false,
   layout:"h",
   enabled:{_arabic:true,kuliev:true},
-  selectedTag:null,
+  selectedTag:null,bookIntro:false,
   theme:"green",
   rpFilter:"",
   fsAr:1,            // Arabic reading text size (⚙ Вид)
@@ -660,7 +721,7 @@ function curTopAyah(){
   return ST.scrollToAyah||1;
 }
 function saveLastPos(){
-  if(ST.selectedTag||ST.scanSource)return;          // теги/скан-читалка — не позиция чтения
+  if(ST.selectedTag||ST.scanSource||ST.bookIntro)return;  // теги/скан/введение — не позиция чтения
   const mode=ST.pageMode?"page":(ST.wbwMode?"words":"ayat");
   ss("lastPos",{surah:ST.surah,ayah:curTopAyah(),page:ST.mushafPage||1,mode});
 }
@@ -975,8 +1036,59 @@ async function openMorphCard(el){
   if(html)showWordCardEl(el,html);
 }
 
-// "О переводе/тафсире" — source-level intro/preface, lazy-loaded from data/about/<id>.md
+// "О переводе/тафсире" — source-level passport + intro/preface, lazy-loaded from data/about/<id>.md
 let aboutCache={};
+const KIND_RU={quran:"Коран",translation:"Перевод",tafsir:"Тафсир",image:"Скан"};
+const LANG_RU={ar:"Арабский",ru:"Русский"};
+const ERA_RU={classical:"Классический",modern:"Современный"};
+function aboutFillText(t){
+  if(t.fill==null)return "";
+  const pct=Math.round(t.fill*1000)/10;
+  return (Number.isInteger(pct)?pct.toFixed(0):pct.toFixed(1))+"%";
+}
+function aboutGroupName(id){const g=(CONFIG.groups||[]).find(x=>x.id===id);return g?g.name:id;}
+function aboutTagName(tag){return tag==="draft"?"неполный":tagLabel(tag);}
+function aboutLink(label,url){
+  const text=label||url;if(!text)return "";
+  if(url)return `<a href="${escAttr(url)}" target="_blank" rel="noopener">${esc(text)}</a>`;
+  return esc(text);
+}
+function aboutRow(label,value){
+  if(value==null||value===""||(Array.isArray(value)&&!value.length))return "";
+  return `<div class="about-row"><span class="about-k">${esc(label)}</span><span class="about-v">${Array.isArray(value)?value.map(esc).join(", "):value}</span></div>`;
+}
+function aboutStatus(t){
+  const tags=t.tags||[],items=[];
+  if(t.approved)items.push(["ok","одобрено"]);
+  if(t.caution)items.push(["warn","не проверено"]);
+  if(tags.includes("draft"))items.push(["warn","черновик"]);
+  if(t.fill!=null&&t.fill<0.999)items.push(["","заполнено "+aboutFillText(t)]);
+  if(!items.length)items.push(["","статус проверки не указан"]);
+  return `<div class="about-status">${items.map(([cls,txt])=>`<span class="about-pill ${cls}">${esc(txt)}</span>`).join("")}</div>`;
+}
+function aboutPassport(t){
+  const tags=(t.tags||[]).map(aboutTagName);
+  const source=aboutLink(t.sourceName||t.source,t.sourceUrl);
+  const rows=[
+    aboutRow("Тип",esc(KIND_RU[t.kind]||t.kind||"")),
+    aboutRow("Группа",esc(aboutGroupName(t.group)||"")),
+    aboutRow("Язык",esc(LANG_RU[t.lang]||t.lang||"")),
+    aboutRow("Эпоха",esc(ERA_RU[t.era]||t.era||"")),
+    aboutRow("Автор",esc(t.author||"")),
+    aboutRow("Переводчик",esc(t.translator||"")),
+    aboutRow("Редактор",esc(t.editor||"")),
+    aboutRow("Год",esc(t.year||"")),
+    aboutRow("Заполненность",esc(aboutFillText(t))),
+    aboutRow("Направления",tags),
+    aboutRow("Источник текста",source),
+    aboutRow("Издание",esc(t.edition||"")),
+    aboutRow("Лицензия",esc(t.license||t.licenseStatus||"")),
+    aboutRow("Проверка",esc(t.reviewNote||t.reviewStatus||"")),
+    aboutRow("ID",esc(t.id)),
+    aboutRow("Файл",esc(t.file||t.imgdir||""))
+  ].filter(Boolean).join("");
+  return aboutStatus(t)+`<div class="about-passport">${rows}</div>`;
+}
 async function openAbout(id){
   const t=CONFIG.tafsirs.find(x=>x.id===id);if(!t)return;
   let bodyHtml;
@@ -985,21 +1097,23 @@ async function openAbout(id){
     if(ab===undefined){ab=null;try{const r=await fetch(`${DATA_PATH}${t.imgdir||("img/"+id)}/_about.json`);if(r.ok)ab=await r.json();}catch(e){}aboutCache["imgabout_"+id]=ab;}
     const dir=imgDir(t);
     const imgs=((ab&&ab.images)||[]).map(f=>`<img loading="lazy" src="${dir}${esc(f)}" style="max-width:100%;border:1px solid var(--border);border-radius:4px;margin-bottom:10px;display:block">`).join("");
-    bodyHtml=imgs||'<span style="color:var(--text-muted)">Предисловие пока не добавлено.</span>';
+    bodyHtml=imgs||'<span class="about-empty">Предисловие пока не добавлено.</span>';
   }else{
     let md=aboutCache[id];
     if(md===undefined){md=null;try{const r=await fetch(`${DATA_PATH}about/${id}.md`);if(r.ok)md=await r.text();}catch(e){}aboutCache[id]=md;}
-    bodyHtml=md?mdRender(md):'<span style="color:var(--text-muted)">Описание пока не добавлено.</span>';
+    bodyHtml=md?mdRender(md):'<span class="about-empty">Описание пока не добавлено.</span>';
   }
   let ov=document.getElementById("aboutOvl");
   if(!ov){ov=document.createElement("div");ov.id="aboutOvl";ov.className="about-ovl";ov.onclick=e=>{if(e.target===ov)closeAbout();};document.body.appendChild(ov);}
-  const meta=[t.author&&"Автор: "+esc(t.author),t.year&&"Год: "+esc(t.year)].filter(Boolean).join(" · ");
+  const meta=[t.author&&"Автор: "+esc(t.author),t.translator&&"Переводчик: "+esc(t.translator),t.year&&"Год: "+esc(t.year)].filter(Boolean).join(" · ");
   const warn=t.caution?`<div class="about-warn">⚠️ Приводится <b>только в ознакомительных целях</b>, «как есть». Точность не гарантируется — в тексте возможны ошибки и вероучительные отклонения. Относитесь с осторожностью и сверяйтесь с авторитетными переводами.</div>`:'';
   ov.innerHTML=`<div class="about-box" role="dialog" aria-modal="true">
     <button class="about-close" onclick="closeAbout()" aria-label="Закрыть">×</button>
     <div class="about-title">${esc(t.name)}${t.nameAr?` <span class="about-ar">${esc(t.nameAr)}</span>`:''}</div>
     ${meta?`<div class="about-meta">${meta}</div>`:''}
+    ${aboutPassport(t)}
     ${warn}
+    <div class="about-section-title">Введение</div>
     <div class="about-body md">${bodyHtml}</div>
   </div>`;
   ov.style.display="flex";ov.scrollTop=0;
@@ -1093,8 +1207,18 @@ function surahBtnHTML(s){
       <div style="flex:1"><div class="s-ar">${s.name}</div><div class="s-meta">${s.ru} · ${s.n}</div></div>
     </button>`;
 }
+// Пункт «Введение» (мукаддима книги) в списке сур — только если у включённых
+// источников есть авторское вступление.
+function introEntryHTML(){
+  if(!booksWithMuqaddima().length)return "";
+  return `<button class="surah-btn ${ST.bookIntro?'active':''}" onclick="openBookIntro()" title="Авторские вступления тафсиров">
+      <span class="s-n">§</span>
+      <div style="flex:1"><div class="s-ar">المقدمة</div><div class="s-meta">Введение</div></div>
+    </button>`;
+}
 function renderSurahList(el){
   const q=ST.search.toLowerCase();
+  const intro=q?"":introEntryHTML();
   if(q){ // при поиске — плоский список (группировка мешала бы)
     el.innerHTML=SURAHS.filter(s=>s.name.includes(q)||s.ru.toLowerCase().includes(q)||String(s.id).includes(q)).map(surahBtnHTML).join("")
       ||'<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:11px">Ничего не найдено</div>';
@@ -1102,7 +1226,7 @@ function renderSurahList(el){
   }
   if(!qpcMeta){ // мета ещё не загружена — плоский, и перерисуем после загрузки
     loadQpcMeta().then(()=>{if(ST.sbTab==="surahs")renderSB();});
-    el.innerHTML=SURAHS.map(surahBtnHTML).join("");
+    el.innerHTML=intro+SURAHS.map(surahBtnHTML).join("");
     return;
   }
   // Группировка по джузам: заголовок «Джуз N» (клик → переход к началу джуза) + свёртка
@@ -1122,7 +1246,7 @@ function renderSurahList(el){
       ${sin.length?`<div class="juz-items">${sin.map(surahBtnHTML).join("")}</div>`:''}
     </div>`;
   }
-  el.innerHTML=html;
+  el.innerHTML=intro+html;
 }
 
 function renderTagPanel(el){
@@ -1213,11 +1337,35 @@ function renderCB(){
 // -- CENTER BODY --
 function renderCenter(){
   const el=document.getElementById("centerBody");
+  if(ST.bookIntro)return renderBookIntro(el);
   if(ST.scanSource)return renderScanReader(el);
   if(ST.selectedTag)return renderTagResults(el);
   if(ST.pageMode)return renderMushafPage(el);
   if(ST.wbwMode)return renderWbw(el);
   return renderReading(el);
+}
+
+// Вступление к суре: текст под ключом "0" в чанке суры (фадаиль, мекканская/мединская,
+// причины ниспослания…). Показывается единым блоком НАД аятом 1, без виртуализации.
+function buildSuraIntro(enabled,loaded){
+  let inner="";
+  for(const t of enabled){
+    if(t.id==="_notes")continue;
+    const text=loaded[t.id]?.["0"];
+    if(!text)continue;
+    const isAr=t.lang==="ar";
+    const {body,notes}=splitNotes(text);
+    const src=body||text;
+    const long=!ST.noTouch&&src.length>600;   // длинное вступление сворачиваем, как тафсиры
+    inner+=`<div class="ab-entry">
+      <div class="ab-entry-label">${esc(t.name)} <span class="lbl-ar">${t.nameAr||''}</span> · <span class="intro-tag">введение к суре</span></div>
+      <div class="ab-entry-text md selectable ${isAr?'rtl':''} ${long?'clamped':''}">${renderRefs(src)}</div>
+      ${long?'<button class="more-btn" onclick="toggleClamp(this)">Развернуть ▾</button>':''}
+      ${notes.length?renderFootnotes(notes):''}
+    </div>`;
+  }
+  if(!inner)return "";
+  return `<div class="ayah-block sura-intro" data-aid="intro"><div class="sura-intro-head">📖 Вступление к суре</div>${inner}</div>`;
 }
 
 // Build the entries (Arabic + tafsirs + notes) for one ayah — used on demand by virtualization
@@ -1252,7 +1400,7 @@ function buildAyahBody(aid,enabled,loaded){
       const inner=body?renderRefs(body):'<span style="color:var(--text-muted)">—</span>';
       const long=!ST.noTouch&&body&&body.length>600; // в режиме без касания — сразу развёрнуто, без кнопки
       html+=`<div class="ab-entry">
-        <div class="ab-entry-label">${esc(t.name)} <span class="lbl-ar">${t.nameAr||''}</span>${t.about?`<button class="ab-info" onclick="openAbout('${t.id}')" title="О переводе/тафсире">ℹ</button>`:''}</div>
+        <div class="ab-entry-label">${esc(t.name)} <span class="lbl-ar">${t.nameAr||''}</span></div>
         <div class="ab-entry-text md selectable ${isAr?'rtl':''} ${long?'clamped':''}">${inner}</div>
         ${long?'<button class="more-btn" onclick="toggleClamp(this)">Развернуть ▾</button>':''}
         ${notes.length?renderFootnotes(notes):''}
@@ -1279,6 +1427,133 @@ function setupHydration(area,enabled,loaded){
   },{root:area,rootMargin:"1200px 0px"});
   area.querySelectorAll(".ab-body").forEach(b=>obs.observe(b));
   hydrationObserver=obs;
+}
+
+// Заметка к ОДНОМУ аяту (кнопка 📝 в панели аята) — инлайн-редактор прямо под панелью.
+// Вставляется в .ayah-block, переживает виртуализацию; при смене суры — сбрасывается.
+function toggleNote(aid,btn){
+  if(ST.noTouch)return;
+  const block=btn.closest(".ayah-block");if(!block)return;
+  const ex=block.querySelector(".ab-note-inline");
+  if(ex){ex.remove();btn.classList.toggle("on",false);btn.classList.toggle("has",hasNote(ST.surah,aid));return;}
+  btn.classList.add("on");
+  const div=document.createElement("div");div.className="ab-note-inline";
+  div.innerHTML=`<div class="ab-note-bar"><button class="ab-note-expand" onclick="openNoteEditor(${ST.surah},${aid})" title="Развернуть на весь экран с форматированием">⤢ Развернуть</button></div>`+
+    `<textarea class="ab-note-area" placeholder="Заметка к аяту ${aid}…" oninput="noteInput(this,${aid})">${esc(getNote(ST.surah,aid))}</textarea>`;
+  block.appendChild(div);
+  const ta=div.querySelector("textarea");if(ta){ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);}
+}
+// Сохранение + живое обновление индикатора заметки (точка + подсветка кнопки).
+function noteInput(ta,aid){
+  saveNote(ST.surah,aid,ta.value);
+  const block=ta.closest(".ayah-block");if(!block)return;
+  const has=hasNote(ST.surah,aid);
+  const btn=block.querySelector(".ab-note-btn");if(btn)btn.classList.toggle("has",has);
+  const dots=block.querySelector(".ab-tag-dots");if(dots)dots.innerHTML=has?'<span class="ab-note-dot"></span>':'';
+  renderF();
+}
+
+// ── Большой редактор заметки (модал на весь экран) ──────────────────────────
+// Хранилище — то же (getNote/setNote), исходник остаётся markdown. Предпросмотр
+// рендерит тем же движком mdRender, что и тафсиры/паспорт (HTML экранируется внутри).
+let noteEd=null; // {s,a} — какой аят редактируем
+function openNoteEditor(s,a){
+  if(ST.noTouch)return;
+  noteEd={s,a};
+  let ov=document.getElementById("neOvl");
+  if(!ov){ov=document.createElement("div");ov.id="neOvl";ov.className="ne-ovl";
+    ov.onclick=e=>{if(e.target===ov)closeNoteEditor();};document.body.appendChild(ov);}
+  const tb=(t,title,inner)=>`<button class="ne-btn" onclick="neFmt('${t}')" title="${title}">${inner}</button>`;
+  ov.innerHTML=`<div class="ne-box" data-m="edit" role="dialog" aria-modal="true">
+    <div class="ne-head">
+      <span class="ne-title">📝 Заметка · аят ${a}</span>
+      <span class="ne-modes">
+        <button class="ne-mode on" data-m="edit" onclick="neMode('edit')">✏ Правка</button>
+        <button class="ne-mode" data-m="preview" onclick="neMode('preview')">👁 Просмотр</button>
+      </span>
+      <button class="ne-close" onclick="closeNoteEditor()" aria-label="Закрыть">×</button>
+    </div>
+    <div class="ne-toolbar">
+      ${tb('bold','Жирный','<b>Ж</b>')}${tb('italic','Курсив','<i>К</i>')}${tb('mono','Моноширинный','&lt;/&gt;')}
+      <span class="ne-sep"></span>
+      ${tb('h','Заголовок','H')}${tb('quote','Цитата','❝')}${tb('ul','Список','•')}${tb('ol','Нумерованный список','1.')}
+      <span class="ne-sep"></span>
+      ${tb('hr','Линия','―')}${tb('table','Таблица','▦')}${tb('card','Карточка [[ ::подсказка ]]','[[ ]]')}
+    </div>
+    <div class="ne-body">
+      <div class="ne-pane edit"><textarea id="neArea" class="ne-area" placeholder="Пишите заметку… поддерживается markdown: **жирный**, *курсив*, &gt; цитата, # заголовок, списки, | таблицы |" oninput="neInput()">${esc(getNote(s,a))}</textarea></div>
+      <div class="ne-pane preview"><div id="nePreview" class="ne-preview md"></div></div>
+    </div>
+  </div>`;
+  ov.style.display="flex";
+  neInput(); // первичный предпросмотр
+  const ta=document.getElementById("neArea");if(ta){ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);}
+}
+function neMode(m){
+  const box=document.querySelector("#neOvl .ne-box");if(!box)return;
+  box.dataset.m=m;box.querySelectorAll(".ne-mode").forEach(b=>b.classList.toggle("on",b.dataset.m===m));
+  if(m==="preview")neInput();
+  else{const ta=document.getElementById("neArea");if(ta)ta.focus();}
+}
+// Автосохранение по вводу + живой предпросмотр (то же хранилище, что у инлайн-поля).
+function neInput(){
+  if(!noteEd)return;
+  const ta=document.getElementById("neArea");if(!ta)return;
+  saveNote(noteEd.s,noteEd.a,ta.value);
+  const pv=document.getElementById("nePreview");
+  if(pv)pv.innerHTML=ta.value.trim()?mdRender(ta.value):'<span style="color:var(--text-muted)">Здесь появится предпросмотр…</span>';
+}
+// Оборачивание выделения / вставка markdown — только синтаксис, который умеет mdRender.
+function neWrap(before,after,placeholder){
+  const ta=document.getElementById("neArea");if(!ta)return;
+  const s=ta.selectionStart,e=ta.selectionEnd,v=ta.value;
+  const sel=v.slice(s,e)||placeholder||"текст";
+  ta.value=v.slice(0,s)+before+sel+after+v.slice(e);
+  ta.focus();ta.setSelectionRange(s+before.length,s+before.length+sel.length);
+  neInput();
+}
+function neLinePrefix(prefix){
+  const ta=document.getElementById("neArea");if(!ta)return;
+  const v=ta.value,s=ta.selectionStart,e=ta.selectionEnd;
+  const ls=v.lastIndexOf("\n",s-1)+1;
+  let le=v.indexOf("\n",e);if(le<0)le=v.length;
+  const seg=v.slice(ls,le)||"текст";
+  const newSeg=seg.split("\n").map(l=>prefix+l).join("\n");
+  ta.value=v.slice(0,ls)+newSeg+v.slice(le);
+  ta.focus();ta.setSelectionRange(ls,ls+newSeg.length);
+  neInput();
+}
+function neInsert(text){
+  const ta=document.getElementById("neArea");if(!ta)return;
+  const s=ta.selectionStart,v=ta.value;
+  ta.value=v.slice(0,s)+text+v.slice(ta.selectionEnd);
+  const pos=s+text.length;ta.focus();ta.setSelectionRange(pos,pos);
+  neInput();
+}
+function neFmt(type){
+  if(type==="bold")neWrap("**","**","жирный");
+  else if(type==="italic")neWrap("*","*","курсив");
+  else if(type==="mono")neWrap("`","`","код");
+  else if(type==="quote")neLinePrefix("> ");
+  else if(type==="h")neLinePrefix("## ");
+  else if(type==="ul")neLinePrefix("- ");
+  else if(type==="ol")neLinePrefix("1. ");
+  else if(type==="hr")neInsert("\n\n---\n\n");
+  else if(type==="table")neInsert("\n\n| Столбец | Столбец |\n| --- | --- |\n| ячейка | ячейка |\n\n");
+  else if(type==="card")neWrap("[[","::подсказка]]","слово");
+}
+function closeNoteEditor(){
+  const ov=document.getElementById("neOvl");if(ov)ov.style.display="none";
+  if(noteEd){                         // синхронизируем индикаторы и инлайн-поле под аятом
+    const a=noteEd.a,has=hasNote(noteEd.s,a);
+    const block=document.querySelector(`.ayah-block[data-aid="${a}"]`);
+    if(block){
+      const btn=block.querySelector(".ab-note-btn");if(btn){btn.classList.toggle("has",has);btn.classList.remove("on");}
+      const inlineTa=block.querySelector(".ab-note-inline textarea");if(inlineTa)inlineTa.value=getNote(noteEd.s,a);
+      const dots=block.querySelector(".ab-tag-dots");if(dots)dots.innerHTML=has?'<span class="ab-note-dot"></span>':'';
+    }
+  }
+  noteEd=null;renderF();
 }
 
 // Разовый показ перевода/оригинала ОДНОГО аята (кнопка ru/ar в панели аята).
@@ -1348,13 +1623,14 @@ async function renderReading(el){
     const hasTr=enabled.some(t=>t.id!=="_notes"&&t.lang!=="ar");
     const peekKind=hasAr&&!hasTr?"ru":(hasTr&&!hasAr?"ar":null);
     // Lightweight skeleton: header + empty body per ayah; bodies hydrate on demand
-    let html="";
+    let html=buildSuraIntro(enabled,loaded);
     for(const aid of ayahIds){
       const hn=hasNote(ST.surah,aid);const ht=hasAT(ST.surah,aid);
       html+=`<div class="ayah-block" data-aid="${aid}"><div class="ab-head">
         <div style="display:flex;align-items:center;gap:8px"><span class="ab-num">${aid}</span>
           <button onclick="event.stopPropagation();openTagPopup(${aid},this)" style="background:${ht?'var(--tag-bg)':'var(--bg-card)'};border:1px solid ${ht?'var(--tag-color)':'var(--border)'};border-radius:4px;padding:1px 6px;cursor:pointer;font-size:11px;color:${ht?'var(--tag-color)':'var(--text-muted)'}" title="Теги">🏷${ht?' '+getATList(ST.surah,aid).length:''}</button>
           <button class="ab-bm-btn ${isBookmarked(ST.surah,aid)?'on':''}" onclick="event.stopPropagation();toggleBookmark(${aid},this)" title="Закладка">${isBookmarked(ST.surah,aid)?'★':'☆'}</button>
+          <button class="ab-note-btn ${hn?'has':''}" onclick="event.stopPropagation();toggleNote(${aid},this)" title="Заметка к аяту">📝</button>
           ${peekKind?`<button class="ab-peek-btn" data-peek="${peekKind}" onclick="event.stopPropagation();togglePeek(${aid},this)" title="${peekKind==='ru'?'Показать перевод этого аята':'Показать оригинал этого аята'}">${peekKind}</button>`:''}
         </div>
         <div class="ab-tag-dots">${hn?'<span class="ab-note-dot"></span>':''}</div>
@@ -1512,7 +1788,7 @@ function imgDir(t){return DATA_PATH+(t.imgdir||("img/"+t.id))+"/";}
 // Открыть/закрыть скан-читалку (взаимоисключающе — один скан за раз).
 function openScan(id){
   ST.scanSource=(ST.scanSource===id)?null:id;
-  if(ST.scanSource)ST.selectedTag=null;
+  if(ST.scanSource){ST.selectedTag=null;ST.bookIntro=false;}
   renderRP();renderCB();renderCenter();renderBottomNav();
 }
 function scanTab(btn,view){
@@ -1537,11 +1813,51 @@ async function renderScanReader(el){
     <div class="scan-bar">
       <span class="scan-title">📖 ${esc(t.name)} <span class="scan-su">· ${su?esc(su.ru):''}</span></span>
       ${hasN?`<span class="scan-tabs"><button class="scan-tab on" onclick="scanTab(this,'text')">Текст</button><button class="scan-tab" onclick="scanTab(this,'notes')">Примечания</button></span>`:''}
-      ${t.about?`<button class="ab-info" onclick="openAbout('${t.id}')" title="О переводе">ℹ</button>`:''}
+      <button class="ab-info" onclick="openAbout('${t.id}')" title="Паспорт источника">ℹ</button>
       <button class="scan-close" onclick="openScan('${t.id}')" title="Вернуться к тексту">✕ К тексту</button>
     </div>
     <div class="scan-pages" data-view="text">${body}</div>
     ${hasN?`<div class="scan-pages" data-view="notes" style="display:none">${pics(notes)}</div>`:''}
+  </div>`;
+}
+// ── Мукаддима книги (авторское вступление целого тафсира — Куртуби и т.п.) ──
+// Хранится как «сура 0»: data/tafsirs/<id>/0.json = {"1":"...","2":"..."} (разделы).
+// В конфиге у такого источника ставится "muqaddima": true → появляется пункт
+// «Введение» в списке сур, открывающий отдельный режим (ST.bookIntro).
+function booksWithMuqaddima(){
+  return getEnabledList().filter(t=>t.id!=="_notes"&&t.kind!=="image"&&t.muqaddima);
+}
+function openBookIntro(){
+  ST.bookIntro=true;ST.selectedTag=null;ST.scanSource=null;
+  if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
+  render();
+}
+function closeBookIntro(){ST.bookIntro=false;render();}
+async function renderBookIntro(el){
+  const books=booksWithMuqaddima();
+  el.innerHTML=`<div class="bi-wrap"><div style="text-align:center;color:var(--text-muted);padding:30px">Загрузка…</div></div>`;
+  const loaded={};
+  await Promise.all(books.map(async t=>{loaded[t.id]=await loadChunk(t.id,0);}));
+  let srcHtml="";
+  for(const t of books){
+    const chunk=loaded[t.id]||{};
+    const keys=Object.keys(chunk).filter(k=>chunk[k]).sort((a,b)=>(+a)-(+b));
+    if(!keys.length)continue;
+    const secs=keys.map(k=>{
+      const isAr=t.lang==="ar";
+      const {body,notes}=splitNotes(chunk[k]);
+      return `<div class="bi-sec md selectable ${isAr?'rtl':''}">${renderRefs(body||chunk[k])}</div>${notes.length?renderFootnotes(notes):''}`;
+    }).join("");
+    srcHtml+=`<div class="bi-src">
+      <div class="bi-src-head">${esc(t.name)} ${t.nameAr?`<span class="lbl-ar">${esc(t.nameAr)}</span>`:''}
+        <button class="ab-info" onclick="openAbout('${t.id}')" title="Паспорт источника">ℹ</button></div>
+      ${secs}</div>`;
+  }
+  if(!srcHtml)srcHtml=`<div style="color:var(--text-muted);text-align:center;padding:40px">У включённых источников введение пока не добавлено.</div>`;
+  el.innerHTML=`<div class="bi-wrap">
+    <div class="bi-title">📖 Введение <span class="lbl-ar">المقدمة</span></div>
+    <div class="bi-sub">Авторские вступления (мукаддима) включённых тафсиров · <a href="#" onclick="closeBookIntro();return false" style="color:var(--accent)">к чтению аятов →</a></div>
+    ${srcHtml}
   </div>`;
 }
 // Полоса наполненности источника (доля реальных аятов). Показываем только для неполных.
@@ -1557,13 +1873,13 @@ function tItem(t,on,reorder){
     return `<div class="t-item scan ${act?'checked':''}" onclick="openScan('${t.id}')">
       <div class="t-check">${act?'✓':'📖'}</div>
       <div class="t-info"><div class="t-name">${esc(t.name)}<span class="t-badge">скан</span></div>${t.nameAr?`<div class="t-ar">${esc(t.nameAr)}</div>`:''}${tafsirMeta(t)}${fillBar(t)}</div>
-      ${t.about?`<button class="t-info-btn" onclick="event.stopPropagation();openAbout('${t.id}')" title="О источнике">ℹ</button>`:''}
+      <button class="t-info-btn" onclick="event.stopPropagation();openAbout('${t.id}')" title="Паспорт источника">ℹ Паспорт</button>
     </div>`;
   }
   return `<div class="t-item ${on?'checked':''}" onclick="toggleEn('${t.id}')">
     <div class="t-check">${on?'✓':''}</div>
     <div class="t-info"><div class="t-name">${esc(t.name)}</div>${t.nameAr?`<div class="t-ar">${esc(t.nameAr)}</div>`:''}${tafsirMeta(t)}${fillBar(t)}</div>
-    ${t.about?`<button class="t-info-btn" onclick="event.stopPropagation();openAbout('${t.id}')" title="О переводе/тафсире">ℹ</button>`:''}
+    <button class="t-info-btn" onclick="event.stopPropagation();openAbout('${t.id}')" title="Паспорт источника">ℹ Паспорт</button>
     ${on&&reorder?`<div class="t-sort" onclick="event.stopPropagation()">
       <button class="sort-b" onclick="moveEnabled('${t.id}',-1)" title="Выше">▲</button>
       <button class="sort-b" onclick="moveEnabled('${t.id}',1)" title="Ниже">▼</button>
@@ -1596,7 +1912,7 @@ function renderRP(){
   let anyShown=false;
   CONFIG.groups.forEach(g=>{
     let items=CONFIG.tafsirs.filter(t=>t.group===g.id&&t.kind!=="quran"&&(t.kind==="image"||!ST.enabled[t.id])).filter(passFacets);
-    if(q)items=items.filter(t=>(t.name||"").toLowerCase().includes(q)||(t.nameAr||"").includes(q)||(t.author||"").toLowerCase().includes(q));
+    if(q)items=items.filter(t=>(t.name||"").toLowerCase().includes(q)||(t.nameAr||"").includes(q)||(t.author||"").toLowerCase().includes(q)||(t.translator||"").toLowerCase().includes(q));
     if(!items.length)return;
     anyShown=true;
     const col=collapsedG["rg_"+g.id];
@@ -1880,6 +2196,8 @@ function goSearchResult(surah,ayah){
 
 // Close search on Escape, open on Ctrl+F, block Ctrl+S/U
 document.addEventListener("keydown",function(e){
+  const neOv=document.getElementById("neOvl");
+  if(e.key==="Escape"&&neOv&&neOv.style.display!=="none"){closeNoteEditor();return;}
   if(e.key==="Escape"&&aboutOpen())closeAbout();
   else if(e.key==="Escape"&&searchOpen)toggleSearch();
   else if(e.key==="Escape"&&ST.rpanelOpen)closeRPanel();
@@ -1979,7 +2297,7 @@ function onFsChange(){
 function closeRPanel(){if(ST.rpanelOpen)toggleRPanel();}
 function onSearch(q){ST.search=q;renderSB();}
 function setSbTab(t){ST.sbTab=t;document.getElementById("sbTabSurahs").classList.toggle("active",t==="surahs");document.getElementById("sbTabTags").classList.toggle("active",t==="tags");document.getElementById("sbTabBookmarks").classList.toggle("active",t==="bookmarks");renderSB();}
-function goSurah(id){ST.surah=id;ST.selectedTag=null;{const st=qpcMeta&&qpcMeta.surahStart&&qpcMeta.surahStart[id];if(st)ST.mushafPage=st.page;}if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}pushSurahHash(id);render();}
+function goSurah(id){ST.surah=id;ST.selectedTag=null;ST.bookIntro=false;{const st=qpcMeta&&qpcMeta.surahStart&&qpcMeta.surahStart[id];if(st)ST.mushafPage=st.page;}if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}pushSurahHash(id);render();}
 function toggleLayout(){ST.layout=ST.layout==="h"?"v":"h";render();}
 
 // --- Reading display settings (⚙ Вид): sizes AR/RU, line spacing AR/RU, margins
@@ -2122,6 +2440,7 @@ function navJumpPage(v){const total=qpcMeta&&qpcMeta.pages||604;v=Math.max(1,Mat
 function setReadMode(toPage){if(!!ST.pageMode!==!!toPage)togglePageMode();}
 // Three-way reading mode: 'ayat' | 'words' (пословный) | 'page' (мусхаф).
 function setMode(mode){
+  ST.bookIntro=false;
   if(mode==="page"){ if(!ST.pageMode){ST.wbwMode=false;ss("wbwMode",false);togglePageMode();} return; }
   // 'ayat' or 'words': both live outside page mode
   ST.wbwMode=(mode==="words");ss("wbwMode",ST.wbwMode);
@@ -2137,6 +2456,7 @@ function curPos(){
 }
 function setNavUnit(u){ST.navUnit=u;ss("navUnit",u);renderBottomNav();}
 function navJumpValue(v){
+  if(v==="intro"){openBookIntro();return;}                              // «§ Введение» — мукаддима книги
   if(typeof v==="string"&&v[0]==="j"){navJumpJuz(+v.slice(1));return;}  // «▸ Джуз N» из объединённого пикера
   const u=ST.navUnit;
   if(u==="surah")navJumpSurah(v);else if(u==="page")navJumpPage(v);
@@ -2176,8 +2496,9 @@ function renderBottomNav(){
   let opts,idx,max;
   if(u==="surah"){
     const opt=s=>`<option value="${s.id}" ${s.id===p.surah?"selected":""}>${s.id}. ${esc(s.ru)}</option>`;
+    const introOpt=booksWithMuqaddima().length?`<option value="intro" ${ST.bookIntro?"selected":""}>§ Введение (المقدمة)</option>`:"";
     if(qpcMeta){ // объединённый пикер: «▸ Джуз N (начало)» как ссылка + суры джуза, в мусхафной очередности
-      let o="";
+      let o=introOpt;
       for(let J=1;J<=30;J++){
         const sin=SURAHS.filter(s=>juzOfSurah(s.id)===J);
         const js=qpcMeta.juzStart[J];const su=js&&SURAHS.find(x=>x.id===js.surah);
@@ -2187,7 +2508,7 @@ function renderBottomNav(){
           +sin.map(opt).join("")+`</optgroup>`;
       }
       opts=o;
-    }else opts=SURAHS.map(opt).join("");
+    }else opts=introOpt+SURAHS.map(opt).join("");
     idx=p.surah;max=114;
   }
   else if(u==="page"){opts=Array.from({length:total},(_,i)=>`<option value="${i+1}" ${i+1===p.page?"selected":""}>Страница ${i+1}</option>`).join("");idx=p.page;max=total;}
@@ -2511,7 +2832,7 @@ function addTag(val){
   for(const p of parts){let f=cur.find(n=>n.name===p);if(!f){f={name:p,children:[]};cur.push(f);}cur=f.children;}
   setTagTree(tree);renderSB();
 }
-function selectTag(path){ST.selectedTag=path;if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}render();}
+function selectTag(path){ST.selectedTag=path;ST.bookIntro=false;if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}render();}
 function renameTag(path){
   const parts=path.split("/");const oldName=parts[parts.length-1];
   const newName=prompt("Новое название:",oldName);

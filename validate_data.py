@@ -38,8 +38,12 @@ def count_real(tid):
         return None
     data = json.load(open(path, encoding="utf-8"))
     n = 0
-    for s in data.values():
-        for txt in s.values():
+    for sk, s in data.items():
+        if sk == "0":            # «сура 0» = мукаддима книги, не аят Корана
+            continue
+        for ak, txt in s.items():
+            if ak == "0":        # ключ "0" внутри суры = вступление к суре, не аят
+                continue
             t = (txt or "").strip()
             if t and not t.startswith("※"):
                 n += 1
