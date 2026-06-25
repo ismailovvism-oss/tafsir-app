@@ -354,6 +354,24 @@
       "tags": [],
       "year": "",
       "fill": 1.0
+    },
+    {
+      "id": "ibn_abi_hatim",
+      "file": "tafsirs/ibn_abi_hatim.json",
+      "name": "Тафсир Ибн Аби Хатима",
+      "nameAr": "تفسير ابن أبي حاتم",
+      "author": "Ибн Аби Хатим ар-Рази",
+      "authorAr": "ابن أبي حاتم الرازي",
+      "group": "classical_ar",
+      "kind": "tafsir",
+      "lang": "ar",
+      "era": "classical",
+      "tags": [
+        "hadith"
+      ],
+      "year": "327 х.",
+      "about": true,
+      "fill": 0.3546
     }
   ]
 }
