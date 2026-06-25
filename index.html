@@ -129,7 +129,7 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 /* Скан-читалка: отдельная постраничная читалка (kind:image), не смешивается с режимом «Аяты» */
 .scan-reader{display:flex;flex-direction:column;height:100%}
 .scan-bar{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--bg-card);flex-wrap:wrap;flex:none}
-.scan-notice{padding:12px 12px 0;flex:none}
+.scan-notice{text-align:left;margin:0 auto 12px;max-width:min(100%,820px)}
 .scan-notice .about-warn{margin:0}
 .scan-title{font-size:13px;font-weight:600;color:var(--accent)}
 .scan-title .scan-su{color:var(--text-sec);font-weight:500}
@@ -2359,7 +2359,9 @@ async function renderScanReader(el){
   const text=(map&&map.text)||[], notes=(map&&map.notes)||[];
   const hasN=notes.length>0;
   // Текстовые по-аятные примечания скан-источника (нет по-аятного текста, поэтому
-  // показываем баннером над страницами). Поле scan_maps: ayahNotes = {<аят>: markdown}.
+  // показываем баннером в начале прокручиваемой ленты страниц — чтобы при чтении
+  // суры баннер уезжал вместе со страницами, а не висел закреплённым сверху).
+  // Поле scan_maps: ayahNotes = {<аят>: markdown}.
   const ayahNotes=(map&&map.ayahNotes)||null;
   const noticeHtml=ayahNotes?Object.keys(ayahNotes).sort((a,b)=>(+a)-(+b))
     .map(k=>`<div class="about-warn">${mdRender(ayahNotes[k])}</div>`).join(""):"";
@@ -2374,8 +2376,7 @@ async function renderScanReader(el){
       <button class="ab-info" onclick="openAbout('${t.id}')" title="Паспорт источника">ℹ</button>
       <button class="scan-close" onclick="openScan('${t.id}')" title="Вернуться к тексту">✕ К тексту</button>
     </div>
-    ${noticeHtml?`<div class="scan-notice">${noticeHtml}</div>`:''}
-    <div class="scan-pages" data-view="text">${body}</div>
+    <div class="scan-pages" data-view="text">${noticeHtml?`<div class="scan-notice">${noticeHtml}</div>`:''}${body}</div>
     ${hasN?`<div class="scan-pages" data-view="notes" style="display:none">${pics(notes)}</div>`:''}
   </div>`;
 }
