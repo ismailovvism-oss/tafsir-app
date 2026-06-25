@@ -16,3 +16,11 @@ __pycache__/
 # Raw build sources (large; re-fetched by build scripts). The built runtime
 # data under data/wbw/ IS committed.
 data/_sources/
+
+# Бинарные данные сканов — на Cloudflare R2, в репозиторий не коммитим.
+# Карты страниц (data/img/<id>/<sura>.json, _about.json) ОСТАЮТСЯ в репо.
+data/img/**/*.webp
+data/img/**/*.png
+data/img/**/*.jpg
+# Аудио-тилява (задел; на объектном хранилище)
+data/audio/
