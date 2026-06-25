@@ -60,6 +60,7 @@ fonts/              ← самохостимые шрифты (.woff2)
 |---|---|
 | `sync_config.py` | `config.json` → `config.js` (запускать после правки конфига) |
 | `compute_fill.py` | пересчёт `fill` у всех источников |
+| `build_coverage.py` | индекс покрытия `data/coverage.json` (какие аяты есть у источника) |
 | `convert.py` | текстовый файл → чанки JSON + индекс (см. GUIDE §5) |
 | `split.py` | монолит `tafsirs/<id>.json` → чанки по сурам |
 | `build_index.py` | инвертированный индекс поиска `data/index/<id>.json` |
@@ -83,7 +84,9 @@ fonts/              ← самохостимые шрифты (.woff2)
 
 ## Рабочие правила
 - Меняешь `config.json` → запусти `sync_config.py`. Меняешь данные источника →
-  `compute_fill.py`. Не редактируй `config.js` и `fill` вручную.
+  `compute_fill.py` И `build_coverage.py` (индекс покрытия для счётчика «Тафсиров: N»,
+  списка у аята, режима источника и карты покрытия). Не редактируй `config.js`,
+  `fill` и `coverage.json` вручную.
 - `data/_sources/` в `.gitignore` — туда кладём сырьё/промежуточное, в коммит не идёт.
 - Коммиты и changelog — по-русски, «новое сверху». Коммитить/пушить — только по
   просьбе пользователя.

@@ -155,11 +155,33 @@ def check_wbw():
         warn(f"wbw: {len(words)} сур со словами (ожидалось 114)")
 
 
+def check_coverage(cfg):
+    """coverage.json: набор источников и счётчики «n» совпадают с фактом; есть зеркало."""
+    cov_path = os.path.join(DATA, "coverage.json")
+    if not os.path.isfile(cov_path):
+        err("нет data/coverage.json — запусти build_coverage.py")
+        return
+    cov = json.load(open(cov_path, encoding="utf-8"))
+    expected = {t["id"] for t in cfg["tafsirs"]
+                if t.get("kind") in ("tafsir", "translation") and (count_real(t["id"]) or 0) > 0}
+    got = set(cov.get("sources", {}))
+    if expected != got:
+        err(f"coverage.json расходится с источниками (нет: {sorted(expected-got)[:5]}, "
+            f"лишние: {sorted(got-expected)[:5]}) — запусти build_coverage.py")
+    for tid, src in cov.get("sources", {}).items():
+        n = count_real(tid)
+        if n is not None and src.get("n") != n:
+            err(f"[{tid}] coverage n={src.get('n')} ≠ факт {n} — запусти build_coverage.py")
+    if not os.path.isfile(os.path.join(DATA, "coverage.js")):
+        err("нет data/coverage.js (offline-зеркало) — запусти build_coverage.py")
+
+
 def main():
     cfg = check_configs()
     if cfg:
         for t in cfg["tafsirs"]:
             check_source(t)
+        check_coverage(cfg)
         print(f"Источников проверено: {len(cfg['tafsirs'])}")
     check_qpc()
     check_wbw()
