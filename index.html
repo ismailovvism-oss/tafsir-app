@@ -129,6 +129,8 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 /* Скан-читалка: отдельная постраничная читалка (kind:image), не смешивается с режимом «Аяты» */
 .scan-reader{display:flex;flex-direction:column;height:100%}
 .scan-bar{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--bg-card);flex-wrap:wrap;flex:none}
+.scan-notice{padding:12px 12px 0;flex:none}
+.scan-notice .about-warn{margin:0}
 .scan-title{font-size:13px;font-weight:600;color:var(--accent)}
 .scan-title .scan-su{color:var(--text-sec);font-weight:500}
 .scan-tabs{display:flex;gap:4px}
@@ -2356,6 +2358,11 @@ async function renderScanReader(el){
   try{const r=await fetch(resolveUrl("scan_maps",{dir:scanDirOf(t),file:ST.surah+".json"}));if(r.ok)map=await r.json();}catch(e){}
   const text=(map&&map.text)||[], notes=(map&&map.notes)||[];
   const hasN=notes.length>0;
+  // Текстовые по-аятные примечания скан-источника (нет по-аятного текста, поэтому
+  // показываем баннером над страницами). Поле scan_maps: ayahNotes = {<аят>: markdown}.
+  const ayahNotes=(map&&map.ayahNotes)||null;
+  const noticeHtml=ayahNotes?Object.keys(ayahNotes).sort((a,b)=>(+a)-(+b))
+    .map(k=>`<div class="about-warn">${mdRender(ayahNotes[k])}</div>`).join(""):"";
   const pics=arr=>arr.map(f=>`<img class="scan-pg" loading="lazy" src="${resolveUrl("mushaf_scans",{dir:scanDirOf(t),file:esc(f)})}" alt="">`).join("");
   const su=SURAHS.find(s=>s.id===ST.surah);
   const body=text.length?pics(text)
@@ -2367,6 +2374,7 @@ async function renderScanReader(el){
       <button class="ab-info" onclick="openAbout('${t.id}')" title="Паспорт источника">ℹ</button>
       <button class="scan-close" onclick="openScan('${t.id}')" title="Вернуться к тексту">✕ К тексту</button>
     </div>
+    ${noticeHtml?`<div class="scan-notice">${noticeHtml}</div>`:''}
     <div class="scan-pages" data-view="text">${body}</div>
     ${hasN?`<div class="scan-pages" data-view="notes" style="display:none">${pics(notes)}</div>`:''}
   </div>`;
