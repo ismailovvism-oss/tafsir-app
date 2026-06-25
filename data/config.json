@@ -319,6 +319,28 @@
       "translator": "Эльмир Кулиев"
     },
     {
+      "id": "kathir_ru",
+      "file": "tafsirs/kathir_ru.json",
+      "name": "Тафсир Ибн Касир (рус.)",
+      "nameAr": "مختصر تفسير ابن كثير",
+      "author": "Ибн Касир — Мухтасар",
+      "authorAr": "ابن كثير",
+      "group": "russian",
+      "kind": "tafsir",
+      "lang": "ru",
+      "era": "classical",
+      "tags": [
+        "hadith",
+        "history",
+        "aqida",
+        "draft"
+      ],
+      "year": "774 х.",
+      "translator": "Айрат Вахитов",
+      "caution": true,
+      "fill": 0.504
+    },
+    {
       "id": "muntahab",
       "file": "tafsirs/muntahab.json",
       "name": "Тафсир аль-Мунтахаб",
