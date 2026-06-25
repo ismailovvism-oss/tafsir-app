@@ -296,6 +296,9 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 .about-body{font-size:14px;line-height:1.7;color:var(--text-sec)}
 .about-empty{color:var(--text-muted)}
 .about-warn{background:var(--note-bg);border:1px solid var(--note-border);color:var(--note-color);border-radius:8px;padding:9px 12px;font-size:12.5px;line-height:1.55;margin:0 0 12px}
+/* кнопка контакта на экране «О программе» (ссылка на канал) */
+.about-contact{display:block;margin-top:16px;padding:11px 14px;background:var(--accent);color:#fff;border-radius:9px;text-align:center;font-size:14px;font-weight:600;text-decoration:none;cursor:pointer}
+.about-contact:hover{filter:brightness(1.08)}
 
 /* Notes inline */
 .ab-note-area{width:100%;border:1px solid var(--note-border);border-radius:5px;padding:6px 8px;font-family:inherit;font-size:12px;line-height:1.6;color:var(--text);background:var(--note-bg);resize:vertical;outline:none;min-height:40px;-webkit-user-select:text;user-select:text}
@@ -343,17 +346,27 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 .cov-blockref{font-size:12px;color:var(--text-muted);padding:4px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .cov-goto,.cov-blockref .cov-goto{background:var(--accent-bg,rgba(60,140,90,.12));border:1px solid var(--accent);border-radius:5px;padding:2px 9px;cursor:pointer;font-size:11px;color:var(--accent);font-family:inherit;font-weight:600}
 .cov-adhoc-x{margin-left:8px;background:none;border:1px solid var(--border);border-radius:4px;padding:0 6px;cursor:pointer;font-size:10px;color:var(--text-muted);font-family:inherit}
-/* режим источника */
-.src-bar{position:sticky;top:0;z-index:6;background:var(--bg-alt);border-bottom:1px solid var(--border);padding:7px 12px;display:flex;flex-direction:column;gap:6px}
+/* режим источника — компактная сворачиваемая шапка (по умолчанию одна строка) */
+.src-bar{position:sticky;top:0;z-index:6;background:var(--bg-alt);border-bottom:1px solid var(--border);padding:5px 10px}
+.src-bar-top{display:flex;align-items:center;gap:6px;min-width:0}
+.src-back{background:var(--bg-card);border:1px solid var(--border);border-radius:5px;padding:1px 8px;cursor:pointer;font-size:13px;line-height:1.4;color:var(--text);font-family:inherit;flex-shrink:0}
+.src-back:hover{border-color:var(--accent);color:var(--accent)}
+.src-name{font-size:12px;font-weight:600;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:40px}
+.src-kind{font-size:9px;font-weight:600;color:var(--text-muted);background:var(--bg-card);border:1px solid var(--border);border-radius:3px;padding:0 4px;text-transform:uppercase}
+.src-pct{font-size:11px;font-weight:700;color:var(--text-muted);flex-shrink:0}
+.src-top-spacer{flex:1;min-width:4px}
+.src-cog{background:var(--bg-card);border:1px solid var(--border);border-radius:5px;padding:1px 7px;cursor:pointer;font-size:12px;line-height:1.4;color:var(--text-muted);font-family:inherit;flex-shrink:0}
+.src-cog:hover{border-color:var(--accent);color:var(--accent)}
+.src-extra{display:none;padding-top:6px;margin-top:5px;border-top:1px dashed var(--border)}
+.src-bar.open .src-extra{display:block}
 .src-bar-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.src-exit{background:var(--bg-card);border:1px solid var(--border);border-radius:5px;padding:3px 9px;cursor:pointer;font-size:11px;color:var(--text);font-family:inherit}
-.src-exit:hover{border-color:var(--accent);color:var(--accent)}
-.src-name{font-size:13px;font-weight:600;color:var(--accent)}
+.src-bar-row+.src-bar-row{margin-top:6px}
+.src-ar{font-family:'Scheherazade New',serif;margin-left:auto}
 .src-extent{font-size:11px;color:var(--text-muted)}
 .src-gap-lbl{font-size:11px;color:var(--text-muted)}
 .src-gap-b{background:var(--bg-card);border:1px solid var(--border);border-radius:5px;padding:2px 9px;cursor:pointer;font-size:11px;color:var(--text-muted);font-family:inherit}
 .src-gap-b.on{background:var(--accent);color:#fff;border-color:var(--accent)}
-.src-nav{background:var(--bg-card);border:1px solid var(--border);border-radius:5px;padding:2px 10px;cursor:pointer;font-size:11px;color:var(--text);font-family:inherit;font-weight:600}
+.src-nav{background:var(--bg-card);border:1px solid var(--border);border-radius:5px;padding:1px 8px;cursor:pointer;font-size:12px;line-height:1.4;color:var(--text);font-family:inherit;font-weight:600;flex-shrink:0}
 .src-nav:hover{border-color:var(--accent);color:var(--accent)}
 .cov-gap-strip{margin:6px 0;padding:8px 12px;border:1px dashed var(--border);border-radius:7px;background:var(--bg-alt);color:var(--text-muted);font-size:12px;cursor:pointer;display:flex;align-items:center;gap:8px}
 .cov-gap-strip:hover{border-color:var(--accent)}
@@ -364,7 +377,13 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 .src-kind{font-size:10px;font-weight:600;color:var(--text-muted);background:var(--bg-card);border:1px solid var(--border);border-radius:4px;padding:0 5px;text-transform:uppercase;letter-spacing:.3px}
 .cov-blocknote{font-size:10px;color:var(--accent);margin:2px 0 4px;font-style:italic}
 .ab-group-head{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin:8px 0 2px;border-bottom:1px solid var(--border-light);padding-bottom:3px}
+/* кликабельные сворачиваемые заголовки групп — в попапе аята и в окне выбора источника */
+.grp-chev{margin-left:auto;font-size:9px;font-weight:700;color:var(--accent)}
 .cov-grp-head{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);padding:6px 9px 2px}
+.cov-grp-head.clickable{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none}
+.cov-grp-head.clickable:hover{color:var(--accent)}
+.srcp-gname.clickable{cursor:pointer;user-select:none;display:flex;align-items:center;gap:6px}
+.srcp-gname.clickable:hover{color:var(--accent);border-color:var(--accent)}
 /* серые суры без выбранного источника (режим «Источник») */
 .surah-btn.nosrc{opacity:.4}
 .surah-btn.nosrc .s-meta{font-style:italic}
@@ -579,6 +598,7 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
     </div>
     <button class="btn-i" onclick="toggleSearch()" title="Поиск по текстам">🔍</button>
     <button class="btn-i" onclick="toggleRPanel()" title="Переводы и тафсиры">📚</button>
+    <button class="btn-i" onclick="openAppAbout()" title="О программе">ℹ</button>
     <button class="btn-i" id="fsBtn" onclick="toggleFullscreen()" title="Во весь экран">⛶</button>
   </div>
 </header>
@@ -652,7 +672,62 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
 
 <script>
 // ============================================================
-const DATA_PATH="data/";
+const DATA_PATH="data/";   // дефолтная база (оставлена для обратной совместимости; пути к данным идут через resolveUrl)
+
+// ============================================================
+// РЕЕСТР ИСТОЧНИКОВ ДАННЫХ (абстракция расположения).
+// Для каждого КЛАССА ресурса — база (baseUrl) и шаблон пути (pathTemplate).
+// Весь код берёт URL только через resolveUrl(class, params) — нигде нет
+// «зашитых» путей. Сейчас все baseUrl указывают на текущее расположение
+// (репозиторий / GitHub Pages): данные НЕ переезжают, это чистый рефакторинг.
+//
+// Задел на будущее: чтобы перенести класс на другое хранилище (напр. тяжёлый
+// бинарь — сканы/аудио — на Cloudflare R2), достаточно сменить baseUrl этого
+// класса здесь; вызывающий код не меняется. Разные классы могут жить на разных
+// хранилищах (лёгкий текст на GitHub, бинарь на R2) — просто разные baseUrl.
+// ============================================================
+const SOURCES={
+  // — лёгкий текст: конфиг и индекс покрытия —
+  config:          {baseUrl:"data",  pathTemplate:"{baseUrl}/config.json"},
+  coverage:        {baseUrl:"data",  pathTemplate:"{baseUrl}/coverage.json"},
+  // — текст Корана по аятам (огласовки/без/расм) —
+  quran_text:      {baseUrl:"data",  pathTemplate:"{baseUrl}/tafsirs/{source}/{sura}.json"},
+  // — тафсиры/переводы по аятам: чанк по суре, монолит (поиск), инвертированный индекс —
+  tafsir_text:     {baseUrl:"data",  pathTemplate:"{baseUrl}/tafsirs/{source}/{sura}.json"},
+  tafsir_monolith: {baseUrl:"data",  pathTemplate:"{baseUrl}/tafsirs/{source}.json"},
+  search_index:    {baseUrl:"data",  pathTemplate:"{baseUrl}/index/{source}.json"},
+  // — пословный перевод (глосс) и морфология (грамматика) по сурам —
+  glosses:         {baseUrl:"data",  pathTemplate:"{baseUrl}/wbw/words/{sura}.json"},
+  morphology:      {baseUrl:"data",  pathTemplate:"{baseUrl}/wbw/morph/{sura}.json"},
+  // — «о переводе/тафсире» (паспорт источника) —
+  about:           {baseUrl:"data",  pathTemplate:"{baseUrl}/about/{source}.md"},
+  // — печатный мусхаф (глифы QPC, лёгкий JSON) и его шрифты; структуру внутри
+  //   задаёт пакет (PACKS), база — отсюда (можно унести на CDN сменой baseUrl) —
+  mushaf_glyphs:   {baseUrl:"data",  pathTemplate:"{baseUrl}/{path}"},
+  mushaf_fonts:    {baseUrl:"fonts", pathTemplate:"{baseUrl}/{path}"},
+  // — тяжёлый бинарь: сканы страниц (kind:image) и аудио-тилява —
+  //   {dir} = imgdir источника (или img/{source}); в будущем baseUrl → R2 —
+  mushaf_scans:    {baseUrl:"data",  pathTemplate:"{baseUrl}/{dir}/{file}"},
+  audio:           {baseUrl:"data",  pathTemplate:"{baseUrl}/audio/{source}/{sura}/{ayah}.mp3"}, // задел: вызовов пока нет
+  // — объёмные арабские тома (на будущее, лежат там же, что и тафсиры) —
+  arabic_volumes:  {baseUrl:"data",  pathTemplate:"{baseUrl}/tafsirs/{source}/{sura}.json"},     // задел
+};
+// Единая точка построения URL: подставляет baseUrl и параметры в шаблон класса.
+function resolveUrl(cls,params){
+  const def=SOURCES[cls];
+  if(!def)throw new Error("resolveUrl: неизвестный класс ресурса «"+cls+"»");
+  let url=def.pathTemplate.split("{baseUrl}").join(def.baseUrl);
+  if(params)for(const k in params)url=url.split("{"+k+"}").join(params[k]);
+  return url;
+}
+// Класс чанка по виду источника: текст Корана vs тафсир/перевод (могут жить на разных базах).
+function chunkClass(id){
+  const t=CONFIG&&CONFIG.tafsirs&&CONFIG.tafsirs.find(x=>x.id===id);
+  return t&&t.kind==="quran"?"quran_text":"tafsir_text";
+}
+// Подкаталог сканов источника (imgdir или img/<id>) — конечный URL через resolveUrl(mushaf_scans).
+function scanDirOf(t){return t.imgdir||("img/"+t.id);}
+
 const SURAHS=[
 {id:1,name:"الفاتحة",ru:"Аль-Фатиха",n:7},{id:2,name:"البقرة",ru:"Аль-Бакара",n:286},{id:3,name:"آل عمران",ru:"Алю Имран",n:200},
 {id:4,name:"النساء",ru:"Ан-Ниса",n:176},{id:5,name:"المائدة",ru:"Аль-Маида",n:120},{id:6,name:"الأنعام",ru:"Аль-Анам",n:165},
@@ -749,6 +824,8 @@ let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,imme
   adHoc:{},          // «показать только здесь»: {"s:a":[id,...]} — разовый показ источника у аята, НЕ постоянно
   srcMode:false,     // 4-й режим «Источник»: чтение по покрытию одного источника
   srcSel:null,       // выбранный источник (null = показать карту+выбор)
+  srcBarOpen:false,  // шапка режима источника развёрнута (по умолчанию свёрнута в одну строку)
+  collapsedKinds:{translation:true}, // свёрнутые группы под аятом (переводы — по умолчанию)
   gapMode:"collapse",// непокрытые аяты в режиме источника: "show" | "collapse"(деф) | "hide"
   expandedGaps:{},   // развёрнутые свёрнутые полоски разрывов: {"s:from-to":true}
 };
@@ -846,7 +923,7 @@ function setEnabled(e){ss("enabled",e);}
 // ============================================================
 async function loadCoverage(){
   if(window.TL_COVERAGE){COV=window.TL_COVERAGE;return;}
-  try{const r=await fetch(DATA_PATH+"coverage.json");if(r.ok)COV=await r.json();}catch(e){}
+  try{const r=await fetch(resolveUrl("coverage"));if(r.ok)COV=await r.json();}catch(e){}
 }
 // Пары диапазонов источника в суре (или null, если в суре нет покрытия).
 function covPairs(id,s){const src=COV.sources[id];return src&&src.s[String(s)]||null;}
@@ -912,7 +989,7 @@ function parseBlockRef(text){
 async function loadConfig(){
   // Try JS preload first (offline mode)
   if(window.TL_CONFIG){CONFIG=window.TL_CONFIG;}
-  else{try{const r=await fetch(DATA_PATH+"config.json");if(r.ok)CONFIG=await r.json();}catch(e){}}
+  else{try{const r=await fetch(resolveUrl("config"));if(r.ok)CONFIG=await r.json();}catch(e){}}
   if(!CONFIG.tafsirs||!CONFIG.tafsirs.length)useFB();
   await loadCoverage();
   ST.enabled=getEnabled();
@@ -954,7 +1031,7 @@ async function loadChunk(id,surahId){
   // 1. Offline preload (whole Quran in TL_DATA) -> slice the surah
   if(window.TL_DATA&&window.TL_DATA[id])chunk=window.TL_DATA[id][String(surahId)]||{};
   // 2. Per-surah chunk file (primary path)
-  if(chunk===null){try{const r=await fetch(`${DATA_PATH}tafsirs/${id}/${surahId}.json`);if(r.ok)chunk=await r.json();}catch(e){}}
+  if(chunk===null){try{const r=await fetch(resolveUrl(chunkClass(id),{source:id,sura:surahId}));if(r.ok)chunk=await r.json();}catch(e){}}
   // 3. Back-compat: monolithic file -> slice
   if(chunk===null){const whole=await loadWhole(id,true);if(whole)chunk=whole[String(surahId)]||{};}
   // 4. Placeholder for a real (not-yet-added) tafsir
@@ -974,8 +1051,9 @@ async function loadWhole(id,quiet){
   if(wholeCache[id])return wholeCache[id];
   if(window.TL_DATA&&window.TL_DATA[id]){wholeCache[id]=window.TL_DATA[id];return wholeCache[id];}
   const info=CONFIG.tafsirs.find(t=>t.id===id);
-  const file=info?.file||`tafsirs/${id}.json`;
-  try{const r=await fetch(DATA_PATH+file);if(r.ok){wholeCache[id]=await r.json();return wholeCache[id];}}catch(e){}
+  // монолит источника: явный override config.file (отн. база класса) или шаблон по умолчанию
+  const url=info&&info.file?`${SOURCES.tafsir_monolith.baseUrl}/${info.file}`:resolveUrl("tafsir_monolith",{source:id});
+  try{const r=await fetch(url);if(r.ok){wholeCache[id]=await r.json();return wholeCache[id];}}catch(e){}
   return quiet?null:{};
 }
 
@@ -983,7 +1061,7 @@ async function loadWhole(id,quiet){
 let indexCache={};
 async function loadIndex(id){
   if(indexCache[id]!==undefined)return indexCache[id];
-  try{const r=await fetch(`${DATA_PATH}index/${id}.json`);indexCache[id]=r.ok?await r.json():null;}catch(e){indexCache[id]=null;}
+  try{const r=await fetch(resolveUrl("search_index",{source:id}));indexCache[id]=r.ok?await r.json():null;}catch(e){indexCache[id]=null;}
   return indexCache[id];
 }
 
@@ -999,7 +1077,9 @@ function mdInlineBasic(t){
   return t.replace(/\*\*([^*]+?)\*\*/g,"<strong>$1</strong>")
           .replace(/__([^_]+?)__/g,"<strong>$1</strong>")
           .replace(/(^|[^*])\*([^*\s][^*]*?)\*/g,"$1<em>$2</em>")
-          .replace(/`([^`]+?)`/g,"<code>$1</code>");
+          .replace(/`([^`]+?)`/g,"<code>$1</code>")
+          // markdown-ссылки [текст](url) → ссылка в новой вкладке (текст уже HTML-экранирован)
+          .replace(/\[([^\]]+?)\]\((https?:[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
 }
 function mdInline(t){
   // tap-to-open cards: [[видимое::текст карточки]] -> clickable word + grammar card.
@@ -1043,12 +1123,12 @@ function hideWordCard(){const el=document.getElementById("wordCard");if(el)el.st
 const wbwWordsCache={},wbwMorphCache={}; // surah -> {ayah:{word:...}}
 function loadWbwWords(surah){
   if(wbwWordsCache[surah]!==undefined)return Promise.resolve(wbwWordsCache[surah]);
-  return fetch(`${DATA_PATH}wbw/words/${surah}.json`).then(r=>r.ok?r.json():null)
+  return fetch(resolveUrl("glosses",{sura:surah})).then(r=>r.ok?r.json():null)
     .then(d=>wbwWordsCache[surah]=d).catch(()=>wbwWordsCache[surah]=null);
 }
 function loadWbwMorph(surah){
   if(wbwMorphCache[surah]!==undefined)return Promise.resolve(wbwMorphCache[surah]);
-  return fetch(`${DATA_PATH}wbw/morph/${surah}.json`).then(r=>r.ok?r.json():null)
+  return fetch(resolveUrl("morphology",{sura:surah})).then(r=>r.ok?r.json():null)
     .then(d=>wbwMorphCache[surah]=d).catch(()=>wbwMorphCache[surah]=null);
 }
 // Part-of-speech labels (Russian). Финальная терминология (выверена Исмаилом).
@@ -1219,22 +1299,68 @@ function aboutPassport(t){
   ].filter(Boolean).join("");
   return aboutStatus(t)+`<div class="about-passport">${rows}</div>`;
 }
+// Общий оверлей-модалка (используют и паспорт источника, и экран «О программе»).
+function ensureAboutOvl(){
+  let ov=document.getElementById("aboutOvl");
+  if(!ov){ov=document.createElement("div");ov.id="aboutOvl";ov.className="about-ovl";ov.onclick=e=>{if(e.target===ov)closeAboutSmart();};document.body.appendChild(ov);}
+  return ov;
+}
+function appAboutOpen(){const ov=document.getElementById("aboutOvl");return !!(ov&&ov.style.display!=="none"&&ov.dataset.app==="1");}
+// Закрытие с учётом аппаратной «Назад»: для экрана «О программе» снимаем overlay-запись истории.
+function closeAboutSmart(){
+  const wasApp=appAboutOpen();
+  closeAbout();
+  const ov=document.getElementById("aboutOvl");if(ov)ov.dataset.app="";
+  if(wasApp)consumeOverlay();
+}
+// Простой front-matter: верхний блок между «---» => {meta, body}.
+function parseFrontmatter(md){
+  const m=String(md).match(/^---\s*\r?\n([\s\S]*?)\r?\n---\s*\r?\n?([\s\S]*)$/);
+  if(!m)return {meta:{},body:String(md)};
+  const meta={};
+  m[1].split(/\r?\n/).forEach(line=>{const i=line.indexOf(":");if(i>0)meta[line.slice(0,i).trim()]=line.slice(i+1).trim();});
+  return {meta,body:m[2]};
+}
+// Экран «О программе»: текст из data/about/app.md (класс about в resolveUrl), движок mdRender.
+// Контакт берётся из front-matter app.md — меняется без правки кода.
+async function openAppAbout(){
+  let md=aboutCache["__app"];
+  if(md===undefined){md=null;try{const r=await fetch(resolveUrl("about",{source:"app"}));if(r.ok)md=await r.text();}catch(e){}aboutCache["__app"]=md;}
+  const {meta,body}=md?parseFrontmatter(md):{meta:{},body:""};
+  const clean=body.replace(/<!--[\s\S]*?-->/g,"");   // служебные HTML-комментарии не показываем
+  const bodyHtml=clean.trim()?mdRender(clean):'<span class="about-empty">Описание пока не добавлено.</span>';
+  // Заголовок — только если задан во front-matter (иначе берётся из самого текста, напр. «# О программе»).
+  const titleHtml=meta.title?`<div class="about-title">${esc(meta.title)}</div>`:"";
+  // Кнопка-контакт — только если задан contact во front-matter; иначе ссылка живёт прямо в тексте.
+  const contact=meta.contact||"";
+  const clabel=meta.contactLabel||"Связаться";
+  const contactBtn=contact?`<a class="about-contact" href="${escAttr(contact)}" target="_blank" rel="noopener">${esc(clabel)}</a>`:"";
+  const ov=ensureAboutOvl();
+  ov.dataset.app="1";
+  ov.innerHTML=`<div class="about-box" role="dialog" aria-modal="true">
+    <button class="about-close" onclick="closeAboutSmart()" aria-label="Закрыть">×</button>
+    ${titleHtml}
+    <div class="about-body md">${bodyHtml}</div>
+    ${contactBtn}
+  </div>`;
+  ov.style.display="flex";ov.scrollTop=0;
+  pushOverlay();                                     // чтобы аппаратная «Назад» закрывала экран
+}
 async function openAbout(id){
   const t=CONFIG.tafsirs.find(x=>x.id===id);if(!t)return;
   let bodyHtml;
   if(t.kind==="image"){                              // скан-источник: предисловие картинками
     let ab=aboutCache["imgabout_"+id];
-    if(ab===undefined){ab=null;try{const r=await fetch(`${DATA_PATH}${t.imgdir||("img/"+id)}/_about.json`);if(r.ok)ab=await r.json();}catch(e){}aboutCache["imgabout_"+id]=ab;}
-    const dir=imgDir(t);
-    const imgs=((ab&&ab.images)||[]).map(f=>`<img loading="lazy" src="${dir}${esc(f)}" style="max-width:100%;border:1px solid var(--border);border-radius:4px;margin-bottom:10px;display:block">`).join("");
+    if(ab===undefined){ab=null;try{const r=await fetch(resolveUrl("mushaf_scans",{dir:scanDirOf(t),file:"_about.json"}));if(r.ok)ab=await r.json();}catch(e){}aboutCache["imgabout_"+id]=ab;}
+    const imgs=((ab&&ab.images)||[]).map(f=>`<img loading="lazy" src="${resolveUrl("mushaf_scans",{dir:scanDirOf(t),file:esc(f)})}" style="max-width:100%;border:1px solid var(--border);border-radius:4px;margin-bottom:10px;display:block">`).join("");
     bodyHtml=imgs||'<span class="about-empty">Предисловие пока не добавлено.</span>';
   }else{
     let md=aboutCache[id];
-    if(md===undefined){md=null;try{const r=await fetch(`${DATA_PATH}about/${id}.md`);if(r.ok)md=await r.text();}catch(e){}aboutCache[id]=md;}
+    if(md===undefined){md=null;try{const r=await fetch(resolveUrl("about",{source:id}));if(r.ok)md=await r.text();}catch(e){}aboutCache[id]=md;}
     bodyHtml=md?mdRender(md):'<span class="about-empty">Описание пока не добавлено.</span>';
   }
-  let ov=document.getElementById("aboutOvl");
-  if(!ov){ov=document.createElement("div");ov.id="aboutOvl";ov.className="about-ovl";ov.onclick=e=>{if(e.target===ov)closeAbout();};document.body.appendChild(ov);}
+  const ov=ensureAboutOvl();
+  ov.dataset.app="";                                 // это паспорт источника, не экран «О программе»
   const meta=[t.author&&"Автор: "+esc(t.author),t.translator&&"Переводчик: "+esc(t.translator),t.year&&"Год: "+esc(t.year)].filter(Boolean).join(" · ");
   const warn=t.caution?`<div class="about-warn">⚠️ Приводится <b>только в ознакомительных целях</b>, «как есть». Точность не гарантируется — в тексте возможны ошибки и вероучительные отклонения. Относитесь с осторожностью и сверяйтесь с авторитетными переводами.</div>`:'';
   ov.innerHTML=`<div class="about-box" role="dialog" aria-modal="true">
@@ -1459,9 +1585,9 @@ function renderCB(){
   // explicit two-mode segmented switch (clearer than a lone "Мусхаф" toggle)
   const modeSeg=`<span class="seg seg-sm"><button class="${!ST.pageMode&&!ST.wbwMode&&!ST.srcMode?'on':''}" onclick="setMode('ayat')" title="Аяты + перевод">Аяты</button>${ST.noTouch?'':`<button class="${!ST.pageMode&&ST.wbwMode&&!ST.srcMode?'on':''}" onclick="setMode('words')" title="Пословный перевод + грамматика">Слова</button>`}<button class="${ST.pageMode?'on':''}" onclick="setMode('page')" title="Постраничный мусхаф">Мусхаф</button><button class="${ST.srcMode?'on':''}" onclick="setMode('source')" title="Чтение по покрытию одного источника">Источник</button></span>`;
   if(ST.srcMode){
-    const src=ST.srcSel&&CONFIG.tafsirs.find(t=>t.id===ST.srcSel);
-    const ttl=src?`${esc(src.name)}`:"Выбор источника";
-    bar.innerHTML=`<div class="cb-left"><h2>📖 ${ttl}</h2></div><div class="cb-right">${modeSeg}${viewBtn}</div>`;return;
+    // при чтении заголовок = сура (как обычно); имя источника живёт в его компактной шапке (без дубля)
+    const ttl=ST.srcSel?`${su.ru} <span class="ar">${su.name}</span>`:"📖 Выбор источника";
+    bar.innerHTML=`<div class="cb-left"><h2>${ttl}</h2></div><div class="cb-right">${modeSeg}${viewBtn}</div>`;return;
   }
   if(ST.pageMode){
     const loc=pageLocation(ST.mushafPage);
@@ -1523,7 +1649,7 @@ function buildAyahBody(aid,enabled,loaded){
     if(!at)continue;
     html+=`<div class="ab-entry">${lbl}<div class="ab-entry-text arabic-main selectable">${at}</div></div>`;
   }
-  // Заголовки групп «Переводы»/«Тафсиры» — только если включены оба вида сразу.
+  // Заголовки групп «Переводы»/«Тафсиры» под аятом — только если включены оба вида сразу.
   const realSrc=enabled.filter(t=>t.id!=="_notes");
   const hasTr=realSrc.some(t=>t.kind!=="tafsir"),hasTaf=realSrc.some(t=>t.kind==="tafsir");
   const splitGroups=hasTr&&hasTaf;
@@ -1556,6 +1682,15 @@ function buildAyahBody(aid,enabled,loaded){
   }
   return html;
 }
+// Свёрнутость групп «Переводы»/«Тафсиры» в попапе аята и в окне выбора источника.
+// По умолчанию переводы свёрнуты (длинный список) — ST.collapsedKinds.translation=true.
+function kindCollapsed(k){return !!ST.collapsedKinds[k];}
+function setKindCollapsed(k){
+  ST.collapsedKinds=Object.assign({},ST.collapsedKinds,{[k]:!ST.collapsedKinds[k]});
+  ss("collapsedKinds",ST.collapsedKinds);
+}
+function covToggleKind(aid,k){setKindCollapsed(k);refreshCovPopup(aid);}
+function pickToggleKind(k){setKindCollapsed(k);renderCenter();}
 // HTML одной колонки источника у аята. Распознаёт блочную отсылку «см. аят Z».
 // adhoc=true → плашка «разовый показ» с кнопкой убрать. blockOf=[from,to] → текст блока.
 function sourceEntryHTML(t,text,aid,adhoc,blockOf){
@@ -1615,9 +1750,14 @@ function covPopupHTML(aid){
   const tr=inIdx.filter(t=>t.kind!=="tafsir");
   const taf=inIdx.filter(t=>t.kind==="tafsir");
   const c=covCountByKind(ST.surah,aid);
-  const grp=(title,items)=>items.length?`<div class="cov-grp-head">${title}</div>${items.map(t=>covRowHTML(t,aid,has,adh)).join("")}`:"";
+  const grp=(kind,title,items)=>{
+    if(!items.length)return"";
+    const col=kindCollapsed(kind);
+    const head=`<div class="cov-grp-head clickable ${col?'collapsed':''}" onclick="covToggleKind(${aid},'${kind}')" title="Свернуть/развернуть">${title} · ${items.length} <span class="grp-chev">${col?'▸':'▾'}</span></div>`;
+    return head+(col?"":items.map(t=>covRowHTML(t,aid,has,adh)).join(""));
+  };
   return `<div class="tag-popup-head"><span>📖 Аят ${aid} · 🌐 ${c.tr} · 📚 ${c.taf}</span><button class="tag-popup-close" onclick="closeCovPopup()">✕</button></div>
-    <div class="tag-popup-list">${grp("🌐 Переводы",tr)}${grp("📚 Тафсиры",taf)}</div>
+    <div class="tag-popup-list">${grp("translation","🌐 Переводы",tr)}${grp("tafsir","📚 Тафсиры",taf)}</div>
     <div class="cov-popup-foot"><button class="cov-act" onclick="closeCovPopup();setMode('source')" title="Открыть режим чтения по источнику">режим источника…</button></div>`;
 }
 function openCovPopup(aid,btnEl){
@@ -1671,6 +1811,13 @@ function setSrcSel(id){
 // Вернуться к списку/карте источников (сменить источник), оставаясь в режиме.
 function srcBackToPicker(){ST.srcSel=null;renderCB();renderBottomNav();renderSB();renderCenter();}
 function setGapMode(m){ST.gapMode=m;ST.expandedGaps={};renderCenter();}
+// Свернуть/развернуть компактную шапку режима источника (без перерисовки всего экрана).
+function toggleSrcBar(btn){
+  ST.srcBarOpen=!ST.srcBarOpen;ss("srcBarOpen",ST.srcBarOpen);
+  const bar=document.getElementById("srcModeBar");
+  if(bar)bar.classList.toggle("open",ST.srcBarOpen);
+  if(btn)btn.textContent=ST.srcBarOpen?"▾":"⚙";
+}
 function toggleGapExpand(key){if(ST.expandedGaps[key])delete ST.expandedGaps[key];else ST.expandedGaps[key]=true;renderCenter();}
 // Навигация по покрытию: прыжок к след./пред. покрытому аяту (через суры).
 function covNav(dir){
@@ -1717,26 +1864,32 @@ async function renderSourceMode(el){
   await Promise.all([src,...quranTexts].map(async t=>{loaded[t.id]=await loadChunk(t.id,ST.surah);}));
   if(activePack())loaded["__qpc"]=await loadPackSurah(ST.arFont,ST.surah);
 
-  // панель режима источника
+  // компактная сворачиваемая панель режима источника (по умолчанию — одна строка)
   const su=SURAHS.find(s=>s.id===ST.surah);
   const gm=ST.gapMode;
   const gbtn=(m,lbl,t)=>`<button class="src-gap-b ${gm===m?'on':''}" onclick="setGapMode('${m}')" title="${t}">${lbl}</button>`;
   const inThisSurah=!!covPairs(id,ST.surah);
   const kindRu=src.kind==="tafsir"?"тафсир":"перевод";
-  document.getElementById("srcModeBar").outerHTML=`<div id="srcModeBar" class="src-bar">
-    <div class="src-bar-row">
-      <button class="src-exit" onclick="srcBackToPicker()" title="Выбрать другой источник">‹ К списку источников</button>
-      <span class="src-name">📖 ${esc(src.name)} <span class="src-kind">${kindRu}</span> <span class="lbl-ar">${src.nameAr||''}</span></span>
+  const pct=Math.round(COV.sources[id].n*100/COV.total);
+  const open=ST.srcBarOpen;
+  document.getElementById("srcModeBar").outerHTML=`<div id="srcModeBar" class="src-bar ${open?'open':''}">
+    <div class="src-bar-top">
+      <button class="src-back" onclick="srcBackToPicker()" title="К списку источников">‹</button>
+      <span class="src-name" title="${escAttr(src.name)}">📖 ${esc(src.name)} <span class="src-kind">${kindRu}</span></span>
+      <span class="src-pct">${pct}%</span>
+      <span class="src-top-spacer"></span>
+      <button class="src-nav" onclick="covNav(-1)" title="Предыдущий покрытый аят">◀</button>
+      <button class="src-nav" onclick="covNav(1)" title="Следующий покрытый аят">▶</button>
+      <button class="src-cog" onclick="toggleSrcBar(this)" title="Настройки режима источника">${open?'▾':'⚙'}</button>
     </div>
-    <div class="src-bar-row src-extent">Охват: ${covExtentText(id)}${inThisSurah?'':` · <b>в суре «${esc(su?su.ru:ST.surah)}» источника нет</b>`}</div>
-    <div class="src-bar-row">
-      <span class="src-gap-lbl">Разрывы:</span>
-      ${gbtn('show','серым','Показывать непокрытые аяты заглушкой')}
-      ${gbtn('collapse','схлопнуть','Сворачивать подряд идущие непокрытые в одну полоску')}
-      ${gbtn('hide','скрыть','Скрывать непокрытые совсем')}
-      <span style="flex:1"></span>
-      <button class="src-nav" onclick="covNav(-1)" title="Предыдущий покрытый аят">◀ пред.</button>
-      <button class="src-nav" onclick="covNav(1)" title="Следующий покрытый аят">след. ▶</button>
+    <div class="src-extra">
+      <div class="src-bar-row src-extent">Охват: ${covExtentText(id)}${inThisSurah?'':` · <b>в суре «${esc(su?su.ru:ST.surah)}» источника нет</b>`} <span class="src-ar">${src.nameAr||''}</span></div>
+      <div class="src-bar-row">
+        <span class="src-gap-lbl">Разрывы:</span>
+        ${gbtn('show','серым','Показывать непокрытые аяты заглушкой')}
+        ${gbtn('collapse','схлопнуть','Сворачивать подряд идущие непокрытые в одну полоску')}
+        ${gbtn('hide','скрыть','Скрывать непокрытые совсем')}
+      </div>
     </div>
   </div>`;
 
@@ -1777,9 +1930,11 @@ async function renderSourceMode(el){
 function renderSourcePicker(el){
   const byKind={translation:[],tafsir:[]};
   for(const t of CONFIG.tafsirs){if(COV.sources[t.id]&&byKind[t.kind])byKind[t.kind].push(t);}
-  const section=(title,icon,items)=>{
+  const section=(kind,title,icon,items)=>{
     if(!items.length)return"";
-    let h=`<div class="srcp-gname">${icon} ${title} · ${items.length}</div>`;
+    const col=kindCollapsed(kind);
+    let h=`<div class="srcp-gname clickable ${col?'collapsed':''}" onclick="pickToggleKind('${kind}')" title="Свернуть/развернуть">${icon} ${title} · ${items.length} <span class="grp-chev">${col?'▸ показать':'▾'}</span></div>`;
+    if(col)return h;
     for(const t of items){
       const src=COV.sources[t.id];const pct=Math.round(src.n*100/COV.total);
       const full=pct>=100;const cls=full?'full':(pct>=50?'mid':'low');
@@ -1794,8 +1949,8 @@ function renderSourcePicker(el){
   el.innerHTML=`<div class="src-picker">
     <div class="srcp-head">📖 Чтение по источнику</div>
     <div class="srcp-sub">Выберите перевод или тафсир — читать будете по его покрытию, разрывы сворачиваются. Видно, у кого сколько и где дыры.</div>
-    ${section("Переводы","🌐",byKind.translation)}
-    ${section("Тафсиры","📚",byKind.tafsir)}
+    ${section("tafsir","Тафсиры","📚",byKind.tafsir)}
+    ${section("translation","Переводы","🌐",byKind.translation)}
   </div>`;
 }
 
@@ -2178,7 +2333,7 @@ function tafsirMeta(t){
 }
 // Скан-источник (kind:image): отдельная постраничная читалка, по-сурно.
 // Не смешивается с режимом «Аяты» — единственное общее это выбор суры.
-function imgDir(t){return DATA_PATH+(t.imgdir||("img/"+t.id))+"/";}
+function imgDir(t){return resolveUrl("mushaf_scans",{dir:scanDirOf(t),file:""});}
 // Открыть/закрыть скан-читалку (взаимоисключающе — один скан за раз).
 function openScan(id){
   ST.scanSource=(ST.scanSource===id)?null:id;
@@ -2195,11 +2350,10 @@ async function renderScanReader(el){
   if(!t){ST.scanSource=null;return renderReading(el);}
   el.innerHTML=`<div class="scan-reader"><div style="text-align:center;color:var(--text-muted);padding:30px">Загрузка...</div></div>`;
   let map=null;
-  try{const r=await fetch(`${imgDir(t)}${ST.surah}.json`);if(r.ok)map=await r.json();}catch(e){}
-  const dir=imgDir(t);
+  try{const r=await fetch(resolveUrl("mushaf_scans",{dir:scanDirOf(t),file:ST.surah+".json"}));if(r.ok)map=await r.json();}catch(e){}
   const text=(map&&map.text)||[], notes=(map&&map.notes)||[];
   const hasN=notes.length>0;
-  const pics=arr=>arr.map(f=>`<img class="scan-pg" loading="lazy" src="${dir}${esc(f)}" alt="">`).join("");
+  const pics=arr=>arr.map(f=>`<img class="scan-pg" loading="lazy" src="${resolveUrl("mushaf_scans",{dir:scanDirOf(t),file:esc(f)})}" alt="">`).join("");
   const su=SURAHS.find(s=>s.id===ST.surah);
   const body=text.length?pics(text)
     :`<div class="scan-empty">Скан этой суры пока не добавлен.<br><span>Перейдите к суре с доступным факсимиле или см. ℹ.</span></div>`;
@@ -2597,7 +2751,7 @@ document.addEventListener("keydown",function(e){
   if(e.key==="Escape"&&neOv&&neOv.style.display!=="none"){closeNoteEditor();return;}
   if(e.key==="Escape"&&document.getElementById("covPopup")){closeCovPopup();return;}
   if(e.key==="Escape"&&ST.srcMode&&ST.srcSel){srcBackToPicker();return;}
-  if(e.key==="Escape"&&aboutOpen())closeAbout();
+  if(e.key==="Escape"&&aboutOpen())closeAboutSmart();
   else if(e.key==="Escape"&&searchOpen)toggleSearch();
   else if(e.key==="Escape"&&ST.rpanelOpen)closeRPanel();
   else if(e.key==="Escape"&&ST.viewOpen)toggleViewPanel();
@@ -2610,12 +2764,13 @@ document.addEventListener("keydown",function(e){
 // ============================================================
 let pendingAyah=null;
 // Which open panels should the Back button / backdrop close (overlays only; the desktop sidebar is docked)
-function anyOverlayOpen(){return searchOpen||ST.rpanelOpen||ST.viewOpen||ST.immersive||(isM()&&ST.sidebarOpen);}
+function anyOverlayOpen(){return searchOpen||ST.rpanelOpen||ST.viewOpen||ST.immersive||appAboutOpen()||(isM()&&ST.sidebarOpen);}
 let navBack=false; // true while we programmatically history.back() to consume our own overlay entry
 function pushOverlay(){if(!(history.state&&history.state.ov))history.pushState({ov:1},"");}
 function consumeOverlay(){if(history.state&&history.state.ov){navBack=true;history.back();}}
 function updateBackdrop(){const b=document.getElementById("panelBackdrop");if(b)b.classList.toggle("show",ST.rpanelOpen||searchOpen||ST.viewOpen);}
 function closeAllPanelsUI(){
+  if(appAboutOpen()){closeAbout();const ov=document.getElementById("aboutOvl");if(ov)ov.dataset.app="";}  // «Назад» (запись уже снята)
   if(searchOpen){searchOpen=false;document.getElementById("searchPanel").classList.add("hidden");}
   if(ST.rpanelOpen){ST.rpanelOpen=false;document.getElementById("rpanel").classList.add("collapsed");}
   if(ST.viewOpen){ST.viewOpen=false;renderViewPanel();renderCB();}
@@ -2959,8 +3114,10 @@ function setArFont(id){
 // A "pack" renders each word as a Private Use Area glyph that only displays with
 // that page's own font. Registry is extensible: add Indopak / Warsh / v2 here.
 const PACKS={
+  // dataDir/pageDir/meta/fontFile — ОТНОСИТЕЛЬНАЯ структура пакета (внутри хранилища);
+  // конечный URL собирает resolveUrl (база — из SOURCES.mushaf_glyphs / mushaf_fonts).
   qpc1:{id:"qpc1",type:"page-font",dataDir:"qpc/v1/surah",pageDir:"qpc/v1/page",meta:"qpc/v1/meta.json",
-    fontFamily:p=>`qpc1-p${p}`,fontUrl:p=>`fonts/qpc-v1/p${p}.woff2`}
+    fontFamily:p=>`qpc1-p${p}`,fontFile:p=>`qpc-v1/p${p}.woff2`}
 };
 function activePack(){return PACKS[ST.arFont]||null;}
 // Lazily inject one @font-face per page the first time that page is shown.
@@ -2970,7 +3127,7 @@ function ensurePageFont(pack,page){
   if(_packFontsLoaded.has(key))return;
   _packFontsLoaded.add(key);
   const st=document.createElement("style");
-  st.textContent=`@font-face{font-family:'${pack.fontFamily(page)}';src:url('${pack.fontUrl(page)}') format('woff2');font-display:swap}`;
+  st.textContent=`@font-face{font-family:'${pack.fontFamily(page)}';src:url('${resolveUrl("mushaf_fonts",{path:pack.fontFile(page)})}') format('woff2');font-display:swap}`;
   document.head.appendChild(st);
 }
 // Per-surah glyph data: {ayah:{"w":[[glyph,page],...],"e":[glyph,page]|null}}
@@ -2979,7 +3136,7 @@ async function loadPackSurah(packId,surah){
   const k=packId+"|"+surah;
   if(qpcCache[k]!==undefined)return qpcCache[k];
   const pack=PACKS[packId];
-  try{const r=await fetch(`${DATA_PATH}${pack.dataDir}/${surah}.json`);qpcCache[k]=r.ok?await r.json():null;}
+  try{const r=await fetch(resolveUrl("mushaf_glyphs",{path:`${pack.dataDir}/${surah}.json`}));qpcCache[k]=r.ok?await r.json():null;}
   catch(e){qpcCache[k]=null;}
   return qpcCache[k];
 }
@@ -3001,13 +3158,13 @@ let qpcMeta=null;
 let mushafResizeObs=null; // re-fits line scaling when the column width changes
 async function loadQpcMeta(){
   if(qpcMeta)return qpcMeta;
-  try{const r=await fetch(`${DATA_PATH}qpc/v1/meta.json`);qpcMeta=r.ok?await r.json():null;}catch(e){qpcMeta=null;}
+  try{const r=await fetch(resolveUrl("mushaf_glyphs",{path:PACKS.qpc1.meta}));qpcMeta=r.ok?await r.json():null;}catch(e){qpcMeta=null;}
   return qpcMeta;
 }
 const qpcPageCache={};
 async function loadQpcPage(p){
   if(qpcPageCache[p]!==undefined)return qpcPageCache[p];
-  try{const r=await fetch(`${DATA_PATH}qpc/v1/page/${p}.json`);qpcPageCache[p]=r.ok?await r.json():null;}catch(e){qpcPageCache[p]=null;}
+  try{const r=await fetch(resolveUrl("mushaf_glyphs",{path:`${PACKS.qpc1.pageDir}/${p}.json`}));qpcPageCache[p]=r.ok?await r.json():null;}catch(e){qpcPageCache[p]=null;}
   return qpcPageCache[p];
 }
 async function togglePageMode(){
@@ -3304,6 +3461,8 @@ applyMushafFull();
 ST.arFont=gs("arFont","qpc1"); // default: печатный мусхаф
 applyArFont();
 ST.navUnit=gs("navUnit","surah");
+ST.srcBarOpen=gs("srcBarOpen",false);     // шапка режима источника: развёрнута? (по умолчанию свёрнута)
+ST.collapsedKinds=gs("collapsedKinds",{translation:true}); // под аятом: какие группы свёрнуты (переводы — по умолч.)
 ST.wbwMode=gs("wbwMode",false); // word-by-word reading layer (пословный перевод)
 ST.noTouch=gs("noTouch",false); ST.ntH=gs("ntH",60); // «Режим без касания»
 if(ST.noTouch&&ST.wbwMode){ST.wbwMode=false;ss("wbwMode",false);} // «Слова» недоступен в режиме без касания

@@ -36,6 +36,18 @@ data/
 fonts/              ← самохостимые шрифты (.woff2)
 ```
 
+## Расположение данных (абстракция источников)
+- **Реестр `SOURCES`** в начале `<script>` в `index.html` — для каждого КЛАССА
+  ресурса `{baseUrl, pathTemplate}`. Классы: `config`, `coverage`, `quran_text`,
+  `tafsir_text`, `tafsir_monolith`, `search_index`, `glosses`, `morphology`,
+  `about`, `mushaf_glyphs`, `mushaf_fonts`, `mushaf_scans`, `audio` (задел),
+  `arabic_volumes` (задел).
+- **Все URL к данным — только через `resolveUrl(class, params)`.** Прямых/«зашитых»
+  путей в коде нет. Чтобы перенести класс на другое хранилище (напр. сканы/аудио на
+  Cloudflare R2), меняется ТОЛЬКО `baseUrl` нужного класса в `SOURCES` — вызывающий
+  код не трогается; разные классы могут жить на разных базах.
+- Сейчас все `baseUrl="data"` (кроме `mushaf_fonts="fonts"`) — данные на своих местах.
+
 ## Модель данных (главное)
 - Каждый тафсир/перевод/словарь = `{ "<номер_аята>": "markdown-текст" }` по сурам.
 - **`config.json` — единственное место правки** метаданных источника. После любой
