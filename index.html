@@ -705,9 +705,12 @@ const SOURCES={
   //   задаёт пакет (PACKS), база — отсюда (можно унести на CDN сменой baseUrl) —
   mushaf_glyphs:   {baseUrl:"data",  pathTemplate:"{baseUrl}/{path}"},
   mushaf_fonts:    {baseUrl:"fonts", pathTemplate:"{baseUrl}/{path}"},
-  // — тяжёлый бинарь: сканы страниц (kind:image) и аудио-тилява —
-  //   {dir} = imgdir источника (или img/{source}); в будущем baseUrl → R2 —
-  mushaf_scans:    {baseUrl:"data",  pathTemplate:"{baseUrl}/{dir}/{file}"},
+  // — тяжёлый бинарь: webp-страницы скан-источника (kind:image) — на объектном
+  //   хранилище Cloudflare R2; {dir}=imgdir источника, {file}=pNNN.webp из карты —
+  mushaf_scans:    {baseUrl:"https://pub-d99a56b61d914461b5864f421a013097.r2.dev",  pathTemplate:"{baseUrl}/{dir}/{file}"},
+  // — лёгкий текст: карты-списки страниц скана (<sura>.json / _about.json) — остаются
+  //   локально (в них — реальные имена webp с пропусками, источник истины навигации) —
+  scan_maps:       {baseUrl:"data",  pathTemplate:"{baseUrl}/{dir}/{file}"},
   audio:           {baseUrl:"data",  pathTemplate:"{baseUrl}/audio/{source}/{sura}/{ayah}.mp3"}, // задел: вызовов пока нет
   // — объёмные арабские тома (на будущее, лежат там же, что и тафсиры) —
   arabic_volumes:  {baseUrl:"data",  pathTemplate:"{baseUrl}/tafsirs/{source}/{sura}.json"},     // задел
@@ -1351,7 +1354,7 @@ async function openAbout(id){
   let bodyHtml;
   if(t.kind==="image"){                              // скан-источник: предисловие картинками
     let ab=aboutCache["imgabout_"+id];
-    if(ab===undefined){ab=null;try{const r=await fetch(resolveUrl("mushaf_scans",{dir:scanDirOf(t),file:"_about.json"}));if(r.ok)ab=await r.json();}catch(e){}aboutCache["imgabout_"+id]=ab;}
+    if(ab===undefined){ab=null;try{const r=await fetch(resolveUrl("scan_maps",{dir:scanDirOf(t),file:"_about.json"}));if(r.ok)ab=await r.json();}catch(e){}aboutCache["imgabout_"+id]=ab;}
     const imgs=((ab&&ab.images)||[]).map(f=>`<img loading="lazy" src="${resolveUrl("mushaf_scans",{dir:scanDirOf(t),file:esc(f)})}" style="max-width:100%;border:1px solid var(--border);border-radius:4px;margin-bottom:10px;display:block">`).join("");
     bodyHtml=imgs||'<span class="about-empty">Предисловие пока не добавлено.</span>';
   }else{
@@ -2350,7 +2353,7 @@ async function renderScanReader(el){
   if(!t){ST.scanSource=null;return renderReading(el);}
   el.innerHTML=`<div class="scan-reader"><div style="text-align:center;color:var(--text-muted);padding:30px">Загрузка...</div></div>`;
   let map=null;
-  try{const r=await fetch(resolveUrl("mushaf_scans",{dir:scanDirOf(t),file:ST.surah+".json"}));if(r.ok)map=await r.json();}catch(e){}
+  try{const r=await fetch(resolveUrl("scan_maps",{dir:scanDirOf(t),file:ST.surah+".json"}));if(r.ok)map=await r.json();}catch(e){}
   const text=(map&&map.text)||[], notes=(map&&map.notes)||[];
   const hasN=notes.length>0;
   const pics=arr=>arr.map(f=>`<img class="scan-pg" loading="lazy" src="${resolveUrl("mushaf_scans",{dir:scanDirOf(t),file:esc(f)})}" alt="">`).join("");
