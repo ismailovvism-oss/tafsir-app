@@ -372,6 +372,25 @@
       "year": "327 х.",
       "about": true,
       "fill": 0.3546
+    },
+    {
+      "id": "mawsua_masur",
+      "file": "tafsirs/mawsua_masur.json",
+      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
+      "name": "Аль-Мавсуа фи-т-тафсир аль-масур",
+      "nameAr": "الموسوعة في التفسير المأثور",
+      "author": "Центр тафсира (свод преданий саляфов)",
+      "authorAr": "مركز الدراسات القرآنية وتحقيق التراث",
+      "group": "classical_ar",
+      "kind": "tafsir",
+      "lang": "ar",
+      "era": "classical",
+      "tags": [
+        "hadith"
+      ],
+      "year": "",
+      "about": true,
+      "fill": 1.0
     }
   ]
 }

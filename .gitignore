@@ -24,3 +24,11 @@ data/img/**/*.png
 data/img/**/*.jpg
 # Аудио-тилява (задел; на объектном хранилище)
 data/audio/
+
+# Тяжёлые тафсиры на Cloudflare R2 (поле dataBase в config). В репо НЕ коммитим
+# ни монолит, ни чанки, ни индекс — они лежат на R2 (и локально для пересборки;
+# пересоздаются скриптами по сырью). См. CHANGELOG «Источники на R2».
+data/tafsirs/mawsua_masur.json
+data/tafsirs/mawsua_masur.js
+data/tafsirs/mawsua_masur/
+data/index/mawsua_masur.json

@@ -721,7 +721,16 @@ const SOURCES={
 function resolveUrl(cls,params){
   const def=SOURCES[cls];
   if(!def)throw new Error("resolveUrl: неизвестный класс ресурса «"+cls+"»");
-  let url=def.pathTemplate.split("{baseUrl}").join(def.baseUrl);
+  let base=def.baseUrl;
+  // Переопределение хранилища на уровне ИСТОЧНИКА: тяжёлый источник может жить не
+  // в репо, а на объектном хранилище (напр. R2) — тогда в config у него поле
+  // dataBase. Касается только по-аятных классов данных источника; лёгкие общие
+  // классы (config/coverage/about/…) не трогаем — они всегда локальны.
+  if(params&&params.source&&(cls==="tafsir_text"||cls==="tafsir_monolith"||cls==="search_index"||cls==="quran_text")){
+    const t=CONFIG&&CONFIG.tafsirs&&CONFIG.tafsirs.find(x=>x.id===params.source);
+    if(t&&t.dataBase)base=t.dataBase;
+  }
+  let url=def.pathTemplate.split("{baseUrl}").join(base);
   if(params)for(const k in params)url=url.split("{"+k+"}").join(params[k]);
   return url;
 }
@@ -1056,8 +1065,10 @@ async function loadWhole(id,quiet){
   if(wholeCache[id])return wholeCache[id];
   if(window.TL_DATA&&window.TL_DATA[id]){wholeCache[id]=window.TL_DATA[id];return wholeCache[id];}
   const info=CONFIG.tafsirs.find(t=>t.id===id);
-  // монолит источника: явный override config.file (отн. база класса) или шаблон по умолчанию
-  const url=info&&info.file?`${SOURCES.tafsir_monolith.baseUrl}/${info.file}`:resolveUrl("tafsir_monolith",{source:id});
+  // монолит источника: явный override config.file (отн. база класса; учитывает
+  // per-source dataBase, напр. R2) или шаблон по умолчанию
+  const monoBase=(info&&info.dataBase)||SOURCES.tafsir_monolith.baseUrl;
+  const url=info&&info.file?`${monoBase}/${info.file}`:resolveUrl("tafsir_monolith",{source:id});
   try{const r=await fetch(url);if(r.ok){wholeCache[id]=await r.json();return wholeCache[id];}}catch(e){}
   return quiet?null:{};
 }
