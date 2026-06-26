@@ -2154,6 +2154,19 @@ async function renderReading(el){
     return;
   }
 
+  // Запоминаем верхний видимый аят ДО затирания DOM, чтобы вернуть скролл на него
+  // после ре-рендера той же суры (напр. при включении/выключении источника).
+  let anchorAid=null;
+  if(lastReadingSurah===ST.surah){
+    const prevArea=el.querySelector("#readingArea");
+    if(prevArea){
+      const top=prevArea.getBoundingClientRect().top;
+      for(const b of prevArea.querySelectorAll(".ayah-block")){
+        if(b.getBoundingClientRect().bottom>top+4){anchorAid=b.dataset.aid;break;}
+      }
+    }
+  }
+
   el.innerHTML=`<div class="reading" id="readingArea"><div style="text-align:center;color:var(--text-muted);padding:30px">Загрузка...</div></div>`;
 
   // Load only the current surah's chunk for each enabled tafsir + Arabic variant
@@ -2173,14 +2186,7 @@ async function renderReading(el){
   // Columns layout is unusable on phones — always stack vertically there
   const layout=isM()?"h":ST.layout;
   if(layout==="h"){
-    // Preserve the topmost visible ayah across a same-surah re-render (e.g. toggling a tafsir)
-    let anchorAid=null;
-    if(lastReadingSurah===ST.surah){
-      const top=area.getBoundingClientRect().top;
-      for(const b of area.querySelectorAll(".ayah-block")){
-        if(b.getBoundingClientRect().bottom>top+4){anchorAid=b.dataset.aid;break;}
-      }
-    }
+    // anchorAid (верхний видимый аят) уже захвачен выше — до затирания DOM.
     // Разовый показ второй стороны одного аята: «ru» если включён только арабский,
     // «ar» если только перевод (когда есть и то и то — кнопка не нужна).
     const hasAr=quranTexts.length>0;
