@@ -3134,16 +3134,25 @@ function renderBottomNav(){
     `<span class="bn-mid">${unitSel}${valSel}</span>`+
     `<button class="bn-arrow" onclick="stepSection(1)" ${aidx>=amax?"disabled":""} title="Следующая ${tip}">›</button>`;
 }
-// horizontal swipe on the reading area → prev/next section (skip column layout's
-// own horizontal scrolling)
-let _swipeX=0,_swipeY=0,_swipeOk=false;
+// horizontal swipe on the reading area → prev/next section. Намеренно отключаем
+// в «Колонках» (там свой горизонтальный скролл — на любом устройстве) и в режиме
+// без касания; гасим случайные срабатывания при вертикальной прокрутке/мультитаче;
+// порог сделан строже, чтобы не «перелистывать» суру нечаянно.
+let _swipeX=0,_swipeY=0,_swipeOk=false,_swipeVScroll=false;
 function setupSwipe(){
   const c=document.getElementById("centerBody");if(!c)return;
-  c.addEventListener("touchstart",e=>{const t=e.changedTouches[0];_swipeX=t.clientX;_swipeY=t.clientY;
-    _swipeOk=!ST.noTouch&&!(!ST.pageMode&&ST.layout==="v"&&!isM());},{passive:true});
+  c.addEventListener("touchstart",e=>{
+    if(e.touches.length>1){_swipeOk=false;return;}            // мультитач (зум) — не свайп
+    const t=e.changedTouches[0];_swipeX=t.clientX;_swipeY=t.clientY;_swipeVScroll=false;
+    _swipeOk=!ST.noTouch&&!(!ST.pageMode&&ST.layout==="v");    // в колонках — выкл. (везде)
+  },{passive:true});
+  c.addEventListener("touchmove",e=>{
+    if(!_swipeOk||e.touches.length>1)return;const t=e.changedTouches[0];
+    if(Math.abs(t.clientY-_swipeY)>40)_swipeVScroll=true;      // была вертикальная прокрутка
+  },{passive:true});
   c.addEventListener("touchend",e=>{
-    if(!_swipeOk)return;const t=e.changedTouches[0];const dx=t.clientX-_swipeX,dy=t.clientY-_swipeY;
-    if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5)stepSection(dx<0?1:-1); // swipe left → next
+    if(!_swipeOk||_swipeVScroll)return;const t=e.changedTouches[0];const dx=t.clientX-_swipeX,dy=t.clientY-_swipeY;
+    if(Math.abs(dx)>80&&Math.abs(dx)>Math.abs(dy)*2)stepSection(dx<0?1:-1); // swipe left → next
   },{passive:true});
 }
 
