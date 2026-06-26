@@ -306,14 +306,16 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 .ab-note-area{width:100%;border:1px solid var(--note-border);border-radius:5px;padding:6px 8px;font-family:inherit;font-size:12px;line-height:1.6;color:var(--text);background:var(--note-bg);resize:vertical;outline:none;min-height:40px;-webkit-user-select:text;user-select:text}
 .ab-note-area:focus{border-color:var(--note-color)}
 
-/* Column layout — CSS-grid: РЯД = аят, высота ряда по самой высокой ячейке,
-   поэтому аяты совпадают между всеми колонками; колонки скроллятся по горизонтали */
-.col-grid{display:grid;overflow:auto;height:100%;padding:0 var(--mar,0px);align-content:start}
-.col-head{padding:6px 8px;background:var(--bg-alt);border-bottom:1px solid var(--border);border-right:1px solid var(--border-light);font-size:11px;font-weight:600;color:var(--accent);position:sticky;top:0;z-index:1;text-align:center}
-.col-ayah{padding:8px 10px;border-bottom:1px solid var(--border-light);border-right:1px solid var(--border-light);font-size:calc(13px*var(--rs-ru,1));line-height:calc(1.85*var(--lh-ru,1));color:var(--text-sec);white-space:pre-wrap;overflow-wrap:anywhere;min-height:44px}
-.col-ayah.col-num{display:flex;align-items:center;justify-content:center;text-align:center;font-weight:600;color:var(--accent);font-size:12px}
-.col-ayah.rtl{direction:rtl;text-align:right;font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(16px*var(--rs-ar,1));line-height:calc(2*var(--lh-ar,1));color:var(--text)}
-.col-ayah.arabic-main{font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(20px*var(--rs-ar,1));line-height:calc(2*var(--lh-ar,1));direction:rtl;text-align:right;color:var(--text)}
+/* Column layout — обычная таблица: РЯД(tr) = аят, высота ряда по самой высокой
+   ячейке, колонки выровнены (table-layout:fixed → равные колонки), перенос текста
+   корректный; колонки скроллятся по горизонтали (min-width таблицы). */
+.col-wrap{overflow:auto;height:100%;padding:0 var(--mar,0px)}
+.col-table{border-collapse:separate;border-spacing:0;width:100%;table-layout:fixed}
+.col-table th{position:sticky;top:0;z-index:1;background:var(--bg-alt);border-bottom:1px solid var(--border);border-right:1px solid var(--border-light);padding:6px 8px;font-size:11px;font-weight:600;color:var(--accent);text-align:center}
+.col-table td{vertical-align:top;border-bottom:1px solid var(--border-light);border-right:1px solid var(--border-light);padding:8px 10px;font-size:calc(13px*var(--rs-ru,1));line-height:calc(1.85*var(--lh-ru,1));color:var(--text-sec);white-space:pre-wrap;overflow-wrap:anywhere}
+.col-table td.col-num{text-align:center;vertical-align:middle;font-weight:600;color:var(--accent);font-size:12px}
+.col-table td.rtl{direction:rtl;text-align:right;font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(16px*var(--rs-ar,1));line-height:calc(2*var(--lh-ar,1));color:var(--text)}
+.col-table td.arabic-main{font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(20px*var(--rs-ar,1));line-height:calc(2*var(--lh-ar,1));direction:rtl;text-align:right;color:var(--text)}
 
 /* TAG RESULTS view */
 .tag-results{flex:1;overflow-y:auto;padding:12px 16px}
@@ -459,15 +461,15 @@ body.immersive .immersive-exit:hover{opacity:1;background:rgba(0,0,0,.32)}
 /* Optional Arabic typefaces for the reading text (toggle in the toolbar) */
 [data-arfont="kufi"] .arabic-main,
 [data-arfont="kufi"] .ab-entry-text.rtl,
-[data-arfont="kufi"] .col-ayah.rtl{font-family:'Reem Kufi','Noto Naskh Arabic','Amiri',serif}
+[data-arfont="kufi"] .col-table td.rtl{font-family:'Reem Kufi','Noto Naskh Arabic','Amiri',serif}
 /* Мусхаф Мадани — почерк Усмана Таха (KFGQPC Uthmanic Hafs) */
 [data-arfont="hafs"] .arabic-main,
 [data-arfont="hafs"] .ab-entry-text.rtl,
-[data-arfont="hafs"] .col-ayah.rtl{font-family:'KFGQPC Uthmanic','Amiri Quran','Noto Naskh Arabic',serif;line-height:2.1}
+[data-arfont="hafs"] .col-table td.rtl{font-family:'KFGQPC Uthmanic','Amiri Quran','Noto Naskh Arabic',serif;line-height:2.1}
 /* Мусхафный насх (Amiri Quran) */
 [data-arfont="amiri"] .arabic-main,
 [data-arfont="amiri"] .ab-entry-text.rtl,
-[data-arfont="amiri"] .col-ayah.rtl{font-family:'Amiri Quran','Noto Naskh Arabic',serif;line-height:2.1}
+[data-arfont="amiri"] .col-table td.rtl{font-family:'Amiri Quran','Noto Naskh Arabic',serif;line-height:2.1}
 /* QPC v1 — постраничные глифы печатного мусхафа Мадани (per-page fonts, lazy) */
 .qpc-line{direction:rtl;text-align:justify;text-align-last:center;line-height:calc(2.3*var(--lh-ar,1));font-size:calc(30px*var(--rs-ar,1));color:var(--text)}
 .qpc-w{display:inline-block}
@@ -2160,8 +2162,8 @@ async function renderReading(el){
       // Ориентир верха: в «Колонках» вычитаем высоту липкой шапки колонок, чтобы
       // взять первый аят ПОД шапкой (а не тот, что чуть выглядывает над ней).
       let refTop=prevArea.getBoundingClientRect().top;
-      const colGrid=prevArea.querySelector(".col-grid");
-      if(colGrid){const h=colGrid.querySelector(".col-head");if(h)refTop=colGrid.getBoundingClientRect().top+h.getBoundingClientRect().height;}
+      const colWrap=prevArea.querySelector(".col-wrap");
+      if(colWrap){const th=colWrap.querySelector("thead");if(th)refTop=colWrap.getBoundingClientRect().top+th.getBoundingClientRect().height;}
       // .ayah-block — режим «Список»; .col-num — режим «Колонки» (ячейки колонки №)
       for(const b of prevArea.querySelectorAll(".ayah-block, .col-num")){
         if(b.getBoundingClientRect().bottom>refTop+4){anchorAid=b.dataset.aid;break;}
@@ -2228,28 +2230,28 @@ async function renderReading(el){
     }
     if(!cols.length){area.innerHTML="";return;}
 
-    // Сетка: 1 узкая колонка номеров + по колонке на источник. Вывод ПОСТРОЧНО
-    // (аят за аятом) — grid сам выравнивает ряды по высоте, поэтому один аят
-    // стоит в один ряд во всех колонках. На узком экране — горизонтальный скролл.
+    // Таблица: 1 узкая колонка номеров + по колонке на источник. tr = аят, высота
+    // ряда по самой высокой ячейке (table сам это делает корректно, с переносом).
+    // table-layout:fixed → равные колонки; min-width таблицы → горизонтальный скролл.
     const colMin=isM()?200:260;
-    const gtc=`minmax(40px,48px) repeat(${cols.length}, minmax(${colMin}px,1fr))`;
-    let html=`<div class="col-grid" style="grid-template-columns:${gtc}">`;
-    html+=`<div class="col-head">#</div>`;
-    for(const col of cols)html+=`<div class="col-head">${esc(col.name)}</div>`;
+    const minW=44+cols.length*colMin;
+    let html=`<div class="col-wrap"><table class="col-table" style="min-width:${minW}px">`;
+    html+=`<colgroup><col style="width:44px">${cols.map(()=>'<col>').join("")}</colgroup>`;
+    html+=`<thead><tr><th>#</th>${cols.map(c=>`<th>${esc(c.name)}</th>`).join("")}</tr></thead><tbody>`;
     for(const aid of ayahIds){
-      html+=`<div class="col-ayah col-num" data-aid="${aid}">${aid}</div>`;
+      html+=`<tr><td class="col-num" data-aid="${aid}">${aid}</td>`;
       for(const col of cols){
         if(col.isArabic){
           const pk=activePack();const qd=loaded["__qpc"];
           if(pk&&col.id==="_arabic"&&qd&&qd[String(aid)]){
-            html+=`<div class="col-ayah arabic-main">${renderPackAyah(pk,qd[String(aid)])}</div>`;
+            html+=`<td class="arabic-main">${renderPackAyah(pk,qd[String(aid)])}</td>`;
           }else{
             const arText=col.data?.[String(aid)]||"";
-            html+=`<div class="col-ayah arabic-main selectable">${arText||'—'}</div>`;
+            html+=`<td class="arabic-main selectable">${arText||'—'}</td>`;
           }
         } else if(col.isNote){
           const note=getNote(ST.surah,aid);
-          html+=`<div class="col-ayah" style="background:var(--note-bg)"><textarea class="ab-note-area" style="min-height:30px;font-size:11px" placeholder="..." oninput="saveNote(${ST.surah},${aid},this.value)">${esc(note)}</textarea></div>`;
+          html+=`<td style="background:var(--note-bg)"><textarea class="ab-note-area" style="min-height:30px;font-size:11px" placeholder="..." oninput="saveNote(${ST.surah},${aid},this.value)">${esc(note)}</textarea></td>`;
         } else {
           const text=col.data?.[String(aid)]||"";
           const isAr=col.lang==="ar";
@@ -2257,18 +2259,19 @@ async function renderReading(el){
           const {body,notes}=text?splitNotes(text):{body:null,notes:[]};
           const inner=body?renderRefs(body):'—';
           const long=!ST.noTouch&&body&&body.length>600;
-          html+=`<div class="col-ayah md selectable ${isAr?'rtl':''}"><div class="${long?'clamped':''}">${inner}</div>${long?'<button class="more-btn" onclick="toggleClamp(this)">Развернуть ▾</button>':''}${notes.length?renderFootnotes(notes):''}</div>`;
+          html+=`<td class="md selectable ${isAr?'rtl':''}"><div class="${long?'clamped':''}">${inner}</div>${long?'<button class="more-btn" onclick="toggleClamp(this)">Развернуть ▾</button>':''}${notes.length?renderFootnotes(notes):''}</td>`;
         }
       }
+      html+=`</tr>`;
     }
-    html+=`</div>`;
+    html+=`</tbody></table></div>`;
     area.innerHTML=html;
     // Вернуть скролл: переход (📑) важнее, иначе — на запомненный верхний аят.
-    // Точное позиционирование под липкую шапку колонок (scrollIntoView её не учитывает).
+    // Точное позиционирование под липкую шапку (scrollIntoView её не учитывает).
     const colScrollTo=aid=>{
-      const lay=area.querySelector(".col-grid");const cell=lay&&lay.querySelector(`.col-num[data-aid="${aid}"]`);
+      const lay=area.querySelector(".col-wrap");const cell=lay&&lay.querySelector(`.col-num[data-aid="${aid}"]`);
       if(!lay||!cell)return;
-      const h=lay.querySelector(".col-head");const headH=h?h.getBoundingClientRect().height:0;
+      const th=lay.querySelector("thead");const headH=th?th.getBoundingClientRect().height:0;
       lay.scrollTop+=cell.getBoundingClientRect().top-lay.getBoundingClientRect().top-headH;
     };
     if(ST.scrollToAyah!=null){colScrollTo(ST.scrollToAyah);ST.scrollToAyah=null;}
