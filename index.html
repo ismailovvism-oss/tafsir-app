@@ -36,9 +36,12 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 
 /* HEADER */
 .header{background:var(--header-bg);color:var(--header-text);padding:7px 12px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(0,0,0,.2);z-index:20;flex-shrink:0}
-.header-left{display:flex;align-items:center;gap:10px}
+.header-left{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
 .h-title{font-size:16px;font-weight:600;font-family:'Amiri',serif}
 .h-sub{font-size:9px;opacity:.5;letter-spacing:1.5px}
+.h-brand{flex:none}
+.h-ctx{margin:0;font-size:14px;font-weight:600;color:var(--header-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.h-ctx .ar{font-family:'Amiri',serif;margin-left:5px;font-size:16px;font-weight:400;opacity:.85}
 .h-right{display:flex;align-items:center;gap:6px}
 .btn-i{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:inherit;border-radius:6px;padding:5px 9px;cursor:pointer;font-size:13px;transition:background .12s}
 .btn-i:hover{background:rgba(255,255,255,.15)}
@@ -46,6 +49,9 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 .theme-dots{display:flex;gap:4px;align-items:center}
 .theme-dot{width:18px;height:18px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border .15s}
 .theme-dot:hover,.theme-dot.active{border-color:rgba(255,255,255,.7)}
+.vp-themes{gap:12px;margin-top:4px}
+.vp-themes .theme-dot{width:26px;height:26px}
+.vp-themes .theme-dot:hover,.vp-themes .theme-dot.active{border-color:var(--accent)}  /* на светлой панели белая рамка не видна */
 
 /* LAYOUT */
 .app-body{display:flex;flex:1;overflow:hidden;position:relative}
@@ -446,6 +452,9 @@ body.immersive .immersive-exit:hover{opacity:1;background:rgba(0,0,0,.32)}
   .sidebar{position:absolute;top:0;height:100%;width:100%;z-index:10;transition:transform .25s}
   .sidebar{left:0;transform:translateX(0)}.sidebar.collapsed{transform:translateX(-100%);margin-left:0}
   .header{padding:7px 8px}.reading{padding:8px}
+  .h-brand{display:none}            /* на телефоне вместо бренда — имя суры (#hCtx) */
+  .h-right{gap:3px}
+  .h-right .btn-i{padding:5px 7px}  /* компактнее, чтобы 🔍 📚 ⚙ ⛶ влезли на узком экране */
   .ab-entry-text.arabic-main{font-size:calc(19px*var(--rs-ar,1))}
   .search-panel{width:100%!important;left:0!important;right:0!important;transform:none!important;border-radius:0!important;max-height:80vh!important}
 }
@@ -588,18 +597,13 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
 <header class="header">
   <div class="header-left">
     <button class="btn-i" onclick="toggleSidebar()" title="Суры / Теги">☰</button>
-    <div><div class="h-title">مكتبة التفاسير</div><div class="h-sub">TAFSIR LIBRARY</div></div>
+    <div class="h-brand"><div class="h-title">مكتبة التفاسير</div><div class="h-sub">TAFSIR LIBRARY</div></div>
+    <h2 class="h-ctx" id="hCtx"></h2>
   </div>
   <div class="h-right">
-    <div class="theme-dots" title="Тема">
-      <span class="theme-dot active" style="background:#1B5E3B" onclick="setTheme('green')"></span>
-      <span class="theme-dot" style="background:#1B4E8E" onclick="setTheme('blue')"></span>
-      <span class="theme-dot" style="background:#8B6914" onclick="setTheme('gold')"></span>
-      <span class="theme-dot" style="background:#333" onclick="setTheme('dark')"></span>
-    </div>
     <button class="btn-i" onclick="toggleSearch()" title="Поиск по текстам">🔍</button>
     <button class="btn-i" onclick="toggleRPanel()" title="Переводы и тафсиры">📚</button>
-    <button class="btn-i" onclick="openAppAbout()" title="О программе">ℹ</button>
+    <button class="btn-i" id="hViewBtn" onclick="toggleViewPanel()" title="Вид: шрифт, размеры, тема, режимы">⚙</button>
     <button class="btn-i" id="fsBtn" onclick="toggleFullscreen()" title="Во весь экран">⛶</button>
   </div>
 </header>
@@ -1583,33 +1587,39 @@ function renderBookmarkPanel(el){
 // -- CENTER BAR --
 function renderCB(){
   const bar=document.getElementById("centerBar");
+  const ctx=document.getElementById("hCtx");
+  const setCtx=h=>{if(ctx)ctx.innerHTML=h||"";};
   const su=SURAHS.find(s=>s.id===ST.surah);
+  const vb=document.getElementById("hViewBtn");if(vb)vb.classList.toggle("active",!!ST.viewOpen); // подсветка ⚙ в шапке
 
   if(ST.selectedTag){
-    bar.innerHTML=`<div class="cb-left"><button class="btn-s" onclick="ST.selectedTag=null;render();">← Суры</button><button class="btn-s" onclick="ST.sbTab='tags';document.getElementById('sbTabSurahs').classList.remove('active');document.getElementById('sbTabTags').classList.add('active');ST.sidebarOpen=true;document.getElementById('sidebar').classList.remove('collapsed');renderSB();">🏷 Теги</button><h2>🏷 ${esc(ST.selectedTag)}</h2></div>`;
+    setCtx(`🏷 ${esc(ST.selectedTag)}`);
+    bar.innerHTML=`<div class="cb-right"><button class="btn-s" onclick="ST.selectedTag=null;render();">← Суры</button><button class="btn-s" onclick="ST.sbTab='tags';document.getElementById('sbTabSurahs').classList.remove('active');document.getElementById('sbTabTags').classList.add('active');ST.sidebarOpen=true;document.getElementById('sidebar').classList.remove('collapsed');renderSB();">🏷 Теги</button></div>`;
     return;
   }
-  if(!su)return;
+  if(!su){setCtx("");if(bar)bar.innerHTML="";return;}
   if(ST.scanSource){ // скан-читалка: своя панель, режимы Аяты/Мусхаф скрыты
     const ts=CONFIG.tafsirs.find(x=>x.id===ST.scanSource);
-    bar.innerHTML=`<div class="cb-left"><h2>${su.ru} <span class="ar">${su.name}</span></h2></div><div class="cb-right"><span class="t-badge">📖 ${esc(ts?ts.name:'Скан')}</span><button class="btn-s" onclick="openScan('${ST.scanSource}')" title="Вернуться к тексту">✕ К тексту</button></div>`;
+    setCtx(`${su.ru} <span class="ar">${su.name}</span>`);
+    bar.innerHTML=`<div class="cb-right"><span class="t-badge">📖 ${esc(ts?ts.name:'Скан')}</span><button class="btn-s" onclick="openScan('${ST.scanSource}')" title="Вернуться к тексту">✕ К тексту</button></div>`;
     return;
   }
-  const layoutBtn=`<button class="btn-s layout-btn ${ST.layout==='v'?'active':''}" onclick="toggleLayout()" title="Колонки / Список">${ST.layout==='h'?'▤ Колонки':'▥ Список'}</button>`;
-  const viewBtn=`<button class="btn-s ${ST.viewOpen?'active':''}" onclick="toggleViewPanel()" title="Вид: шрифт, размеры, интервал, поля">⚙ Вид</button>`;
-  const ntBtn=`<button class="btn-s ${ST.noTouch?'active':''}" onclick="toggleNoTouch()" title="Режим без касания — чтение и листание без касания текста">✋</button>`;
+  // «Колонки/Список» — только иконка (тултип поясняет); ⚙ Вид и ✋ переехали:
+  // ⚙ в шапку (всегда видно), ✋ — тумблером в ⚙ Вид, тема — там же.
+  const layoutBtn=`<button class="btn-s layout-btn ${ST.layout==='v'?'active':''}" onclick="toggleLayout()" title="Колонки / Список">${ST.layout==='h'?'▤':'▥'}</button>`;
   // explicit two-mode segmented switch (clearer than a lone "Мусхаф" toggle)
   const modeSeg=`<span class="seg seg-sm"><button class="${!ST.pageMode&&!ST.wbwMode&&!ST.srcMode?'on':''}" onclick="setMode('ayat')" title="Аяты + перевод">Аяты</button>${ST.noTouch?'':`<button class="${!ST.pageMode&&ST.wbwMode&&!ST.srcMode?'on':''}" onclick="setMode('words')" title="Пословный перевод + грамматика">Слова</button>`}<button class="${ST.pageMode?'on':''}" onclick="setMode('page')" title="Постраничный мусхаф">Мусхаф</button><button class="${ST.srcMode?'on':''}" onclick="setMode('source')" title="Чтение по покрытию одного источника">Источник</button></span>`;
   if(ST.srcMode){
     // при чтении заголовок = сура (как обычно); имя источника живёт в его компактной шапке (без дубля)
-    const ttl=ST.srcSel?`${su.ru} <span class="ar">${su.name}</span>`:"📖 Выбор источника";
-    bar.innerHTML=`<div class="cb-left"><h2>${ttl}</h2></div><div class="cb-right">${modeSeg}${viewBtn}</div>`;return;
+    setCtx(ST.srcSel?`${su.ru} <span class="ar">${su.name}</span>`:"📖 Выбор источника");
+    bar.innerHTML=`<div class="cb-right">${modeSeg}</div>`;return;
   }
   if(ST.pageMode){
-    const loc=pageLocation(ST.mushafPage);
-    bar.innerHTML=`<div class="cb-left"><h2>${loc}</h2></div><div class="cb-right">${modeSeg}${ntBtn}${viewBtn}</div>`;return;
+    setCtx(pageLocation(ST.mushafPage));
+    bar.innerHTML=`<div class="cb-right">${modeSeg}</div>`;return;
   }
-  bar.innerHTML=`<div class="cb-left"><h2>${su.ru} <span class="ar">${su.name}</span></h2></div><div class="cb-right">${modeSeg}${ntBtn}${layoutBtn}${viewBtn}</div>`;
+  setCtx(`${su.ru} <span class="ar">${su.name}</span>`);
+  bar.innerHTML=`<div class="cb-right">${modeSeg}${layoutBtn}</div>`;
 }
 
 // -- CENTER BODY --
@@ -2983,6 +2993,10 @@ function renderViewPanel(){
   const navGroup=`<div class="vp-group"><div class="vp-label">Жесты</div>`+
     `<label class="vp-check"><input type="checkbox" ${ST.swipeNav?"checked":""} onchange="toggleSwipeNav()"> Свайп влево/вправо листает суру</label>`+
     `<div class="vp-note">В «Колонках» свайп всегда отключён (там горизонтальная прокрутка). Сура также листается кнопками ‹ › внизу.</div></div>`;
+  const themeGroup=`<div class="vp-group"><div class="vp-label">Тема</div><div class="theme-dots vp-themes">`+
+    [["green","#1B5E3B"],["blue","#1B4E8E"],["gold","#8B6914"],["dark","#333"]].map(([t,c])=>`<span class="theme-dot ${ST.theme===t?'active':''}" style="background:${c}" title="${t}" onclick="setTheme('${t}')"></span>`).join("")+
+    `</div></div>`;
+  const aboutRow=`<button class="vp-reset" onclick="toggleViewPanel();openAppAbout()">ℹ О программе</button>`;
   if(ST.pageMode){
     // page mode = printed vowelled glyphs at a fixed column fit: only line spacing
     // is meaningful (size/margins are absorbed by the fit; font is fixed)
@@ -2991,7 +3005,7 @@ function renderViewPanel(){
       `<div class="vp-group"><div class="vp-label">Отступы</div>${step("Межстрочный","lhAr",pct("lhAr"))}</div>`+
       `<div class="vp-note">Размер строк в «Мусхафе» подстраивается автоматически под ширину страницы.</div>`+
       `<div class="vp-group"><div class="vp-label">Боковая панель (суры, теги)</div>${step("Размер","sbScale",pct("sbScale"))}</div>`+
-      navGroup+ntGroup+resetBtn+`<button class="vp-close" onclick="toggleViewPanel()">Готово</button>`;
+      themeGroup+navGroup+ntGroup+aboutRow+resetBtn+`<button class="vp-close" onclick="toggleViewPanel()">Готово</button>`;
     return;
   }
   const variants=[["_arabic","С огласовками"],["_arabic_clean","Без огласовок"],["_arabic_rasm","Без точек (расм)"]];
@@ -3004,7 +3018,7 @@ function renderViewPanel(){
     `<div class="vp-group"><div class="vp-label">Межстрочный интервал</div>${step("Арабский","lhAr",pct("lhAr"))}${step("Русский","lhRu",pct("lhRu"))}</div>`+
     `<div class="vp-group"><div class="vp-label">Поля</div>${step("Отступы по краям","mar",ST.mar+"px")}</div>`+
     `<div class="vp-group"><div class="vp-label">Боковая панель (суры, теги)</div>${step("Размер","sbScale",pct("sbScale"))}</div>`+
-    navGroup+ntGroup+resetBtn+`<button class="vp-close" onclick="toggleViewPanel()">Готово</button>`;
+    themeGroup+navGroup+ntGroup+aboutRow+resetBtn+`<button class="vp-close" onclick="toggleViewPanel()">Готово</button>`;
 }
 
 // --- 📑 Переход: jump by surah / juz / rub al-hizb / page (both modes) -------
