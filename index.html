@@ -306,15 +306,14 @@ body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);c
 .ab-note-area{width:100%;border:1px solid var(--note-border);border-radius:5px;padding:6px 8px;font-family:inherit;font-size:12px;line-height:1.6;color:var(--text);background:var(--note-bg);resize:vertical;outline:none;min-height:40px;-webkit-user-select:text;user-select:text}
 .ab-note-area:focus{border-color:var(--note-color)}
 
-/* Vertical/column layout */
-.col-layout{display:flex;overflow-x:auto;gap:0;padding:0 var(--mar,0px)}
-.col-col{flex:1;min-width:250px;border-right:1px solid var(--border-light)}
-.col-col:last-child{border-right:none}
-.col-head{padding:6px 8px;background:var(--bg-alt);border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--accent);position:sticky;top:0;z-index:1;text-align:center}
-.col-ayah{padding:8px 10px;border-bottom:1px solid var(--border-light);font-size:calc(13px*var(--rs-ru,1));line-height:calc(1.85*var(--lh-ru,1));color:var(--text-sec);white-space:pre-wrap;min-height:50px}
+/* Column layout — CSS-grid: РЯД = аят, высота ряда по самой высокой ячейке,
+   поэтому аяты совпадают между всеми колонками; колонки скроллятся по горизонтали */
+.col-grid{display:grid;overflow:auto;height:100%;padding:0 var(--mar,0px);align-content:start}
+.col-head{padding:6px 8px;background:var(--bg-alt);border-bottom:1px solid var(--border);border-right:1px solid var(--border-light);font-size:11px;font-weight:600;color:var(--accent);position:sticky;top:0;z-index:1;text-align:center}
+.col-ayah{padding:8px 10px;border-bottom:1px solid var(--border-light);border-right:1px solid var(--border-light);font-size:calc(13px*var(--rs-ru,1));line-height:calc(1.85*var(--lh-ru,1));color:var(--text-sec);white-space:pre-wrap;overflow-wrap:anywhere;min-height:44px}
+.col-ayah.col-num{display:flex;align-items:center;justify-content:center;text-align:center;font-weight:600;color:var(--accent);font-size:12px}
 .col-ayah.rtl{direction:rtl;text-align:right;font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(16px*var(--rs-ar,1));line-height:calc(2*var(--lh-ar,1));color:var(--text)}
 .col-ayah.arabic-main{font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(20px*var(--rs-ar,1));line-height:calc(2*var(--lh-ar,1));direction:rtl;text-align:right;color:var(--text)}
-.col-ayah-num{font-size:9px;font-weight:600;color:var(--accent);margin-bottom:2px}
 
 /* TAG RESULTS view */
 .tag-results{flex:1;overflow-y:auto;padding:12px 16px}
@@ -446,7 +445,6 @@ body.immersive .immersive-exit:hover{opacity:1;background:rgba(0,0,0,.32)}
   .sidebar{left:0;transform:translateX(0)}.sidebar.collapsed{transform:translateX(-100%);margin-left:0}
   .header{padding:7px 8px}.reading{padding:8px}
   .ab-entry-text.arabic-main{font-size:calc(19px*var(--rs-ar,1))}
-  .col-col{min-width:200px}
   .search-panel{width:100%!important;left:0!important;right:0!important;transform:none!important;border-radius:0!important;max-height:80vh!important}
 }
 
@@ -2162,8 +2160,8 @@ async function renderReading(el){
       // Ориентир верха: в «Колонках» вычитаем высоту липкой шапки колонок, чтобы
       // взять первый аят ПОД шапкой (а не тот, что чуть выглядывает над ней).
       let refTop=prevArea.getBoundingClientRect().top;
-      const colLayout=prevArea.querySelector(".col-layout");
-      if(colLayout){const h=colLayout.querySelector(".col-head");if(h)refTop=colLayout.getBoundingClientRect().top+h.getBoundingClientRect().height;}
+      const colGrid=prevArea.querySelector(".col-grid");
+      if(colGrid){const h=colGrid.querySelector(".col-head");if(h)refTop=colGrid.getBoundingClientRect().top+h.getBoundingClientRect().height;}
       // .ayah-block — режим «Список»; .col-num — режим «Колонки» (ячейки колонки №)
       for(const b of prevArea.querySelectorAll(".ayah-block, .col-num")){
         if(b.getBoundingClientRect().bottom>refTop+4){anchorAid=b.dataset.aid;break;}
@@ -2230,39 +2228,41 @@ async function renderReading(el){
     }
     if(!cols.length){area.innerHTML="";return;}
 
-    let html=`<div class="col-layout" style="height:100%;overflow:auto">`;
-    html+=`<div class="col-col" style="min-width:40px;max-width:50px;flex:none"><div class="col-head">#</div>`;
-    for(const aid of ayahIds)html+=`<div class="col-ayah col-num" data-aid="${aid}" style="text-align:center;font-weight:600;color:var(--accent);font-size:12px;display:flex;align-items:center;justify-content:center">${aid}</div>`;
-    html+=`</div>`;
-
-    for(const col of cols){
-      html+=`<div class="col-col"><div class="col-head">${esc(col.name)}</div>`;
-      for(const aid of ayahIds){
+    // Сетка: 1 узкая колонка номеров + по колонке на источник. Вывод ПОСТРОЧНО
+    // (аят за аятом) — grid сам выравнивает ряды по высоте, поэтому один аят
+    // стоит в один ряд во всех колонках. На узком экране — горизонтальный скролл.
+    const colMin=isM()?200:260;
+    const gtc=`minmax(40px,48px) repeat(${cols.length}, minmax(${colMin}px,1fr))`;
+    let html=`<div class="col-grid" style="grid-template-columns:${gtc}">`;
+    html+=`<div class="col-head">#</div>`;
+    for(const col of cols)html+=`<div class="col-head">${esc(col.name)}</div>`;
+    for(const aid of ayahIds){
+      html+=`<div class="col-ayah col-num" data-aid="${aid}">${aid}</div>`;
+      for(const col of cols){
         if(col.isArabic){
           const pk=activePack();const qd=loaded["__qpc"];
           if(pk&&col.id==="_arabic"&&qd&&qd[String(aid)]){
-            html+=`<div class="col-ayah">${renderPackAyah(pk,qd[String(aid)])}</div>`;
+            html+=`<div class="col-ayah arabic-main">${renderPackAyah(pk,qd[String(aid)])}</div>`;
           }else{
             const arText=col.data?.[String(aid)]||"";
             html+=`<div class="col-ayah arabic-main selectable">${arText||'—'}</div>`;
           }
         } else if(col.isNote){
           const note=getNote(ST.surah,aid);
-          html+=`<div class="col-ayah" style="background:var(--note-bg);padding:4px 6px"><textarea class="ab-note-area" style="min-height:30px;font-size:11px" placeholder="..." oninput="saveNote(${ST.surah},${aid},this.value)">${esc(note)}</textarea></div>`;
+          html+=`<div class="col-ayah" style="background:var(--note-bg)"><textarea class="ab-note-area" style="min-height:30px;font-size:11px" placeholder="..." oninput="saveNote(${ST.surah},${aid},this.value)">${esc(note)}</textarea></div>`;
         } else {
           const text=col.data?.[String(aid)]||"";
           const isAr=col.lang==="ar";
           html+=`<div class="col-ayah md selectable ${isAr?'rtl':''}">${text?mdRender(text):'—'}</div>`;
         }
       }
-      html+=`</div>`;
     }
     html+=`</div>`;
     area.innerHTML=html;
     // Вернуть скролл: переход (📑) важнее, иначе — на запомненный верхний аят.
     // Точное позиционирование под липкую шапку колонок (scrollIntoView её не учитывает).
     const colScrollTo=aid=>{
-      const lay=area.querySelector(".col-layout");const cell=lay&&lay.querySelector(`.col-num[data-aid="${aid}"]`);
+      const lay=area.querySelector(".col-grid");const cell=lay&&lay.querySelector(`.col-num[data-aid="${aid}"]`);
       if(!lay||!cell)return;
       const h=lay.querySelector(".col-head");const headH=h?h.getBoundingClientRect().height:0;
       lay.scrollTop+=cell.getBoundingClientRect().top-lay.getBoundingClientRect().top-headH;
