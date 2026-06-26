@@ -2253,7 +2253,11 @@ async function renderReading(el){
         } else {
           const text=col.data?.[String(aid)]||"";
           const isAr=col.lang==="ar";
-          html+=`<div class="col-ayah md selectable ${isAr?'rtl':''}">${text?mdRender(text):'—'}</div>`;
+          // Длинные тафсиры сворачиваем (как в «Списке»): clamped + «Развернуть».
+          const {body,notes}=text?splitNotes(text):{body:null,notes:[]};
+          const inner=body?renderRefs(body):'—';
+          const long=!ST.noTouch&&body&&body.length>600;
+          html+=`<div class="col-ayah md selectable ${isAr?'rtl':''}"><div class="${long?'clamped':''}">${inner}</div>${long?'<button class="more-btn" onclick="toggleClamp(this)">Развернуть ▾</button>':''}${notes.length?renderFootnotes(notes):''}</div>`;
         }
       }
     }
