@@ -3134,27 +3134,8 @@ function renderBottomNav(){
     `<span class="bn-mid">${unitSel}${valSel}</span>`+
     `<button class="bn-arrow" onclick="stepSection(1)" ${aidx>=amax?"disabled":""} title="Следующая ${tip}">›</button>`;
 }
-// horizontal swipe on the reading area → prev/next section. Намеренно отключаем
-// в «Колонках» (там свой горизонтальный скролл — на любом устройстве) и в режиме
-// без касания; гасим случайные срабатывания при вертикальной прокрутке/мультитаче;
-// порог сделан строже, чтобы не «перелистывать» суру нечаянно.
-let _swipeX=0,_swipeY=0,_swipeOk=false,_swipeVScroll=false;
-function setupSwipe(){
-  const c=document.getElementById("centerBody");if(!c)return;
-  c.addEventListener("touchstart",e=>{
-    if(e.touches.length>1){_swipeOk=false;return;}            // мультитач (зум) — не свайп
-    const t=e.changedTouches[0];_swipeX=t.clientX;_swipeY=t.clientY;_swipeVScroll=false;
-    _swipeOk=!ST.noTouch&&!(!ST.pageMode&&ST.layout==="v");    // в колонках — выкл. (везде)
-  },{passive:true});
-  c.addEventListener("touchmove",e=>{
-    if(!_swipeOk||e.touches.length>1)return;const t=e.changedTouches[0];
-    if(Math.abs(t.clientY-_swipeY)>40)_swipeVScroll=true;      // была вертикальная прокрутка
-  },{passive:true});
-  c.addEventListener("touchend",e=>{
-    if(!_swipeOk||_swipeVScroll)return;const t=e.changedTouches[0];const dx=t.clientX-_swipeX,dy=t.clientY-_swipeY;
-    if(Math.abs(dx)>80&&Math.abs(dx)>Math.abs(dy)*2)stepSection(dx<0?1:-1); // swipe left → next
-  },{passive:true});
-}
+// Свайп для смены суры убран по просьбе (мешал прокрутке/колонкам). Навигация —
+// кнопками ‹ › в нижней панели и селектором суры. stepSection() остаётся для них.
 
 // Arabic typeface (chosen in the ⚙ Вид panel; persisted). Names are russified.
 function applyArFont(){document.body.setAttribute("data-arfont",ST.arFont);}
@@ -3528,7 +3509,6 @@ ST.noTouch=gs("noTouch",false); ST.ntH=gs("ntH",60); // «Режим без ка
 if(ST.noTouch&&ST.wbwMode){ST.wbwMode=false;ss("wbwMode",false);} // «Слова» недоступен в режиме без касания
 applyNoTouch();
 loadQpcMeta(); // preload mushaf page index (surah → page) for page-mode jumps
-setupSwipe();  // horizontal swipe → prev/next section
 // Keep immersive state in sync if the user leaves browser fullscreen via Esc/F11/gesture.
 // (⛶ всегда доступна: иммерсивный режим работает без Fullscreen API, в т.ч. на iOS)
 document.addEventListener("fullscreenchange",onFsChange);
