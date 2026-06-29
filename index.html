@@ -924,11 +924,15 @@ function curTopAyah(){
   }
   return ST.scrollToAyah||1;
 }
+// Позиция (верхний видимый аят) по каждой суре в текущей сессии — чтобы листание
+// стрелками ‹ › и свайпом возвращало туда, где ты был в той суре (а не к началу).
+const surahPos={};
 function saveLastPos(){
   if(ST.homeMode||ST.selectedTag||ST.scanSource||ST.bookIntro||ST.srcMode)return;  // Главная/теги/скан/введение/источник — не позиция чтения
   const mode=ST.pageMode?"page":(ST.wbwMode?"words":"ayat");
   const ayah=curTopAyah();
   ss("lastPos",{surah:ST.surah,ayah,page:ST.mushafPage||1,mode});
+  if(!ST.pageMode)surahPos[ST.surah]=ayah;           // запомнить позицию в этой суре
   pushRecent(ST.surah,ayah,mode);                    // лента «недавнее» для Главной
   // Запомнить позицию чтения в ТЕКУЩЕЙ записи истории, чтобы «назад» (стрелка/свайп)
   // вернул на тот же аят. URL остаётся чистым «#сура» — аят кладём в state. Не трогаем
@@ -3421,7 +3425,11 @@ function navJumpValue(v){
 function stepUnit(){return ST.pageMode?"page":ST.navUnit;}
 function stepSection(dir){
   const p=curPos(),u=stepUnit();
-  if(u==="surah")jumpTo({surah:Math.max(1,Math.min(114,p.surah+dir))});
+  if(u==="surah"){
+    if(!ST.pageMode)surahPos[p.surah]=curTopAyah();              // запомнить, где был в текущей суре
+    const dst=Math.max(1,Math.min(114,p.surah+dir));
+    jumpTo({surah:dst,ayah:surahPos[dst]||1});                  // вернуться туда, где был в целевой суре
+  }
   else if(u==="page")navJumpPage(p.page+dir);
   else if(u==="juz")navJumpJuz(Math.max(1,Math.min(30,p.juz+dir)));
   else navJumpHizb(Math.max(1,Math.min(60,p.hizb+dir)));
