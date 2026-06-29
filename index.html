@@ -622,6 +622,19 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
 .home-btn{padding:8px 14px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;font-size:14px}
 .home-btn.prim{background:var(--accent);color:#fff;border-color:var(--accent)}
 .home-btn.ghost{color:var(--text-muted)}
+/* — Бэкап личных данных (экспорт/импорт) — */
+.data-io{padding:8px 10px 4px;margin-top:2px}
+.data-io-lbl{font-size:10px;color:var(--text-muted);margin-bottom:6px}
+.data-io-btns{display:flex;gap:8px}
+.data-io-btn{flex:1;padding:7px 8px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text);cursor:pointer;font-size:12px}
+.data-io-btn:hover{border-color:var(--accent)}
+.io-ovl{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:1000;padding:18px}
+.io-box{background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:14px;max-width:380px;width:100%;padding:18px 18px 16px;box-shadow:0 8px 30px rgba(0,0,0,.3)}
+.io-h{font-size:17px;font-weight:600;margin-bottom:10px}
+.io-sum{font-size:13px;line-height:1.6;color:var(--text);background:var(--note-bg,rgba(127,127,127,.08));border-radius:8px;padding:9px 11px;margin-bottom:12px}
+.io-p{font-size:13px;line-height:1.5;color:var(--text-muted);margin-bottom:12px}
+.io-acts{display:flex;gap:8px;justify-content:flex-end}
+.io-acts.io-wrap{flex-wrap:wrap;margin-bottom:8px}
 </style>
 </head>
 <body data-theme="green">
@@ -987,6 +1000,116 @@ function toggleAT(s,a,path){const at=getAyahTags();const k=s+":"+a;if(!at[k])at[
 
 function tagPath(anc,name){return anc.length?anc.join("/")+"/"+name:name;}
 function countTag(path){const at=getAyahTags();let c=0;for(const k in at)for(const p of at[k])if(p===path||p.startsWith(path+"/"))c++;return c;}
+
+// ============================================================
+// ЭКСПОРТ / ИМПОРТ ЛИЧНЫХ ДАННЫХ (заметки · закладки · теги · дерево тегов)
+// Один .json для бэкапа/переноса между устройствами. Импорт — слияние.
+// ============================================================
+const AYKEY=/^\d+:\d+$/;                              // ключ «сура:аят»
+let _pendingImport=null;                             // данные, ждущие выбора стратегии конфликта
+function downloadJSON(obj,fname){
+  const blob=new Blob([JSON.stringify(obj,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");a.href=url;a.download=fname;
+  document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},150);
+}
+function exportPersonalData(){
+  const data={app:"tafsir-library",kind:"personal-data",version:1,
+    exportedAt:new Date().toISOString(),
+    notes:getNotes(),bookmarks:getBookmarks(),ayahTags:getAyahTags(),tagTree:getTagTree()};
+  downloadJSON(data,`тафсир-данные-${new Date().toISOString().slice(0,10)}.json`);
+}
+function importPersonalDataFile(input){
+  const f=input.files&&input.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    input.value="";                                  // позволить повторный выбор того же файла
+    let data=null;try{data=JSON.parse(r.result);}catch(e){data=null;}
+    showImportSummary(data);
+  };
+  r.readAsText(f);
+}
+// Глубокое слияние дерева тегов по именам (новые ветки добавляются, существующие — рекурсивно).
+function mergeTagTree(a,b){
+  const out=(a||[]).map(n=>({name:n.name,children:mergeTagTree(n.children||[],[])}));
+  for(const bn of (b||[])){
+    const ex=out.find(n=>n.name===bn.name);
+    if(ex)ex.children=mergeTagTree(ex.children,bn.children||[]);
+    else out.push({name:bn.name,children:mergeTagTree(bn.children||[],[])});
+  }
+  return out;
+}
+// strategy для конфликтов заметок (один и тот же аят, другой текст): 'skip'|'append'|'replace'.
+function applyImport(data,strategy){
+  let added=0,changed=0;
+  // — заметки —
+  const cur=getNotes(),imp=data.notes||{};
+  for(const k in imp){
+    if(!AYKEY.test(k)||typeof imp[k]!=="string")continue;
+    if(!(k in cur)){cur[k]=imp[k];added++;}
+    else if(cur[k]!==imp[k]){
+      if(strategy==="replace"){cur[k]=imp[k];changed++;}
+      else if(strategy==="append"){cur[k]=cur[k]+"\n\n---\n\n"+imp[k];changed++;}
+      // 'skip' — оставляем свою
+    }
+  }
+  ss("notes",cur);
+  // — закладки: добавляем недостающие, существующие не трогаем —
+  const bm=getBookmarks(),ibm=data.bookmarks||{};let bmAdd=0;
+  for(const k in ibm){if(AYKEY.test(k)&&!(k in bm)&&typeof ibm[k]==="string"){bm[k]=ibm[k];bmAdd++;}}
+  setBookmarks(bm);
+  // — теги аятов: объединяем списки путей —
+  const at=getAyahTags(),iat=data.ayahTags||{};let tagAdd=0;
+  for(const k in iat){
+    if(!AYKEY.test(k)||!Array.isArray(iat[k]))continue;
+    const set=new Set(at[k]||[]);const before=set.size;
+    iat[k].forEach(p=>{if(typeof p==="string")set.add(p);});
+    if(set.size){at[k]=[...set];tagAdd+=set.size-before;}
+  }
+  setAyahTags(at);
+  // — дерево тегов —
+  if(Array.isArray(data.tagTree))setTagTree(mergeTagTree(getTagTree(),data.tagTree));
+  return {added,changed,bmAdd,tagAdd};
+}
+function showImportSummary(data){
+  const ok=data&&typeof data==="object"&&(data.notes||data.bookmarks||data.ayahTags||data.tagTree);
+  if(!ok){openIOModal(`<div class="io-h">Импорт</div><div class="io-p">Не удалось распознать файл резервной копии. Нужен .json, созданный кнопкой «Экспорт».</div><div class="io-acts"><button class="home-btn prim" onclick="closeIOModal()">Закрыть</button></div>`);return;}
+  _pendingImport=data;
+  const cur=getNotes(),imp=data.notes||{};
+  let nNew=0,nConf=0;
+  for(const k in imp){if(!AYKEY.test(k))continue;if(!(k in cur))nNew++;else if(cur[k]!==imp[k])nConf++;}
+  const bmN=Object.keys(data.bookmarks||{}).length,tagN=Object.keys(data.ayahTags||{}).length;
+  let body=`<div class="io-h">Импорт данных</div>
+    <div class="io-sum">Новых заметок: <b>${nNew}</b>${nConf?` · конфликтов: <b>${nConf}</b>`:""}<br>В файле закладок: ${bmN} · аятов с тегами: ${tagN}</div>`;
+  if(nConf){
+    body+=`<div class="io-p">${nConf} заметок уже есть с другим текстом. Что с ними сделать?</div>
+      <div class="io-acts io-wrap">
+        <button class="home-btn" onclick="doImport('skip')">Оставить мои</button>
+        <button class="home-btn" onclick="doImport('append')">Дописать обе</button>
+        <button class="home-btn prim" onclick="doImport('replace')">Заменить импортом</button>
+      </div>
+      <div class="io-acts"><button class="home-btn ghost" onclick="closeIOModal()">Отмена</button></div>`;
+  }else{
+    body+=`<div class="io-acts"><button class="home-btn prim" onclick="doImport('skip')">Импортировать</button><button class="home-btn ghost" onclick="closeIOModal()">Отмена</button></div>`;
+  }
+  openIOModal(body);
+}
+function doImport(strategy){
+  if(!_pendingImport){closeIOModal();return;}
+  const r=applyImport(_pendingImport,strategy);_pendingImport=null;
+  openIOModal(`<div class="io-h">Готово</div>
+    <div class="io-sum">Заметок добавлено: <b>${r.added}</b>${r.changed?` · обновлено: <b>${r.changed}</b>`:""}${r.bmAdd?`<br>Закладок добавлено: ${r.bmAdd}`:""}${r.tagAdd?` · тегов добавлено: ${r.tagAdd}`:""}</div>
+    <div class="io-acts"><button class="home-btn prim" onclick="closeIOModal();render();">ОК</button></div>`);
+}
+function openIOModal(html){
+  closeIOModal();
+  const ov=document.createElement("div");ov.className="io-ovl";ov.id="ioOvl";
+  ov.innerHTML=`<div class="io-box">${html}</div>`;
+  ov.addEventListener("click",e=>{if(e.target===ov)closeIOModal();});
+  document.body.appendChild(ov);
+}
+function closeIOModal(){const o=document.getElementById("ioOvl");if(o)o.remove();}
 // Аяты, у которых выбранный тег есть в цепочке: точное совпадение ИЛИ предок (префикс пути).
 // Цепочка уже хранится в самом пути ("Акыда/Таухид" содержит "Акыда"), ничего не достраиваем.
 // Возвращает [{key,origins}] где origins — листовые имена фактических тегов аята, по которым он
@@ -2685,6 +2808,15 @@ function renderRP(){
     <div class="t-check">${notesOn?'✓':''}</div>
     <div class="t-info"><div class="t-name">📝 Мои заметки</div><div class="t-ar" style="font-family:inherit;direction:ltr;font-size:10px">Личные комментарии</div></div>
   </div>`;
+  // Бэкап личных данных (заметки · закладки · теги) — экспорт/импорт одним .json
+  html+=`<div class="data-io">
+    <div class="data-io-lbl">Резервная копия: заметки · закладки · теги</div>
+    <div class="data-io-btns">
+      <button class="data-io-btn" onclick="exportPersonalData()" title="Скачать .json со всеми личными данными">⬆ Экспорт</button>
+      <button class="data-io-btn" onclick="document.getElementById('importDataFile').click()" title="Загрузить .json и объединить с текущими">⬇ Импорт</button>
+    </div>
+    <input type="file" id="importDataFile" accept="application/json,.json" style="display:none" onchange="importPersonalDataFile(this)">
+  </div>`;
 
   // 3. Catalog — not-yet-enabled items, filtered by facets + search
   html+=`<div class="rp-sec-head" style="border-top:1px solid var(--border);margin-top:4px;padding-top:8px">Каталог</div>`;
@@ -2977,6 +3109,7 @@ function goSearchResult(surah,ayah){
 document.addEventListener("keydown",function(e){
   const neOv=document.getElementById("neOvl");
   if(e.key==="Escape"&&neOv&&neOv.style.display!=="none"){closeNoteEditor();return;}
+  if(e.key==="Escape"&&document.getElementById("ioOvl")){closeIOModal();return;}
   if(e.key==="Escape"&&document.getElementById("covPopup")){closeCovPopup();return;}
   if(e.key==="Escape"&&ST.srcMode&&ST.srcSel){srcBackToPicker();return;}
   if(e.key==="Escape"&&aboutOpen())closeAboutSmart();
