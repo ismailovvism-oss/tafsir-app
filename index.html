@@ -3180,17 +3180,25 @@ window.addEventListener("popstate",()=>{
 // ============================================================
 function toggleSidebar(){ST.sidebarOpen=!ST.sidebarOpen;document.getElementById("sidebar").classList.toggle("collapsed",!ST.sidebarOpen);updateBackdrop();if(isM()){if(ST.sidebarOpen)pushOverlay();else consumeOverlay();}}
 function toggleRPanel(){ST.rpanelOpen=!ST.rpanelOpen;document.getElementById("rpanel").classList.toggle("collapsed",!ST.rpanelOpen);if(ST.rpanelOpen){renderRP();pushOverlay();}else consumeOverlay();updateBackdrop();}
+// iOS/iPadOS (всегда WebKit, даже под видом «Chrome»): element-fullscreen хрупкий —
+// вертикальный свайп с резиновым overscroll в момент отпускания пальца заставляет WebKit
+// сам выйти из fullscreen, что через fullscreenchange выкидывало из режима чтения. iPadOS
+// маскируется под Mac, поэтому проверяем ещё и тач-точки.
+const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
 // Immersive reading: hide ALL app chrome (header, surah nav, picker, search, footer),
 // leave only the reading field. Class-based so it works everywhere (incl. iOS); also
-// requests browser fullscreen as a bonus where supported. Exit via Back / Esc / ✕.
+// requests browser fullscreen as a bonus where supported (но НЕ на iOS — см. выше).
+// Exit via Back / Esc / ✕.
 function toggleFullscreen(){if(ST.immersive)exitImmersive();else enterImmersive();}
 function enterImmersive(){
   if(ST.immersive)return;
   ST.immersive=true;
   document.body.classList.add("immersive");
   pushOverlay();                                   // so the Back button leaves immersive
-  const el=document.documentElement,req=el.requestFullscreen||el.webkitRequestFullscreen;
-  if(req)try{req.call(el);}catch(e){}              // best-effort true fullscreen (desktop)
+  if(!isIOS){
+    const el=document.documentElement,req=el.requestFullscreen||el.webkitRequestFullscreen;
+    if(req)try{req.call(el);}catch(e){}            // best-effort true fullscreen (desktop)
+  }
   syncFsBtn();refitIfPage();
 }
 function exitImmersive(viaBack){
