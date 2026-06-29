@@ -30,7 +30,7 @@
 }
 [data-theme="dark"]{--note-bg:#2A2818;--note-border:#4A4520;--note-color:#C8A830;--tag-bg:#2A2440;--tag-color:#9E8DE0}
 
-body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--bg);color:var(--text);height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;-webkit-user-select:none;user-select:none}
+body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;background:var(--bg);color:var(--text);height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;-webkit-user-select:none;user-select:none}
 .selectable{-webkit-user-select:text;user-select:text}
 ::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
 
@@ -590,6 +590,38 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
 .sp-status{padding:12px;text-align:center;color:var(--text-muted);font-size:12px}
 .sp-count{font-size:11px;color:var(--text-muted);padding:4px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
 @media print{body{display:none!important}}
+/* — Главная (5-й режим) — */
+.home{flex:1;overflow:auto;-webkit-overflow-scrolling:touch}
+.home-inner{max-width:680px;margin:0 auto;padding:18px 16px 40px}
+.home-cont{background:var(--accent);color:#fff;border-radius:14px;padding:16px 18px;cursor:pointer;margin-bottom:22px;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+.home-cont:active{opacity:.9}
+.home-cont .hc-lbl{font-size:12px;opacity:.85;margin-bottom:6px;letter-spacing:.02em}
+.home-cont .hc-main{font-size:21px;font-weight:600}
+.home-cont .hc-main .ar{font-size:18px;opacity:.9;margin-right:4px}
+.home-cont .hc-sub{font-size:13px;opacity:.85;margin-top:4px}
+.home-sec{margin-bottom:24px}
+.home-sec-h{font-size:13px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.home-edit-btn{margin-left:auto;background:none;border:none;cursor:pointer;font-size:14px;padding:2px 6px;border-radius:6px;color:var(--text-muted)}
+.home-edit-btn:hover{background:var(--border)}
+.home-recent{display:flex;flex-direction:column;gap:2px}
+.home-rrow{display:flex;justify-content:space-between;align-items:center;padding:11px 12px;border-radius:10px;cursor:pointer;background:var(--card,transparent)}
+.home-rrow:hover{background:var(--border)}
+.home-rrow .hr-name{font-size:16px}
+.home-rrow .hr-name .ar{opacity:.7;margin-right:4px;font-size:15px}
+.home-rrow .hr-sub{font-size:12px;color:var(--text-muted);white-space:nowrap}
+.home-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.home-tile{border:1px solid var(--border);border-radius:12px;padding:13px 14px;cursor:pointer;display:flex;flex-direction:column;gap:3px;background:var(--card,transparent);transition:border-color .12s}
+.home-tile:hover{border-color:var(--accent)}
+.home-tile:active{opacity:.85}
+.home-tile .ht-main{font-size:15px;font-weight:500;line-height:1.25}
+.home-tile .ht-ar{font-size:14px;opacity:.6}
+.home-tile.friday{border:1.5px solid var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.home-tile.friday .ht-tag{font-size:12px;color:var(--accent);font-weight:600}
+.home-ta{width:100%;box-sizing:border-box;min-height:120px;font-family:inherit;font-size:14px;line-height:1.5;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);resize:vertical}
+.home-edit-acts{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.home-btn{padding:8px 14px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;font-size:14px}
+.home-btn.prim{background:var(--accent);color:#fff;border-color:var(--accent)}
+.home-btn.ghost{color:var(--text-muted)}
 </style>
 </head>
 <body data-theme="green">
@@ -846,6 +878,8 @@ let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,imme
   collapsedKinds:{translation:true}, // свёрнутые группы под аятом (переводы — по умолчанию)
   gapMode:"collapse",// непокрытые аяты в режиме источника: "show" | "collapse"(деф) | "hide"
   expandedGaps:{},   // развёрнутые свёрнутые полоски разрывов: {"s:from-to":true}
+  homeMode:false,    // 5-й режим «Главная»: экран по умолчанию при открытии (недавнее + быстрые ссылки)
+  homeEdit:false,    // на Главной открыт редактор быстрых ссылок (не сохраняется)
 };
 let CONFIG={groups:[],tafsirs:[]};
 let COV={total:6236,names:{},sources:{}};   // индекс покрытия (data/coverage.json)
@@ -878,9 +912,11 @@ function curTopAyah(){
   return ST.scrollToAyah||1;
 }
 function saveLastPos(){
-  if(ST.selectedTag||ST.scanSource||ST.bookIntro||ST.srcMode)return;  // теги/скан/введение/источник — не позиция чтения
+  if(ST.homeMode||ST.selectedTag||ST.scanSource||ST.bookIntro||ST.srcMode)return;  // Главная/теги/скан/введение/источник — не позиция чтения
   const mode=ST.pageMode?"page":(ST.wbwMode?"words":"ayat");
-  ss("lastPos",{surah:ST.surah,ayah:curTopAyah(),page:ST.mushafPage||1,mode});
+  const ayah=curTopAyah();
+  ss("lastPos",{surah:ST.surah,ayah,page:ST.mushafPage||1,mode});
+  pushRecent(ST.surah,ayah,mode);                    // лента «недавнее» для Главной
 }
 let _lastPosT=null;
 function saveLastPosSoon(){clearTimeout(_lastPosT);_lastPosT=setTimeout(saveLastPos,500);}
@@ -891,6 +927,45 @@ function restoreLastPos(){
   if(lp.mode==="page"){ST.pageMode=true;ST.wbwMode=false;ST.mushafPage=lp.page||1;}
   else{ST.pageMode=false;ST.wbwMode=(lp.mode==="words");if(lp.ayah)ST.scrollToAyah=lp.ayah;}
   return true;
+}
+// --- Недавнее чтение (для Главной): список последних мест, MRU, по одному на суру ---
+const RECENT_MAX=5;
+function getRecent(){const r=gs("recent",[]);return Array.isArray(r)?r:[];}
+function pushRecent(surah,ayah,mode){
+  if(!SURAHS.find(s=>s.id===surah))return;
+  let r=getRecent().filter(e=>e&&e.surah!==surah);
+  r.unshift({surah,ayah:ayah||1,mode:mode||"ayat",ts:Date.now()});
+  if(r.length>RECENT_MAX)r=r.slice(0,RECENT_MAX);
+  ss("recent",r);
+}
+// --- Быстрые ссылки на Главной (пользователь правит текстом) ---
+// Грамматика: элементы через запятую/перенос строки. «N» = вся сура; «N/A» = аят;
+// «N/A-B» = диапазон (открывается на A); допускается «:» вместо «/». После ссылки
+// можно дописать свою подпись: «36 Сердце Корана». Без подписи — авто-имя суры.
+const DEFAULT_QUICK="1, 2/255, 2/285-286, 18, 36, 55, 56, 67, 112, 113, 114";
+function getQuickRaw(){const v=gs("quickLinks",null);return v==null?DEFAULT_QUICK:v;}
+function setQuickRaw(s){ss("quickLinks",s);}
+function parseQuickLinks(raw){
+  const out=[];
+  for(let item of String(raw||"").split(/[,\n]/)){
+    item=item.trim();if(!item)continue;
+    const m=item.match(/^(\d+)(?:[\/:](\d+)(?:-(\d+))?)?\s*(.*)$/);
+    if(!m)continue;
+    const surah=+m[1];const su=SURAHS.find(s=>s.id===surah);if(!su)continue;
+    let ayah=m[2]?+m[2]:null,to=m[3]?+m[3]:null;
+    if(ayah&&(ayah<1||ayah>su.n))ayah=null;        // аят вне диапазона суры — игнорируем аят, оставляем суру
+    if(to&&(to<=(ayah||0)||to>su.n))to=null;
+    const label=(m[4]||"").trim();
+    out.push({surah,ayah,to,label,su});
+  }
+  return out;
+}
+// Авто-подпись плитки быстрой ссылки (если пользователь не задал свою).
+function quickLabel(q){
+  if(q.label)return q.label;
+  if(!q.ayah)return q.su.ru;                         // вся сура
+  if(q.to)return `${q.su.ru} ${q.ayah}–${q.to}`;     // диапазон
+  return `${q.su.ru} ${q.ayah}`;                      // один аят
 }
 
 function getNotes(){return gs("notes",{});}
@@ -1012,8 +1087,11 @@ async function loadConfig(){
   await loadCoverage();
   ST.enabled=getEnabled();
   if(ST.enabled._arabic===undefined)ST.enabled._arabic=true;
-  if(!applyHash(true))restoreLastPos();              // deep-link из URL ИЛИ последняя позиция
-  history.replaceState({surah:ST.surah},"","#"+ST.surah);
+  if(!applyHash(true)){                              // нет deep-link/«#home» → Главная (ST.surah из lastPos для «Продолжить»)
+    restoreLastPos();ST.homeMode=true;
+  }
+  if(ST.homeMode)history.replaceState({home:true},"","#home");
+  else history.replaceState({surah:ST.surah},"","#"+ST.surah);
   await loadQpcMeta();                               // для группировки списка сур по джузам (и мусхафа)
   render();
 }
@@ -1608,7 +1686,11 @@ function renderCB(){
   // ⚙ в шапку (всегда видно), ✋ — тумблером в ⚙ Вид, тема — там же.
   const layoutBtn=`<button class="btn-s layout-btn ${ST.layout==='v'?'active':''}" onclick="toggleLayout()" title="Колонки / Список">${ST.layout==='h'?'▤':'▥'}</button>`;
   // explicit two-mode segmented switch (clearer than a lone "Мусхаф" toggle)
-  const modeSeg=`<span class="seg seg-sm"><button class="${!ST.pageMode&&!ST.wbwMode&&!ST.srcMode?'on':''}" onclick="setMode('ayat')" title="Аяты + перевод">Аяты</button>${ST.noTouch?'':`<button class="${!ST.pageMode&&ST.wbwMode&&!ST.srcMode?'on':''}" onclick="setMode('words')" title="Пословный перевод + грамматика">Слова</button>`}<button class="${ST.pageMode?'on':''}" onclick="setMode('page')" title="Постраничный мусхаф">Мусхаф</button><button class="${ST.srcMode?'on':''}" onclick="setMode('source')" title="Чтение по покрытию одного источника">Источник</button></span>`;
+  const modeSeg=`<span class="seg seg-sm"><button class="${ST.homeMode?'on':''}" onclick="setMode('home')" title="Главная">🏠</button><button class="${!ST.homeMode&&!ST.pageMode&&!ST.wbwMode&&!ST.srcMode?'on':''}" onclick="setMode('ayat')" title="Аяты + перевод">Аяты</button>${ST.noTouch?'':`<button class="${!ST.homeMode&&!ST.pageMode&&ST.wbwMode&&!ST.srcMode?'on':''}" onclick="setMode('words')" title="Пословный перевод + грамматика">Слова</button>`}<button class="${!ST.homeMode&&ST.pageMode?'on':''}" onclick="setMode('page')" title="Постраничный мусхаф">Мусхаф</button><button class="${!ST.homeMode&&ST.srcMode?'on':''}" onclick="setMode('source')" title="Чтение по покрытию одного источника">Источник</button></span>`;
+  if(ST.homeMode){
+    setCtx("🏠 Главная");
+    bar.innerHTML=`<div class="cb-right">${modeSeg}</div>`;return;
+  }
   if(ST.srcMode){
     // при чтении заголовок = сура (как обычно); имя источника живёт в его компактной шапке (без дубля)
     setCtx(ST.srcSel?`${su.ru} <span class="ar">${su.name}</span>`:"📖 Выбор источника");
@@ -1625,6 +1707,7 @@ function renderCB(){
 // -- CENTER BODY --
 function renderCenter(){
   const el=document.getElementById("centerBody");
+  if(ST.homeMode)return renderHome(el);
   if(ST.bookIntro)return renderBookIntro(el);
   if(ST.scanSource)return renderScanReader(el);
   if(ST.srcMode)return renderSourceMode(el);
@@ -1632,6 +1715,89 @@ function renderCenter(){
   if(ST.pageMode)return renderMushafPage(el);
   if(ST.wbwMode)return renderWbw(el);
   return renderReading(el);
+}
+
+// ============================================================
+// ГЛАВНАЯ (5-й режим): продолжить чтение + недавнее + быстрые ссылки
+// ============================================================
+function renderHome(el){
+  const isFriday=new Date().getDay()===5;          // 5 = пятница (по локальному времени устройства)
+  const lp=gs("lastPos",null);
+  const lpOk=lp&&lp.surah&&SURAHS.find(s=>s.id===lp.surah);
+  const recent=getRecent().filter(e=>e&&!(lpOk&&e.surah===lp.surah));
+  let html=`<div class="home"><div class="home-inner">`;
+
+  // — Продолжить чтение (последняя позиция) —
+  if(lpOk){
+    const su=SURAHS.find(s=>s.id===lp.surah);
+    const sub=lp.mode==="page"?`мусхаф · стр. ${lp.page||1}`:(lp.mode==="words"?`пословно · аят ${lp.ayah||1}`:`аят ${lp.ayah||1}`);
+    html+=`<div class="home-cont" onclick="homeResume()" title="Вернуться к чтению">
+      <div class="hc-lbl">▶ Продолжить чтение</div>
+      <div class="hc-main">${esc(su.ru)} <span class="ar">${esc(su.name)}</span></div>
+      <div class="hc-sub">${sub}</div></div>`;
+  }
+
+  // — Недавнее —
+  if(recent.length){
+    html+=`<div class="home-sec"><div class="home-sec-h">Недавнее</div><div class="home-recent">`;
+    for(const e of recent){
+      const su=SURAHS.find(s=>s.id===e.surah);if(!su)continue;
+      const act=e.mode==="page"?`goSurah(${e.surah})`:`goAyah(${e.surah},${e.ayah||1})`;
+      const sub=e.mode==="page"?`стр.`:`аят ${e.ayah||1}`;
+      html+=`<div class="home-rrow" onclick="${act}">
+        <span class="hr-name">${esc(su.ru)} <span class="ar">${esc(su.name)}</span></span>
+        <span class="hr-sub">${sub} ›</span></div>`;
+    }
+    html+=`</div></div>`;
+  }
+
+  // — Быстрые ссылки —
+  html+=`<div class="home-sec"><div class="home-sec-h">Быстрые ссылки
+    <button class="home-edit-btn" onclick="homeEditToggle()" title="Настроить список">${ST.homeEdit?'✕':'✏️'}</button></div>`;
+  if(ST.homeEdit){
+    const hint="Например: 2/285-286, 36, 2/255\nПо строке или через запятую.\nЧисло — вся сура; N/A — аят; N/A-B — диапазон.\nМожно дописать свою подпись: 36 Сердце Корана";
+    html+=`<div class="home-edit">
+      <textarea id="homeLinksTA" class="home-ta" placeholder="${escAttr(hint)}">${esc(getQuickRaw())}</textarea>
+      <div class="home-edit-acts">
+        <button class="home-btn prim" onclick="homeSaveLinks()">Сохранить</button>
+        <button class="home-btn" onclick="homeEditToggle()">Отмена</button>
+        <button class="home-btn ghost" onclick="homeResetLinks()" title="Вернуть стандартный список">Сбросить</button>
+      </div></div>`;
+  }else{
+    html+=`<div class="home-tiles">`;
+    if(isFriday){                                    // пятница: Аль-Кахф первым, выделенной плиткой
+      const k=SURAHS.find(s=>s.id===18);
+      html+=`<div class="home-tile friday" onclick="goSurah(18)" title="Чтение суры в пятницу">
+        <span class="ht-main">${esc(k.ru)} <span class="ar">${esc(k.name)}</span></span>
+        <span class="ht-tag">📿 пятница</span></div>`;
+    }
+    for(const q of parseQuickLinks(getQuickRaw())){
+      if(isFriday&&q.surah===18&&!q.ayah)continue;   // не дублируем целую суру Кахф в пятницу
+      const act=q.ayah?`goAyah(${q.surah},${q.ayah})`:`goSurah(${q.surah})`;
+      html+=`<div class="home-tile" onclick="${act}">
+        <span class="ht-main">${esc(quickLabel(q))}</span>
+        ${q.ayah&&!q.label?`<span class="ht-ar ar">${esc(q.su.name)}</span>`:""}</div>`;
+    }
+    html+=`</div>`;
+  }
+  html+=`</div></div></div>`;
+  el.innerHTML=html;
+}
+function homeResume(){                                // «Продолжить чтение» — восстановить последнюю позицию
+  if(!restoreLastPos())ST.surah=ST.surah||1;
+  ST.homeMode=false;
+  if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
+  pushSurahHash(ST.surah);render();
+}
+function homeEditToggle(){ST.homeEdit=!ST.homeEdit;renderCenter();}
+function homeSaveLinks(){
+  const ta=document.getElementById("homeLinksTA");
+  if(ta)setQuickRaw(ta.value);
+  ST.homeEdit=false;renderCenter();
+}
+function homeResetLinks(){
+  const ta=document.getElementById("homeLinksTA");
+  if(ta)ta.value=DEFAULT_QUICK;                       // показать стандарт, но не сохранять до «Сохранить»
 }
 
 // Вступление к суре: текст под ключом "0" в чанке суры (фадаиль, мекканская/мединская,
@@ -2842,14 +3008,18 @@ function closeAllPanelsUI(){
 }
 function panelBackdrop(){const ov=history.state&&history.state.ov;closeAllPanelsUI();if(ov)consumeOverlay();}
 function pushSurahHash(id){const h="#"+id;if(location.hash!==h)history.pushState({surah:id},"",h);}
+function pushHomeHash(){const h="#home";if(location.hash!==h)history.pushState({home:true},"",h);}
 function applyHash(initial){
   const raw=decodeURIComponent((location.hash||"").replace(/^#/,"")).trim();
+  if(raw==="home"){                                  // явный «#home» (например, «назад» на Главную)
+    ST.homeMode=true;ST.selectedTag=null;if(!initial)render();return true;
+  }
   const m=raw.match(/^(\d+)(?::(\d+))?$/);
   if(!m)return false;
   const sid=+m[1];
   if(!SURAHS.find(s=>s.id===sid))return false;
   pendingAyah=m[2]?+m[2]:null;
-  if(ST.surah!==sid||ST.selectedTag){ST.surah=sid;ST.selectedTag=null;if(!initial)render();}
+  if(ST.surah!==sid||ST.selectedTag||ST.homeMode){ST.surah=sid;ST.selectedTag=null;ST.homeMode=false;if(!initial)render();}
   if(pendingAyah)scrollToAyah(pendingAyah);
   return true;
 }
@@ -2913,7 +3083,7 @@ function onFsChange(){
 function closeRPanel(){if(ST.rpanelOpen)toggleRPanel();}
 function onSearch(q){ST.search=q;renderSB();}
 function setSbTab(t){ST.sbTab=t;document.getElementById("sbTabSurahs").classList.toggle("active",t==="surahs");document.getElementById("sbTabTags").classList.toggle("active",t==="tags");document.getElementById("sbTabBookmarks").classList.toggle("active",t==="bookmarks");renderSB();}
-function goSurah(id){ST.surah=id;ST.selectedTag=null;ST.bookIntro=false;{const st=qpcMeta&&qpcMeta.surahStart&&qpcMeta.surahStart[id];if(st)ST.mushafPage=st.page;}if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}pushSurahHash(id);render();}
+function goSurah(id){ST.surah=id;ST.selectedTag=null;ST.bookIntro=false;ST.homeMode=false;{const st=qpcMeta&&qpcMeta.surahStart&&qpcMeta.surahStart[id];if(st)ST.mushafPage=st.page;}if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}pushSurahHash(id);render();}
 function toggleLayout(){ST.layout=ST.layout==="h"?"v":"h";render();}
 
 // --- Reading display settings (⚙ Вид): sizes AR/RU, line spacing AR/RU, margins
@@ -3037,7 +3207,7 @@ function pageLocation(pg){
   return `${su?esc(su.ru):"Мусхаф"}${juz?` · Джуз ${juz}`:""} · стр. ${pg}/${total}`;
 }
 function goAyah(surah,ayah){
-  ST.surah=surah;ST.selectedTag=null;ST.scrollToAyah=ayah||1;
+  ST.surah=surah;ST.selectedTag=null;ST.homeMode=false;ST.scrollToAyah=ayah||1;
   if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   pushSurahHash(surah);render();
 }
@@ -3064,6 +3234,11 @@ function setReadMode(toPage){if(!!ST.pageMode!==!!toPage)togglePageMode();}
 // Three-way reading mode: 'ayat' | 'words' (пословный) | 'page' (мусхаф).
 function setMode(mode){
   ST.bookIntro=false;
+  if(mode==="home"){                           // 5-й режим «Главная»
+    ST.homeMode=true;ST.srcMode=false;ST.wbwMode=false;ss("wbwMode",false);ST.pageMode=false;ST.homeEdit=false;
+    pushHomeHash();renderCB();renderBottomNav();renderSB();renderCenter();return;
+  }
+  ST.homeMode=false;
   if(mode==="source"){                         // 4-й режим «Источник» (чтение по покрытию)
     ST.srcMode=true;ST.wbwMode=false;ss("wbwMode",false);ST.pageMode=false;
     renderCB();renderBottomNav();renderSB();renderCenter();return;
@@ -3105,7 +3280,7 @@ function renderBottomNav(){
   const el=document.getElementById("bottomNav");if(!el)return;
   ntStopScroll();                                    // на всякий случай гасим непрерывную прокрутку
   el.className="bottom-nav";el.style.height="";       // сброс к обычному виду
-  if(ST.selectedTag){el.style.display="none";return;}
+  if(ST.homeMode||ST.selectedTag){el.style.display="none";return;}
   el.style.display="flex";
   if(ST.noTouch){                                     // кнопочная панель вне области текста
     el.classList.add("notouch-nav");el.style.height=(ST.ntH||60)+"px";

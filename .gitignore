@@ -32,3 +32,7 @@ data/tafsirs/mawsua_masur.json
 data/tafsirs/mawsua_masur.js
 data/tafsirs/mawsua_masur/
 data/index/mawsua_masur.json
+
+# Локальное зеркало Cloudflare R2 (бакет tafsir-data): сканы и пр. бинарь.
+# Полная копия того, что лежит на R2; в репозиторий НЕ коммитим.
+/r2-data/
