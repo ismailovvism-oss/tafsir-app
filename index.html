@@ -930,6 +930,10 @@ function saveLastPos(){
   const ayah=curTopAyah();
   ss("lastPos",{surah:ST.surah,ayah,page:ST.mushafPage||1,mode});
   pushRecent(ST.surah,ayah,mode);                    // лента «недавнее» для Главной
+  // Запомнить позицию чтения в ТЕКУЩЕЙ записи истории, чтобы «назад» (стрелка/свайп)
+  // вернул на тот же аят. URL остаётся чистым «#сура» — аят кладём в state. Не трогаем
+  // оверлейные записи (ov) и режим мусхафа (там позиция — страница, не аят).
+  if(!ST.pageMode){const hs=history.state;if(hs&&hs.surah===ST.surah&&!hs.ov)history.replaceState({surah:ST.surah,ayah},"",location.hash);}
 }
 let _lastPosT=null;
 function saveLastPosSoon(){clearTimeout(_lastPosT);_lastPosT=setTimeout(saveLastPos,500);}
@@ -3151,9 +3155,16 @@ function applyHash(initial){
   if(!m)return false;
   const sid=+m[1];
   if(!SURAHS.find(s=>s.id===sid))return false;
-  pendingAyah=m[2]?+m[2]:null;
-  if(ST.surah!==sid||ST.selectedTag||ST.homeMode){ST.surah=sid;ST.selectedTag=null;ST.homeMode=false;if(!initial)render();}
-  if(pendingAyah)scrollToAyah(pendingAyah);
+  const st=history.state;
+  const hashAyah=m[2]?+m[2]:null;                                 // явный deep-link «#сура:аят»
+  const stateAyah=(st&&st.surah===sid&&st.ayah)?st.ayah:null;     // позиция, запомненная при скролле → «назад»
+  pendingAyah=hashAyah;
+  const changing=(ST.surah!==sid||ST.selectedTag||ST.homeMode);
+  if(changing){ST.surah=sid;ST.selectedTag=null;ST.homeMode=false;}
+  if(!hashAyah&&stateAyah&&(changing||initial))ST.scrollToAyah=stateAyah;  // встанем на аят при рендере (без анимации)
+  if(changing&&!initial)render();
+  if(hashAyah)scrollToAyah(hashAyah);                             // deep-link — плавно + подсветка
+  else if(stateAyah&&!changing&&!initial)scrollToAyah(stateAyah); // та же сура уже отрисована — доскроллим
   return true;
 }
 function scrollToAyah(ayah){
