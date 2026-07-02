@@ -32,6 +32,50 @@ data/tafsirs/mawsua_masur.json
 data/tafsirs/mawsua_masur.js
 data/tafsirs/mawsua_masur/
 data/index/mawsua_masur.json
+# Производные по-аятные тафсиры отдельных саляфов из свода mawsua_masur
+# (build_athar.py). Тоже тяжёлые → на R2 (dataBase), в репо НЕ коммитим.
+data/tafsirs/ibn_abbas.json
+data/tafsirs/ibn_abbas.js
+data/tafsirs/ibn_abbas/
+data/index/ibn_abbas.json
+data/tafsirs/ibn_abbas_ar.json
+data/tafsirs/ibn_abbas_ar.js
+data/tafsirs/ibn_abbas_ar/
+data/index/ibn_abbas_ar.json
+data/tafsirs/qurtubi_ru.json
+data/tafsirs/qurtubi_ru.js
+data/tafsirs/qurtubi_ru/
+data/index/qurtubi_ru.json
+data/tafsirs/muqatil.json
+data/tafsirs/muqatil/
+data/index/muqatil.json
+data/tafsirs/qatada.json
+data/tafsirs/qatada/
+data/index/qatada.json
+data/tafsirs/mujahid.json
+data/tafsirs/mujahid/
+data/index/mujahid.json
+data/tafsirs/hasan.json
+data/tafsirs/hasan/
+data/index/hasan.json
+data/tafsirs/suddi.json
+data/tafsirs/suddi/
+data/index/suddi.json
+data/tafsirs/dahhak.json
+data/tafsirs/dahhak/
+data/index/dahhak.json
+data/tafsirs/saeed.json
+data/tafsirs/saeed/
+data/index/saeed.json
+data/tafsirs/ikrima.json
+data/tafsirs/ikrima/
+data/index/ikrima.json
+data/tafsirs/ibn_masud.json
+data/tafsirs/ibn_masud/
+data/index/ibn_masud.json
+data/tafsirs/ata.json
+data/tafsirs/ata/
+data/index/ata.json
 
 # Локальное зеркало Cloudflare R2 (бакет tafsir-data): сканы и пр. бинарь.
 # Полная копия того, что лежит на R2; в репозиторий НЕ коммитим.
