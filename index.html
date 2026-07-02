@@ -403,6 +403,10 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .srcp-head{font-size:16px;font-weight:700;color:var(--text)}
 .srcp-sub{font-size:12px;color:var(--text-muted);margin:3px 0 14px;max-width:560px}
 .srcp-gname{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin:14px 0 6px;border-bottom:1px solid var(--border-light);padding-bottom:4px}
+/* Свёрнутая секция — заметная кликабельная плашка (не теряется среди списка) */
+.srcp-gname.collapsed{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:11px 12px;margin:10px 0;color:var(--text-sec)}
+.srcp-gname.collapsed:hover{border-color:var(--accent);color:var(--accent)}
+.srcp-gname.collapsed .grp-chev{color:var(--accent);font-size:11px;text-transform:none;letter-spacing:0}
 .srcp-item{display:block;width:100%;text-align:left;background:var(--bg-card);border:1px solid var(--border-light);border-radius:8px;padding:8px 11px;margin-bottom:7px;cursor:pointer;font-family:inherit;transition:border-color .12s}
 .srcp-item:hover{border-color:var(--accent)}
 .srcp-row1{display:flex;justify-content:space-between;align-items:center;gap:8px}
@@ -2013,7 +2017,11 @@ function setKindCollapsed(k){
   ss("collapsedKinds",ST.collapsedKinds);
 }
 function covToggleKind(aid,k){setKindCollapsed(k);refreshCovPopup(aid);}
-function pickToggleKind(k){setKindCollapsed(k);renderCenter();}
+// Свёрнутость секций в окне выбора источника (3 группы). По умолчанию свёрнуты
+// переводы и арабские тафсиры; русские тафсиры раскрыты.
+const PICK_COL_DEFAULT={translation:true,ar_tafsir:true};
+function pickCollapsed(k){const v=ST.collapsedKinds[k];return v===undefined?!!PICK_COL_DEFAULT[k]:!!v;}
+function pickToggleKind(k){ST.collapsedKinds=Object.assign({},ST.collapsedKinds,{[k]:!pickCollapsed(k)});ss("collapsedKinds",ST.collapsedKinds);renderCenter();}
 // HTML одной колонки источника у аята. Распознаёт блочную отсылку «см. аят Z».
 // adhoc=true → плашка «разовый показ» с кнопкой убрать. blockOf=[from,to] → текст блока.
 function sourceEntryHTML(t,text,aid,adhoc,blockOf){
@@ -2251,12 +2259,17 @@ async function renderSourceMode(el){
 
 // Экран ВЫБОРА источника = компактная карта покрытия (Переводы/Тафсиры), скроллится.
 function renderSourcePicker(el){
-  const byKind={translation:[],tafsir:[]};
-  for(const t of CONFIG.tafsirs){if(COV.sources[t.id]&&byKind[t.kind])byKind[t.kind].push(t);}
-  const section=(kind,title,icon,items)=>{
+  // 3 группы: русские тафсиры, русские переводы, арабские тафсиры.
+  const buckets={ru_tafsir:[],translation:[],ar_tafsir:[]};
+  for(const t of CONFIG.tafsirs){
+    if(!COV.sources[t.id])continue;
+    if(t.kind==="tafsir")buckets[t.lang==="ar"?"ar_tafsir":"ru_tafsir"].push(t);
+    else if(t.kind==="translation")buckets.translation.push(t);
+  }
+  const section=(key,title,icon,items)=>{
     if(!items.length)return"";
-    const col=kindCollapsed(kind);
-    let h=`<div class="srcp-gname clickable ${col?'collapsed':''}" onclick="pickToggleKind('${kind}')" title="Свернуть/развернуть">${icon} ${title} · ${items.length} <span class="grp-chev">${col?'▸ показать':'▾'}</span></div>`;
+    const col=pickCollapsed(key);
+    let h=`<div class="srcp-gname clickable ${col?'collapsed':''}" onclick="pickToggleKind('${key}')" title="Свернуть/развернуть">${icon} ${title} · ${items.length} <span class="grp-chev">${col?'▸ показать':'▾'}</span></div>`;
     if(col)return h;
     for(const t of items){
       const src=COV.sources[t.id];const pct=Math.round(src.n*100/COV.total);
@@ -2272,8 +2285,9 @@ function renderSourcePicker(el){
   el.innerHTML=`<div class="src-picker">
     <div class="srcp-head">📖 Чтение по источнику</div>
     <div class="srcp-sub">Выберите перевод или тафсир — читать будете по его покрытию, разрывы сворачиваются. Видно, у кого сколько и где дыры.</div>
-    ${section("tafsir","Тафсиры","📚",byKind.tafsir)}
-    ${section("translation","Переводы","🌐",byKind.translation)}
+    ${section("ru_tafsir","Русские тафсиры","🇷🇺",buckets.ru_tafsir)}
+    ${section("translation","Русские переводы","🌐",buckets.translation)}
+    ${section("ar_tafsir","Арабские тафсиры","📜",buckets.ar_tafsir)}
   </div>`;
 }
 
