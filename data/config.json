@@ -385,9 +385,20 @@
       "year": "516 х.",
       "translator": "Исмаил Исмаилов",
       "about": true,
-      "approved": true,
-      "fill": 0.0,
-      "counterpart": "baghawi_ar"
+      "counterpart": "baghawi_ar",
+      "segments": [
+        {
+          "suras": "58-114",
+          "translator": "Исмаил Исмаилов",
+          "approved": true
+        },
+        {
+          "suras": "51,57",
+          "translator": "Исмаил (Валиуллах) Хаертдинов",
+          "draft": true
+        }
+      ],
+      "fill": 0.1958
     },
     {
       "id": "baghawi_ar",
@@ -406,7 +417,7 @@
       ],
       "year": "516 х.",
       "about": true,
-      "fill": 1.0,
+      "fill": 0.0,
       "counterpart": "baghawi"
     },
     {

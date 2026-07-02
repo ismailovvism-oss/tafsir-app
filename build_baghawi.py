@@ -309,7 +309,9 @@ def build_all():
     ayah_tr = load_ayah_tr()
     canon = canon_counts()
     filled = 0
-    for s in range(58, 115):
+    suras = sorted(int(f[:-5]) for f in os.listdir(SRC)
+                   if f.endswith(".docx") and f[:-5].isdigit())
+    for s in suras:
         p = sura_path(s)
         if not os.path.isfile(p):
             continue

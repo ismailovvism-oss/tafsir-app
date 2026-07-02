@@ -3068,8 +3068,12 @@ function tafsirMeta(t){
   if(t.era==="classical")bits.push("классич.");else if(t.era==="modern")bits.push("совр.");
   (t.tags||[]).forEach(tag=>bits.push(TAG_RU[tag]||tagLabel(tag)));
   let pills=bits.map(b=>`<span class="t-pill">${esc(b)}</span>`).join("");
-  if(t.caution)pills=`<span class="t-pill warn" title="Не проверено — давайте только для ознакомления">⚠ не проверено</span>`+pills;
-  if(t.approved)pills=`<span class="t-pill ok" title="Полностью проверено и одобрено">✓ одобрено</span>`+pills;
+  const composite=Array.isArray(t.segments)&&t.segments.length>=2;
+  if(composite){pills=`<span class="t-pill" title="Разные переводчики по сурам — статус проверки указан по каждой части">составной</span>`+pills;}
+  else{
+    if(t.caution)pills=`<span class="t-pill warn" title="Не проверено — давайте только для ознакомления">⚠ не проверено</span>`+pills;
+    if(t.approved)pills=`<span class="t-pill ok" title="Полностью проверено и одобрено">✓ одобрено</span>`+pills;
+  }
   return pills?`<div class="t-meta">${pills}</div>`:"";
 }
 // Скан-источник (kind:image): отдельная постраничная читалка, по-сурно.
