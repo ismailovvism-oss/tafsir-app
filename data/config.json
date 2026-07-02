@@ -387,6 +387,29 @@
       "fill": 0.59
     },
     {
+      "id": "ibn_abbas_sel",
+      "file": "tafsirs/ibn_abbas_sel.json",
+      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
+      "name": "Тафсир Ибн Аббаса (избранные суры)",
+      "nameAr": "تفسير ابن عباس — سور مختارة",
+      "author": "Ибн Аббас и мекканская школа",
+      "authorAr": "عبد الله بن عباس ومدرسة مكة",
+      "group": "russian",
+      "kind": "tafsir",
+      "lang": "ru",
+      "era": "classical",
+      "tags": [
+        "hadith",
+        "athar",
+        "isnad"
+      ],
+      "year": "68 х.",
+      "translator": "сост. Кенан Абу Абдуррахман",
+      "about": true,
+      "caution": true,
+      "fill": 0.0165
+    },
+    {
       "id": "ibn_abbas_ar",
       "file": "tafsirs/ibn_abbas_ar.json",
       "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",

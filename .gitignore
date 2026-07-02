@@ -50,6 +50,10 @@ data/tafsirs/qurtubi_ar.json
 data/tafsirs/qurtubi_ar.js
 data/tafsirs/qurtubi_ar/
 data/index/qurtubi_ar.json
+data/tafsirs/ibn_abbas_sel.json
+data/tafsirs/ibn_abbas_sel.js
+data/tafsirs/ibn_abbas_sel/
+data/index/ibn_abbas_sel.json
 data/tafsirs/muqatil.json
 data/tafsirs/muqatil/
 data/index/muqatil.json
