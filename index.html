@@ -681,6 +681,13 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
 .prog-pg.review{background:#b06cf0}
 .prog-pg.mastered{background:#f06c9b}
 .prog-cont{background:var(--accent);color:#fff;border:none;border-radius:9px;padding:9px 12px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;margin-top:10px}
+.prog-goalset{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:13px;padding-top:12px;border-top:1px solid var(--border)}
+.prog-seg{display:inline-flex;border:1px solid var(--border);border-radius:7px;overflow:hidden}
+.prog-seg button{border:none;background:var(--bg);color:var(--text-sec);font-family:inherit;cursor:pointer;padding:5px 11px;font-size:12px}
+.prog-seg button.on{background:var(--accent);color:#fff}
+.prog-step{display:inline-flex;align-items:center;gap:9px}
+.prog-step button{width:27px;height:27px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text);font-size:16px;line-height:1;cursor:pointer}
+.prog-step b{min-width:24px;text-align:center;font-size:14px;color:var(--text)}
 .prog-debug{border-style:dashed}
 .prog-btns{display:flex;flex-wrap:wrap;gap:7px}
 .prog-btns button{font-family:inherit;font-size:12px;background:var(--bg);color:var(--text);border:1px solid var(--border);padding:7px 10px;border-radius:8px;cursor:pointer}
@@ -1163,14 +1170,16 @@ const Progress=(()=>{
     setInterval(tick,TICK_SEC*1000);
   }
   // ═══ Отладка (в проде скрыта за флагом ?pdebug; ридер зовёт те же recordActivity/updateResume) ═══
+  // Настройка дневной цели — часть ПОЛЬЗОВАТЕЛЬСКОГО контракта (не отладка).
+  function setGoal(type,value){state.settings.goalType=(type==="ayahs"?"ayahs":"minutes");state.settings.goalValue=Math.max(1,value|0);state.activityDays.forEach(recalcGoal);save();}
   const debug={
-    setGoal(t,v){state.settings.goalType=t;state.settings.goalValue=Math.max(1,v|0);state.activityDays.forEach(recalcGoal);save();},
+    setGoal,
     resetDay(){state.activityDays=state.activityDays.filter(d=>d.date!==today());save();},
     shiftDay(n){state._debugDayOffset=(state._debugDayOffset||0)+n;save();},
     restore(){state.manualRestore.active=true;save();},
     wipe(){state=def();save();}
   };
-  return {recordActivity,updateResume,getSummary,getResume,getCoverage,getPageStatus,getHifzStatus,exportState,importState,verseToPage,ensureInit,markAction,debug,TOTAL_PAGES};
+  return {recordActivity,updateResume,setGoal,getSummary,getResume,getCoverage,getPageStatus,getHifzStatus,exportState,importState,verseToPage,ensureInit,markAction,debug,TOTAL_PAGES};
 })();
 
 // ============================================================
@@ -1212,7 +1221,13 @@ function renderProgress(){
     <div class="prog-grow"><div class="prog-big">${curLabel}</div><div class="prog-muted" style="margin-top:6px">Прочитано сегодня</div>
     ${res?`<div class="prog-muted" style="margin-top:9px">Продолжить: <b style="color:var(--accent)">${esc(res.verseKey)}</b>${resPage?` · стр. ${resPage}`:""}</div>
       <button class="prog-cont" onclick="progGoResume()">Продолжить чтение →</button>`:""}
-    </div></div></div>`;
+    </div></div>
+    <div class="prog-goalset">
+      <span class="prog-muted">Цель в день:</span>
+      <div class="prog-seg"><button class="${tp.type==="minutes"?"on":""}" onclick="progSetGoalType('minutes')">минуты</button><button class="${tp.type==="ayahs"?"on":""}" onclick="progSetGoalType('ayahs')">аяты</button></div>
+      <div class="prog-step"><button onclick="progGoalDelta(-1)" title="Меньше">−</button><b>${tp.goal}</b><button onclick="progGoalDelta(1)" title="Больше">+</button></div>
+      <span class="prog-muted">${tp.type==="minutes"?"мин":"аят."}</span>
+    </div></div>`;
   // 2) Текущая серия
   const rc=s.recovery;
   const streak=`<div class="prog-card"><h3>Текущая серия</h3><div class="prog-row">
@@ -1262,6 +1277,9 @@ function renderProgress(){
 }
 // Переход к позиции resume из дашборда (закрывает экран статистики).
 function progGoResume(){const r=Progress.getResume();if(!r)return;const p=r.verseKey.split(":");closeProgress();goAyah(+p[0],+p[1]);}
+// Настройка дневной цели из дашборда (тип и значение; шаг для минут/аятов = 1).
+function progSetGoalType(t){const s=Progress.getSummary().settings;Progress.setGoal(t,s.goalValue);renderProgress();}
+function progGoalDelta(d){const s=Progress.getSummary().settings;Progress.setGoal(s.goalType,Math.max(1,s.goalValue+d));renderProgress();}
 // Отладочные генераторы тестовых событий (за флагом ?pdebug).
 let _progFakeAyah=1;
 function progDbgAyahs(){const vks=[];for(let i=0;i<5;i++)vks.push("2:"+(++_progFakeAyah));Progress.recordActivity(0,vks);renderProgress();}
