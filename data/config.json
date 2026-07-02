@@ -339,7 +339,7 @@
       "year": "774 х.",
       "translator": "Айрат Вахитов",
       "caution": true,
-      "fill": 1.0
+      "fill": 0.0
     },
     {
       "id": "qurtubi_ru",
@@ -364,6 +364,27 @@
       "about": true,
       "caution": true,
       "fill": 0.0832
+    },
+    {
+      "id": "baghawi",
+      "file": "tafsirs/baghawi.json",
+      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
+      "name": "Тафсир аль-Багави (рус.)",
+      "nameAr": "معالم التنزيل",
+      "author": "аль-Багави",
+      "authorAr": "أبو محمد الحسين بن مسعود البغوي",
+      "group": "russian",
+      "kind": "tafsir",
+      "lang": "ru",
+      "era": "classical",
+      "tags": [
+        "hadith",
+        "draft"
+      ],
+      "year": "516 х.",
+      "translator": "Исмаил Исмаилов",
+      "caution": true,
+      "fill": 0.1806
     },
     {
       "id": "ibn_abbas",
