@@ -152,11 +152,21 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .t-item.scan .t-check{color:var(--accent)}
 .t-badge{display:inline-block;font-size:10px;font-weight:600;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:0 5px;margin-left:6px;vertical-align:middle;opacity:.85}
 
-.tg-head{display:flex;align-items:center;gap:5px;padding:6px 8px 4px;font-size:10px;font-weight:600;color:var(--text-sec);letter-spacing:.3px;cursor:pointer;background:var(--bg);border:none;width:100%;text-align:left;font-family:inherit;position:sticky;top:0;z-index:1}
+/* Каталог: каждая группа — отдельная карточка с чётким заголовком; элементы — сетка плиток. */
+.tg{background:var(--bg-card);border:1px solid var(--border-light);border-radius:12px;margin:10px 0;overflow:hidden}
+.tg-head{display:flex;align-items:center;gap:6px;padding:9px 11px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-sec);cursor:pointer;background:var(--bg-alt);border:none;width:100%;text-align:left;font-family:inherit}
 .tg-head:hover{background:var(--border-light)}
-.tg-icon{font-size:12px}
+.tg-icon{font-size:13px}
 .tg-arrow{margin-left:auto;font-size:8px;color:var(--text-muted);transition:transform .2s}
 .tg.collapsed .tg-arrow{transform:rotate(-90deg)}.tg.collapsed .tg-items{display:none}
+.tg-items{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:1px;background:var(--border-light)}
+@media(max-width:760px){.tg-items{grid-template-columns:1fr 1fr}}  /* на узкой панели — всегда 2 в ряд */
+.tg-items .t-item{background:var(--bg-card);padding:7px 9px;align-items:flex-start;flex-wrap:wrap}
+.tg-items .t-item:hover{background:var(--bg-alt)}
+.tg-items .t-item.approved{background:rgba(40,160,95,.10)}
+.tg-items .t-check{display:none}
+.tg-items .t-info-btn{padding:2px 6px;font-size:11px}
+.tg-items .t-meta{gap:2px}
 
 .t-item{display:flex;align-items:center;gap:6px;width:100%;padding:5px 8px 5px 14px;border:none;background:transparent;cursor:pointer;text-align:left;font-family:inherit;transition:background .1s}
 .t-item:hover{background:rgba(128,128,128,.06)}
@@ -239,8 +249,13 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .ab-entry-label .lbl-ar{font-family:'Amiri',serif;color:var(--text-muted);font-weight:400}
 .cp-chip{margin-left:6px;font-size:9px;font-weight:600;color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent);border-radius:10px;padding:0 6px;line-height:15px;cursor:pointer;white-space:nowrap}
 .cp-chip:hover{background:var(--accent);color:#fff}
-.seg-cred{margin-left:6px;font-size:9px;font-weight:600;color:var(--text-muted);white-space:nowrap}
-.seg-cred.ok{color:#1B5E3B}.seg-cred.warn{color:#8B6914}
+.seg-cred{margin-left:6px;white-space:nowrap}
+.seg-cred.ok{color:#1e874e;font-size:11px;font-weight:800;letter-spacing:-1.5px}
+/* Одобренность — мягкая зелёная ЗАЛИВКА (фикс. зелёный, не тема; не путать с
+   полосами покрытия). Непроверенное — без заливки (дефолт). */
+.ab-entry.approved{background:rgba(40,160,95,.09);border-radius:6px;padding:4px 8px;margin-left:-8px;margin-right:-8px}
+.t-item.approved{background:rgba(40,160,95,.10)}
+.t-pill.appr{background:rgba(40,160,95,.14);color:#1e874e;border:1px solid rgba(40,160,95,.45);font-weight:700}
 .ab-entry-text{font-size:calc(13px*var(--rs-ru,1));line-height:calc(1.85*var(--lh-ru,1));color:var(--text-sec);white-space:pre-wrap}
 .ab-entry-text.selectable{-webkit-user-select:text;user-select:text}
 .ab-entry-text.rtl{direction:rtl;text-align:right;font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(17px*var(--rs-ar,1));line-height:calc(2*var(--lh-ar,1));color:var(--text)}
@@ -958,11 +973,12 @@ let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,imme
 };
 let CONFIG={groups:[],tafsirs:[]};
 let COV={total:6236,names:{},sources:{}};   // индекс покрытия (data/coverage.json)
+let covLoadFailed=false;  // coverage не загрузился → счётчики врали бы «0», показываем «?»
 let chunkCache={};        // "id|surah" -> {ayah:text}  (lazy, LRU-evicted)
 let chunkLRU=[];          // chunk keys in recent-use order
 const MAX_CHUNKS=80;      // memory cap on cached surah chunks
 let wholeCache={};        // id -> full Quran (only used by search)
-let collapsedG={};
+let collapsedG={rg_translations:true}; // в каталоге «Переводы» свёрнуты по умолчанию (длинный список)
 let hydrationObserver=null; // virtualization: lazily fills/empties ayah bodies
 let lastReadingSurah=null;  // to preserve scroll across same-surah re-render
 
@@ -1089,7 +1105,9 @@ const Progress=(()=>{
   function load(){const s=gs(KEY,null);if(!s)return def();return Object.assign(def(),s,{settings:Object.assign(def().settings,s.settings||{})});}
   function save(){ss(KEY,state);}
   // — даты (со сдвигом «сегодня» для отладки серии/вех) —
-  function iso(d){return d.toISOString().slice(0,10);}
+  // ЛОКАЛЬНАЯ дата, не toISOString (тот даёт UTC: в UTC+3 время 00:00–02:59
+  // уезжало во «вчера», а addDays возвращал s+n−1 — рвались серии и теплокарта)
+  function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
   function today(){const d=new Date();d.setDate(d.getDate()+(state._debugDayOffset||0));return iso(d);}
   function parseISO(s){const p=s.split("-");return new Date(+p[0],+p[1]-1,+p[2]);}
   function addDays(s,n){const d=parseISO(s);d.setDate(d.getDate()+n);return iso(d);}
@@ -1479,9 +1497,16 @@ function setEnabled(e){ss("enabled",e);}
 // Единица — аят; диапазоны хранятся плоскими парами [нач,кон, нач,кон,…].
 // Блочные тафсиры покрыты целиком (все аяты диапазона — реальные ключи в данных).
 // ============================================================
+// fetch JSON с различением исходов: {data:…} — успех; {net:true} — сеть/хранилище
+// недоступны (fetch упал или 5xx); {} — данных нет (404 и т.п., это норма).
+async function fetchJson(url){
+  try{const r=await fetch(url);if(r.ok)return{data:await r.json()};return r.status>=500?{net:true}:{};}
+  catch(e){return{net:true};}
+}
 async function loadCoverage(){
   if(window.TL_COVERAGE){COV=window.TL_COVERAGE;return;}
-  try{const r=await fetch(resolveUrl("coverage"));if(r.ok)COV=await r.json();}catch(e){}
+  const r=await fetchJson(resolveUrl("coverage"));
+  if(r.data)COV=r.data;else covLoadFailed=true;
 }
 // Пары диапазонов источника в суре (или null, если в суре нет покрытия).
 function covPairs(id,s){const src=COV.sources[id];return src&&src.s[String(s)]||null;}
@@ -1502,7 +1527,7 @@ function covCount(s,a){let n=0;for(const id in COV.sources)if(covHas(id,s,a))n++
 // Разделённый счётчик: сколько переводов и сколько тафсиров есть у аята.
 function covCountByKind(s,a){let tr=0,taf=0;for(const id in COV.sources){if(!covHas(id,s,a))continue;if(COV.sources[id].kind==="tafsir")taf++;else tr++;}return{tr,taf};}
 // Метка для кнопки-счётчика в шапке аята: «🌐 N · 📚 M».
-function covCountLabel(s,a){const c=covCountByKind(s,a);return`🌐 ${c.tr} · 📚 ${c.taf}`;}
+function covCountLabel(s,a){if(covLoadFailed)return`🌐 ? · 📚 ?`;const c=covCountByKind(s,a);return`🌐 ${c.tr} · 📚 ${c.taf}`;}
 // Следующий/предыдущий аят с этим источником, начиная за (fromS,fromA). dir +1/-1.
 // Прыгает и через суры; возвращает {surah,ayah} или null.
 function covNextAyah(id,fromS,fromA,dir){
@@ -1589,27 +1614,31 @@ function touchChunk(key){
 async function loadChunk(id,surahId){
   const key=id+"|"+surahId;
   if(chunkCache[key]){touchChunk(key);return chunkCache[key];}
-  let chunk=null;
+  let chunk=null,netFail=false;
   // 1. Offline preload (whole Quran in TL_DATA) -> slice the surah
   if(window.TL_DATA&&window.TL_DATA[id])chunk=window.TL_DATA[id][String(surahId)]||{};
   // 2. Per-surah chunk file (primary path)
-  if(chunk===null){try{const r=await fetch(resolveUrl(chunkClass(id),{source:id,sura:surahId}));if(r.ok)chunk=await r.json();}catch(e){}}
+  if(chunk===null){const r=await fetchJson(resolveUrl(chunkClass(id),{source:id,sura:surahId}));if(r.data)chunk=r.data;else if(r.net)netFail=true;}
   // 3. Back-compat: monolithic file -> slice
-  if(chunk===null){const whole=await loadWhole(id,true);if(whole)chunk=whole[String(surahId)]||{};}
-  // 4. Placeholder for a real (not-yet-added) tafsir
+  if(chunk===null){const whole=await loadWhole(id,true);if(whole)chunk=whole[String(surahId)]||{};else if(wholeNetFail)netFail=true;}
+  // 4. Placeholder: различаем «данных нет» (норма) и «не смогли загрузить» (сеть/R2)
   if(chunk===null){
     if(id==="_arabic"){chunk={};}
     else{
       const info=CONFIG.tafsirs.find(t=>t.id===id);const su=SURAHS.find(s=>s.id===surahId);chunk={};
-      if(su)for(let i=1;i<=su.n;i++)chunk[i]=`[${info?.name||id}] Сура ${surahId}, аят ${i}\n\n※ Тафсир ещё не добавлен.`;
+      const msg=netFail?"⚠ Не удалось загрузить данные (нет сети или хранилище недоступно). Проверьте подключение — при следующем открытии попробуем снова.":"※ Тафсир ещё не добавлен.";
+      if(su)for(let i=1;i<=su.n;i++)chunk[i]=`[${info?.name||id}] Сура ${surahId}, аят ${i}\n\n${msg}`;
     }
   }
+  if(netFail)return chunk;            // ошибку НЕ кэшируем: следующий рендер повторит попытку
   chunkCache[key]=chunk;touchChunk(key);
   return chunk;
 }
 
 // Load the full tafsir (all surahs) — only used by search. Cached separately.
+let wholeNetFail=false; // последний loadWhole не удался по сети (а не из-за отсутствия файла)
 async function loadWhole(id,quiet){
+  wholeNetFail=false;
   if(wholeCache[id])return wholeCache[id];
   if(window.TL_DATA&&window.TL_DATA[id]){wholeCache[id]=window.TL_DATA[id];return wholeCache[id];}
   const info=CONFIG.tafsirs.find(t=>t.id===id);
@@ -1617,7 +1646,9 @@ async function loadWhole(id,quiet){
   // per-source dataBase, напр. R2) или шаблон по умолчанию
   const monoBase=(info&&info.dataBase)||SOURCES.tafsir_monolith.baseUrl;
   const url=info&&info.file?`${monoBase}/${info.file}`:resolveUrl("tafsir_monolith",{source:id});
-  try{const r=await fetch(url);if(r.ok){wholeCache[id]=await r.json();return wholeCache[id];}}catch(e){}
+  const r=await fetchJson(url);
+  if(r.data){wholeCache[id]=r.data;return wholeCache[id];}
+  wholeNetFail=!!r.net;
   return quiet?null:{};
 }
 
@@ -2389,12 +2420,21 @@ function segForSura(t,surah){
   return t.segments.find(s=>suraInSpec(surah,s.suras))||null;
 }
 // Бейдж «пер. Имя ✓/⚠» для текущей суры — только у составных источников (≥2 переводчиков).
+// Маркер одобрения у аята: двойная галочка ✓✓ (только у выверенного). Имя
+// переводчика не показываем (оно есть в паспорте) — чтобы все источники были
+// единообразны. Непроверенное/черновик — без значка (это дефолт).
 function segCredit(t){
-  if(!t||!Array.isArray(t.segments)||t.segments.length<2)return"";
-  const seg=segForSura(t,ST.surah); if(!seg)return"";
-  const mark=seg.approved?' ✓':(seg.draft||seg.caution)?' ⚠':'';
-  const cls=seg.approved?'ok':(seg.draft||seg.caution)?'warn':'';
-  return `<span class="seg-cred ${cls}" title="Перевод этой суры${seg.draft?' — черновик, не выверен':seg.approved?' — выверен и одобрен':''}">пер. ${esc(seg.translator||'')}${mark}</span>`;
+  if(!t)return"";
+  const seg=(Array.isArray(t.segments)&&t.segments.length>=2)?segForSura(t,ST.surah):null;
+  const approved=seg?seg.approved:t.approved;
+  if(!approved)return"";
+  return `<span class="seg-cred ok" title="Выверено и одобрено">✓✓</span>`;
+}
+// Одобрено ли ЗДЕСЬ (для текущей суры, с учётом сегментов составного источника).
+function isApprovedHere(t){
+  if(!t)return false;
+  const seg=(Array.isArray(t.segments)&&t.segments.length>=2)?segForSura(t,ST.surah):null;
+  return !!(seg?seg.approved:t.approved);
 }
 // HTML одной колонки источника у аята. Распознаёт блочную отсылку «см. аят Z».
 // adhoc=true → плашка «разовый показ» с кнопкой убрать. blockOf=[from,to] → текст блока.
@@ -2403,7 +2443,7 @@ function sourceEntryHTML(t,text,aid,adhoc,blockOf){
   const badge=adhoc?`<button class="cov-adhoc-x" onclick="removeAdHoc(${aid},'${escAttr(t.id)}')" title="Убрать разовый показ">только здесь ✕</button>`:"";
   const blk=(!blockOf&&text)?parseBlockRef(text):null;
   if(blk){
-    return `<div class="ab-entry"${adhoc?' style="border-left:2px solid var(--accent)"':''}>
+    return `<div class="ab-entry${isApprovedHere(t)?' approved':''}"${adhoc?' style="border-left:2px solid var(--accent)"':''}>
       <div class="ab-entry-label">${esc(t.name)} <span class="lbl-ar">${t.nameAr||''}</span>${segCredit(t)}${badge}${counterpartChip(t)}</div>
       <div class="cov-blockref">📎 Разобрано в блоке <b>${blk.from}–${blk.to}</b> <button class="cov-goto" onclick="goAyah(${ST.surah},${blk.target})">перейти к аяту ${blk.target} →</button></div>
     </div>`;
@@ -2412,7 +2452,7 @@ function sourceEntryHTML(t,text,aid,adhoc,blockOf){
   const inner=body?renderRefs(body):'<span style="color:var(--text-muted)">—</span>';
   const long=!ST.noTouch&&body&&body.length>600; // в режиме без касания — сразу развёрнуто, без кнопки
   const blockNote=blockOf?`<div class="cov-blocknote">показан блок ${blockOf[0]}–${blockOf[1]} (этот аят входит в него)</div>`:"";
-  return `<div class="ab-entry"${adhoc?' style="border-left:2px solid var(--accent)"':''}>
+  return `<div class="ab-entry${isApprovedHere(t)?' approved':''}"${adhoc?' style="border-left:2px solid var(--accent)"':''}>
     <div class="ab-entry-label">${esc(t.name)} <span class="lbl-ar">${t.nameAr||''}</span>${segCredit(t)}${badge}${counterpartChip(t)}</div>
     ${blockNote}
     <div class="ab-entry-text md selectable ${isAr?'rtl':''} ${long?'clamped':''}">${inner}</div>
@@ -2461,8 +2501,9 @@ function covPopupHTML(aid){
     const head=`<div class="cov-grp-head clickable ${col?'collapsed':''}" onclick="covToggleKind(${aid},'${kind}')" title="Свернуть/развернуть">${title} · ${items.length} <span class="grp-chev">${col?'▸':'▾'}</span></div>`;
     return head+(col?"":items.map(t=>covRowHTML(t,aid,has,adh)).join(""));
   };
-  return `<div class="tag-popup-head"><span>📖 Аят ${aid} · 🌐 ${c.tr} · 📚 ${c.taf}</span><button class="tag-popup-close" onclick="closeCovPopup()">✕</button></div>
-    <div class="tag-popup-list">${grp("translation","🌐 Переводы",tr)}${grp("tafsir","📚 Тафсиры",taf)}</div>
+  const covWarn=covLoadFailed?`<div class="about-warn">⚠ Индекс покрытия не загрузился (нет сети?) — список источников неполный. Обновите страницу.</div>`:"";
+  return `<div class="tag-popup-head"><span>📖 Аят ${aid} · 🌐 ${covLoadFailed?'?':c.tr} · 📚 ${covLoadFailed?'?':c.taf}</span><button class="tag-popup-close" onclick="closeCovPopup()">✕</button></div>
+    <div class="tag-popup-list">${covWarn}${grp("translation","🌐 Переводы",tr)}${grp("tafsir","📚 Тафсиры",taf)}</div>
     <div class="cov-popup-foot"><button class="cov-act" onclick="closeCovPopup();setMode('source')" title="Открыть режим чтения по источнику">режим источника…</button></div>`;
 }
 function openCovPopup(aid,btnEl){
@@ -2660,6 +2701,7 @@ function renderSourcePicker(el){
   el.innerHTML=`<div class="src-picker">
     <div class="srcp-head">📖 Чтение по источнику</div>
     <div class="srcp-sub">Выберите перевод или тафсир — читать будете по его покрытию, разрывы сворачиваются. Видно, у кого сколько и где дыры.</div>
+    ${covLoadFailed?`<div class="about-warn">⚠ Индекс покрытия не загрузился (нет сети?). Без него режим «Источник» недоступен — проверьте подключение и обновите страницу.</div>`:''}
     ${section("ru_tafsir","Русские тафсиры","🇷🇺",buckets.ru_tafsir)}
     ${section("translation","Русские переводы","🌐",buckets.translation)}
     ${section("ar_tafsir","Арабские тафсиры","📜",buckets.ar_tafsir)}
@@ -3069,10 +3111,13 @@ function tafsirMeta(t){
   (t.tags||[]).forEach(tag=>bits.push(TAG_RU[tag]||tagLabel(tag)));
   let pills=bits.map(b=>`<span class="t-pill">${esc(b)}</span>`).join("");
   const composite=Array.isArray(t.segments)&&t.segments.length>=2;
-  if(composite){pills=`<span class="t-pill" title="Разные переводчики по сурам — статус проверки указан по каждой части">составной</span>`+pills;}
-  else{
-    if(t.caution)pills=`<span class="t-pill warn" title="Не проверено — давайте только для ознакомления">⚠ не проверено</span>`+pills;
-    if(t.approved)pills=`<span class="t-pill ok" title="Полностью проверено и одобрено">✓ одобрено</span>`+pills;
+  if(composite){
+    const anyAppr=t.segments.some(s=>s.approved);
+    pills=`<span class="t-pill" title="Разные переводчики по сурам — статус по каждой части">составной</span>`
+      +(anyAppr?`<span class="t-pill appr" title="Часть сур выверена и одобрена">✓✓ частично</span>`:'')+pills;
+  }else{
+    if(t.caution)pills=`<span class="t-pill warn" title="Не проверено — даётся только для ознакомления">⚠ не проверено</span>`+pills;
+    if(t.approved)pills=`<span class="t-pill appr" title="Полностью выверено и одобрено">✓✓ одобрено</span>`+pills;
   }
   return pills?`<div class="t-meta">${pills}</div>`:"";
 }
@@ -3173,13 +3218,13 @@ function tItem(t,on,reorder){
     return `<div class="t-item scan ${act?'checked':''}" onclick="openScan('${t.id}')">
       <div class="t-check">${act?'✓':'📖'}</div>
       <div class="t-info"><div class="t-name">${esc(t.name)}<span class="t-badge">скан</span></div>${t.nameAr?`<div class="t-ar">${esc(t.nameAr)}</div>`:''}${tafsirMeta(t)}${fillBar(t)}</div>
-      <button class="t-info-btn" onclick="event.stopPropagation();openAbout('${t.id}')" title="Паспорт источника">ℹ Паспорт</button>
+      <button class="t-info-btn" onclick="event.stopPropagation();openAbout('${t.id}')" title="Паспорт источника">ℹ</button>
     </div>`;
   }
-  return `<div class="t-item ${on?'checked':''}" onclick="toggleEn('${t.id}')">
+  return `<div class="t-item ${on?'checked':''}${t.approved?' approved':''}" onclick="toggleEn('${t.id}')">
     <div class="t-check">${on?'✓':''}</div>
     <div class="t-info"><div class="t-name">${esc(t.name)}</div>${t.nameAr?`<div class="t-ar">${esc(t.nameAr)}</div>`:''}${tafsirMeta(t)}${fillBar(t)}</div>
-    <button class="t-info-btn" onclick="event.stopPropagation();openAbout('${t.id}')" title="Паспорт источника">ℹ Паспорт</button>
+    <button class="t-info-btn" onclick="event.stopPropagation();openAbout('${t.id}')" title="Паспорт источника">ℹ</button>
     ${on&&reorder?`<div class="t-sort" onclick="event.stopPropagation()">
       <button class="sort-b" onclick="moveEnabled('${t.id}',-1)" title="Выше">▲</button>
       <button class="sort-b" onclick="moveEnabled('${t.id}',1)" title="Ниже">▼</button>
@@ -3209,15 +3254,7 @@ function renderRP(){
     <div class="t-check">${notesOn?'✓':''}</div>
     <div class="t-info"><div class="t-name">📝 Мои заметки</div><div class="t-ar" style="font-family:inherit;direction:ltr;font-size:10px">Личные комментарии</div></div>
   </div>`;
-  // Бэкап личных данных (заметки · закладки · теги) — экспорт/импорт одним .json
-  html+=`<div class="data-io">
-    <div class="data-io-lbl">Резервная копия: заметки · закладки · теги</div>
-    <div class="data-io-btns">
-      <button class="data-io-btn" onclick="exportPersonalData()" title="Скачать .json со всеми личными данными">⬆ Экспорт</button>
-      <button class="data-io-btn" onclick="document.getElementById('importDataFile').click()" title="Загрузить .json и объединить с текущими">⬇ Импорт</button>
-    </div>
-    <input type="file" id="importDataFile" accept="application/json,.json" style="display:none" onchange="importPersonalDataFile(this)">
-  </div>`;
+  // (Резервная копия — экспорт/импорт — перенесена в ⚙ Вид, чтобы разгрузить панель.)
 
   // 3. Catalog — not-yet-enabled items, filtered by facets + search
   html+=`<div class="rp-sec-head" style="border-top:1px solid var(--border);margin-top:4px;padding-top:8px">Каталог</div>`;
@@ -3716,6 +3753,11 @@ function renderViewPanel(){
   const themeGroup=`<div class="vp-group"><div class="vp-label">Тема</div><div class="theme-dots vp-themes">`+
     [["green","#1B5E3B"],["blue","#1B4E8E"],["gold","#8B6914"],["dark","#333"]].map(([t,c])=>`<span class="theme-dot ${ST.theme===t?'active':''}" style="background:${c}" title="${t}" onclick="setTheme('${t}')"></span>`).join("")+
     `</div></div>`;
+  const backupGroup=`<div class="vp-group"><div class="vp-label">Резервная копия · заметки · закладки · теги</div>`+
+    `<div class="data-io-btns">`+
+      `<button class="data-io-btn" onclick="exportPersonalData()" title="Скачать .json со всеми личными данными">⬆ Экспорт</button>`+
+      `<button class="data-io-btn" onclick="document.getElementById('importDataFile').click()" title="Загрузить .json и объединить">⬇ Импорт</button>`+
+    `</div><input type="file" id="importDataFile" accept="application/json,.json" style="display:none" onchange="importPersonalDataFile(this)"></div>`;
   const aboutRow=`<button class="vp-reset" onclick="toggleViewPanel();openAppAbout()">ℹ О программе</button>`;
   if(ST.pageMode){
     // page mode = printed vowelled glyphs at a fixed column fit: only line spacing
@@ -3725,7 +3767,7 @@ function renderViewPanel(){
       `<div class="vp-group"><div class="vp-label">Отступы</div>${step("Межстрочный","lhAr",pct("lhAr"))}</div>`+
       `<div class="vp-note">Размер строк в «Мусхафе» подстраивается автоматически под ширину страницы.</div>`+
       `<div class="vp-group"><div class="vp-label">Боковая панель (суры, теги)</div>${step("Размер","sbScale",pct("sbScale"))}</div>`+
-      themeGroup+navGroup+ntGroup+aboutRow+resetBtn+`<button class="vp-close" onclick="toggleViewPanel()">Готово</button>`;
+      themeGroup+navGroup+ntGroup+backupGroup+aboutRow+resetBtn+`<button class="vp-close" onclick="toggleViewPanel()">Готово</button>`;
     return;
   }
   const variants=[["_arabic","С огласовками"],["_arabic_clean","Без огласовок"],["_arabic_rasm","Без точек (расм)"]];
@@ -3738,7 +3780,7 @@ function renderViewPanel(){
     `<div class="vp-group"><div class="vp-label">Межстрочный интервал</div>${step("Арабский","lhAr",pct("lhAr"))}${step("Русский","lhRu",pct("lhRu"))}</div>`+
     `<div class="vp-group"><div class="vp-label">Поля</div>${step("Отступы по краям","mar",ST.mar+"px")}</div>`+
     `<div class="vp-group"><div class="vp-label">Боковая панель (суры, теги)</div>${step("Размер","sbScale",pct("sbScale"))}</div>`+
-    themeGroup+navGroup+ntGroup+aboutRow+resetBtn+`<button class="vp-close" onclick="toggleViewPanel()">Готово</button>`;
+    themeGroup+navGroup+ntGroup+backupGroup+aboutRow+resetBtn+`<button class="vp-close" onclick="toggleViewPanel()">Готово</button>`;
 }
 
 // --- 📑 Переход: jump by surah / juz / rub al-hizb / page (both modes) -------
