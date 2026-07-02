@@ -321,6 +321,7 @@
     {
       "id": "kathir_ru",
       "file": "tafsirs/kathir_ru.json",
+      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
       "name": "Тафсир Ибн Касир (рус.)",
       "nameAr": "مختصر تفسير ابن كثير",
       "author": "Ибн Касир — Мухтасар",
@@ -338,7 +339,7 @@
       "year": "774 х.",
       "translator": "Айрат Вахитов",
       "caution": true,
-      "fill": 0.5064
+      "fill": 1.0
     },
     {
       "id": "qurtubi_ru",
