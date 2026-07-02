@@ -12,13 +12,23 @@ import json, os, re
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 TAF = os.path.join(ROOT, "data", "tafsirs")
+R2TAF = os.path.join(ROOT, "r2-data", "tafsirs")  # локальное зеркало данных на R2
 TOTAL = 6236  # аятов в Коране (стандартная нумерация)
 
 
+def mono_path(tid):
+    """Монолит источника: сначала data/, иначе зеркало r2-data/ (источники с dataBase)."""
+    for base in (TAF, R2TAF):
+        p = os.path.join(base, tid + ".json")
+        if os.path.isfile(p):
+            return p
+    return None
+
+
 def count_real(tid):
-    path = os.path.join(TAF, tid + ".json")
-    if not os.path.isfile(path):
-        return 0
+    path = mono_path(tid)
+    if path is None:
+        return None
     with open(path, encoding="utf-8") as f:
         data = json.load(f)
     n = 0
@@ -42,7 +52,14 @@ def main():
         if t.get("kind") == "image":      # скан-источники: fill задаётся вручную
             fills[t["id"]] = t.get("fill", 0)
             continue
-        f = round(min(1.0, count_real(t["id"]) / TOTAL), 4)
+        n = count_real(t["id"])
+        if n is None:
+            # данных нет ни в data/, ни в r2-data/ — НЕ обнуляем, оставляем как есть
+            # (источник с dataBase живёт на R2; без зеркала пересчитать нечем)
+            fills[t["id"]] = t.get("fill", 0)
+            print(f"  ⚠ {t['id']}: монолита нет ни в data/, ни в r2-data/ — fill оставлен {fills[t['id']]}")
+            continue
+        f = round(min(1.0, n / TOTAL), 4)
         t["fill"] = f
         fills[t["id"]] = f
     json.dump(cfg, open(cfg_json, "w", encoding="utf-8"), ensure_ascii=False, indent=2)

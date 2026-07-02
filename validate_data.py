@@ -17,6 +17,7 @@ import json, os, re, sys
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(ROOT, "data")
+R2DATA = os.path.join(ROOT, "r2-data")  # локальное зеркало данных, живущих на R2
 TOTAL = 6236  # аятов в Коране (стандартная нумерация)
 
 errors = []
@@ -31,10 +32,19 @@ def warn(msg):
     warnings.append(msg)
 
 
+def mono_path(tid):
+    """Монолит источника: сначала data/, иначе зеркало r2-data/ (источники с dataBase)."""
+    for base in (os.path.join(DATA, "tafsirs"), os.path.join(R2DATA, "tafsirs")):
+        p = os.path.join(base, tid + ".json")
+        if os.path.isfile(p):
+            return p
+    return None
+
+
 def count_real(tid):
     """Реальные (не-«※») аяты монолита — та же логика, что в compute_fill.py."""
-    path = os.path.join(DATA, "tafsirs", tid + ".json")
-    if not os.path.isfile(path):
+    path = mono_path(tid)
+    if path is None:
         return None
     data = json.load(open(path, encoding="utf-8"))
     n = 0
@@ -82,17 +92,32 @@ def check_source(t):
             err(f"[{tid}] каталог сканов не найден: data/{imgdir}")
         return
 
+    # источник с dataBase живёт на R2: каждый артефакт ищем и в data/, и в
+    # зеркале r2-data/ (монолит может быть локальным, а чанки — только на R2)
+    on_r2 = bool(t.get("dataBase"))
+    bases = [DATA, R2DATA] if on_r2 else [DATA]
+
+    def find(*rel):
+        for b in bases:
+            p = os.path.join(b, *rel)
+            if os.path.exists(p):
+                return p
+        return None
+
     # монолит
-    mono = os.path.join(DATA, "tafsirs", tid + ".json")
-    if not os.path.isfile(mono):
-        err(f"[{tid}] нет монолита data/tafsirs/{tid}.json")
+    mono = find("tafsirs", tid + ".json")
+    if mono is None:
+        if on_r2:
+            warn(f"[{tid}] данные на R2, локального зеркала r2-data нет — проверка пропущена")
+        else:
+            err(f"[{tid}] нет монолита data/tafsirs/{tid}.json")
         return
 
     # чанки по сурам
-    chunk_dir = os.path.join(DATA, "tafsirs", tid)
-    idx_path = os.path.join(chunk_dir, "index.json")
-    if not os.path.isdir(chunk_dir):
-        err(f"[{tid}] нет каталога чанков data/tafsirs/{tid}/")
+    chunk_dir = find("tafsirs", tid)
+    idx_path = chunk_dir and os.path.join(chunk_dir, "index.json")
+    if chunk_dir is None:
+        err(f"[{tid}] нет каталога чанков tafsirs/{tid}/ (ни в data/, ни в r2-data/)")
     elif not os.path.isfile(idx_path):
         err(f"[{tid}] нет index.json в каталоге чанков")
     else:
@@ -103,8 +128,8 @@ def check_source(t):
             err(f"[{tid}] index.json ссылается на отсутствующие чанки: {missing[:10]}")
 
     # поисковый индекс
-    if not os.path.isfile(os.path.join(DATA, "index", tid + ".json")):
-        err(f"[{tid}] нет поискового индекса data/index/{tid}.json")
+    if find("index", tid + ".json") is None:
+        err(f"[{tid}] нет поискового индекса index/{tid}.json (ни в data/, ни в r2-data/)")
 
     # fill
     n = count_real(tid)
@@ -162,12 +187,19 @@ def check_coverage(cfg):
         err("нет data/coverage.json — запусти build_coverage.py")
         return
     cov = json.load(open(cov_path, encoding="utf-8"))
-    expected = {t["id"] for t in cfg["tafsirs"]
-                if t.get("kind") in ("tafsir", "translation") and (count_real(t["id"]) or 0) > 0}
+    txt_ids = {t["id"]: t for t in cfg["tafsirs"]
+               if t.get("kind") in ("tafsir", "translation")}
+    expected = {tid for tid, t in txt_ids.items() if (count_real(tid) or 0) > 0}
     got = set(cov.get("sources", {}))
-    if expected != got:
+    # R2-источник без локального зеркала: запись в coverage легитимна, хоть данных и нет
+    unverifiable = {tid for tid in got - expected
+                    if tid in txt_ids and txt_ids[tid].get("dataBase")
+                    and count_real(tid) is None}
+    for tid in sorted(unverifiable):
+        warn(f"[{tid}] в coverage, но данных нет ни в data/, ни в r2-data/ — n не сверить")
+    if expected != got - unverifiable:
         err(f"coverage.json расходится с источниками (нет: {sorted(expected-got)[:5]}, "
-            f"лишние: {sorted(got-expected)[:5]}) — запусти build_coverage.py")
+            f"лишние: {sorted(got-unverifiable-expected)[:5]}) — запусти build_coverage.py")
     for tid, src in cov.get("sources", {}).items():
         n = count_real(tid)
         if n is not None and src.get("n") != n:

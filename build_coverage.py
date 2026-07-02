@@ -35,6 +35,7 @@ import os
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 TAF = os.path.join(ROOT, "data", "tafsirs")
+R2TAF = os.path.join(ROOT, "r2-data", "tafsirs")  # локальное зеркало данных, живущих на R2
 TOTAL = 6236  # аятов в стандартной нумерации Корана
 
 
@@ -43,11 +44,20 @@ def is_real(txt):
     return bool(t) and not t.startswith("※")
 
 
+def mono_path(tid):
+    """Монолит источника: сначала data/, иначе зеркало r2-data/ (источники с dataBase)."""
+    for base in (TAF, R2TAF):
+        p = os.path.join(base, tid + ".json")
+        if os.path.isfile(p):
+            return p
+    return None
+
+
 def covered_ranges(tid):
-    """{сура: [пары границ диапазонов]} по реальным аятам источника."""
-    path = os.path.join(TAF, tid + ".json")
-    if not os.path.isfile(path):
-        return {}, 0
+    """{сура: [пары границ диапазонов]} по реальным аятам источника. None = данных нет."""
+    path = mono_path(tid)
+    if path is None:
+        return None, 0
     with open(path, encoding="utf-8") as f:
         data = json.load(f)
     out = {}
@@ -78,16 +88,30 @@ def covered_ranges(tid):
 
 def main():
     cfg = json.load(open(os.path.join(ROOT, "data", "config.json"), encoding="utf-8"))
+    # старый индекс — чтобы НЕ терять источники, чьих данных сейчас нет локально
+    old_path = os.path.join(ROOT, "data", "coverage.json")
+    old = json.load(open(old_path, encoding="utf-8")) if os.path.isfile(old_path) else {}
     sources = {}
     names = {}
     for t in cfg["tafsirs"]:
         if t.get("kind") not in ("tafsir", "translation"):
             continue
-        ranges, n = covered_ranges(t["id"])
+        tid = t["id"]
+        ranges, n = covered_ranges(tid)
+        if ranges is None:
+            # данных нет ни в data/, ни в r2-data/ — сохраняем старую запись, не выкидываем
+            prev = (old.get("sources") or {}).get(tid)
+            if prev:
+                sources[tid] = prev
+                names[tid] = t.get("name", tid)
+                print(f"  ⚠ {tid}: монолита нет ни в data/, ни в r2-data/ — оставлена старая запись")
+            else:
+                print(f"  ⚠ {tid}: монолита нет нигде и записи в coverage не было — пропущен")
+            continue
         if n == 0:
             continue                          # демо-заглушки (только ※) не покрывают ничего
-        sources[t["id"]] = {"n": n, "kind": t["kind"], "s": ranges}
-        names[t["id"]] = t.get("name", t["id"])
+        sources[tid] = {"n": n, "kind": t["kind"], "s": ranges}
+        names[tid] = t.get("name", tid)
 
     out = {"total": TOTAL, "names": names, "sources": sources}
     dest = os.path.join(ROOT, "data", "coverage.json")
