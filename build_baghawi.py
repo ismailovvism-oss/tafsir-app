@@ -147,22 +147,19 @@ def parse_B(P):
             cur['comment'].append(comm)
     if cur and (cur['ayahs'] or cur['comment']):
         groups.append(cur)
-    # раскладка: первый аят диапазона получает переводы всех аятов группы +
-    # комментарий; прочие аяты — свой перевод + отсылка к диапазону.
+    # раскладка: диапазон разведён по аятам — КАЖДЫЙ аят группы несёт свой
+    # перевод (жирным) + общий комментарий диапазона (толкование Багави идёт
+    # на диапазон, поэтому у каждого аята показываем весь блок).
     for g in groups:
         ns = [n for n, _ in g['ayahs']]
         if not ns:
             continue
-        first = min(ns)
-        rng = "%d–%d" % (min(ns), max(ns)) if len(set(ns)) > 1 else str(first)
-        heads = "\n".join("**«%s»**" % tr for _, tr in g['ayahs'])
         comment = "\n\n".join(g['comment']).strip()
-        out[str(first)] = (heads + ("\n\n" + comment if comment else "")).strip()
         for n, tr in g['ayahs']:
-            if n == first:
-                continue
-            ptr = "\n\n*(См. толкование аятов %s)*" % rng if comment else ""
-            out[str(n)] = ("**«%s»**" % tr + ptr).strip()
+            parts = ["**«%s»**" % tr]
+            if comment:
+                parts.append(comment)
+            out[str(n)] = "\n\n".join(parts).strip()
     return out
 
 def detect_and_parse(path):
