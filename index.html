@@ -161,12 +161,13 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .tg.collapsed .tg-arrow{transform:rotate(-90deg)}.tg.collapsed .tg-items{display:none}
 .tg-items{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:1px;background:var(--border-light)}
 @media(max-width:760px){.tg-items{grid-template-columns:1fr 1fr}}  /* на узкой панели — всегда 2 в ряд */
-.tg-items .t-item{background:var(--bg-card);padding:7px 9px;align-items:flex-start;flex-wrap:wrap}
+.tg-items .t-item{background:var(--bg-card);padding:7px 9px;align-items:flex-start;flex-wrap:wrap;min-width:0;overflow:hidden}
 .tg-items .t-item:hover{background:var(--bg-alt)}
 .tg-items .t-item.approved{background:rgba(40,160,95,.10)}
 .tg-items .t-check{display:none}
 .tg-items .t-info-btn{padding:2px 6px;font-size:11px}
 .tg-items .t-meta{gap:2px}
+.tg-items .show-more-btn{grid-column:1/-1}
 
 .t-item{display:flex;align-items:center;gap:6px;width:100%;padding:5px 8px 5px 14px;border:none;background:transparent;cursor:pointer;text-align:left;font-family:inherit;transition:background .1s}
 .t-item:hover{background:rgba(128,128,128,.06)}
@@ -978,7 +979,7 @@ let chunkCache={};        // "id|surah" -> {ayah:text}  (lazy, LRU-evicted)
 let chunkLRU=[];          // chunk keys in recent-use order
 const MAX_CHUNKS=80;      // memory cap on cached surah chunks
 let wholeCache={};        // id -> full Quran (only used by search)
-let collapsedG={rg_translations:true}; // в каталоге «Переводы» свёрнуты по умолчанию (длинный список)
+let collapsedG={}; // группы каталога развёрнуты; «Переводы» показывают превью N штук + «ещё…»
 let hydrationObserver=null; // virtualization: lazily fills/empties ayah bodies
 let lastReadingSurah=null;  // to preserve scroll across same-surah re-render
 
@@ -3252,7 +3253,7 @@ function renderRP(){
   const notesOn=ST.enabled._notes;
   html+=`<div class="t-item special ${notesOn?'checked':''}" onclick="toggleEn('_notes')">
     <div class="t-check">${notesOn?'✓':''}</div>
-    <div class="t-info"><div class="t-name">📝 Мои заметки</div><div class="t-ar" style="font-family:inherit;direction:ltr;font-size:10px">Личные комментарии</div></div>
+    <div class="t-info"><div class="t-name">📝 Мои заметки <span style="font-weight:400;color:var(--text-muted);font-size:10px">· личные</span></div></div>
   </div>`;
   // (Резервная копия — экспорт/импорт — перенесена в ⚙ Вид, чтобы разгрузить панель.)
 
@@ -3265,7 +3266,9 @@ function renderRP(){
     if(!items.length)return;
     anyShown=true;
     const col=collapsedG["rg_"+g.id];
-    const LIMIT=12;
+    // «Переводы» — длинный список: показываем превью (несколько) + «ещё…», чтобы
+    // секция была заметна, но не занимала весь экран. Прочие группы — целиком.
+    const LIMIT=(g.id==="translations")?4:12;
     const expanded=ST.expandedGroups[g.id];
     const showItems=(!expanded&&items.length>LIMIT)?items.slice(0,LIMIT):items;
     html+=`<div class="tg ${col?'collapsed':''}"><button class="tg-head" onclick="collapsedG['rg_${g.id}']=!collapsedG['rg_${g.id}'];renderRP();">
