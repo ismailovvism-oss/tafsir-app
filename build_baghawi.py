@@ -92,6 +92,42 @@ def strip_arabic(s):
     """Как drop_arabic, но ещё срезать обрамляющие пробелы/точки (для интро/коммента)."""
     return drop_arabic(s).strip(" .")
 
+# ---------- якорь по арабскому: сопоставление арабского фрагмента → стандартный № аята ----------
+def normA(s):
+    s = re.sub(r"[ً-ْٰـ]", "", s)  # харакаты, шадда, суперскрипт-алиф, тату
+    for a, b in (("أ", "ا"), ("إ", "ا"), ("آ", "ا"), ("ٱ", "ا"),
+                 ("ى", "ي"), ("ة", "ه"), ("ؤ", "و"), ("ئ", "ي")):
+        s = s.replace(a, b)
+    return re.sub(r"[^ء-ي]", "", s)
+
+def load_quran(sura):
+    af = os.path.join(ROOT, "data", "tafsirs", "_arabic", "%d.json" % sura)
+    if not os.path.isfile(af):
+        return {}
+    return {int(n): normA(t) for n, t in json.load(open(af)).items()}
+
+def match_ayah(seg, qmap):
+    """Стандартный № аята по арабскому фрагменту (наибольший общий префикс/вхождение)."""
+    ns = normA(seg)
+    if len(ns) < 3:
+        return None
+    best, bs = None, 0
+    for n, t in qmap.items():
+        if not t:
+            continue
+        k = 0
+        m = min(len(ns), len(t))
+        while k < m and ns[k] == t[k]:
+            k += 1
+        score = k
+        if t in ns or (len(ns) >= 8 and ns in t):
+            score = max(score, min(len(t), len(ns)))
+        if score > bs:
+            bs, best = score, n
+    return best if bs >= 4 else None
+
+_ARLINE = re.compile(r"^([ء-ي][ء-يً-ْٰـ ]*)")
+
 # ---------- разбор шапки суры → интро ----------
 def parse_header(P):
     """Вернуть (intro_md, idx) — idx = индекс первой строки после шапки."""
@@ -149,15 +185,16 @@ def parse_A(P):
     flush()
     return out
 
-# ---------- ФОРМАТ B: арабский+"N."+перевод, комментарий на диапазон ----------
-_DECL = re.compile(r"(\d{1,3})\.\s*(.+?)(?=\s*\d{1,3}\.\s|$)")
-def parse_B(P):
+# ---------- ФОРМАТ B: якорь по арабскому, комментарий на диапазон ----------
+def parse_B(P, sura, ayah_tr=None):
+    ayah_tr = ayah_tr or {}
+    qmap = load_quran(sura)
     intro, i = parse_header(P)
     out = {}
     if intro:
         out["0"] = intro
-    # группируем: блок объявлений аятов (арабский+N.+перевод) + следующий за ним
-    # комментарий = одна группа (комментарий Багави идёт на диапазон аятов).
+    # Группа = блок объявлений аятов (арабский аята + опц. «N.»+перевод) + идущий
+    # за ним комментарий (толкование Багави даётся на диапазон аятов).
     groups = []       # {'ayahs':[(n,tr)], 'comment':[str]}
     cur = None
     for l in P[i:]:
@@ -166,46 +203,69 @@ def parse_B(P):
             if cur and (cur['ayahs'] or cur['comment']):
                 groups.append(cur); cur = None
             continue
-        is_decl = (bool(re.match(r'^["“\s]*\d{1,3}\.\s', l))
-                   or (arabic_ratio(l) > 0.12 and re.search(r"\d{1,3}\.", l)))
-        if is_decl:
-            if cur and cur['comment']:            # начались новые аяты после коммента
+        # объявление аята: строка НАЧИНАЕТСЯ с арабского → якорим по нему № аята
+        am = _ARLINE.match(l)
+        if am and len(re.findall(r"[ء-ي]", am.group(1))) >= 3:
+            arab = am.group(1)
+            num = match_ayah(arab, qmap)
+            rest = l[am.end():]
+            rest = re.sub(r'^\s*\d{1,3}\s*["“».\)]\s*', "", rest)      # убрать docx-номер (N. N) N")
+            tr = drop_arabic(rest).strip().strip('"«».  ') or None
+            if num is None:                                            # fallback: docx-номер
+                mlbl = re.match(r'\s*(\d{1,3})\s*["“».\)]', rest)
+                num = int(mlbl.group(1)) if mlbl else None
+            if num:
+                if cur and cur['comment']:
+                    groups.append(cur); cur = None
+                if cur is None:
+                    cur = {'ayahs': [], 'comment': []}
+                cur['ayahs'].append((num, tr))
+                continue
+        # строка вида "N) перевод" без арабского (редко в B)
+        mnum = re.match(r'^["“\s]*(\d{1,3})[.\)]\s*(.+)$', l)
+        if mnum and not re.search(r"[ء-ي]", l):
+            tr = mnum.group(2).strip().strip('"«».  ')
+            if cur and cur['comment']:
                 groups.append(cur); cur = None
             if cur is None:
                 cur = {'ayahs': [], 'comment': []}
-            for m in _DECL.finditer(drop_arabic(l)):
-                n = int(m.group(1)); tr = m.group(2).strip().strip('"«».  ')
-                if 1 <= n <= 300 and tr:
-                    cur['ayahs'].append((n, tr))
-        else:
-            comm = drop_arabic(l).strip().strip('"')
-            if not comm:
-                continue
+            cur['ayahs'].append((int(mnum.group(1)), tr))
+            continue
+        # иначе — комментарий (текущего диапазона)
+        comm = drop_arabic(l).strip().strip('"')
+        if comm:
             if cur is None:
                 cur = {'ayahs': [], 'comment': []}
             cur['comment'].append(comm)
     if cur and (cur['ayahs'] or cur['comment']):
         groups.append(cur)
-    # раскладка: диапазон разведён по аятам — КАЖДЫЙ аят группы несёт свой
-    # перевод (жирным) + общий комментарий диапазона (толкование Багави идёт
-    # на диапазон, поэтому у каждого аята показываем весь блок).
+    # раскладка: диапазон разведён по аятам — каждый аят в промежутке [min..max]
+    # группы получает свой перевод (docx → иначе из файла аятов) + комментарий.
     for g in groups:
-        ns = [n for n, _ in g['ayahs']]
+        ns = [n for n, _ in g['ayahs'] if n]
         if not ns:
             continue
+        lo, hi = min(ns), max(ns)
         comment = "\n\n".join(g['comment']).strip()
-        for n, tr in g['ayahs']:
-            parts = ["**«%s»**" % tr]
+        trmap = {n: tr for n, tr in g['ayahs'] if tr}
+        for n in range(lo, hi + 1):
+            tr = trmap.get(n) or ayah_tr.get(n)
+            parts = []
+            if tr:
+                parts.append("**«%s»**" % tr)
             if comment:
                 parts.append(comment)
-            out[str(n)] = "\n\n".join(parts).strip()
+            if parts:
+                out[str(n)] = "\n\n".join(parts).strip()
     return out
 
-def detect_and_parse(path):
+def detect_and_parse(path, sura, ayah_tr=None):
     P = paras(path)
     # формат A, если есть заметное число маркеров "N) «"
     a_markers = sum(bool(re.match(r"^\d{1,3}\)\s*[«\"]", l)) for l in P)
-    return (parse_A if a_markers >= 3 else parse_B)(P), ("A" if a_markers >= 3 else "B")
+    if a_markers >= 3:
+        return parse_A(P), "A"
+    return parse_B(P, sura, ayah_tr or {}), "B"
 
 # ---------- перевод аятов Ismail'а (для дозаполнения формата B) ----------
 AYAT_DIR = os.path.join(ROOT, "data", "_sources", "baghawi", "аяты")
@@ -253,17 +313,16 @@ def build_all():
         p = sura_path(s)
         if not os.path.isfile(p):
             continue
-        chunk, fmt = detect_and_parse(p)
+        chunk, fmt = detect_and_parse(p, s, ayah_tr.get(s, {}))
         # встроить вордовские сноски → markdown [^N] + [^N]: … в каждом аяте
         notes = load_notes(p)
         for k in list(chunk):
             chunk[k] = attach_footnotes(chunk[k], notes)
-        # дозаполнение пропусков формата B переводом аятов Ismail'а
+        # дозаполнение остаточных пропусков формата B переводом аятов Ismail'а
         if fmt == "B" and s in ayah_tr:
             for n in range(1, canon.get(s, 0) + 1):
                 if str(n) not in chunk and n in ayah_tr[s]:
-                    chunk[str(n)] = ("**«%s»**\n\n*(толкование — в составе соседних аятов)*"
-                                     % ayah_tr[s][n])
+                    chunk[str(n)] = "**«%s»**" % ayah_tr[s][n]
                     filled += 1
         ayahs = [k for k in chunk if k != "0"]
         data[str(s)] = chunk
@@ -282,9 +341,10 @@ def sample(sids):
         af = os.path.join(ROOT, "data", "tafsirs", "_arabic", "%s.json" % s)
         if os.path.isfile(af):
             canon[int(s)] = max(int(k) for k in json.load(open(af)))
+    atr = load_ayah_tr()
     for s in sids:
         p = sura_path(int(s))
-        chunk, fmt = detect_and_parse(p)
+        chunk, fmt = detect_and_parse(p, int(s), atr.get(int(s), {}))
         ayahs = sorted(int(k) for k in chunk if k != "0")
         need = canon.get(int(s), "?")
         print("\n================ сура %s [формат %s] — %d/%s аятов ================" %
