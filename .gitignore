@@ -46,6 +46,10 @@ data/tafsirs/qurtubi_ru.json
 data/tafsirs/qurtubi_ru.js
 data/tafsirs/qurtubi_ru/
 data/index/qurtubi_ru.json
+data/tafsirs/qurtubi_ar.json
+data/tafsirs/qurtubi_ar.js
+data/tafsirs/qurtubi_ar/
+data/index/qurtubi_ar.json
 data/tafsirs/muqatil.json
 data/tafsirs/muqatil/
 data/index/muqatil.json
