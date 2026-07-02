@@ -237,6 +237,8 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .ab-entry:last-child{border-bottom:none}
 .ab-entry-label{font-size:10px;font-weight:600;color:var(--accent);margin-bottom:3px;display:flex;align-items:center;gap:4px}
 .ab-entry-label .lbl-ar{font-family:'Amiri',serif;color:var(--text-muted);font-weight:400}
+.cp-chip{margin-left:6px;font-size:9px;font-weight:600;color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent);border-radius:10px;padding:0 6px;line-height:15px;cursor:pointer;white-space:nowrap}
+.cp-chip:hover{background:var(--accent);color:#fff}
 .ab-entry-text{font-size:calc(13px*var(--rs-ru,1));line-height:calc(1.85*var(--lh-ru,1));color:var(--text-sec);white-space:pre-wrap}
 .ab-entry-text.selectable{-webkit-user-select:text;user-select:text}
 .ab-entry-text.rtl{direction:rtl;text-align:right;font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(17px*var(--rs-ar,1));line-height:calc(2*var(--lh-ar,1));color:var(--text)}
@@ -2349,6 +2351,15 @@ function covToggleKind(aid,k){setKindCollapsed(k);refreshCovPopup(aid);}
 const PICK_COL_DEFAULT={translation:true,ar_tafsir:true};
 function pickCollapsed(k){const v=ST.collapsedKinds[k];return v===undefined?!!PICK_COL_DEFAULT[k]:!!v;}
 function pickToggleKind(k){ST.collapsedKinds=Object.assign({},ST.collapsedKinds,{[k]:!pickCollapsed(k)});ss("collapsedKinds",ST.collapsedKinds);renderCenter();}
+// Чип «＋ عربي / ＋ рус» у источника, для которого есть парный (арабский оригинал
+// ↔ русский перевод). Показывается только пока пара НЕ включена. Клик — включает её.
+function counterpartChip(t){
+  const cid=t&&t.counterpart; if(!cid||ST.enabled[cid])return"";
+  const c=CONFIG.tafsirs.find(x=>x.id===cid); if(!c)return"";
+  const lbl=c.lang==="ar"?"عربي":"рус";
+  return `<button class="cp-chip" onclick="event.stopPropagation();enablePair('${escAttr(cid)}')" title="Подключить: ${escAttr(c.name)}">+ ${lbl}</button>`;
+}
+function enablePair(id){if(!ST.enabled[id]){ST.enabled[id]=true;setEnabled(ST.enabled);} if(typeof renderRP==="function")renderRP(); renderCenter();}
 // HTML одной колонки источника у аята. Распознаёт блочную отсылку «см. аят Z».
 // adhoc=true → плашка «разовый показ» с кнопкой убрать. blockOf=[from,to] → текст блока.
 function sourceEntryHTML(t,text,aid,adhoc,blockOf){
@@ -2357,7 +2368,7 @@ function sourceEntryHTML(t,text,aid,adhoc,blockOf){
   const blk=(!blockOf&&text)?parseBlockRef(text):null;
   if(blk){
     return `<div class="ab-entry"${adhoc?' style="border-left:2px solid var(--accent)"':''}>
-      <div class="ab-entry-label">${esc(t.name)} <span class="lbl-ar">${t.nameAr||''}</span>${badge}</div>
+      <div class="ab-entry-label">${esc(t.name)} <span class="lbl-ar">${t.nameAr||''}</span>${badge}${counterpartChip(t)}</div>
       <div class="cov-blockref">📎 Разобрано в блоке <b>${blk.from}–${blk.to}</b> <button class="cov-goto" onclick="goAyah(${ST.surah},${blk.target})">перейти к аяту ${blk.target} →</button></div>
     </div>`;
   }
@@ -2366,7 +2377,7 @@ function sourceEntryHTML(t,text,aid,adhoc,blockOf){
   const long=!ST.noTouch&&body&&body.length>600; // в режиме без касания — сразу развёрнуто, без кнопки
   const blockNote=blockOf?`<div class="cov-blocknote">показан блок ${blockOf[0]}–${blockOf[1]} (этот аят входит в него)</div>`:"";
   return `<div class="ab-entry"${adhoc?' style="border-left:2px solid var(--accent)"':''}>
-    <div class="ab-entry-label">${esc(t.name)} <span class="lbl-ar">${t.nameAr||''}</span>${badge}</div>
+    <div class="ab-entry-label">${esc(t.name)} <span class="lbl-ar">${t.nameAr||''}</span>${badge}${counterpartChip(t)}</div>
     ${blockNote}
     <div class="ab-entry-text md selectable ${isAr?'rtl':''} ${long?'clamped':''}">${inner}</div>
     ${long?'<button class="more-btn" onclick="toggleClamp(this)">Развернуть ▾</button>':''}

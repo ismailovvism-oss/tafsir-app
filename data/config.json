@@ -363,7 +363,8 @@
       "translator": "Исмаил (Валиуллах) Хаертдинов",
       "about": true,
       "caution": true,
-      "fill": 0.0832
+      "fill": 0.0832,
+      "counterpart": "qurtubi_ar"
     },
     {
       "id": "baghawi",
@@ -383,8 +384,30 @@
       ],
       "year": "516 х.",
       "translator": "Исмаил Исмаилов",
-      "caution": true,
-      "fill": 0.1815
+      "about": true,
+      "approved": true,
+      "fill": 0.0,
+      "counterpart": "baghawi_ar"
+    },
+    {
+      "id": "baghawi_ar",
+      "file": "tafsirs/baghawi_ar.json",
+      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
+      "name": "تفسير البغوي (معالم التنزيل)",
+      "nameAr": "",
+      "author": "аль-Багави",
+      "authorAr": "أبو محمد الحسين بن مسعود البغوي",
+      "group": "classical_ar",
+      "kind": "tafsir",
+      "lang": "ar",
+      "era": "classical",
+      "tags": [
+        "hadith"
+      ],
+      "year": "516 х.",
+      "about": true,
+      "fill": 1.0,
+      "counterpart": "baghawi"
     },
     {
       "id": "ibn_abbas",
@@ -406,7 +429,8 @@
       ],
       "about": true,
       "caution": true,
-      "fill": 0.59
+      "fill": 0.59,
+      "counterpart": "ibn_abbas_ar"
     },
     {
       "id": "ibn_abbas_sel",
@@ -435,8 +459,8 @@
       "id": "ibn_abbas_ar",
       "file": "tafsirs/ibn_abbas_ar.json",
       "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "Тафсир Ибн Аббаса (араб.)",
-      "nameAr": "مرويات ابن عباس في التفسير",
+      "name": "تفسير ابن عباس",
+      "nameAr": "",
       "author": "Ибн Аббас (асары) + редакторские сводки",
       "authorAr": "عبد الله بن عباس",
       "group": "classical_ar",
@@ -448,16 +472,16 @@
         "athar",
         "isnad"
       ],
-      "caution": true,
       "fill": 0.59,
-      "about": true
+      "about": true,
+      "counterpart": "ibn_abbas"
     },
     {
       "id": "mujahid",
       "file": "tafsirs/mujahid.json",
       "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "Тафсир Муджахида",
-      "nameAr": "تفسير مجاهد",
+      "name": "تفسير مجاهد",
+      "nameAr": "",
       "author": "Муджахид ибн Джабр аль-Макки",
       "authorAr": "مجاهد بن جبر المكي",
       "group": "classical_ar",
@@ -470,15 +494,14 @@
         "isnad"
       ],
       "year": "104 х.",
-      "caution": true,
       "fill": 0.4421
     },
     {
       "id": "qatada",
       "file": "tafsirs/qatada.json",
       "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "Тафсир Катады",
-      "nameAr": "تفسير قتادة",
+      "name": "تفسير قتادة",
+      "nameAr": "",
       "author": "Катада ибн Диама ас-Садуси",
       "authorAr": "قتادة بن دعامة السدوسي",
       "group": "classical_ar",
@@ -491,15 +514,14 @@
         "isnad"
       ],
       "year": "118 х.",
-      "caution": true,
       "fill": 0.6081
     },
     {
       "id": "ikrima",
       "file": "tafsirs/ikrima.json",
       "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "Тафсир Икримы",
-      "nameAr": "تفسير عكرمة",
+      "name": "تفسير عكرمة",
+      "nameAr": "",
       "author": "Икрима, вольноотпущенник Ибн Аббаса",
       "authorAr": "عكرمة مولى ابن عباس",
       "group": "classical_ar",
@@ -512,15 +534,14 @@
         "isnad"
       ],
       "year": "105 х.",
-      "caution": true,
       "fill": 0.2086
     },
     {
       "id": "hasan",
       "file": "tafsirs/hasan.json",
       "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "Тафсир аль-Хасана аль-Басри",
-      "nameAr": "تفسير الحسن البصري",
+      "name": "تفسير الحسن البصري",
+      "nameAr": "",
       "author": "аль-Хасан аль-Басри",
       "authorAr": "الحسن البصري",
       "group": "classical_ar",
@@ -533,15 +554,14 @@
         "isnad"
       ],
       "year": "110 х.",
-      "caution": true,
       "fill": 0.3457
     },
     {
       "id": "suddi",
       "file": "tafsirs/suddi.json",
       "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "Тафсир ас-Судди",
-      "nameAr": "تفسير السدي",
+      "name": "تفسير السدي",
+      "nameAr": "",
       "author": "Исмаил ибн Абд ар-Рахман ас-Судди аль-Кабир",
       "authorAr": "إسماعيل بن عبد الرحمن السدي",
       "group": "classical_ar",
@@ -554,15 +574,14 @@
         "isnad"
       ],
       "year": "127 х.",
-      "caution": true,
       "fill": 0.3379
     },
     {
       "id": "saeed",
       "file": "tafsirs/saeed.json",
       "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "Тафсир Саида ибн Джубайра",
-      "nameAr": "تفسير سعيد بن جبير",
+      "name": "تفسير سعيد بن جبير",
+      "nameAr": "",
       "author": "Саид ибн Джубайр",
       "authorAr": "سعيد بن جبير",
       "group": "classical_ar",
@@ -575,15 +594,14 @@
         "isnad"
       ],
       "year": "95 х.",
-      "caution": true,
       "fill": 0.1899
     },
     {
       "id": "dahhak",
       "file": "tafsirs/dahhak.json",
       "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "Тафсир ад-Даххака",
-      "nameAr": "تفسير الضحاك",
+      "name": "تفسير الضحاك",
+      "nameAr": "",
       "author": "ад-Даххак ибн Музахим аль-Хиляли",
       "authorAr": "الضحاك بن مزاحم الهلالي",
       "group": "classical_ar",
@@ -596,15 +614,14 @@
         "isnad"
       ],
       "year": "105 х.",
-      "caution": true,
       "fill": 0.2574
     },
     {
       "id": "ibn_masud",
       "file": "tafsirs/ibn_masud.json",
       "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "Тафсир Ибн Масуда",
-      "nameAr": "تفسير ابن مسعود",
+      "name": "تفسير ابن مسعود",
+      "nameAr": "",
       "author": "Абдуллах ибн Масуд",
       "authorAr": "عبد الله بن مسعود",
       "group": "classical_ar",
@@ -617,15 +634,14 @@
         "isnad"
       ],
       "year": "32 х.",
-      "caution": true,
       "fill": 0.122
     },
     {
       "id": "ata",
       "file": "tafsirs/ata.json",
       "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "Тафсир Аты ибн Аби Рабаха",
-      "nameAr": "تفسير عطاء",
+      "name": "تفسير عطاء",
+      "nameAr": "",
       "author": "Ата ибн Аби Рабах",
       "authorAr": "عطاء بن أبي رباح",
       "group": "classical_ar",
@@ -638,15 +654,14 @@
         "isnad"
       ],
       "year": "114 х.",
-      "caution": true,
       "fill": 0.1084
     },
     {
       "id": "muqatil",
       "file": "tafsirs/muqatil.json",
       "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "Тафсир Мукатиля ибн Сулеймана",
-      "nameAr": "تفسير مقاتل بن سليمان",
+      "name": "تفسير مقاتل بن سليمان",
+      "nameAr": "",
       "author": "Мукатиль ибн Сулейман аль-Балхи",
       "authorAr": "مقاتل بن سليمان البلخي",
       "group": "classical_ar",
@@ -659,15 +674,14 @@
         "isnad"
       ],
       "year": "150 х.",
-      "caution": true,
       "fill": 0.9881
     },
     {
       "id": "qurtubi_ar",
       "file": "tafsirs/qurtubi_ar.json",
       "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "Тафсир аль-Куртуби (араб.)",
-      "nameAr": "الجامع لأحكام القرآن",
+      "name": "تفسير القرطبي (الجامع لأحكام القرآن)",
+      "nameAr": "",
       "author": "Мухаммад ибн Ахмад аль-Куртуби",
       "authorAr": "أبو عبد الله محمد بن أحمد الأنصاري القرطبي",
       "group": "classical_ar",
@@ -681,7 +695,8 @@
       ],
       "year": "671 х.",
       "about": true,
-      "fill": 0.9997
+      "fill": 0.9997,
+      "counterpart": "qurtubi_ru"
     },
     {
       "id": "muntahab",
@@ -701,8 +716,8 @@
     {
       "id": "ibn_abi_hatim",
       "file": "tafsirs/ibn_abi_hatim.json",
-      "name": "Тафсир Ибн Аби Хатима",
-      "nameAr": "تفسير ابن أبي حاتم",
+      "name": "تفسير ابن أبي حاتم",
+      "nameAr": "",
       "author": "Ибн Аби Хатим ар-Рази",
       "authorAr": "ابن أبي حاتم الرازي",
       "group": "classical_ar",
@@ -720,8 +735,8 @@
       "id": "mawsua_masur",
       "file": "tafsirs/mawsua_masur.json",
       "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "Аль-Мавсуа фи-т-тафсир аль-масур",
-      "nameAr": "الموسوعة في التفسير المأثور",
+      "name": "الموسوعة في التفسير المأثور",
+      "nameAr": "",
       "author": "Центр тафсира (свод преданий саляфов)",
       "authorAr": "مركز الدراسات القرآنية وتحقيق التراث",
       "group": "classical_ar",

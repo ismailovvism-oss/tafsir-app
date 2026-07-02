@@ -54,6 +54,10 @@ data/tafsirs/baghawi.json
 data/tafsirs/baghawi.js
 data/tafsirs/baghawi/
 data/index/baghawi.json
+data/tafsirs/baghawi_ar.json
+data/tafsirs/baghawi_ar.js
+data/tafsirs/baghawi_ar/
+data/index/baghawi_ar.json
 data/tafsirs/qurtubi_ar.json
 data/tafsirs/qurtubi_ar.js
 data/tafsirs/qurtubi_ar/
