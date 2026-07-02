@@ -2227,8 +2227,9 @@ async function renderSourceMode(el){
   const area=document.getElementById("readingArea");
   if(!area)return;
   const items=sourceModeItems(id,ayahIds);
-  let html="";
-  if(!items.length){html=`<div style="text-align:center;color:var(--text-muted);padding:40px">В этой суре у источника нет покрытия.<br>Нажмите «след. ▶» для перехода к покрытию.</div>`;}
+  // Введение к суре (ключ "0") — тем же блоком, что и в режиме Аяты, для согласованности.
+  let html=buildSuraIntro(enabled,loaded);
+  if(!items.length){html+=`<div style="text-align:center;color:var(--text-muted);padding:40px">В этой суре у источника нет покрытия.<br>Нажмите «след. ▶» для перехода к покрытию.</div>`;}
   for(const it of items){
     if(it.gap){
       const [f,t]=it.gap;const key=ST.surah+":"+f+"-"+t;
