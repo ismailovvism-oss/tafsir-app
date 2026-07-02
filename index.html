@@ -239,6 +239,8 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .ab-entry-label .lbl-ar{font-family:'Amiri',serif;color:var(--text-muted);font-weight:400}
 .cp-chip{margin-left:6px;font-size:9px;font-weight:600;color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent);border-radius:10px;padding:0 6px;line-height:15px;cursor:pointer;white-space:nowrap}
 .cp-chip:hover{background:var(--accent);color:#fff}
+.seg-cred{margin-left:6px;font-size:9px;font-weight:600;color:var(--text-muted);white-space:nowrap}
+.seg-cred.ok{color:#1B5E3B}.seg-cred.warn{color:#8B6914}
 .ab-entry-text{font-size:calc(13px*var(--rs-ru,1));line-height:calc(1.85*var(--lh-ru,1));color:var(--text-sec);white-space:pre-wrap}
 .ab-entry-text.selectable{-webkit-user-select:text;user-select:text}
 .ab-entry-text.rtl{direction:rtl;text-align:right;font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(17px*var(--rs-ar,1));line-height:calc(2*var(--lh-ar,1));color:var(--text)}
@@ -1831,12 +1833,22 @@ function aboutRow(label,value){
 }
 function aboutStatus(t){
   const tags=t.tags||[],items=[];
-  if(t.approved)items.push(["ok","одобрено"]);
+  const composite=Array.isArray(t.segments)&&t.segments.length>=2;
+  if(composite)items.push(["","составной перевод — статус по сурам ниже"]);
+  if(t.approved&&!composite)items.push(["ok","одобрено"]);
   if(t.caution)items.push(["warn","не проверено"]);
-  if(tags.includes("draft"))items.push(["warn","черновик"]);
+  if(tags.includes("draft")&&!composite)items.push(["warn","черновик"]);
   if(t.fill!=null&&t.fill<0.999)items.push(["","заполнено "+aboutFillText(t)]);
   if(!items.length)items.push(["","статус проверки не указан"]);
   return `<div class="about-status">${items.map(([cls,txt])=>`<span class="about-pill ${cls}">${esc(txt)}</span>`).join("")}</div>`;
+}
+// Разбивка «кто какие суры перевёл» для составного источника.
+function aboutSegments(t){
+  if(!Array.isArray(t.segments)||t.segments.length<2)return "";
+  return t.segments.map(s=>{
+    const pill=s.approved?'<span class="about-pill ok">одобрено</span>':s.draft?'<span class="about-pill warn">черновик</span>':s.caution?'<span class="about-pill warn">не проверено</span>':'';
+    return `<div class="about-row"><span class="about-k">Суры ${esc(String(s.suras))}</span><span class="about-v">${esc(s.translator||'')} ${pill}</span></div>`;
+  }).join("");
 }
 function aboutPassport(t){
   const tags=(t.tags||[]).map(aboutTagName);
@@ -1847,7 +1859,7 @@ function aboutPassport(t){
     aboutRow("Язык",esc(LANG_RU[t.lang]||t.lang||"")),
     aboutRow("Эпоха",esc(ERA_RU[t.era]||t.era||"")),
     aboutRow("Автор",esc(t.author||"")),
-    aboutRow("Переводчик",esc(t.translator||"")),
+    (Array.isArray(t.segments)&&t.segments.length>=2)?aboutSegments(t):aboutRow("Переводчик",esc(t.translator||"")),
     aboutRow("Редактор",esc(t.editor||"")),
     aboutRow("Год",esc(t.year||"")),
     aboutRow("Заполненность",esc(aboutFillText(t))),
@@ -2360,6 +2372,30 @@ function counterpartChip(t){
   return `<button class="cp-chip" onclick="event.stopPropagation();enablePair('${escAttr(cid)}')" title="Подключить: ${escAttr(c.name)}">+ ${lbl}</button>`;
 }
 function enablePair(id){if(!ST.enabled[id]){ST.enabled[id]=true;setEnabled(ST.enabled);} if(typeof renderRP==="function")renderRP(); renderCenter();}
+// Составной источник: разные переводчики по разным сурам. t.segments =
+// [{suras:"58-114", translator, approved|draft, note?}, …]. Спека сур — "50-57",
+// "50,52,60", "50-57,60". Возвращает сегмент, покрывающий суру (или null).
+function suraInSpec(surah,spec){
+  if(spec==null)return false;
+  return String(spec).split(",").some(part=>{
+    const m=part.trim().match(/^(\d+)(?:\s*[-–]\s*(\d+))?$/);
+    if(!m)return false;
+    const a=+m[1],b=m[2]?+m[2]:a;
+    return surah>=Math.min(a,b)&&surah<=Math.max(a,b);
+  });
+}
+function segForSura(t,surah){
+  if(!t||!Array.isArray(t.segments))return null;
+  return t.segments.find(s=>suraInSpec(surah,s.suras))||null;
+}
+// Бейдж «пер. Имя ✓/⚠» для текущей суры — только у составных источников (≥2 переводчиков).
+function segCredit(t){
+  if(!t||!Array.isArray(t.segments)||t.segments.length<2)return"";
+  const seg=segForSura(t,ST.surah); if(!seg)return"";
+  const mark=seg.approved?' ✓':(seg.draft||seg.caution)?' ⚠':'';
+  const cls=seg.approved?'ok':(seg.draft||seg.caution)?'warn':'';
+  return `<span class="seg-cred ${cls}" title="Перевод этой суры${seg.draft?' — черновик, не выверен':seg.approved?' — выверен и одобрен':''}">пер. ${esc(seg.translator||'')}${mark}</span>`;
+}
 // HTML одной колонки источника у аята. Распознаёт блочную отсылку «см. аят Z».
 // adhoc=true → плашка «разовый показ» с кнопкой убрать. blockOf=[from,to] → текст блока.
 function sourceEntryHTML(t,text,aid,adhoc,blockOf){
@@ -2368,7 +2404,7 @@ function sourceEntryHTML(t,text,aid,adhoc,blockOf){
   const blk=(!blockOf&&text)?parseBlockRef(text):null;
   if(blk){
     return `<div class="ab-entry"${adhoc?' style="border-left:2px solid var(--accent)"':''}>
-      <div class="ab-entry-label">${esc(t.name)} <span class="lbl-ar">${t.nameAr||''}</span>${badge}${counterpartChip(t)}</div>
+      <div class="ab-entry-label">${esc(t.name)} <span class="lbl-ar">${t.nameAr||''}</span>${segCredit(t)}${badge}${counterpartChip(t)}</div>
       <div class="cov-blockref">📎 Разобрано в блоке <b>${blk.from}–${blk.to}</b> <button class="cov-goto" onclick="goAyah(${ST.surah},${blk.target})">перейти к аяту ${blk.target} →</button></div>
     </div>`;
   }
@@ -2377,7 +2413,7 @@ function sourceEntryHTML(t,text,aid,adhoc,blockOf){
   const long=!ST.noTouch&&body&&body.length>600; // в режиме без касания — сразу развёрнуто, без кнопки
   const blockNote=blockOf?`<div class="cov-blocknote">показан блок ${blockOf[0]}–${blockOf[1]} (этот аят входит в него)</div>`:"";
   return `<div class="ab-entry"${adhoc?' style="border-left:2px solid var(--accent)"':''}>
-    <div class="ab-entry-label">${esc(t.name)} <span class="lbl-ar">${t.nameAr||''}</span>${badge}${counterpartChip(t)}</div>
+    <div class="ab-entry-label">${esc(t.name)} <span class="lbl-ar">${t.nameAr||''}</span>${segCredit(t)}${badge}${counterpartChip(t)}</div>
     ${blockNote}
     <div class="ab-entry-text md selectable ${isAr?'rtl':''} ${long?'clamped':''}">${inner}</div>
     ${long?'<button class="more-btn" onclick="toggleClamp(this)">Развернуть ▾</button>':''}
