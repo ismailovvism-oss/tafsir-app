@@ -34,15 +34,54 @@ def arabic_ratio(s):
         return 0.0
     return sum(bool(AR.match(c)) for c in letters) / len(letters)
 
+def _para_text(p):
+    """Текст абзаца в порядке документа; ссылки на сноски → маркер [^id]."""
+    buf = []
+    for el in p.iter():
+        if el.tag == NS + "t":
+            buf.append(el.text or "")
+        elif el.tag == NS + "footnoteReference":
+            fid = el.get(NS + "id")
+            if fid:
+                buf.append("[^%s]" % fid)
+    return "".join(buf).strip()
+
 def paras(path):
     with zipfile.ZipFile(path) as z:
         xml = z.read("word/document.xml")
     out = []
     for p in ET.fromstring(xml).iter(NS + "p"):
-        s = "".join(t.text or "" for t in p.iter(NS + "t")).strip()
+        s = _para_text(p)
         if s:
             out.append(s)
     return out
+
+def load_notes(path):
+    """{id: текст сноски} из word/footnotes.xml (реальные вордовские сноски)."""
+    with zipfile.ZipFile(path) as z:
+        if "word/footnotes.xml" not in z.namelist():
+            return {}
+        root = ET.fromstring(z.read("word/footnotes.xml"))
+    notes = {}
+    for fn in root.iter(NS + "footnote"):
+        if fn.get(NS + "type") in ("separator", "continuationSeparator"):
+            continue
+        fid = fn.get(NS + "id")
+        txt = "".join(t.text or "" for t in fn.iter(NS + "t")).strip()
+        if fid and txt:
+            notes[fid] = txt
+    return notes
+
+def attach_footnotes(md, notes):
+    """Маркеры [^id] в тексте аята → перенумеровать 1..k и добавить [^N]: … в конец."""
+    ids = list(dict.fromkeys(re.findall(r"\[\^(\d+)\]", md)))
+    ids = [i for i in ids if notes.get(i)]
+    if not ids:
+        return re.sub(r"\[\^\d+\]", "", md)  # ссылка без текста — убрать маркер
+    mp = {old: n + 1 for n, old in enumerate(ids)}
+    body = re.sub(r"\[\^(\d+)\]", lambda m: "[^%d]" % mp[m.group(1)] if m.group(1) in mp else "", md)
+    defs = "\n".join("[^%d]: %s" % (mp[old], notes[old]) for old in ids)
+    return body.rstrip() + "\n\n" + defs
 
 _AR_SEQ = re.compile(r"[؀-ۿݐ-ݿﭐ-﷿ﹰ-﻿‏‎]+")
 def drop_arabic(s):
@@ -215,6 +254,10 @@ def build_all():
         if not os.path.isfile(p):
             continue
         chunk, fmt = detect_and_parse(p)
+        # встроить вордовские сноски → markdown [^N] + [^N]: … в каждом аяте
+        notes = load_notes(p)
+        for k in list(chunk):
+            chunk[k] = attach_footnotes(chunk[k], notes)
         # дозаполнение пропусков формата B переводом аятов Ismail'а
         if fmt == "B" and s in ayah_tr:
             for n in range(1, canon.get(s, 0) + 1):
