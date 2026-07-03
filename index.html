@@ -884,6 +884,11 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
 .bm-tools{padding:9px 10px 3px}
 /* «недавнее» на Главной — акцентный ховер в тон темы */
 .home-rrow:hover{background:rgba(var(--accent-rgb),.07)}
+/* разрыв ряда таблицы (структурные раскладки: Фатиха/манзили/периоды) */
+.hfz-break{grid-column:1/-1;display:flex;align-items:center;gap:8px;min-height:4px;margin:3px 0 1px;font-size:9px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+.hfz-break::before,.hfz-break::after{content:"";flex:1;height:1px;background:rgba(var(--accent-rgb),.35)}
+/* объединённая ячейка 8–9 (Анфаль+Тауба) — двойной ширины */
+.hfz-cell.wide{grid-column:span 2}
 /* степпер плотности сетки (ячеек в ряду) таблицы Корана / карты хифза */
 .hfz-bc .lbl{font-size:10px;color:var(--text-muted)}
 .qt-step{display:inline-flex;align-items:center;gap:6px}
@@ -2066,7 +2071,9 @@ let HFO=null,_hfoLoading=false;
 // обслуживают (а) режим хифза (ST.hifzMode) и (б) таблицу Корана на Главной
 // (QT). У каждой — своё независимое состояние; _ovlEnv() решает, чьё сейчас
 // активно, по активному режиму (режимы взаимоисключающие — конфликтов нет).
-const QT={level:"suras",juz:null,ovl:{group:null,value:null,sub:null},ord:"mushaf"};
+const QT={level:"suras",juz:null,ovl:{group:null,value:null,sub:null},ord:"mushaf",
+  rows:gs("qtRows","plain"),                              // разрывы рядов: plain|fatiha|manzil|period
+  m89:gs("qtM89",false)};                                 // Анфаль+Тауба одной ячейкой
 function _ovlEnv(){return ST.hifzMode?[HF,renderHifz]:[QT,renderQuranTable];}
 // Плотность сетки таблицы (ячеек в ряду): 0 = авто (по ширине экрана), 3–16 —
 // фиксированно. Общая настройка для таблицы Главной и карты хифза (tl_qtCols).
@@ -2269,8 +2276,33 @@ function quranTableHTML(){
     <button class="chip ${QT.level==="juz"?"on":""}" onclick="qtLevel('juz')">джузы</button>
     <span style="margin-left:8px"></span>${qtColsCtl()}</div>`;
   const order=QT.level==="suras"?hifzOrdRowHTML():"";
+  // структурные раскладки рядов — только суры в мусхафном порядке (в хронологии
+  // и «по длине» разрывы мусхафной структуры не имеют смысла)
+  let rowsRow="";
+  if(QT.level==="suras"&&QT.ord==="mushaf"){
+    const rchip=(v,lab,title)=>`<button class="chip ${QT.rows===v?"on":""}" title="${escAttr(title||"")}" onclick="qtRows('${v}')">${lab}</button>`;
+    rowsRow=`<div class="hfo-chips"><span class="lbl">Ряды:</span>`
+      +rchip("plain","сплошные","обычная плотная сетка")
+      +rchip("fatiha","Фатиха особняком","Фатиха отдельным первым рядом — как водород в таблице Менделеева")
+      +rchip("manzil","манзили","7 недельных частей чтения: 3-5-7-9-11-13 сур и остаток; Фатиха перед ними")
+      +rchip("period","периоды","ряды по зонам длины: тивал · миун/масани · три яруса муфассаля")
+      +`<button class="chip ${QT.m89?"on":""}" title="Между Аль-Анфаль и Ат-Таубой нет басмалы; по ряду мнений это одна сура («карина»)" onclick="qtM89()">8+9 вместе</button></div>`;
+  }
   return `<div class="home-sec"><div class="home-sec-h">Коран · суры и джузы</div>
-    ${view}${order}${hfoChipsHTML()}${QT.level==="suras"?qtSurasHTML():qtJuzHTML()}</div>`;
+    ${view}${order}${rowsRow}${hfoChipsHTML()}${QT.level==="suras"?qtSurasHTML():qtJuzHTML()}</div>`;
+}
+// ─── Структурные раскладки рядов (эксперименты «как таблица Менделеева») ───
+// Разрыв ряда ПЕРЕД сурой sid (только мусхафный порядок): null — нет,
+// строка — подпись разделителя ("" — просто перенос без подписи).
+// «Фатиха особняком» — отдельный первый ряд (как водород);
+// «манзили» — 7 недельных частей (3-5-7-9-11-13-остаток, Фатиха перед ними);
+// «периоды» — непрерывные зоны длины (тивал / миун-масани / три муфассаля).
+function qtBreakBefore(sid){
+  const r=QT.rows;
+  if(r==="fatiha")return sid===2?"":null;
+  if(r==="manzil")return ({2:"манзиль 1 · 3 суры",5:"манзиль 2 · 5 сур",10:"манзиль 3 · 7 сур",17:"манзиль 4 · 9 сур",26:"манзиль 5 · 11 сур",37:"манзиль 6 · 13 сур",50:"манзиль 7 · 65 сур"})[sid]??null;
+  if(r==="period")return ({2:"ат-тивал · длинные",10:"аль-миун и аль-масани",50:"муфассаль · длинный",78:"муфассаль · средний",93:"муфассаль · короткий"})[sid]??null;
+  return null;
 }
 function qtSurasHTML(){
   const js=qpcMeta.juzStart;
@@ -2278,17 +2310,33 @@ function qtSurasHTML(){
   const mushaf=QT.ord==="mushaf",chrono=QT.ord==="chrono";
   let cells="";
   for(const su of hifzOrderedSuras()){
+    if(mushaf&&QT.m89&&su.id===9)continue;               // Тауба влита в ячейку Анфаля
+    if(mushaf){
+      const br=qtBreakBefore(su.id);
+      if(br!=null)cells+=`<div class="hfz-break">${br?`<span>${br}</span>`:""}</div>`;
+    }
     const m=hfoMatch(su.id);
+    const focus=QT.juz&&juzOfSurah(su.id)===QT.juz;
+    if(mushaf&&QT.m89&&su.id===8){                       // объединённая ячейка 8–9 («карина»)
+      const su9=SURAHS.find(x=>x.id===9);
+      const chips=(juzAt[8]||[]).concat(juzAt[9]||[]).map(j=>`дж ${j}`).join(",");
+      cells+=`<div class="hfz-cell wide ${focus?"focus":""} ${m===false?"hfo-dim":""}" onclick="goSurah(8)" title="8–9. Аль-Анфаль + Ат-Тауба · ${su.n+su9.n} аятов — между ними нет басмалы; по ряду мнений — одна сура («карина»)">
+        <div class="num">8–9</div>${chips?`<div class="jz">${chips}</div>`:""}
+        <div class="nm">Аль-Анфаль · Ат-Тауба</div><div class="sub">${su.n+su9.n}</div>
+        <span class="anom" title="Ат-Тауба: единственная сура без басмалы">٭</span>${hfoBadge(m)}</div>`;
+      continue;
+    }
     const chips=mushaf?(juzAt[su.id]||[]).map(j=>`дж ${j}`).join(","):
       (chrono&&HFO&&HFO.by[su.id]?`${HFO.by[su.id].chrono}-я`:"");
     const anom=HFO&&HFO.by[su.id]&&HFO.by[su.id].no_basmala?`<span class="anom" title="${escAttr(su.ru)}: единственная сура без басмалы">٭</span>`:"";
-    const focus=QT.juz&&juzOfSurah(su.id)===QT.juz;
     cells+=`<div class="hfz-cell ${focus?"focus":""} ${m===false?"hfo-dim":""}" onclick="goSurah(${su.id})" title="${su.id}. ${escAttr(su.ru)} · ${su.n} аятов — открыть${m?` · ${escAttr(m.title)}`:""}">
       <div class="num">${su.id}</div>${chips?`<div class="jz">${chips}</div>`:""}
       <div class="nm">${esc(su.ru)}</div><div class="sub">${su.n}</div>${anom}${hfoBadge(m)}</div>`;
   }
   return `<div class="hfz-grid suras" style="margin-top:9px;${qtGridCols()}">${cells}</div>`;
 }
+function qtRows(v){QT.rows=v;ss("qtRows",v);renderQuranTable();}
+function qtM89(){QT.m89=!QT.m89;ss("qtM89",QT.m89);renderQuranTable();}
 function qtJuzHTML(){
   const jc=QT.ovl.group&&HFO?hfoJuzCounts():null;
   const jOrd=hifzJuzOrds();
