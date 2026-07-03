@@ -753,6 +753,54 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
 .prog-btns{display:flex;flex-wrap:wrap;gap:7px}
 .prog-btns button{font-family:inherit;font-size:12px;background:var(--bg);color:var(--text);border:1px solid var(--border);padding:7px 10px;border-radius:8px;cursor:pointer}
 .prog-kv{font-size:11px;color:var(--text-muted);margin-top:9px;line-height:1.6;font-family:ui-monospace,Menlo,monospace}
+
+/* ── Проверка заучивания (хифз-тренажёр) ─────────────────────
+   Эпистемика на карте: КОНТУР ячейки = декларация («я считаю, что знаю»),
+   ЗАЛИВКА = свидетельство проверок. Цвета силы памяти: красный (не помню) →
+   янтарный (с трудом) → светло-зелёный (уверенно, в повторении) → зелёный (закреплено). */
+.hf-tabs{display:flex;gap:7px;margin:0 0 13px}
+.hf-tabs button{flex:1;font-family:inherit;font-size:13px;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text-sec);cursor:pointer}
+.hf-tabs button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.hf-scope{display:flex;gap:7px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--text-sec)}
+.hf-scope select,.hf-scope input{font-family:inherit;font-size:12px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:7px;padding:6px 7px;max-width:170px}
+.hf-scope input{width:56px}
+.hf-bar{display:flex;height:11px;border-radius:6px;overflow:hidden;background:var(--bg-alt);border:1px solid var(--border);margin-top:9px}
+.hf-bar i{display:block;height:100%}
+.hf-sura{border:1px solid var(--border);border-radius:9px;padding:8px 10px;margin-top:8px}
+.hf-sura.mastered{border-color:var(--accent);background:rgba(46,160,110,.10)}
+.hf-sura-head{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.hf-sura-name{font-size:13px;color:var(--text);font-weight:600;flex:1;min-width:130px;cursor:pointer}
+.hf-sura-name small{font-weight:400;color:var(--text-muted)}
+.hf-decl{display:inline-flex;border:1px solid var(--border);border-radius:7px;overflow:hidden}
+.hf-decl button{border:none;background:var(--bg);color:var(--text-muted);font-family:inherit;font-size:11px;padding:4px 8px;cursor:pointer}
+.hf-decl button.k.on{background:#2ea06e;color:#fff}
+.hf-decl button.s.on{background:#e0a030;color:#fff}
+.hf-decl button.n.on{background:#e05252;color:#fff}
+.hf-heat{display:grid;grid-template-columns:repeat(auto-fill,minmax(30px,1fr));gap:3px;margin-top:9px}
+.hf-cell{height:22px;border-radius:4px;background:var(--bg-alt);border:2px solid transparent;font-size:9px;color:var(--text-muted);display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap}
+.hf-cell.v-weak{background:#e05252;color:#fff}
+.hf-cell.v-mid{background:#e0a030;color:#fff}
+.hf-cell.v-strong{background:rgba(46,160,110,.55);color:#fff}
+.hf-cell.v-mast{background:#2ea06e;color:#fff}
+.hf-cell.d-know{border-color:#2ea06e}
+.hf-cell.d-shaky{border-color:#e0a030}
+.hf-cell.d-no{border-color:#e05252}
+.hf-quiz-card{border:1px solid var(--border);border-radius:10px;padding:13px;margin-top:10px}
+.hf-ar{font-size:calc(21px*var(--rs-ar,1));line-height:calc(1.9*var(--lh-ar,1));direction:rtl;text-align:right;color:var(--text)}
+.hf-ru{font-size:14px;line-height:1.55;color:var(--text)}
+.hf-ru.sec{font-size:12px;color:var(--text-muted);margin-top:5px}
+.hf-ref{font-size:12px;color:var(--accent);font-weight:700;margin-bottom:6px}
+.hf-grade{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
+.hf-grade button{font-family:inherit;font-size:11px;padding:5px 10px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--text-sec);cursor:pointer}
+.hf-grade button.g0.on{background:#e05252;border-color:#e05252;color:#fff}
+.hf-grade button.g1.on{background:#e0a030;border-color:#e0a030;color:#fff}
+.hf-grade button.g2.on{background:#2ea06e;border-color:#2ea06e;color:#fff}
+.hf-chain-item{border-top:1px dashed var(--border);padding:11px 0 4px}
+.hf-set{display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--text-sec)}
+.hf-set label{display:inline-flex;align-items:center;gap:5px;cursor:pointer}
+.hf-muted{font-size:12px;color:var(--text-muted)}
+.hf-legend{display:flex;gap:11px;flex-wrap:wrap;margin-top:9px;font-size:10px;color:var(--text-muted);align-items:center}
+.hf-legend .sw{width:12px;height:12px;border-radius:3px;display:inline-block;vertical-align:-2px;margin-right:3px}
 </style>
 </head>
 <body data-theme="green">
@@ -1102,13 +1150,17 @@ function pushRecent(surah,ayah,mode){
 // Единый store поверх того же localStorage приложения (через ss/gs — никто,
 // кроме store, его не трогает). Наружу — УЗКИЙ контракт (граница модуля):
 //   запись:  Progress.recordActivity(sec,verseKeys), Progress.updateResume(vk)
+//            hifzDeclareSurah / hifzRecordReview / hifzSetSettings (слой LEARNING)
 //   чтение:  getSummary / getResume / getCoverage / getPageStatus
-//   хуки:    getHifzStatus [заглушка], exportState/importState [через общий бэкап]
+//            hifzAyahs / hifzGetAyah / hifzStage / hifzSuraDecl / hifzSettings / todayISO
+//   хуки:    getHifzStatus [РЕАЛЬНЫЙ: агрегат LEARNING по страницам],
+//            exportState/importState [через общий бэкап]
 // Ридер и прогресс НЕ зовут друг друга напрямую — только через этот контракт.
 // Три несмешиваемых слоя прогресса:
 //   RESUME   — одна позиция «где продолжить» (updateResume; НИЧЕГО не начисляет).
 //   CREDITED — реестр дней activityDays (recordActivity; ядро всех метрик).
-//   LEARNING — хифз, пока getHifzStatus=>null (оживёт с движком заучивания).
+//   LEARNING — хифз: по-аятное состояние памяти (пишет ТОЛЬКО тренажёр
+//              «Проверка заучивания» через hifz*-контракт; см. блок ниже).
 // ============================================================
 
 // Числа аятов по 114 сурам — для глобального порядкового номера аята (verse→page).
@@ -1143,10 +1195,17 @@ function verseToPage(verseKey,mushafId){
 
 const Progress=(()=>{
   const IDLE_LIMIT_SEC=30, TICK_SEC=1, MILESTONES=[3,7,30,100,365], TOTAL_PAGES=604;
+  const HIFZ_MASTER=21;                                   // интервал (дней), с которого аят считается «закреплён»
   const KEY="progress";                                   // хранится через ss/gs (ключ tl_progress)
-  function def(){return {settings:{goalType:"minutes",goalValue:1,mushafId:1,recovery:{autoPerWeek:1,manualMaxDays:2}},activityDays:[],resumePosition:null,manualRestore:{active:false},_debugDayOffset:0};}
+  // hifz.settings: K — длина цепочки проверки; lang — язык показа (ar|ru); backward —
+  // цепочка назад (сложный режим); feedActivity — см. комментарий у hifzRecordReview.
+  function hifzDef(){return {ayahs:{},junctions:{},suraDecl:{},settings:{K:4,lang:"ar",backward:false,feedActivity:false,scope:null}};}
+  function def(){return {settings:{goalType:"minutes",goalValue:1,mushafId:1,recovery:{autoPerWeek:1,manualMaxDays:2}},activityDays:[],resumePosition:null,manualRestore:{active:false},hifz:hifzDef(),_debugDayOffset:0};}
   let state=load();
-  function load(){const s=gs(KEY,null);if(!s)return def();return Object.assign(def(),s,{settings:Object.assign(def().settings,s.settings||{})});}
+  function load(){const s=gs(KEY,null);if(!s)return def();
+    return Object.assign(def(),s,
+      {settings:Object.assign(def().settings,s.settings||{}),
+       hifz:Object.assign(hifzDef(),s.hifz||{},{settings:Object.assign(hifzDef().settings,(s.hifz||{}).settings||{})})});}
   function save(){ss(KEY,state);}
   // — даты (со сдвигом «сегодня» для отладки серии/вех) —
   // ЛОКАЛЬНАЯ дата, не toISOString (тот даёт UTC: в UTC+3 время 00:00–02:59
@@ -1163,6 +1222,86 @@ const Progress=(()=>{
   function recordActivity(sec,verseKeys){const r=dayRec(today(),true);if(sec>0)r.activeSeconds+=sec;if(verseKeys&&verseKeys.length){const set=new Set(r.verseKeys);for(const vk of verseKeys)set.add(vk);r.verseKeys=[...set];}recalcGoal(r);save();}
   // updateResume — двигает ОДНУ позицию resume и НИЧЕГО не начисляет (RESUME ≠ CREDITED).
   function updateResume(verseKey){state.resumePosition={verseKey,mushafId:state.settings.mushafId,touchedAt:today()};save();}
+  // ═══ СЛОЙ LEARNING (хифз) — по-аятное состояние памяти ═══
+  // Пишется ТОЛЬКО тренажёром «Проверка заучивания» через контракт ниже;
+  // resume/credited эти функции не трогают (слои прогресса не смешиваются).
+  // Модель: hifz.ayahs[verseKey] = {declared, verified, srs{due,interval,ease}, log[], up}
+  //   declared — ДЕКЛАРАЦИЯ пользователя ("know"|"shaky"|"no"|null): гипотеза-засев карты.
+  //   verified — ПОДТВЕРЖДЕНИЕ проверкой (последняя оценка 0|1|2; null = не проверялся).
+  //   Эпистемика: это РАЗНЫЕ поля. Свидетельство переопределяет декларацию при
+  //   отображении и в пуле; декларация НИКОГДА не затирает свидетельство.
+  //   srs — упрощённый SM-2: interval в днях, due — локальная дата, ease 1.3…2.8.
+  //   log — хвост оценок [{t,g}] (обрезается; все метрики — производные, не хранятся).
+  // hifz.junctions["a>b"] — состояние ПЕРЕХОДОВ между соседними аятами (задел под
+  //   будущий движок «швов»): оценка аята b, вспомненного в цепочке после a, — это
+  //   одновременно свидетельство шва a→b. Ключ всегда в ПОРЯДКЕ ТЕКСТА.
+  let _hifzPg=null;                                       // кэш агрегации по страницам (сбрасывается при записи)
+  // Пред-разметка: декларация СУРОЙ ЦЕЛИКОМ (level: "know"|"shaky"|"no"; null = снять).
+  // Ставит declared всем аятам суры; verified/srs НЕ трогает (свидетельство сильнее).
+  function hifzDeclareSurah(surahId,level){
+    const su=SURAHS.find(s=>s.id===surahId);if(!su)return;
+    const H=state.hifz,t=today();
+    if(level==null)delete H.suraDecl[surahId];else H.suraDecl[surahId]=level;
+    for(let a=1;a<=su.n;a++){
+      const vk=surahId+":"+a;let r=H.ayahs[vk];
+      if(level==null){                                    // снятие декларации: пустые записи вычищаем
+        if(r){r.declared=null;if(r.verified==null&&!(r.log&&r.log.length))delete H.ayahs[vk];}
+        continue;
+      }
+      if(!r)r=H.ayahs[vk]={declared:null,verified:null,srs:null,log:[]};
+      r.declared=level;r.up=t;
+    }
+    _hifzPg=null;save();
+  }
+  // Свидетельство проверки: grade 0=не помню / 1=с трудом / 2=уверенно. Обновляет
+  // verified + SRS по-аятно. neighborVk — сосед по цепочке (показанный/оценённый
+  // перед этим аятом): по нему пишется junction-состояние шва (в порядке текста).
+  function hifzRecordReview(vk,grade,neighborVk){
+    const H=state.hifz,t=today();
+    const r=H.ayahs[vk]||(H.ayahs[vk]={declared:null,verified:null,srs:null,log:[]});
+    const s=r.srs||{interval:0,ease:2.5,due:t};
+    if(grade===0){s.interval=0;s.ease=Math.max(1.3,s.ease-0.2);s.due=t;}   // забыт → снова в работу сегодня
+    else if(grade===1){s.interval=Math.max(1,Math.round(s.interval*1.2));s.ease=Math.max(1.3,s.ease-0.05);s.due=addDays(t,s.interval);}
+    else{s.interval=s.interval<1?1:(s.interval===1?3:Math.round(s.interval*s.ease));s.ease=Math.min(2.8,s.ease+0.05);s.due=addDays(t,s.interval);}
+    r.srs=s;r.verified=grade;r.up=t;
+    (r.log=r.log||[]).push({t,g:grade});if(r.log.length>30)r.log=r.log.slice(-30);
+    if(neighborVk){                                       // шов между соседями — ключ в порядке текста
+      const jk=progVerseOrdinal(neighborVk)<progVerseOrdinal(vk)?neighborVk+">"+vk:vk+">"+neighborVk;
+      const j=H.junctions[jk]||(H.junctions[jk]={log:[]});
+      j.last=grade;j.up=t;j.log.push({t,g:grade});if(j.log.length>20)j.log=j.log.slice(-20);
+    }
+    _hifzPg=null;save();
+    // ИНВАРИАНТ СЛОЁВ: проверка памяти — НЕ чтение. В CREDITED (серия/цель/покрытие)
+    // сессия попадает ТОЛЬКО по явному флагу настроек «засчитывать проверку».
+    if(H.settings.feedActivity)recordActivity(0,[vk]);
+  }
+  // Производная ступень памяти аята (НЕ хранится):
+  //   "mastered" — подтверждённо освоен (уверенно, interval ≥ HIFZ_MASTER, срок не вышел);
+  //   "strong"/"mid"/"weak" — последнее свидетельство (уверенно / с трудом / не помню);
+  //   "decl" — только декларация, проверок не было; null — вне hifz-слоя.
+  function hifzStage(vk){
+    const r=state.hifz.ayahs[vk];if(!r)return null;
+    if(r.verified==null)return r.declared?"decl":null;
+    if(r.verified===2)return (r.srs&&r.srs.interval>=HIFZ_MASTER&&r.srs.due>=today())?"mastered":"strong";
+    return r.verified===1?"mid":"weak";
+  }
+  // Агрегация LEARNING по страницам мусхафа: по-аятные состояния → verseToPage.
+  // Кэш перестраивается при любой hifz-записи; размеры страниц — по ординалам pageStart.
+  function hifzPageAgg(){
+    if(_hifzPg)return _hifzPg;
+    const idx=progBuildPageIdx();if(!idx)return null;
+    const size={};for(let i=0;i<idx.length;i++)size[idx[i].page]=(i+1<idx.length?idx[i+1].ord:PROG_AYAH_OFFSET[114]+1)-idx[i].ord;
+    const agg={};
+    for(const vk in state.hifz.ayahs){
+      const p=verseToPage(vk,state.settings.mushafId);if(!p)continue;
+      const a=agg[p]||(agg[p]={n:0,mastered:0,weak:0,unverified:0});
+      a.n++;const st=hifzStage(vk);
+      if(st==="mastered")a.mastered++;
+      else if(st==="weak")a.weak++;
+      else if(st==="decl"||st===null)a.unverified++;
+    }
+    _hifzPg={agg,size};return _hifzPg;
+  }
   // ═══ ПРОИЗВОДНЫЕ (считаются, не хранятся) ═══
   function coveredPages(){const s=new Set();for(const d of state.activityDays)for(const vk of d.verseKeys){const p=verseToPage(vk,state.settings.mushafId);if(p)s.add(p);}return s;}
   function lifeAyahs(){const s=new Set();for(const d of state.activityDays)for(const vk of d.verseKeys)s.add(vk);return s.size;}
@@ -1197,9 +1336,24 @@ const Progress=(()=>{
   // getPageStatus — РЕДЬЮСЕР слоёв: hifz перекрывает reading сверху (когда появится).
   function getPageStatus(pageId){const h=getHifzStatus(pageId);if(h)return h;return coveredPages().has(pageId)?"read":"unread";}
   // ═══ ХУКИ ═══
-  // ХУК #3: LEARNING/хифз — данные придут из модуля заучивания; getPageStatus готов
-  // наложить их поверх reading без переписывания. Пока осознанно заглушка.
-  function getHifzStatus(pageId){return null;}
+  // ХУК #3 — РЕАЛЬНЫЙ: статус СТРАНИЦЫ из по-аятного LEARNING-состояния.
+  // Якорь — verse_key; страница только ПРОИЗВОДИТСЯ (verseToPage), нигде не хранится.
+  //   "mastered" — ВСЕ аяты страницы отслеживаются и закреплены;
+  //   "review"   — всё отслеживаемое проверено и держится (нет «не помню» и непроверенного);
+  //   "learning" — есть слабые или ещё не подтверждённые; null — hifz-слоя на странице нет.
+  function getHifzStatus(pageId){
+    const m=hifzPageAgg();if(!m)return null;
+    const a=m.agg[pageId];if(!a)return null;
+    if(a.mastered===a.n&&a.n>=(m.size[pageId]||Infinity))return "mastered";
+    if(a.weak===0&&a.unverified===0)return "review";
+    return "learning";
+  }
+  // Читающий hifz-контракт: живые ссылки — ТОЛЬКО чтение (писать — declare/review выше).
+  function hifzAyahs(){return state.hifz.ayahs;}
+  function hifzSuraDecl(){return state.hifz.suraDecl;}
+  function hifzGetAyah(vk){const r=state.hifz.ayahs[vk];return r?JSON.parse(JSON.stringify(r)):null;}
+  function hifzSettings(){return JSON.parse(JSON.stringify(state.hifz.settings));}
+  function hifzSetSettings(patch){Object.assign(state.hifz.settings,patch||{});save();}
   // ХУК #4: НЕ отдельный поток. Подключено к ЕДИНОМУ бэкапу приложения
   // (exportPersonalData/applyImport). exportState отдаёт снимок; importState
   // сливает дни по датам (union verseKeys, +секунды) и берёт более свежий resume.
@@ -1215,6 +1369,17 @@ const Progress=(()=>{
       recalcGoal(r);if(r.activeSeconds+r.verseKeys.length!==before)merged++;
     }
     if(snap.resumePosition&&(!state.resumePosition||(snap.resumePosition.touchedAt||"")>(state.resumePosition.touchedAt||"")))state.resumePosition=snap.resumePosition;
+    // — hifz (LEARNING): по-аятно и по швам побеждает более свежая запись (up);
+    //   декларации сур только дополняются (свои не затираем импортом) —
+    if(snap.hifz&&snap.hifz.ayahs){
+      const H=state.hifz;
+      for(const vk in snap.hifz.ayahs){const inc=snap.hifz.ayahs[vk];const cur=H.ayahs[vk];
+        if(inc&&(!cur||(inc.up||"")>(cur.up||"")))H.ayahs[vk]=inc;}
+      for(const jk in (snap.hifz.junctions||{})){const inc=snap.hifz.junctions[jk];const cur=H.junctions[jk];
+        if(inc&&(!cur||(inc.up||"")>(cur.up||"")))H.junctions[jk]=inc;}
+      for(const s in (snap.hifz.suraDecl||{}))if(!(s in H.suraDecl))H.suraDecl[s]=snap.hifz.suraDecl[s];
+      _hifzPg=null;
+    }
     save();return merged;
   }
   // ═══ Таймер активного времени (слой CREDITED; resume не трогает) ═══
@@ -1227,6 +1392,9 @@ const Progress=(()=>{
     if(document.visibilityState!=="visible")return;
     if(Date.now()-_lastAction>=IDLE_LIMIT_SEC*1000)return;
     if(ST.homeMode||progressOpen||!ST.surah)return;
+    // Открыт тренажёр хифза: время проверки — НЕ чтение (кормит CREDITED только
+    // по явному флагу «засчитывать проверку», тому же, что и аяты сессии).
+    if(hifzOpen&&!state.hifz.settings.feedActivity)return;
     recordActivity(TICK_SEC,[]);
   }
   function ensureInit(){
@@ -1245,7 +1413,10 @@ const Progress=(()=>{
     restore(){state.manualRestore.active=true;save();},
     wipe(){state=def();save();}
   };
-  return {recordActivity,updateResume,setGoal,getSummary,getResume,getCoverage,getPageStatus,getHifzStatus,exportState,importState,verseToPage,ensureInit,markAction,debug,TOTAL_PAGES};
+  return {recordActivity,updateResume,setGoal,getSummary,getResume,getCoverage,getPageStatus,getHifzStatus,
+    hifzDeclareSurah,hifzRecordReview,hifzStage,hifzAyahs,hifzSuraDecl,hifzGetAyah,hifzSettings,hifzSetSettings,
+    todayISO:today,HIFZ_MASTER,
+    exportState,importState,verseToPage,ensureInit,markAction,debug,TOTAL_PAGES};
 })();
 
 // ============================================================
@@ -1320,11 +1491,13 @@ function renderProgress(){
   // Карта покрытия мусхафа (реальные границы страниц; общий субстрат reading + будущий hifz)
   const total=Progress.TOTAL_PAGES;
   let pgHtml="";for(let p=1;p<=total;p++){pgHtml+=`<div class="prog-pg ${Progress.getPageStatus(p)}" title="Страница ${p}"></div>`;}
+  const hifzN=Object.keys(Progress.hifzAyahs()).length;   // аятов в hifz-слое (LEARNING)
   const map=`<div class="prog-card"><h3>Карта покрытия мусхафа</h3>
     <div class="prog-muted" style="margin:-4px 0 11px">Прочитано страниц: <b style="color:var(--accent)">${cov.size}</b> из ${total}${_progPageIdx?"":" · <span style=\"color:#c98a1e\">границы страниц ещё грузятся</span>"}</div>
     <div class="prog-pages">${pgHtml}</div>
     <div class="prog-legend"><span><span class="cell" style="background:var(--border)"></span>не читал</span><span><span class="cell" style="background:var(--accent)"></span>читал</span><span><span class="cell" style="background:#7c6cf0"></span>учится</span><span><span class="cell" style="background:#b06cf0"></span>повторение</span><span><span class="cell" style="background:#f06c9b"></span>закреплено</span></div>
-    <div class="prog-muted" style="margin-top:8px">Слой хифза — заглушка (getHifzStatus→null); reading перекрывается им сверху, когда появится.</div></div>`;
+    <div class="prog-muted" style="margin-top:8px">${hifzN?`Хифз-слой: <b style="color:var(--accent)">${hifzN}</b> аятов в работе — он перекрывает «читал» на карте.`:"Хифз-слой пуст — начните с проверки заучивания."}</div>
+    <button class="prog-cont" onclick="progOpenHifz()">🧠 Проверка заучивания →</button></div>`;
   // Отладка (только при ?pdebug)
   let dbg="";
   if(PROG_DEBUG){dbg=`<div class="prog-card prog-debug"><h3>Отладка (симуляция ридера) · ?pdebug</h3>
@@ -1343,6 +1516,10 @@ function renderProgress(){
 }
 // Переход к позиции resume из дашборда (закрывает экран статистики).
 function progGoResume(){const r=Progress.getResume();if(!r)return;const p=r.verseKey.split(":");closeProgress();goAyah(+p[0],+p[1]);}
+// Переход «Прогресс → Проверка заучивания»: экран прогресса прячем БЕЗ снятия
+// overlay-записи истории — её переиспользует тренажёр (pushOverlay не дублирует);
+// иначе была бы гонка history.back() ↔ pushState.
+function progOpenHifz(){const ov=document.getElementById("progressOvl");if(ov)ov.style.display="none";progressOpen=false;openHifz();}
 // Настройка дневной цели из дашборда (тип и значение; шаг для минут/аятов = 1).
 function progSetGoalType(t){const s=Progress.getSummary().settings;Progress.setGoal(t,s.goalValue);renderProgress();}
 function progGoalDelta(d){const s=Progress.getSummary().settings;Progress.setGoal(s.goalType,Math.max(1,s.goalValue+d));renderProgress();}
@@ -1350,6 +1527,360 @@ function progGoalDelta(d){const s=Progress.getSummary().settings;Progress.setGoa
 let _progFakeAyah=1;
 function progDbgAyahs(){const vks=[];for(let i=0;i<5;i++)vks.push("2:"+(++_progFakeAyah));Progress.recordActivity(0,vks);renderProgress();}
 function progDbgResume(){Progress.updateResume("2:"+(++_progFakeAyah));renderProgress();}
+
+// ============================================================
+// МОДУЛЬ «ПРОВЕРКА ЗАУЧИВАНИЯ» (хифз-тренажёр) — UI слоя LEARNING.
+// ------------------------------------------------------------
+// Порождает данные для Progress.getHifzStatus: пишет ТОЛЬКО через hifz*-контракт
+// store (localStorage напрямую не трогает); карта покрытия читает их сама.
+// Грузится ЛЕНИВО в смысле этого приложения (один index.html без сборки):
+// вся инициализация — qpcMeta, чанки текста, построение UI — происходит лишь
+// при открытии экрана. Ридер о модуле НЕ знает: единственный вход — кнопка
+// на экране прогресса; ни один рендер-путь чтения сюда не заглядывает.
+// Русский текст — из уже подключённого перевода приложения (hifzRuId), не хардкод.
+// ============================================================
+let hifzOpen=false;
+const HF={tab:"map",scope:null,open:{},sess:null};
+
+async function openHifz(){
+  Progress.ensureInit();
+  if(typeof loadQpcMeta==="function")await loadQpcMeta();  // границы джузов и страниц (карта, verseToPage)
+  _progPageIdx=null;
+  HF.scope=Progress.hifzSettings().scope||{juz:30,surah:null,from:null,to:null};
+  HF.tab="map";HF.sess=null;HF.open={};
+  let ov=document.getElementById("hifzOvl");
+  if(!ov){ov=document.createElement("div");ov.id="hifzOvl";ov.className="about-ovl";ov.onclick=e=>{if(e.target===ov)closeHifz();};document.body.appendChild(ov);}
+  ov.innerHTML=`<div class="about-box prog-box" role="dialog" aria-modal="true"><button class="about-close" onclick="closeHifz()" aria-label="Закрыть">×</button><div id="hifzBody"></div></div>`;
+  ov.style.display="flex";ov.scrollTop=0;hifzOpen=true;
+  renderHifz();
+  pushOverlay();                                           // аппаратная «Назад» закрывает экран
+}
+function hifzOvlOpen(){const ov=document.getElementById("hifzOvl");return !!(ov&&ov.style.display!=="none");}
+function closeHifz(){const ov=document.getElementById("hifzOvl");if(ov)ov.style.display="none";hifzOpen=false;consumeOverlay();}
+
+// ─── Охват: джуз → сура → пассаж (строгое сужение) ───
+// Суры охвата с аятными под-диапазонами: пересечение суры с джузом и пассажем.
+// Границы джуза — из qpcMeta.juzStart (конец = начало следующего джуза − 1 аят).
+function hifzJuzRange(j){
+  const js=qpcMeta&&qpcMeta.juzStart;if(!js||!js[j])return null;
+  const a=js[j],b=js[j+1];
+  let to={s:114,a:6};
+  if(b)to=b.ayah>1?{s:b.surah,a:b.ayah-1}:{s:b.surah-1,a:(SURAHS.find(x=>x.id===b.surah-1)||{n:1}).n};
+  return {from:{s:a.surah,a:a.ayah},to};
+}
+function hifzScopeSuras(){
+  const r=hifzJuzRange(HF.scope.juz);if(!r)return [];
+  const out=[];
+  for(let s=r.from.s;s<=r.to.s;s++){
+    const su=SURAHS.find(x=>x.id===s);if(!su)continue;
+    let a1=(s===r.from.s)?r.from.a:1, a2=(s===r.to.s)?r.to.a:su.n;
+    if(HF.scope.surah){
+      if(s!==HF.scope.surah)continue;
+      if(HF.scope.from)a1=Math.max(a1,HF.scope.from);
+      if(HF.scope.to)a2=Math.min(a2,HF.scope.to);
+    }
+    if(a1<=a2)out.push({surah:s,from:a1,to:a2,su});
+  }
+  return out;
+}
+function hifzScopeVks(){const vks=[];for(const r of hifzScopeSuras())for(let a=r.from;a<=r.to;a++)vks.push(r.surah+":"+a);return vks;}
+function hifzSetScope(part,v){
+  if(part==="juz"){HF.scope={juz:Math.max(1,Math.min(30,+v||1)),surah:null,from:null,to:null};}
+  else if(part==="surah"){HF.scope.surah=+v||null;HF.scope.from=null;HF.scope.to=null;}
+  else if(part==="range"){
+    const f=+document.getElementById("hfFrom").value||null,t=+document.getElementById("hfTo").value||null;
+    HF.scope.from=f;HF.scope.to=t;
+  }
+  HF.open={};
+  Progress.hifzSetSettings({scope:HF.scope});             // последний охват переживает перезапуск
+  renderHifz();
+}
+
+// ─── Адаптивная гранулярность тепловой карты ───
+// Состояние живёт ПО-АЯТНО всегда; меняется только ЯЧЕЙКА ОТОБРАЖЕНИЯ:
+// короткий диапазон (джуз 30 и т.п.) — по-аятно; длинные суры — по руку́ (ع),
+// если разметка появится в данных (qpcMeta.rukuStart), пока — окно ~5 аятов.
+// Единица НЕ фиксируется одна на весь мусхаф.
+function hifzUnits(rng){
+  const len=rng.to-rng.from+1;
+  if(len<=30){const u=[];for(let a=rng.from;a<=rng.to;a++)u.push({from:a,to:a});return u;}
+  const rk=qpcMeta&&qpcMeta.rukuStart&&qpcMeta.rukuStart[rng.surah];   // задел: [{ayah},…] начала руку́
+  if(Array.isArray(rk)&&rk.length){
+    const bounds=rk.map(x=>x.ayah).filter(a=>a>rng.from&&a<=rng.to).sort((a,b)=>a-b);
+    const u=[];let cur=rng.from;
+    for(const b of bounds){u.push({from:cur,to:b-1});cur=b;}
+    u.push({from:cur,to:rng.to});return u;
+  }
+  const u=[];for(let a=rng.from;a<=rng.to;a+=5)u.push({from:a,to:Math.min(rng.to,a+4)});
+  if(u.length>1&&u[u.length-1].to-u[u.length-1].from<2)u[u.length-2].to=u.pop().to;  // хвост <3 аятов клеим к предыдущему
+  return u;
+}
+
+// ─── Производные по охвату (НЕ хранятся — считаются из store) ───
+function hifzRangeCounts(surah,from,to){
+  const c={mast:0,strong:0,mid:0,weak:0,decl:0,none:0,n:to-from+1};
+  for(let a=from;a<=to;a++){
+    const st=Progress.hifzStage(surah+":"+a);
+    if(st==="mastered")c.mast++;else if(st==="strong")c.strong++;else if(st==="mid")c.mid++;
+    else if(st==="weak")c.weak++;else if(st==="decl")c.decl++;else c.none++;
+  }
+  return c;
+}
+// Индикатор цели: сколько охвата подтверждённо освоено и сколько «мест» осталось
+// (место = непрерывный кусок не-освоенных аятов в порядке текста).
+function hifzScopeStats(){
+  let total=0,mast=0,places=0,inRun=false;
+  const agg={mast:0,strong:0,mid:0,weak:0,decl:0,none:0};
+  for(const r of hifzScopeSuras())for(let a=r.from;a<=r.to;a++){
+    total++;const st=Progress.hifzStage(r.surah+":"+a);
+    if(st==="mastered"){mast++;agg.mast++;inRun=false;}
+    else{
+      if(!inRun){places++;inRun=true;}
+      if(st==="strong")agg.strong++;else if(st==="mid")agg.mid++;else if(st==="weak")agg.weak++;
+      else if(st==="decl")agg.decl++;else agg.none++;
+    }
+  }
+  return {total,mast,places,agg};
+}
+
+// ─── Пул проверки: аяты охвата, ВЗВЕШЕННЫЕ к слабым ───
+// Исключаем подтверждённо-освоенные (проверенно-зелёное не тестируем).
+// Вес растёт от: декларации «нетвёрдо/не знаю», отсутствия проверок, последней
+// слабой оценки, просроченного SRS-срока; свежеподтверждённые — сильно вниз.
+function hifzDaysLate(due,t){return Math.max(0,Math.round((new Date(t)-new Date(due))/864e5));}
+function hifzPool(){
+  const t=Progress.todayISO(),A=Progress.hifzAyahs(),out=[];
+  for(const vk of hifzScopeVks()){
+    const st=Progress.hifzStage(vk);
+    if(st==="mastered")continue;
+    const r=A[vk];let w=1;
+    const d=r&&r.declared;
+    if(d==="shaky")w+=2;else if(d==="no")w+=3;else if(!d)w+=1;      // без декларации — тоже неизвестность
+    if(!r||r.verified==null)w+=1;                                   // ни разу не проверялся
+    else{
+      if(r.verified===0)w+=4;else if(r.verified===1)w+=2;
+      if(r.srs){if(r.srs.due<=t)w+=Math.min(4,1+hifzDaysLate(r.srs.due,t)*0.5);else w*=0.25;}
+    }
+    out.push({vk,w});
+  }
+  return out;
+}
+function hifzPick(pool){
+  let sum=0;for(const p of pool)sum+=p.w;
+  let x=Math.random()*sum;
+  for(const p of pool){x-=p.w;if(x<=0)return p.vk;}
+  return pool[pool.length-1].vk;
+}
+
+// ─── Раунд: случайная точка входа + цепочка (НЕ одиночный рандом) ───
+// Взвешенно выбранный слабый аят становится ПЕРВЫМ звеном цепочки; показываемая
+// точка входа — его сосед ПЕРЕД ним по направлению (вперёд/назад). Если соседа
+// в охвате нет — «соло»-подсказка: только адрес сура:аят. Цепочка не выходит
+// за пределы суры и охвата.
+function hifzMakeRound(vk){
+  const S=Progress.hifzSettings(),K=Math.max(1,Math.min(10,S.K||4)),dir=S.backward?-1:1;
+  const p=vk.split(":"),s=+p[0],a=+p[1];
+  const rng=hifzScopeSuras().find(r=>r.surah===s);if(!rng)return null;
+  const chain=[];
+  for(let i=0;i<K;i++){const aa=a+dir*i;if(aa<rng.from||aa>rng.to)break;chain.push(s+":"+aa);}
+  if(!chain.length)return null;
+  const anch=a-dir;
+  const start=(anch>=rng.from&&anch<=rng.to)?s+":"+anch:null;
+  return {start,chain,revealed:false,grades:{}};
+}
+function hifzBeginSession(){HF.sess={n:0,g:[0,0,0],round:null,loading:false,empty:false};hifzNextRound();}
+async function hifzNextRound(){
+  const pool=hifzPool();
+  if(!pool.length){HF.sess.round=null;HF.sess.empty=true;renderHifz();return;}
+  let round=null;
+  for(let i=0;i<25&&!round;i++)round=hifzMakeRound(hifzPick(pool));
+  if(!round){HF.sess.round=null;HF.sess.empty=true;renderHifz();return;}
+  HF.sess.round=round;HF.sess.empty=false;HF.sess.n++;HF.sess.loading=true;
+  renderHifz();
+  const s=+round.chain[0].split(":")[0],ru=hifzRuId();     // тексты — лениво, только нужная сура
+  await loadChunk("_arabic",s);if(ru)await loadChunk(ru,s);
+  HF.sess.loading=false;renderHifz();
+}
+function hifzReveal(){if(HF.sess&&HF.sess.round)HF.sess.round.revealed=true;renderHifz();}
+// Само-оценка звена: 0=не помню / 1=с трудом / 2=уверенно. Свидетельство уходит
+// в store по-аятно; сосед по порядку вспоминания даёт junction-состояние шва.
+function hifzGrade(i,g){
+  const R=HF.sess&&HF.sess.round;
+  if(!R||!R.revealed||R.grades[i]!=null)return;            // повторная оценка не пишется (иначе двойной SRS-шаг)
+  R.grades[i]=g;HF.sess.g[g]++;
+  const nb=i===0?R.start:R.chain[i-1];
+  Progress.hifzRecordReview(R.chain[i],g,nb||null);
+  renderHifz();
+}
+
+// Русский текст — первый ВКЛЮЧЁННЫЙ не-арабский перевод в пользовательском порядке;
+// если переводы выключены — первый kind:translation из конфига. Ничего не зашито.
+function hifzRuId(){
+  const en=getEnabledList().find(t=>t.id!=="_notes"&&t.lang!=="ar"&&t.kind==="translation");
+  if(en)return en.id;
+  const any=CONFIG.tafsirs.find(t=>t.kind==="translation"&&t.lang!=="ar");
+  return any?any.id:null;
+}
+function hifzRuText(s,a){const id=hifzRuId();if(!id)return "";const c=getChunk(id,s);return (c&&c[String(a)])||"";}
+function hifzSuName(s){const su=SURAHS.find(x=>x.id===s);return su?su.ru:("Сура "+s);}
+
+// ─── Рендер ───
+function renderHifz(){
+  const body=document.getElementById("hifzBody");if(!body)return;
+  body.innerHTML=`<div class="prog-h">Проверка заучивания</div><div class="prog-sub">Карта памяти · взвешенный пул · цепочки · SRS</div>
+    <div class="hf-tabs">
+      <button class="${HF.tab==="map"?"on":""}" onclick="hifzTab('map')">🗺 Карта</button>
+      <button class="${HF.tab==="quiz"?"on":""}" onclick="hifzTab('quiz')">🎯 Проверка</button>
+    </div>`+(HF.tab==="map"?hifzMapHTML():hifzQuizHTML());
+}
+function hifzTab(t){HF.tab=t;if(t==="quiz"&&!HF.sess)hifzBeginSession();else renderHifz();}
+
+function hifzMapHTML(){
+  const suras=hifzScopeSuras();
+  if(!suras.length){
+    if(!hifzJuzRange(HF.scope.juz))return `<div class="prog-card"><div class="hf-muted">Границы джузов не загрузились (нет сети?) — карта и охват недоступны.</div></div>`;
+    // охват есть, но пассаж сужен до пустоты (например, «от» больше «до»)
+    return `<div class="prog-card"><h3>Охват</h3><div class="hf-muted">Пустой охват — проверьте диапазон аятов.</div>
+      <button class="prog-cont" onclick="hifzSetScope('juz',${HF.scope.juz})">Сбросить сужение</button></div>`;
+  }
+  const sc=HF.scope;
+  const juzOpts=Array.from({length:30},(_,i)=>`<option value="${i+1}" ${i+1===sc.juz?"selected":""}>Джуз ${i+1}</option>`).join("");
+  const inJuz=hifzJuzRange(sc.juz);
+  const suraOpts=[`<option value="0">все суры</option>`];
+  for(let s=inJuz.from.s;s<=inJuz.to.s;s++){const su=SURAHS.find(x=>x.id===s);if(su)suraOpts.push(`<option value="${s}" ${s===sc.surah?"selected":""}>${s}. ${esc(su.ru)}</option>`);}
+  const one=sc.surah?suras[0]:null;
+  const range=one?`<span>аяты</span><input id="hfFrom" type="number" min="1" placeholder="${one.from}" value="${sc.from||""}" onchange="hifzSetScope('range')"><span>—</span><input id="hfTo" type="number" min="1" placeholder="${one.to}" value="${sc.to||""}" onchange="hifzSetScope('range')">`:"";
+  const st=hifzScopeStats();
+  const pct=st.total?Math.round(st.mast/st.total*100):0;
+  const seg=(n,color)=>n?`<i style="width:${(n/st.total*100).toFixed(2)}%;background:${color}"></i>`:"";
+  // «Сжатие белой области»: закреплённое растёт слева, непроверенное тает справа
+  const bar=`<div class="hf-bar">${seg(st.mast,"#2ea06e")}${seg(st.agg.strong,"rgba(46,160,110,.55)")}${seg(st.agg.mid,"#e0a030")}${seg(st.agg.weak,"#e05252")}</div>`;
+  const scope=`<div class="prog-card"><h3>Охват</h3>
+    <div class="hf-scope">
+      <select onchange="hifzSetScope('juz',this.value)">${juzOpts}</select>
+      <select onchange="hifzSetScope('surah',this.value)">${suraOpts.join("")}</select>
+      ${range}
+    </div>
+    <div class="hf-muted" style="margin-top:11px">Освоено <b style="color:var(--accent)">${pct}%</b> охвата (${st.mast} из ${st.total} аятов) · осталось: <b>${st.total-st.mast}</b> аятов / <b>${st.places}</b> мест</div>
+    ${bar}
+    <button class="prog-cont" onclick="hifzTab('quiz')">▶ Начать проверку</button></div>`;
+  const legend=`<div class="hf-legend"><span>заливка = проверено:</span>
+    <span><span class="sw" style="background:#e05252"></span>не помню</span>
+    <span><span class="sw" style="background:#e0a030"></span>с трудом</span>
+    <span><span class="sw" style="background:rgba(46,160,110,.55)"></span>уверенно</span>
+    <span><span class="sw" style="background:#2ea06e"></span>закреплено</span>
+    <span style="margin-left:6px">контур = декларировано:</span>
+    <span><span class="sw" style="border:2px solid #2ea06e"></span>знаю</span>
+    <span><span class="sw" style="border:2px solid #e0a030"></span>нетвёрдо</span>
+    <span><span class="sw" style="border:2px solid #e05252"></span>не знаю</span></div>`;
+  return scope+`<div class="prog-card"><h3>Суры охвата · декларация и карта</h3>
+    <div class="hf-muted">Отметьте гипотезу («знаю / нетвёрдо / не знаю») — она сеет карту контуром. Финальна только проверка: заливка появляется по свидетельству и переопределяет декларацию.</div>
+    ${suras.map(hifzSuraHTML).join("")}${legend}</div>`;
+}
+function hifzSuraHTML(rng){
+  const c=hifzRangeCounts(rng.surah,rng.from,rng.to);
+  const mastered=c.mast===c.n;                            // полностью зелёная — не разворачиваем
+  const decl=Progress.hifzSuraDecl()[rng.surah]||null;
+  const declBtn=(lv,cls,lab)=>`<button class="${cls} ${decl===lv?"on":""}" onclick="hifzDecl(${rng.surah},'${lv}')">${lab}</button>`;
+  const seg=(n,color)=>n?`<i style="width:${(n/c.n*100).toFixed(2)}%;background:${color}"></i>`:"";
+  const bar=`<div class="hf-bar" style="margin-top:7px">${seg(c.mast,"#2ea06e")}${seg(c.strong,"rgba(46,160,110,.55)")}${seg(c.mid,"#e0a030")}${seg(c.weak,"#e05252")}</div>`;
+  const open=!!HF.open[rng.surah]&&!mastered;
+  let heat="";
+  if(open){
+    heat=`<div class="hf-heat">`+hifzUnits(rng).map(u=>{
+      let cls="",dcl=null,rank=n=>n==="no"?3:n==="shaky"?2:n==="know"?1:0;
+      let weak=0,mid=0,untested=0,strong=0;
+      const A=Progress.hifzAyahs();
+      for(let a=u.from;a<=u.to;a++){
+        const st=Progress.hifzStage(rng.surah+":"+a);
+        if(st==="weak")weak++;else if(st==="mid")mid++;else if(st==="strong")strong++;else if(st!=="mastered")untested++;
+        const d=(A[rng.surah+":"+a]||{}).declared;if(rank(d)>rank(dcl))dcl=d;   // контур — по «худшей» декларации
+      }
+      if(weak)cls="v-weak";else if(mid)cls="v-mid";else if(untested)cls="";else if(strong)cls="v-strong";else cls="v-mast";
+      if(dcl)cls+=" d-"+dcl;
+      const lab=u.from===u.to?u.from:(u.from+"–"+u.to);
+      return `<div class="hf-cell ${cls}" title="${rng.surah}:${u.from}${u.from===u.to?"":"–"+u.to}">${lab}</div>`;
+    }).join("")+`</div>`;
+  }
+  return `<div class="hf-sura ${mastered?"mastered":""}">
+    <div class="hf-sura-head">
+      <span class="hf-sura-name" onclick="hifzSuraToggle(${rng.surah})">${mastered?"✅":open?"▼":"▶"} ${rng.surah}. ${esc(rng.su.ru)} <small>${rng.from>1||rng.to<rng.su.n?`аяты ${rng.from}–${rng.to}`:rng.su.n+" аятов"}</small></span>
+      <span class="hf-decl">${declBtn("know","k","знаю")}${declBtn("shaky","s","нетвёрдо")}${declBtn("no","n","не знаю")}</span>
+    </div>
+    ${mastered?`<div class="hf-muted" style="margin-top:5px">Закреплено полностью — в пул проверки не входит.</div>`:bar+heat}
+  </div>`;
+}
+function hifzSuraToggle(s){
+  const rng=hifzScopeSuras().find(r=>r.surah===s);if(!rng)return;
+  const c=hifzRangeCounts(s,rng.from,rng.to);
+  if(c.mast===c.n)return;                                  // зелёные суры не разворачиваем (не тратим внимание)
+  HF.open[s]=!HF.open[s];renderHifz();
+}
+// Декларация — переключатель с «отжатием»: повторный тап по активному уровню снимает её.
+function hifzDecl(s,lv){
+  const cur=Progress.hifzSuraDecl()[s]||null;
+  Progress.hifzDeclareSurah(s,cur===lv?null:lv);
+  renderHifz();
+}
+
+function hifzQuizHTML(){
+  const S=Progress.hifzSettings();
+  const ruName=(CONFIG.tafsirs.find(t=>t.id===hifzRuId())||{}).name||"нет перевода";
+  const set=`<div class="prog-card"><h3>Настройки проверки</h3><div class="hf-set">
+    <span>Показ:</span><div class="prog-seg"><button class="${S.lang==="ar"?"on":""}" onclick="hifzSet('lang','ar')">арабский</button><button class="${S.lang==="ru"?"on":""}" onclick="hifzSet('lang','ru')" title="${escAttr(ruName)}">перевод</button></div>
+    <span>Цепочка:</span><div class="prog-step"><button onclick="hifzSet('K',${Math.max(1,(S.K||4)-1)})">−</button><b>${S.K||4}</b><button onclick="hifzSet('K',${Math.min(10,(S.K||4)+1)})">+</button></div>
+    <label title="Сложный режим: вспоминать предыдущие аяты"><input type="checkbox" ${S.backward?"checked":""} onchange="hifzSet('backward',this.checked)"> назад</label>
+    <label title="По умолчанию ВЫКЛ: проверка памяти — не чтение, серию и дневную цель не кормит"><input type="checkbox" ${S.feedActivity?"checked":""} onchange="hifzSet('feedActivity',this.checked)"> засчитывать в дневную цель</label>
+  </div><div class="hf-muted" style="margin-top:7px">Изменения длины/направления применяются со следующей точки.</div></div>`;
+  const sess=HF.sess;
+  if(!sess)return set;
+  const stats=`<div class="hf-muted" style="margin:2px 0 0">Раунд ${sess.n} · уверенно ${sess.g[2]} · с трудом ${sess.g[1]} · не помню ${sess.g[0]}</div>`;
+  if(sess.empty)return set+`<div class="prog-card"><h3>Пул пуст</h3><div class="hf-muted">Всё в охвате подтверждённо освоено 🎉 — либо расширьте охват на карте.</div>${stats}
+    <button class="prog-cont" onclick="hifzTab('map')">← К карте</button></div>`;
+  const R=sess.round;if(!R)return set;
+  if(sess.loading)return set+`<div class="prog-card"><div class="hf-muted">Загружаю текст…</div></div>`;
+  const S2=Progress.hifzSettings();
+  const dirWord=S2.backward?"НАЗАД":"вперёд";
+  const first=R.chain[0].split(":"),fs=+first[0];
+  let prompt;
+  if(R.start){
+    const sp=R.start.split(":"),ss=+sp[0],sa=+sp[1];
+    // Привязка сура:аят показывается ВСЕГДА (в переводе — обязательна по смыслу,
+    // в арабском — снимает неоднозначность повторяющихся аятов-рефренов).
+    prompt=`<div class="hf-ref">${esc(hifzSuName(ss))} · ${ss}:${sa}</div>
+      ${S2.lang==="ar"?`<div class="hf-ar arabic-main">${esc(getArabicFromCache(ss,sa))}</div>`:`<div class="hf-ru">${esc(hifzRuText(ss,sa))}</div>`}
+      <div class="hf-muted" style="margin-top:9px">Продолжите по памяти <b>${dirWord}</b>: ${R.chain.length} ${R.chain.length===1?"аят":R.chain.length<5?"аята":"аятов"}.</div>`;
+  }else{
+    prompt=`<div class="hf-ref">${esc(hifzSuName(fs))} · ${R.chain[0]}${R.chain.length>1?" …":""}</div>
+      <div class="hf-muted">Точка без соседа в охвате — вспомните ${R.chain.length===1?"этот аят":"аяты с этого места"} по памяти.</div>`;
+  }
+  let bodyHtml;
+  if(!R.revealed){
+    bodyHtml=`<button class="prog-cont" onclick="hifzReveal()">👁 Раскрыть цепочку</button>`;
+  }else{
+    const items=R.chain.map((vk,i)=>{
+      const p=vk.split(":"),s=+p[0],a=+p[1];
+      const ar=`<div class="hf-ar arabic-main">${esc(getArabicFromCache(s,a))}</div>`;
+      const ru=hifzRuText(s,a);
+      const main=S2.lang==="ar"?ar+(ru?`<div class="hf-ru sec">${esc(ru)}</div>`:""):`<div class="hf-ru">${esc(ru)||"<i>нет текста перевода</i>"}</div>`+ar;
+      const g=R.grades[i];
+      const btn=(gv,lab)=>`<button class="g${gv} ${g===gv?"on":""}" ${g!=null?"disabled":""} onclick="hifzGrade(${i},${gv})">${lab}</button>`;
+      return `<div class="hf-chain-item"><div class="hf-ref">${s}:${a}</div>${main}
+        <div class="hf-grade">${btn(0,"не помню")}${btn(1,"с трудом")}${btn(2,"уверенно")}</div></div>`;
+    }).join("");
+    const graded=Object.keys(R.grades).length;
+    bodyHtml=items+`<div class="prog-btns" style="margin-top:13px">
+      <button class="prog-cont" style="margin-top:0" onclick="hifzNextRound()">Следующая точка →</button>
+      <button onclick="hifzTab('map')">К карте</button></div>
+      ${graded<R.chain.length?`<div class="hf-muted" style="margin-top:7px">Оценено ${graded} из ${R.chain.length} — неоценённые звенья в SRS не запишутся.</div>`:""}`;
+  }
+  return set+`<div class="prog-card"><h3>Точка входа</h3>${stats}<div class="hf-quiz-card">${prompt}</div>${bodyHtml}</div>`;
+}
+function hifzSet(k,v){
+  if(k==="K")v=Math.max(1,Math.min(10,+v||4));
+  Progress.hifzSetSettings({[k]:v});
+  renderHifz();
+}
 
 // --- Быстрые ссылки на Главной (пользователь правит текстом) ---
 // Грамматика: элементы через запятую/перенос строки. «N» = вся сура; «N/A» = аят;
@@ -3609,7 +4140,7 @@ document.addEventListener("keydown",function(e){
 // ============================================================
 let pendingAyah=null;
 // Which open panels should the Back button / backdrop close (overlays only; the desktop sidebar is docked)
-function anyOverlayOpen(){return searchOpen||ST.rpanelOpen||ST.viewOpen||ST.immersive||appAboutOpen()||progressOpen||(isM()&&ST.sidebarOpen);}
+function anyOverlayOpen(){return searchOpen||ST.rpanelOpen||ST.viewOpen||ST.immersive||appAboutOpen()||progressOpen||hifzOpen||(isM()&&ST.sidebarOpen);}
 let navBack=false; // true while we programmatically history.back() to consume our own overlay entry
 function pushOverlay(){if(!(history.state&&history.state.ov))history.pushState({ov:1},"");}
 function consumeOverlay(){if(history.state&&history.state.ov){navBack=true;history.back();}}
@@ -3617,6 +4148,7 @@ function updateBackdrop(){const b=document.getElementById("panelBackdrop");if(b)
 function closeAllPanelsUI(){
   if(appAboutOpen()){closeAbout();const ov=document.getElementById("aboutOvl");if(ov)ov.dataset.app="";}  // «Назад» (запись уже снята)
   if(progressOpen){const ov=document.getElementById("progressOvl");if(ov)ov.style.display="none";progressOpen=false;}  // «Назад» закрывает экран прогресса (запись истории уже снята)
+  if(hifzOpen){const ov=document.getElementById("hifzOvl");if(ov)ov.style.display="none";hifzOpen=false;}  // «Назад» закрывает тренажёр хифза
   if(searchOpen){searchOpen=false;document.getElementById("searchPanel").classList.add("hidden");}
   if(ST.rpanelOpen){ST.rpanelOpen=false;document.getElementById("rpanel").classList.add("collapsed");}
   if(ST.viewOpen){ST.viewOpen=false;renderViewPanel();renderCB();}
