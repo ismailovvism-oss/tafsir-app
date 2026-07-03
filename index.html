@@ -803,6 +803,31 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
 .hf-muted{font-size:12px;color:var(--text-muted)}
 .hf-legend{display:flex;gap:11px;flex-wrap:wrap;margin-top:9px;font-size:10px;color:var(--text-muted);align-items:center}
 .hf-legend .sw{width:12px;height:12px;border-radius:3px;display:inline-block;vertical-align:-2px;margin-right:3px}
+
+/* ── Скорость чтения (осознанные замеры беглости) ── */
+.spd-pill{position:fixed;left:50%;transform:translateX(-50%);bottom:74px;z-index:60;display:flex;align-items:center;gap:10px;
+  background:var(--bg);border:1px solid var(--accent);border-radius:999px;padding:8px 10px 8px 16px;box-shadow:0 4px 18px rgba(0,0,0,.25)}
+.spd-pill .t{font-size:17px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;min-width:52px}
+.spd-pill .pg{font-size:11px;color:var(--text-muted);white-space:nowrap}
+.spd-pill button{font-family:inherit;font-size:12px;border-radius:999px;border:1px solid var(--border);background:var(--bg);color:var(--text);padding:6px 11px;cursor:pointer}
+.spd-pill button.fin{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.spd-pill.paused .t{color:var(--text-muted)}
+.spd-big{font-size:26px;font-weight:700;color:var(--text)}
+.spd-big small{font-size:13px;font-weight:400;color:var(--text-muted)}
+.spd-rec{color:#c98a1e;font-weight:700}
+.spd-row{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px}
+.spd-kpi b{display:block;font-size:16px;color:var(--text)}
+.spd-kpi span{font-size:11px;color:var(--text-muted)}
+.spd-trend{display:flex;align-items:flex-end;gap:6px;height:92px;margin-top:10px}
+.spd-trend .c{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
+.spd-trend .bar{width:100%;max-width:34px;background:var(--accent);opacity:.75;border-radius:4px 4px 0 0}
+.spd-trend .lab{font-size:9px;color:var(--text-muted);white-space:nowrap}
+.spd-trend .val{font-size:10px;color:var(--text-sec)}
+.spd-runs{margin-top:6px;font-size:12px;color:var(--text-sec)}
+.spd-runs .r{display:flex;gap:9px;padding:6px 0;border-top:1px dashed var(--border);align-items:baseline;flex-wrap:wrap}
+.spd-runs .r b{color:var(--text)}
+.spd-zone{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;border:1px solid var(--border);color:var(--text-sec)}
+.spd-zone.in{border-color:var(--accent);color:var(--accent)}
 </style>
 </head>
 <body data-theme="green">
@@ -1202,12 +1227,16 @@ const Progress=(()=>{
   // hifz.settings: K — длина цепочки проверки; lang — язык показа (ar|ru); backward —
   // цепочка назад (сложный режим); feedActivity — см. комментарий у hifzRecordReview.
   function hifzDef(){return {ayahs:{},junctions:{},suraDecl:{},settings:{K:4,lang:"ar",backward:false,feedActivity:false,scope:null}};}
-  function def(){return {settings:{goalType:"minutes",goalValue:1,mushafId:1,recovery:{autoPerWeek:1,manualMaxDays:2}},activityDays:[],resumePosition:null,manualRestore:{active:false},hifz:hifzDef(),_debugDayOffset:0};}
+  // speed.settings.targetWpm — МЯГКИЙ комфортный уровень WPM (цель — беглость,
+  // не гонка на максимум); null = не задан. runs — сырой лог замеров.
+  function speedDef(){return {runs:[],settings:{targetWpm:null}};}
+  function def(){return {settings:{goalType:"minutes",goalValue:1,mushafId:1,recovery:{autoPerWeek:1,manualMaxDays:2}},activityDays:[],resumePosition:null,manualRestore:{active:false},hifz:hifzDef(),speed:speedDef(),_debugDayOffset:0};}
   let state=load();
   function load(){const s=gs(KEY,null);if(!s)return def();
     return Object.assign(def(),s,
       {settings:Object.assign(def().settings,s.settings||{}),
-       hifz:Object.assign(hifzDef(),s.hifz||{},{settings:Object.assign(hifzDef().settings,(s.hifz||{}).settings||{})})});}
+       hifz:Object.assign(hifzDef(),s.hifz||{},{settings:Object.assign(hifzDef().settings,(s.hifz||{}).settings||{})}),
+       speed:Object.assign(speedDef(),s.speed||{},{settings:Object.assign(speedDef().settings,(s.speed||{}).settings||{})})});}
   function save(){ss(KEY,state);}
   // — даты (со сдвигом «сегодня» для отладки серии/вех) —
   // ЛОКАЛЬНАЯ дата, не toISOString (тот даёт UTC: в UTC+3 время 00:00–02:59
@@ -1311,6 +1340,67 @@ const Progress=(()=>{
     }
     _hifzPg={agg,size};return _hifzPg;
   }
+  // ═══ СЛОЙ SPEED (скорость чтения) — осознанные замеры беглости ═══
+  // ОТДЕЛЬНЫЙ от пассивного таймера привычки: явные СТАРТ/ФИНИШ, а не тик.
+  // Лог state.speed.runs[]: {pageId, mushafId, verseKeys, seconds, wordCount, wpm, ts}.
+  // Производные (рекорды, средние, тренд) НЕ хранятся — считаются функциями.
+  // Активный замер _run НЕ персистится: перезагрузка страницы = отмена замера
+  // (осознанный секундомер нельзя «дочитать» в другой сессии).
+  const SPEED_RUNS_MAX=400, SPEED_MIN_SEC=5;              // страховка: <5 c — не замер, а случайный тап
+  let _run=null,_runPaused=false;
+  // Старт замера. info поставляет МОДУЛЬ (данные — его забота, store — только состояние):
+  // wordCount — из пословного слоя мушафа; verseKeys — аяты страницы (якорь verse_key).
+  function startPageRun(pageId,info){
+    _run={pageId,mushafId:state.settings.mushafId,wordCount:(info&&info.wordCount)||0,
+      verseKeys:(info&&info.verseKeys)||[],seconds:0};
+    _runPaused=false;
+  }
+  function runInfo(){return _run?{pageId:_run.pageId,seconds:_run.seconds,paused:_runPaused}:null;}
+  function cancelPageRun(){_run=null;_runPaused=false;}
+  // Финиш: пишет run в лог и возвращает результат с контекстом сравнения
+  // (личный рекорд ЭТОЙ страницы до замера, среднее по ней, признак рекорда).
+  function finishPageRun(){
+    if(!_run)return null;
+    const r=_run;_run=null;_runPaused=false;
+    if(r.seconds<SPEED_MIN_SEC)return {tooShort:true,seconds:r.seconds};
+    const prev=getPageBest(r.pageId);                     // срез ДО записи нового замера
+    const wpm=Math.round(r.wordCount/(r.seconds/60)*10)/10;
+    const run={pageId:r.pageId,mushafId:r.mushafId,verseKeys:r.verseKeys,seconds:r.seconds,wordCount:r.wordCount,wpm,ts:Date.now()};
+    state.speed.runs.push(run);
+    if(state.speed.runs.length>SPEED_RUNS_MAX)state.speed.runs=state.speed.runs.slice(-SPEED_RUNS_MAX);
+    // Тренировка идёт и в привычку/серию: секунды и аяты — в CREDITED через ту же
+    // единственную точку зачёта. Пассивный тик на время замера МОЛЧАЛ (см. tick),
+    // поэтому время не двоится; покрытие не двоится дедупом verseKey за день.
+    recordActivity(run.seconds,run.verseKeys);
+    save();
+    return {run,prev,isRecord:!prev.count||wpm>prev.bestWpm};
+  }
+  // Личный рекорд по КОНКРЕТНОЙ странице — ядро метрики (перечитывание одной
+  // страницы фиксирует её сложность; сырые секунды между страницами несравнимы).
+  function getPageBest(pageId){
+    let count=0,bestWpm=0,bestSeconds=0,sum=0,lastWpm=null;
+    for(const r of state.speed.runs){
+      if(r.pageId!==pageId)continue;
+      count++;sum+=r.wpm;lastWpm=r.wpm;
+      if(r.wpm>bestWpm){bestWpm=r.wpm;bestSeconds=r.seconds;}
+    }
+    return {count,bestWpm,bestSeconds,avgWpm:count?Math.round(sum/count*10)/10:0,lastWpm};
+  }
+  // Общий WPM-тренд по неделям (обзорный вид, шумнее личных рекордов страниц —
+  // разные страницы имеют разную сложность; так и помечаем в UI). 12 недель.
+  function getSpeedTrend(){
+    const t=today(),mon=addDays(t,-dow(t)),weeks=[];
+    for(let w=11;w>=0;w--){
+      const from=addDays(mon,-7*w),to=addDays(from,6);
+      let sum=0,n=0;
+      for(const r of state.speed.runs){const d=iso(new Date(r.ts));if(d>=from&&d<=to){sum+=r.wpm;n++;}}
+      weeks.push({week:from,avgWpm:n?Math.round(sum/n*10)/10:0,runs:n});
+    }
+    return weeks;
+  }
+  function speedRuns(){return state.speed.runs;}          // живая ссылка — ТОЛЬКО чтение
+  function speedSettings(){return JSON.parse(JSON.stringify(state.speed.settings));}
+  function speedSetSettings(patch){Object.assign(state.speed.settings,patch||{});save();}
   // ═══ ПРОИЗВОДНЫЕ (считаются, не хранятся) ═══
   function coveredPages(){const s=new Set();for(const d of state.activityDays)for(const vk of d.verseKeys){const p=verseToPage(vk,state.settings.mushafId);if(p)s.add(p);}return s;}
   function lifeAyahs(){const s=new Set();for(const d of state.activityDays)for(const vk of d.verseKeys)s.add(vk);return s.size;}
@@ -1389,6 +1479,13 @@ const Progress=(()=>{
       for(const s in (snap.hifz.suraDecl||{}))if(!(s in H.suraDecl))H.suraDecl[s]=snap.hifz.suraDecl[s];
       _hifzPg=null;
     }
+    // — speed (замеры скорости): объединение логов, дедуп по ts+pageId, хронология —
+    if(snap.speed&&Array.isArray(snap.speed.runs)){
+      const seen=new Set(state.speed.runs.map(r=>r.ts+"|"+r.pageId));
+      for(const r of snap.speed.runs)if(r&&r.ts&&!seen.has(r.ts+"|"+r.pageId))state.speed.runs.push(r);
+      state.speed.runs.sort((a,b)=>a.ts-b.ts);
+      if(state.speed.runs.length>SPEED_RUNS_MAX)state.speed.runs=state.speed.runs.slice(-SPEED_RUNS_MAX);
+    }
     save();return merged;
   }
   // ═══ Таймер активного времени (слой CREDITED; resume не трогает) ═══
@@ -1398,6 +1495,16 @@ const Progress=(()=>{
   let _lastAction=Date.now(),_started=false;
   function markAction(){_lastAction=Date.now();}
   function tick(){
+    // Активный ЗАМЕР скорости: тот же движок пауз (visibility + IDLE_LIMIT_SEC)
+    // переиспользован как страховка от накрутки — скрытая вкладка и простой
+    // секундомер не двигают. Пассивный тик привычки на время замера МОЛЧИТ:
+    // секунды замера уйдут в recordActivity одним куском при финише (не двоить).
+    if(_run){
+      const active=document.visibilityState==="visible"&&(Date.now()-_lastAction<IDLE_LIMIT_SEC*1000);
+      _runPaused=!active;
+      if(active)_run.seconds+=TICK_SEC;
+      return;
+    }
     if(document.visibilityState!=="visible")return;
     if(Date.now()-_lastAction>=IDLE_LIMIT_SEC*1000)return;
     if(ST.homeMode||progressOpen||!ST.surah)return;
@@ -1424,6 +1531,7 @@ const Progress=(()=>{
   };
   return {recordActivity,updateResume,setGoal,getSummary,getResume,getCoverage,getPageStatus,getHifzStatus,
     hifzDeclareSurah,hifzDeclareRange,hifzRecordReview,hifzStage,hifzAyahs,hifzSuraDecl,hifzGetAyah,hifzSettings,hifzSetSettings,
+    startPageRun,finishPageRun,cancelPageRun,runInfo,getPageBest,getSpeedTrend,speedRuns,speedSettings,speedSetSettings,
     todayISO:today,HIFZ_MASTER,
     exportState,importState,verseToPage,ensureInit,markAction,debug,TOTAL_PAGES};
 })();
@@ -1507,6 +1615,11 @@ function renderProgress(){
     <div class="prog-legend"><span><span class="cell" style="background:var(--border)"></span>не читал</span><span><span class="cell" style="background:var(--accent)"></span>читал</span><span><span class="cell" style="background:#7c6cf0"></span>учится</span><span><span class="cell" style="background:#b06cf0"></span>повторение</span><span><span class="cell" style="background:#f06c9b"></span>закреплено</span></div>
     <div class="prog-muted" style="margin-top:8px">${hifzN?`Хифз-слой: <b style="color:var(--accent)">${hifzN}</b> аятов в работе — он перекрывает «читал» на карте.`:"Хифз-слой пуст — начните с проверки заучивания."}</div>
     <button class="prog-cont" onclick="progOpenHifz()">🧠 Проверка заучивания →</button></div>`;
+  // Скорость чтения (слой SPEED: осознанные замеры, отдельно от таймера привычки)
+  const spdN=Progress.speedRuns().length;
+  const speed=`<div class="prog-card"><h3>Скорость чтения</h3>
+    <div class="prog-muted">Осознанные замеры беглости по страницам мусхафа — отдельно от пассивного таймера привычки.${spdN?` Замеров: <b style="color:var(--accent)">${spdN}</b>.`:""}</div>
+    <button class="prog-cont" onclick="progOpenSpeed()">⚡ Скорость чтения →</button></div>`;
   // Отладка (только при ?pdebug)
   let dbg="";
   if(PROG_DEBUG){dbg=`<div class="prog-card prog-debug"><h3>Отладка (симуляция ридера) · ?pdebug</h3>
@@ -1521,7 +1634,7 @@ function renderProgress(){
       <button onclick="if(confirm('Стереть весь прогресс?')){Progress.debug.wipe();renderProgress();}">Стереть всё</button>
     </div>
     <div class="prog-kv">сегодня(сдвиг): ${s.todayDate} · дней в реестре: ${s.daysCount}<br>resume: ${res?esc(res.verseKey):"—"} · серия: ${s.streak} · лучшая: ${s.bestStreak}</div></div>`;}
-  body.innerHTML=`<div class="prog-h">Прогресс чтения</div><div class="prog-sub">Цель · серия · покрытие мусхафа</div>`+ring+streak+week+mile+tiles+heat+map+dbg;
+  body.innerHTML=`<div class="prog-h">Прогресс чтения</div><div class="prog-sub">Цель · серия · покрытие мусхафа</div>`+ring+streak+week+mile+tiles+heat+map+speed+dbg;
 }
 // Переход к позиции resume из дашборда (закрывает экран статистики).
 function progGoResume(){const r=Progress.getResume();if(!r)return;const p=r.verseKey.split(":");closeProgress();goAyah(+p[0],+p[1]);}
@@ -1908,6 +2021,201 @@ function hifzSet(k,v){
   Progress.hifzSetSettings({[k]:v});
   renderHifz();
 }
+
+// ============================================================
+// МОДУЛЬ «СКОРОСТЬ ЧТЕНИЯ» — UI слоя SPEED (осознанные замеры беглости).
+// ------------------------------------------------------------
+// ОТДЕЛЬНЫЙ от пассивного таймера привычки: явные СТАРТ/ФИНИШ. Пишет только
+// через контракт store (startPageRun/finishPageRun/…), localStorage не трогает.
+// Грузится лениво: инициализация (qpcMeta, пословный слой) — при открытии
+// экрана; ридер о модуле НЕ знает (вход — с экрана прогресса; секундомер-пилюля
+// — собственный DOM модуля поверх страницы, ни один рендер-путь чтения его
+// не касается). Рамка: цель — беглость до комфортного уровня и личный рекорд
+// страницы, НЕ гонка на максимум.
+// ============================================================
+let spdOpen=false;
+const SPD={result:null,timer:null};
+
+async function openSpeed(){
+  Progress.ensureInit();
+  if(typeof loadQpcMeta==="function")await loadQpcMeta();  // границы страниц (аяты страницы, verseToPage)
+  _progPageIdx=null;
+  let ov=document.getElementById("speedOvl");
+  if(!ov){ov=document.createElement("div");ov.id="speedOvl";ov.className="about-ovl";ov.onclick=e=>{if(e.target===ov)closeSpeed();};document.body.appendChild(ov);}
+  ov.innerHTML=`<div class="about-box prog-box" role="dialog" aria-modal="true"><button class="about-close" onclick="closeSpeed()" aria-label="Закрыть">×</button><div id="spdBody"></div></div>`;
+  ov.style.display="flex";ov.scrollTop=0;spdOpen=true;
+  renderSpeed();
+  pushOverlay();
+}
+function spdOvlOpen(){const ov=document.getElementById("speedOvl");return !!(ov&&ov.style.display!=="none");}
+function closeSpeed(){const ov=document.getElementById("speedOvl");if(ov)ov.style.display="none";spdOpen=false;consumeOverlay();}
+// Переход «Прогресс → Скорость»: как progOpenHifz — переиспользуем overlay-запись.
+function progOpenSpeed(){const ov=document.getElementById("progressOvl");if(ov)ov.style.display="none";progressOpen=false;openSpeed();}
+
+// ─── Данные страницы (якорь verse_key; страница только производится) ───
+function spdOrdToVk(o){                                   // глобальный ординал 1..6236 → "сура:аят"
+  let s=1;while(s<114&&PROG_AYAH_OFFSET[s]<o)s++;
+  return s+":"+(o-PROG_AYAH_OFFSET[s-1]);
+}
+function spdPageVks(p){                                   // аяты страницы p по qpcMeta.pageStart
+  const ps=qpcMeta&&qpcMeta.pageStart;if(!ps||!ps[p])return [];
+  const o1=progVerseOrdinal(ps[p].surah+":"+ps[p].ayah);
+  const o2=ps[p+1]?progVerseOrdinal(ps[p+1].surah+":"+ps[p+1].ayah)-1:PROG_AYAH_OFFSET[114];
+  const vks=[];for(let o=o1;o<=o2;o++)vks.push(spdOrdToVk(o));
+  return vks;
+}
+// wordCount — из ПОСЛОВНОГО слоя мусхафа (wbw/words, число слов аята = число
+// ключей); фолбэк, если пословных данных для суры нет, — счёт слов арабского текста.
+async function spdPageWords(vks){
+  const bySura={};for(const vk of vks){const q=vk.split(":");(bySura[q[0]]=bySura[q[0]]||[]).push(+q[1]);}
+  let count=0;
+  for(const s in bySura){
+    const words=await loadWbwWords(+s);
+    const ch=words?null:await loadChunk("_arabic",+s);
+    for(const a of bySura[s]){
+      if(words&&words[a])count+=Object.keys(words[a]).length;
+      else if(ch&&ch[String(a)])count+=String(ch[String(a)]).trim().split(/\s+/).length;
+    }
+  }
+  return count;
+}
+// Страница замера: в мусхафе — текущая; вне его — страница позиции resume
+// (свежая: saveLastPos обновляет её при чтении).
+function spdCurPage(){
+  if(ST.pageMode)return ST.mushafPage||1;
+  const res=Progress.getResume();
+  return res?(Progress.verseToPage(res.verseKey,res.mushafId)||1):1;
+}
+
+// ─── Замер ───
+async function spdStart(){
+  const p=spdCurPage();
+  const vks=spdPageVks(p);
+  if(!vks.length){renderSpeed();return;}                  // нет границ страниц (нет сети) — не стартуем
+  const wc=await spdPageWords(vks);
+  // Замер идёт по странице мусхафа. Переход в режим страницы ОБЯЗАТЕЛЬНО дождаться
+  // (togglePageMode асинхронный: ST.pageMode встаёт после await loadQpcMeta) —
+  // иначе страж пилюли увидит «не мусхаф» и сбросит только что начатый замер.
+  if(!ST.pageMode){
+    ST.homeMode=false;ST.srcMode=false;ST.bookIntro=false;ST.wbwMode=false;ss("wbwMode",false);
+    await togglePageMode();
+  }
+  if((ST.mushafPage||1)!==p)await gotoPage(p);
+  Progress.startPageRun(p,{wordCount:wc,verseKeys:vks});
+  SPD.result=null;
+  closeSpeed();
+  spdPillShow();
+}
+function spdFmt(sec){return Math.floor(sec/60)+":"+String(sec%60).padStart(2,"0");}
+function spdPillShow(){
+  let el=document.getElementById("spdPill");
+  if(!el){el=document.createElement("div");el.id="spdPill";el.className="spd-pill";document.body.appendChild(el);}
+  el.innerHTML=`<span class="t" id="spdPillT">0:00</span><span class="pg" id="spdPillP"></span>
+    <button class="fin" onclick="spdFinish()">Финиш</button><button onclick="spdCancelRun()" title="Отменить замер (не запишется)">✕</button>`;
+  el.style.display="flex";
+  clearInterval(SPD.timer);SPD.timer=setInterval(spdPillTick,500);
+  spdPillTick();
+}
+function spdPillHide(){const el=document.getElementById("spdPill");if(el)el.style.display="none";clearInterval(SPD.timer);SPD.timer=null;}
+function spdPillTick(){
+  const el=document.getElementById("spdPill");if(!el)return;
+  const ri=Progress.runInfo();
+  if(!ri){spdPillHide();return;}
+  if(!ST.pageMode||(ST.mushafPage||1)!==ri.pageId){       // ушли со страницы — замер испорчен, сбрасываем
+    Progress.cancelPageRun();
+    el.innerHTML=`<span class="pg">Замер сброшен — страница сменилась</span>`;
+    clearInterval(SPD.timer);SPD.timer=null;
+    setTimeout(spdPillHide,2500);
+    return;
+  }
+  el.classList.toggle("paused",!!ri.paused);
+  const t=document.getElementById("spdPillT"),pp=document.getElementById("spdPillP");
+  if(t)t.textContent=(ri.paused?"⏸ ":"")+spdFmt(ri.seconds);
+  if(pp)pp.textContent="стр. "+ri.pageId;
+}
+function spdFinish(){
+  const res=Progress.finishPageRun();
+  spdPillHide();
+  SPD.result=res;
+  openSpeed();                                            // показать результат на экране скорости
+}
+function spdCancelRun(){Progress.cancelPageRun();spdPillHide();}  // отмена осознанно теряет секунды (в привычку не идут)
+
+// ─── Рендер экрана ───
+// Мягкая зона вокруг целевого WPM (±15%): без «рекорда любой ценой».
+function spdZoneChip(wpm,target){
+  if(!target)return "";
+  if(wpm<target*0.85)return `<div style="margin-top:8px"><span class="spd-zone">ниже зоны — спокойно: беглость набирается повторами</span></div>`;
+  if(wpm>target*1.15)return `<div style="margin-top:8px"><span class="spd-zone">выше зоны — не гонитесь, главное смысл</span></div>`;
+  return `<div style="margin-top:8px"><span class="spd-zone in">в комфортной зоне 🎯</span></div>`;
+}
+function renderSpeed(){
+  const body=document.getElementById("spdBody");if(!body)return;
+  const S=Progress.speedSettings();
+  // — результат только что завершённого замера —
+  let resCard="";
+  if(SPD.result){
+    const R=SPD.result;
+    if(R.tooShort){
+      resCard=`<div class="prog-card"><h3>Замер не засчитан</h3><div class="hf-muted">Слишком короткий (меньше 5 секунд) — так страница не читается; в лог не пишем.</div></div>`;
+    }else if(R.run){
+      const r=R.run,prev=R.prev;
+      const dBest=prev.count?Math.round((r.wpm-prev.bestWpm)*10)/10:null;
+      const dAvg=prev.count?Math.round((r.wpm-prev.avgWpm)*10)/10:null;
+      resCard=`<div class="prog-card"><h3>Результат · страница ${r.pageId}</h3>
+        <div class="spd-big">${spdFmt(r.seconds)} <small>·</small> ${r.wpm} <small>WPM · ${r.wordCount} слов</small></div>
+        ${R.isRecord
+          ?`<div class="spd-rec" style="margin-top:6px">🏆 Личный рекорд этой страницы${dBest!=null?` (+${dBest} WPM)`:" — первый замер"}</div>`
+          :`<div class="hf-muted" style="margin-top:6px">Рекорд страницы: <b>${prev.bestWpm}</b> WPM · к среднему: ${dAvg>=0?"+":""}${dAvg} WPM</div>`}
+        ${spdZoneChip(r.wpm,S.targetWpm)}</div>`;
+    }
+  }
+  // — текущая страница: личный рекорд run-за-run (ядро метрики) —
+  const p=spdCurPage();
+  const pb=Progress.getPageBest(p);
+  const cur=`<div class="prog-card"><h3>Замер · страница ${p}</h3>
+    ${pb.count?`<div class="spd-row">
+      <div class="spd-kpi"><b>${pb.bestWpm}</b><span>рекорд WPM</span></div>
+      <div class="spd-kpi"><b>${spdFmt(pb.bestSeconds)}</b><span>лучшее время</span></div>
+      <div class="spd-kpi"><b>${pb.avgWpm}</b><span>средний WPM</span></div>
+      <div class="spd-kpi"><b>${pb.count}</b><span>замер${pb.count===1?"":pb.count<5?"а":"ов"}</span></div></div>`
+      :`<div class="hf-muted">Эта страница ещё не замерялась. Личный рекорд по конкретной странице — честная метрика: перечитывание фиксирует её сложность.</div>`}
+    <button class="prog-cont" onclick="spdStart()">▶ ${ST.pageMode?"Начать замер":"Открыть мусхаф и начать замер"}</button>
+    <div class="hf-muted" style="margin-top:8px">Явные старт/финиш; при простое и скрытой вкладке секундомер сам встаёт на паузу. Финиш зачтёт время и аяты в дневную цель.</div></div>`;
+  // — комфортный уровень —
+  const goal=`<div class="prog-card"><h3>Комфортный уровень</h3>
+    <div class="hf-muted">Цель — беглость до комфортного уровня и личные рекорды страниц, не гонка на максимум. Выход тренда на плато — норма, не подгоняйте себя.</div>
+    <div class="hf-set" style="margin-top:10px"><span>Целевой WPM:</span>
+      <div class="prog-step"><button onclick="spdGoal(-5)">−</button><b>${S.targetWpm||"—"}</b><button onclick="spdGoal(5)">+</button></div>
+      ${S.targetWpm?`<span class="hf-muted">зона комфорта ±15%</span><button class="hf-go" onclick="spdGoalOff()">снять</button>`:`<span class="hf-muted">не задан</span>`}
+    </div></div>`;
+  // — общий тренд по неделям (обзорный вид, шумнее личных рекордов) —
+  const tr=Progress.getSpeedTrend();
+  const maxW=Math.max(1,...tr.map(w=>w.avgWpm));
+  const bars=tr.map(w=>`<div class="c" title="Неделя от ${w.week}: ${w.runs?w.avgWpm+" WPM · "+w.runs+" замеров":"нет замеров"}">
+    <div class="val">${w.avgWpm||""}</div><div class="bar" style="height:${w.avgWpm?6+(w.avgWpm/maxW)*60:2}px"></div>
+    <div class="lab">${w.week.slice(5)}</div></div>`).join("");
+  const trend=`<div class="prog-card"><h3>Тренд WPM по неделям</h3>
+    <div class="hf-muted">Обзорный вид: он шумнее рекордов страниц (страницы разной сложности усредняются).</div>
+    <div class="spd-trend">${bars}</div></div>`;
+  // — последние замеры —
+  const runs=Progress.speedRuns().slice(-8).reverse();
+  const rows=runs.map(r=>{
+    const d=new Date(r.ts);
+    const ds=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+    const best=Progress.getPageBest(r.pageId).bestWpm===r.wpm?` <span class="spd-rec">🏆</span>`:"";
+    return `<div class="r"><span>${ds}</span><span>стр. <b>${r.pageId}</b></span><span>${spdFmt(r.seconds)}</span><span><b>${r.wpm}</b> WPM${best}</span></div>`;
+  }).join("");
+  const last=runs.length?`<div class="prog-card"><h3>Последние замеры</h3><div class="spd-runs">${rows}</div></div>`:"";
+  body.innerHTML=`<div class="prog-h">Скорость чтения</div><div class="prog-sub">Осознанные замеры · рекорды страниц · беглость, не гонка</div>`
+    +resCard+cur+goal+trend+last;
+}
+function spdGoal(d){
+  const S=Progress.speedSettings();
+  Progress.speedSetSettings({targetWpm:Math.max(10,(S.targetWpm||60)+d)});
+  renderSpeed();
+}
+function spdGoalOff(){Progress.speedSetSettings({targetWpm:null});renderSpeed();}
 
 // --- Быстрые ссылки на Главной (пользователь правит текстом) ---
 // Грамматика: элементы через запятую/перенос строки. «N» = вся сура; «N/A» = аят;
@@ -4167,7 +4475,7 @@ document.addEventListener("keydown",function(e){
 // ============================================================
 let pendingAyah=null;
 // Which open panels should the Back button / backdrop close (overlays only; the desktop sidebar is docked)
-function anyOverlayOpen(){return searchOpen||ST.rpanelOpen||ST.viewOpen||ST.immersive||appAboutOpen()||progressOpen||hifzOpen||(isM()&&ST.sidebarOpen);}
+function anyOverlayOpen(){return searchOpen||ST.rpanelOpen||ST.viewOpen||ST.immersive||appAboutOpen()||progressOpen||hifzOpen||spdOpen||(isM()&&ST.sidebarOpen);}
 let navBack=false; // true while we programmatically history.back() to consume our own overlay entry
 function pushOverlay(){if(!(history.state&&history.state.ov))history.pushState({ov:1},"");}
 function consumeOverlay(){if(history.state&&history.state.ov){navBack=true;history.back();}}
@@ -4176,6 +4484,7 @@ function closeAllPanelsUI(){
   if(appAboutOpen()){closeAbout();const ov=document.getElementById("aboutOvl");if(ov)ov.dataset.app="";}  // «Назад» (запись уже снята)
   if(progressOpen){const ov=document.getElementById("progressOvl");if(ov)ov.style.display="none";progressOpen=false;}  // «Назад» закрывает экран прогресса (запись истории уже снята)
   if(hifzOpen){const ov=document.getElementById("hifzOvl");if(ov)ov.style.display="none";hifzOpen=false;}  // «Назад» закрывает тренажёр хифза
+  if(spdOpen){const ov=document.getElementById("speedOvl");if(ov)ov.style.display="none";spdOpen=false;}  // «Назад» закрывает экран скорости (активный замер-пилюля живёт дальше)
   if(searchOpen){searchOpen=false;document.getElementById("searchPanel").classList.add("hidden");}
   if(ST.rpanelOpen){ST.rpanelOpen=false;document.getElementById("rpanel").classList.add("collapsed");}
   if(ST.viewOpen){ST.viewOpen=false;renderViewPanel();renderCB();}
