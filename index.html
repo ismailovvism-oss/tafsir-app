@@ -823,6 +823,21 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
 .hfz-cell.d-know{border-color:#2ea06e}
 .hfz-cell.d-shaky{border-color:#e0a030}
 .hfz-cell.d-no{border-color:#e05252}
+/* оверлей-фильтры структуры мусхафа: dim НЕсовпадающих + бейдж у совпадающих;
+   заливку (истина заучивания) и контур (декларация) НЕ трогаем */
+.hfz-cell.hfo-dim{opacity:.28}
+.hfz-cell .ob{position:absolute;bottom:1px;right:2px;z-index:2;font-size:8px;line-height:1.3;border-radius:5px;padding:1px 4px;color:#fff;background:var(--accent);max-width:80%;overflow:hidden;white-space:nowrap}
+.hfz-cell .anom{position:absolute;bottom:1px;left:2px;z-index:2;font-size:8px;line-height:1.2;color:#e05252;border:1px solid #e05252;border-radius:4px;padding:0 2px;background:var(--bg)}
+.hfo-chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px;align-items:center}
+.hfo-chips .lbl{font-size:10px;color:var(--text-muted)}
+.hfo-chips .chip{font-family:inherit;font-size:11px;padding:4px 9px;border-radius:999px;border:1px solid var(--border);background:var(--bg);color:var(--text-sec);cursor:pointer}
+.hfo-chips .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.hfo-leg{margin-top:7px;font-size:11px;color:var(--text-sec)}
+.hfo-leg summary{cursor:pointer;color:var(--text-muted);font-size:11px}
+.hfo-leg .body{margin-top:5px;line-height:1.55}
+.hfo-leg .fam{display:inline-flex;align-items:center;gap:4px;margin:3px 9px 0 0;cursor:pointer;border:none;background:none;font-family:inherit;font-size:11px;color:var(--text-sec);padding:0}
+.hfo-leg .fam.on{font-weight:700;color:var(--text)}
+.hfo-leg .fam .sw{width:10px;height:10px;border-radius:3px;display:inline-block}
 
 /* ── Скорость чтения (осознанные замеры беглости) ── */
 .spd-pill{position:fixed;left:50%;transform:translateX(-50%);bottom:74px;z-index:60;display:flex;align-items:center;gap:10px;
@@ -965,6 +980,9 @@ const SOURCES={
   morphology:      {baseUrl:"data",  pathTemplate:"{baseUrl}/wbw/morph/{sura}.json"},
   // — «о переводе/тафсире» (паспорт источника) —
   about:           {baseUrl:"data",  pathTemplate:"{baseUrl}/about/{source}.md"},
+  // — статичные классификации сур (Мекка/Медина, периоды, мукатта'ат, пары…) —
+  //   оверлей-фильтры карты хифза; чистая справка, не связана с состоянием —
+  surah_meta:      {baseUrl:"data",  pathTemplate:"{baseUrl}/surah-classifications.json"},
   // — печатный мусхаф (глифы QPC, лёгкий JSON) и его шрифты; структуру внутри
   //   задаёт пакет (PACKS), база — отсюда (можно унести на CDN сменой baseUrl) —
   mushaf_glyphs:   {baseUrl:"data",  pathTemplate:"{baseUrl}/{path}"},
@@ -1714,7 +1732,9 @@ async function openHifz(){
   HF.scope=Progress.hifzSettings().scope||{juz:30,surah:null,from:null,to:null};
   HF.tab="map";HF.sess=null;HF.open={};
   HF.zoom={level:2,juz:null,surah:null};                   // вид по умолчанию — уровень сур
+  HF.ovl={group:null,value:null,sub:null};                 // оверлей-фильтры выключены при открытии
   _hifzJuzOrds=null;                                       // пересобрать статику джузов на свежей мете
+  hfoLoad();                                               // классификации сур — лениво, один раз, в память
   let ov=document.getElementById("hifzOvl");
   if(!ov){ov=document.createElement("div");ov.id="hifzOvl";ov.className="about-ovl";ov.onclick=e=>{if(e.target===ov)closeHifz();};document.body.appendChild(ov);}
   ov.innerHTML=`<div class="about-box prog-box" role="dialog" aria-modal="true"><button class="about-close" onclick="closeHifz()" aria-label="Закрыть">×</button><div id="hifzBody"></div></div>`;
@@ -1999,15 +2019,137 @@ function hifzBcHTML(){                                     // хлебная к�
   const whole=z.level===2?`<button class="hf-go" style="margin-left:auto" onclick="hifzZoomTo(1)">весь Коран</button>`:"";
   return `<div class="hfz-bc">${parts.join(`<span class="sep">→</span>`)}${whole}</div>`;
 }
+// ═══ ОВЕРЛЕЙ-ФИЛЬТРЫ структуры мусхафа (Мекка/Медина, периоды, мукатта'ат,
+// мусаббихат, пары) — чисто ВИЗУАЛЬНЫЙ слой поверх уровней 1–2 карты. ═══
+// Источник — статичный data/surah-classifications.json (класс surah_meta);
+// грузится лениво один раз, кэш в памяти (НЕ localStorage). Никакой записи в
+// store: оверлей — чистая функция от JSON + активного чипа (HF.ovl). На пул
+// проверки и селектор охвата не влияет — это просмотр, не отбор.
+// ИНВАРИАНТ: заливка = истина заучивания, контур = декларация; оверлей их не
+// перекрашивает — несовпадающие ячейки притушаются, совпадающие получают бейдж.
+let HFO=null,_hfoLoading=false;
+function hfoLoad(){
+  if(HFO||_hfoLoading)return;
+  _hfoLoading=true;
+  fetch(resolveUrl("surah_meta")).then(r=>r.ok?r.json():null).then(d=>{
+    if(d&&Array.isArray(d.surahs)){HFO={data:d,by:{}};for(const s of d.surahs)HFO.by[s.n]=s;}
+    _hfoLoading=false;if(hifzOpen)renderHifz();
+  }).catch(()=>{_hfoLoading=false;});
+}
+// Стабильные оттенки: семействам мукатта'ат — по порядку в families_legend, парам — по индексу.
+function hfoFamColor(fam){
+  const keys=Object.keys(HFO.data.families_legend||{});
+  const i=Math.max(0,keys.indexOf(fam));
+  return `hsl(${(i*31)%360},52%,42%)`;
+}
+function hfoPairColor(i){return `hsl(${(i*79+15)%360},55%,42%)`;}
+const HFO_PERIODS=[["tiwal","ат-Тивал"],["miun","аль-Миун"],["mathani","аль-Масани"],["mufassal","аль-Муфассаль"]];
+const HFO_SUBS=[["tiwal_mufassal","длинный"],["awsat_mufassal","средний"],["qisar_mufassal","короткий"]];
+// Матчинг суры против активного чипа: null = фильтра нет, false = притушить,
+// объект = совпала (бейдж {t:текст, c:цвет, title}).
+function hfoMatch(sid){
+  const o=HF.ovl;if(!o||!o.group||!HFO)return null;
+  const c=HFO.by[sid];if(!c)return false;
+  if(o.group==="rev"){
+    if(c.revelation!==o.value)return false;
+    return c.revelation_disputed
+      ?{t:"?",c:"#8a8a8a",title:"место ниспослания оспаривается"}
+      :{t:"●",c:o.value==="meccan"?"#c98a1e":"#3a7bd5",title:o.value==="meccan"?"мекканская":"мединская"};
+  }
+  if(o.group==="period"){
+    if(c.period!==o.value)return false;
+    if(o.value==="mufassal"&&o.sub&&c.mufassal_sub!==o.sub)return false;
+    const sub=c.mufassal_sub?(HFO_SUBS.find(x=>x[0]===c.mufassal_sub)||[])[1]:null;
+    return {t:"●",c:"#3a7bd5",title:(HFO_PERIODS.find(x=>x[0]===c.period)||[])[1]+(sub?" · "+sub:"")};
+  }
+  if(o.group==="muq"){
+    if(!c.muqattaat)return false;
+    if(o.value&&c.muqattaat_family!==o.value)return false;
+    // при активном фильтре в бейдже — сами буквы, цвет семейства
+    return {t:c.muqattaat,c:hfoFamColor(c.muqattaat_family),title:HFO.data.families_legend[c.muqattaat_family]||c.muqattaat};
+  }
+  if(o.group==="musab"){
+    if(!c.musabbihat)return false;
+    return c.musabbihat==="core"
+      ?{t:"●",c:"#3a7bd5",title:"мусаббихат: начинается с тасбиха"}
+      :{t:"◐",c:"#8a6cc9",title:"мусаббихат — расширенный список (императив «саббих»)"};  // вторая тональность (87)
+  }
+  if(o.group==="pairs"){
+    const i=(HFO.data.pairs||[]).findIndex(p=>(p.surahs||[]).includes(sid));
+    if(i<0)return false;
+    const p=HFO.data.pairs[i];
+    return {t:"⧉",c:hfoPairColor(i),title:p.label+" — "+(p.note||"")};
+  }
+  return null;
+}
+function hfoBadge(m){return m?`<span class="ob" style="background:${m.c}" title="${escAttr(m.title)}">${esc(m.t)}</span>`:"";}
+// Совпадения по джузам (сура «в джузе», если пересекает его) — для уровня 1.
+function hfoJuzCounts(){
+  const jOrd=hifzJuzOrds(),out={};
+  for(const su of SURAHS){
+    if(!hfoMatch(su.id))continue;
+    const o1=PROG_AYAH_OFFSET[su.id-1]+1,o2=PROG_AYAH_OFFSET[su.id];
+    let j1=1;while(j1<30&&jOrd[j1+1]<=o1)j1++;
+    let j2=j1;while(j2<30&&jOrd[j2+1]<=o2)j2++;
+    for(let j=j1;j<=j2;j++)out[j]=(out[j]||0)+1;
+  }
+  return out;
+}
+// Чипы: активна ОДНА группа за раз, повторный тап по активному — снимает.
+function hfoChip(group,value){
+  const o=HF.ovl;
+  if(o.group===group&&(o.value||null)===(value||null))HF.ovl={group:null,value:null,sub:null};
+  else HF.ovl={group,value:value||null,sub:null};
+  renderHifz();
+}
+function hfoSub(sub){HF.ovl.sub=(HF.ovl.sub===sub?null:sub);renderHifz();}
+function hfoFam(fam){HF.ovl.value=(HF.ovl.value===fam?null:fam);renderHifz();}
+function hfoChipsHTML(){
+  if(!HFO)return _hfoLoading?`<div class="hf-muted" style="margin-top:8px">Загружаю классификации сур…</div>`:"";
+  const o=HF.ovl;
+  const chip=(g,v,lab,title)=>`<button class="chip ${o.group===g&&(o.value||null)===(v||null)?"on":""}" ${title?`title="${escAttr(title)}"`:""} onclick="hfoChip('${g}'${v?`,'${v}'`:""})">${lab}</button>`;
+  let row=`<div class="hfo-chips"><span class="lbl">Фильтр:</span>`
+    +chip("rev","meccan","Мекка")+chip("rev","medinan","Медина")
+    +HFO_PERIODS.map(p=>{
+      // группа периодов: чип активен и при выбранном подтипе
+      const on=o.group==="period"&&o.value===p[0];
+      return `<button class="chip ${on?"on":""}" onclick="hfoChip('period','${p[0]}')">${p[1]}</button>`;
+    }).join("")
+    +chip("muq",null,"Мукатта'ат","суры с «разрозненными буквами»")
+    +chip("musab",null,"Мусаббихат","суры, начинающиеся с тасбиха")
+    +chip("pairs",null,"Пары","классические пары сур")+`</div>`;
+  if(o.group==="period"&&o.value==="mufassal")
+    row+=`<div class="hfo-chips"><span class="lbl">муфассаль:</span>`+HFO_SUBS.map(s=>
+      `<button class="chip ${o.sub===s[0]?"on":""}" onclick="hfoSub('${s[0]}')">${s[1]}</button>`).join("")+`</div>`;
+  return row+hfoLegendHTML();
+}
+// Компактная сворачиваемая легенда активного фильтра (из families_legend / meta).
+function hfoLegendHTML(){
+  const o=HF.ovl;if(!o.group)return "";
+  const M=HFO.data.meta||{};let body="";
+  if(o.group==="rev")body=esc(M.revelation_basis||"")+" Бейдж «?» — место ниспослания оспаривается.";
+  else if(o.group==="period")body=esc(M.period_rule||"");
+  else if(o.group==="muq")body=Object.entries(HFO.data.families_legend||{}).map(([k,v])=>
+    `<button class="fam ${o.value===k?"on":""}" onclick="hfoFam('${k}')" title="показать только это семейство"><span class="sw" style="background:${hfoFamColor(k)}"></span>${esc(v)}</button>`).join("");
+  else if(o.group==="musab")body=esc(M.musabbihat_note||"");
+  else if(o.group==="pairs")body=(HFO.data.pairs||[]).map((p,i)=>
+    `<span class="fam"><span class="sw" style="background:${hfoPairColor(i)}"></span>${esc(p.label)} (${p.surahs.join(", ")}) — ${esc(p.note||"")}</span>`).join("");
+  return `<details class="hfo-leg" open><summary>Легенда фильтра</summary><div class="body">${body}</div></details>`;
+}
+
 // Уровень 1 — джузы: 30 ячеек, заливка «уровнем жидкости» по доле закреплённого.
 function hifzL1HTML(agg){
+  // активный оверлей: джузы без совпадающих сур притушить, у остальных — бейдж с числом
+  const jc=HF.ovl&&HF.ovl.group&&HFO?hfoJuzCounts():null;
   let cells="";
   for(let j=1;j<=30;j++){
     const J=agg.byJuz[j]||{total:1,mast:0,part:0,dWorst:null};
     const g=(J.mast/J.total*100),y=(J.part/J.total*100);
-    cells+=`<div class="hfz-cell jcell ${J.dWorst?"d-"+J.dWorst:""}" onclick="hifzZoomTo(2,${j})" title="Джуз ${j}: закреплено ${J.mast} из ${J.total} аятов">
+    const cnt=jc?(jc[j]||0):null;
+    cells+=`<div class="hfz-cell jcell ${J.dWorst?"d-"+J.dWorst:""} ${jc&&!cnt?"hfo-dim":""}" onclick="hifzZoomTo(2,${j})" title="Джуз ${j}: закреплено ${J.mast} из ${J.total} аятов${cnt?`; совпадений: ${cnt}`:""}">
       <div class="fg" style="height:${g.toFixed(1)}%"></div><div class="fy" style="bottom:${g.toFixed(1)}%;height:${y.toFixed(1)}%"></div>
-      <div class="big">${j}</div><div class="sub">${hifzJuzSuraCount(j)} сур · ${J.total} а.</div></div>`;
+      <div class="big">${j}</div><div class="sub">${hifzJuzSuraCount(j)} сур · ${J.total} а.</div>
+      ${cnt?`<span class="ob" title="совпадающих сур в джузе">${cnt}</span>`:""}</div>`;
   }
   return `<div class="hfz-grid">${cells}</div>`;
 }
@@ -2022,10 +2164,14 @@ function hifzL2HTML(agg){
     const g=(o.mast/o.n*100),y=(o.part/o.n*100);
     const chips=(juzAt[su.id]||[]).map(j=>`дж ${j}`).join(",");
     const focus=HF.zoom.juz&&juzOfSurah(su.id)===HF.zoom.juz;
-    cells+=`<div class="hfz-cell ${o.dWorst?"d-"+o.dWorst:""} ${focus?"focus":""}" onclick="hifzZoomTo(3,null,${su.id})" title="${su.id}. ${escAttr(su.ru)}: закреплено ${o.mast} из ${o.n}">
+    // оверлей: m=null (фильтра нет) / false (притушить) / бейдж; заливку и контур не трогаем
+    const m=hfoMatch(su.id);
+    // вечная микро-метка «аномальной ячейки»: ат-Тауба без басмалы (независимо от фильтров)
+    const anom=HFO&&HFO.by[su.id]&&HFO.by[su.id].no_basmala?`<span class="anom" title="${escAttr(su.ru)}: единственная сура без басмалы">٭</span>`:"";
+    cells+=`<div class="hfz-cell ${o.dWorst?"d-"+o.dWorst:""} ${focus?"focus":""} ${m===false?"hfo-dim":""}" onclick="hifzZoomTo(3,null,${su.id})" title="${su.id}. ${escAttr(su.ru)}: закреплено ${o.mast} из ${o.n}${m?` · ${escAttr(m.title)}`:""}">
       <div class="fg" style="height:${g.toFixed(1)}%"></div><div class="fy" style="bottom:${g.toFixed(1)}%;height:${y.toFixed(1)}%"></div>
       <div class="num">${su.id}</div>${chips?`<div class="jz">${chips}</div>`:""}
-      <div class="nm">${esc(su.ru)}</div><div class="sub">${su.n}</div></div>`;
+      <div class="nm">${esc(su.ru)}</div><div class="sub">${su.n}</div>${anom}${hfoBadge(m)}</div>`;
   }
   return `<div class="hfz-grid suras">${cells}</div>`;
 }
@@ -2100,7 +2246,8 @@ function hifzMapHTML(){
       <span><span class="sw" style="border:2px solid #e05252"></span>не знаю</span>
       <span style="margin-left:6px">красные провалы — на уровне аятов</span></div>`;
   const hint=z.level===3?"":`<div class="hf-muted" style="margin-top:7px">${z.level===1?"Тап по джузу — к его сурам.":"Тап по суре — её аятная карта; «Назад» поднимает на уровень выше."}</div>`;
-  return summary+scope+`<div class="prog-card"><h3>Карта памяти</h3>${hifzBcHTML()}${level}${legend}${hint}</div>`;
+  const overlay=z.level<3?hfoChipsHTML():"";               // оверлей-фильтры — только на обзорных уровнях
+  return summary+scope+`<div class="prog-card"><h3>Карта памяти</h3>${hifzBcHTML()}${overlay}${level}${legend}${hint}</div>`;
 }
 function hifzSuraHTML(rng){
   const c=hifzRangeCounts(rng.surah,rng.from,rng.to);

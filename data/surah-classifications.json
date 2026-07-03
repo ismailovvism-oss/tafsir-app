@@ -1,0 +1,1105 @@
+{
+  "meta": {
+    "description": "Классификации 114 сур для оверлей-фильтров карты хифза. Статичные данные, не связаны с состоянием заучивания.",
+    "ayah_count_basis": "куфийский счёт (Хафс), сумма 6236",
+    "revelation_basis": "разметка мусхафа Короля Фахда; revelation_disputed=true — есть значимое расхождение мнений",
+    "period_rule": "1=фатиха; 2–9=ат-тивал; 10–49: >=98 аятов = аль-миун, иначе аль-масани; 50–114=аль-муфассаль (подтипы: 50–77 длинный, 78–92 средний, 93–114 короткий; границы подтипов в традиции варьируются)",
+    "musabbihat_note": "core: 57,59,61,62,64 (начинаются с тасбиха); extended: 87 (императив саббих)"
+  },
+  "families_legend": {
+    "alif_lam_mim": "Алиф-Лям-Мим (2,3,29–32)",
+    "alif_lam_ra": "Алиф-Лям-Ра (10–12,14,15)",
+    "alif_lam_mim_ra": "Алиф-Лям-Мим-Ра (13)",
+    "alif_lam_mim_sad": "Алиф-Лям-Мим-Сад (7)",
+    "kaf_ha_ya_ayn_sad": "Кяф-Ха-Йа-Айн-Сад (19)",
+    "ta_ha": "Та-Ха (20)",
+    "ta_sin": "Та-Син(-Мим) (26–28)",
+    "ya_sin": "Йа-Син (36)",
+    "sad": "Сад (38)",
+    "ha_mim": "Ха-Мим / Хавамим (40–46)",
+    "qaf": "Каф (50)",
+    "nun": "Нун (68)"
+  },
+  "pairs": [
+    {
+      "id": "zahrawan",
+      "surahs": [
+        2,
+        3
+      ],
+      "label": "аз-Захраван",
+      "note": "классическая пара"
+    },
+    {
+      "id": "muawwidhatan",
+      "surahs": [
+        113,
+        114
+      ],
+      "label": "аль-Му'аввизатан",
+      "note": "пара-замыкание"
+    },
+    {
+      "id": "duha_sharh",
+      "surahs": [
+        93,
+        94
+      ],
+      "label": "ад-Духа / аш-Шарх",
+      "note": "смысловая связка по ряду учёных"
+    },
+    {
+      "id": "fil_quraysh",
+      "surahs": [
+        105,
+        106
+      ],
+      "label": "аль-Филь / Курайш",
+      "note": "смысловая связка по ряду учёных"
+    }
+  ],
+  "surahs": [
+    {
+      "n": 1,
+      "name_ru": "аль-Фатиха",
+      "ayahs": 7,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "fatiha"
+    },
+    {
+      "n": 2,
+      "name_ru": "аль-Бакара",
+      "ayahs": 286,
+      "revelation": "medinan",
+      "revelation_disputed": false,
+      "period": "tiwal",
+      "muqattaat": "АЛМ",
+      "muqattaat_family": "alif_lam_mim"
+    },
+    {
+      "n": 3,
+      "name_ru": "Аль Имран",
+      "ayahs": 200,
+      "revelation": "medinan",
+      "revelation_disputed": false,
+      "period": "tiwal",
+      "muqattaat": "АЛМ",
+      "muqattaat_family": "alif_lam_mim"
+    },
+    {
+      "n": 4,
+      "name_ru": "ан-Ниса",
+      "ayahs": 176,
+      "revelation": "medinan",
+      "revelation_disputed": false,
+      "period": "tiwal"
+    },
+    {
+      "n": 5,
+      "name_ru": "аль-Маида",
+      "ayahs": 120,
+      "revelation": "medinan",
+      "revelation_disputed": false,
+      "period": "tiwal"
+    },
+    {
+      "n": 6,
+      "name_ru": "аль-Ан'ам",
+      "ayahs": 165,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "tiwal"
+    },
+    {
+      "n": 7,
+      "name_ru": "аль-А'раф",
+      "ayahs": 206,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "tiwal",
+      "muqattaat": "АЛМС",
+      "muqattaat_family": "alif_lam_mim_sad"
+    },
+    {
+      "n": 8,
+      "name_ru": "аль-Анфаль",
+      "ayahs": 75,
+      "revelation": "medinan",
+      "revelation_disputed": false,
+      "period": "tiwal"
+    },
+    {
+      "n": 9,
+      "name_ru": "ат-Тауба",
+      "ayahs": 129,
+      "revelation": "medinan",
+      "revelation_disputed": false,
+      "period": "tiwal",
+      "no_basmala": true
+    },
+    {
+      "n": 10,
+      "name_ru": "Юнус",
+      "ayahs": 109,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "miun",
+      "muqattaat": "АЛР",
+      "muqattaat_family": "alif_lam_ra"
+    },
+    {
+      "n": 11,
+      "name_ru": "Худ",
+      "ayahs": 123,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "miun",
+      "muqattaat": "АЛР",
+      "muqattaat_family": "alif_lam_ra"
+    },
+    {
+      "n": 12,
+      "name_ru": "Юсуф",
+      "ayahs": 111,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "miun",
+      "muqattaat": "АЛР",
+      "muqattaat_family": "alif_lam_ra"
+    },
+    {
+      "n": 13,
+      "name_ru": "ар-Ра'д",
+      "ayahs": 43,
+      "revelation": "medinan",
+      "revelation_disputed": true,
+      "period": "mathani",
+      "muqattaat": "АЛМР",
+      "muqattaat_family": "alif_lam_mim_ra"
+    },
+    {
+      "n": 14,
+      "name_ru": "Ибрахим",
+      "ayahs": 52,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mathani",
+      "muqattaat": "АЛР",
+      "muqattaat_family": "alif_lam_ra"
+    },
+    {
+      "n": 15,
+      "name_ru": "аль-Хиджр",
+      "ayahs": 99,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "miun",
+      "muqattaat": "АЛР",
+      "muqattaat_family": "alif_lam_ra"
+    },
+    {
+      "n": 16,
+      "name_ru": "ан-Нахль",
+      "ayahs": 128,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "miun"
+    },
+    {
+      "n": 17,
+      "name_ru": "аль-Исра",
+      "ayahs": 111,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "miun"
+    },
+    {
+      "n": 18,
+      "name_ru": "аль-Кахф",
+      "ayahs": 110,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "miun"
+    },
+    {
+      "n": 19,
+      "name_ru": "Марьям",
+      "ayahs": 98,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "miun",
+      "muqattaat": "КХЙ'С",
+      "muqattaat_family": "kaf_ha_ya_ayn_sad"
+    },
+    {
+      "n": 20,
+      "name_ru": "Та Ха",
+      "ayahs": 135,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "miun",
+      "muqattaat": "ТХ",
+      "muqattaat_family": "ta_ha"
+    },
+    {
+      "n": 21,
+      "name_ru": "аль-Анбия",
+      "ayahs": 112,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "miun"
+    },
+    {
+      "n": 22,
+      "name_ru": "аль-Хадж",
+      "ayahs": 78,
+      "revelation": "medinan",
+      "revelation_disputed": true,
+      "period": "mathani"
+    },
+    {
+      "n": 23,
+      "name_ru": "аль-Му'минун",
+      "ayahs": 118,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "miun"
+    },
+    {
+      "n": 24,
+      "name_ru": "ан-Нур",
+      "ayahs": 64,
+      "revelation": "medinan",
+      "revelation_disputed": false,
+      "period": "mathani"
+    },
+    {
+      "n": 25,
+      "name_ru": "аль-Фуркан",
+      "ayahs": 77,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mathani"
+    },
+    {
+      "n": 26,
+      "name_ru": "аш-Шу'ара",
+      "ayahs": 227,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "miun",
+      "muqattaat": "ТСМ",
+      "muqattaat_family": "ta_sin"
+    },
+    {
+      "n": 27,
+      "name_ru": "ан-Намль",
+      "ayahs": 93,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mathani",
+      "muqattaat": "ТС",
+      "muqattaat_family": "ta_sin"
+    },
+    {
+      "n": 28,
+      "name_ru": "аль-Касас",
+      "ayahs": 88,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mathani",
+      "muqattaat": "ТСМ",
+      "muqattaat_family": "ta_sin"
+    },
+    {
+      "n": 29,
+      "name_ru": "аль-Анкабут",
+      "ayahs": 69,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mathani",
+      "muqattaat": "АЛМ",
+      "muqattaat_family": "alif_lam_mim"
+    },
+    {
+      "n": 30,
+      "name_ru": "ар-Рум",
+      "ayahs": 60,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mathani",
+      "muqattaat": "АЛМ",
+      "muqattaat_family": "alif_lam_mim"
+    },
+    {
+      "n": 31,
+      "name_ru": "Лукман",
+      "ayahs": 34,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mathani",
+      "muqattaat": "АЛМ",
+      "muqattaat_family": "alif_lam_mim"
+    },
+    {
+      "n": 32,
+      "name_ru": "ас-Саджда",
+      "ayahs": 30,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mathani",
+      "muqattaat": "АЛМ",
+      "muqattaat_family": "alif_lam_mim"
+    },
+    {
+      "n": 33,
+      "name_ru": "аль-Ахзаб",
+      "ayahs": 73,
+      "revelation": "medinan",
+      "revelation_disputed": false,
+      "period": "mathani"
+    },
+    {
+      "n": 34,
+      "name_ru": "Саба",
+      "ayahs": 54,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mathani"
+    },
+    {
+      "n": 35,
+      "name_ru": "Фатыр",
+      "ayahs": 45,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mathani"
+    },
+    {
+      "n": 36,
+      "name_ru": "Йа Син",
+      "ayahs": 83,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mathani",
+      "muqattaat": "ЙС",
+      "muqattaat_family": "ya_sin"
+    },
+    {
+      "n": 37,
+      "name_ru": "ас-Саффат",
+      "ayahs": 182,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "miun"
+    },
+    {
+      "n": 38,
+      "name_ru": "Сад",
+      "ayahs": 88,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mathani",
+      "muqattaat": "С",
+      "muqattaat_family": "sad"
+    },
+    {
+      "n": 39,
+      "name_ru": "аз-Зумар",
+      "ayahs": 75,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mathani"
+    },
+    {
+      "n": 40,
+      "name_ru": "Гафир",
+      "ayahs": 85,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mathani",
+      "muqattaat": "ХМ",
+      "muqattaat_family": "ha_mim"
+    },
+    {
+      "n": 41,
+      "name_ru": "Фуссылят",
+      "ayahs": 54,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mathani",
+      "muqattaat": "ХМ",
+      "muqattaat_family": "ha_mim"
+    },
+    {
+      "n": 42,
+      "name_ru": "аш-Шура",
+      "ayahs": 53,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mathani",
+      "muqattaat": "ХМ+'СК",
+      "muqattaat_family": "ha_mim"
+    },
+    {
+      "n": 43,
+      "name_ru": "аз-Зухруф",
+      "ayahs": 89,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mathani",
+      "muqattaat": "ХМ",
+      "muqattaat_family": "ha_mim"
+    },
+    {
+      "n": 44,
+      "name_ru": "ад-Духан",
+      "ayahs": 59,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mathani",
+      "muqattaat": "ХМ",
+      "muqattaat_family": "ha_mim"
+    },
+    {
+      "n": 45,
+      "name_ru": "аль-Джасия",
+      "ayahs": 37,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mathani",
+      "muqattaat": "ХМ",
+      "muqattaat_family": "ha_mim"
+    },
+    {
+      "n": 46,
+      "name_ru": "аль-Ахкаф",
+      "ayahs": 35,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mathani",
+      "muqattaat": "ХМ",
+      "muqattaat_family": "ha_mim"
+    },
+    {
+      "n": 47,
+      "name_ru": "Мухаммад",
+      "ayahs": 38,
+      "revelation": "medinan",
+      "revelation_disputed": false,
+      "period": "mathani"
+    },
+    {
+      "n": 48,
+      "name_ru": "аль-Фатх",
+      "ayahs": 29,
+      "revelation": "medinan",
+      "revelation_disputed": false,
+      "period": "mathani"
+    },
+    {
+      "n": 49,
+      "name_ru": "аль-Худжурат",
+      "ayahs": 18,
+      "revelation": "medinan",
+      "revelation_disputed": false,
+      "period": "mathani"
+    },
+    {
+      "n": 50,
+      "name_ru": "Каф",
+      "ayahs": 45,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "tiwal_mufassal",
+      "muqattaat": "К",
+      "muqattaat_family": "qaf"
+    },
+    {
+      "n": 51,
+      "name_ru": "аз-Зарият",
+      "ayahs": 60,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "tiwal_mufassal"
+    },
+    {
+      "n": 52,
+      "name_ru": "ат-Тур",
+      "ayahs": 49,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "tiwal_mufassal"
+    },
+    {
+      "n": 53,
+      "name_ru": "ан-Наджм",
+      "ayahs": 62,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "tiwal_mufassal"
+    },
+    {
+      "n": 54,
+      "name_ru": "аль-Камар",
+      "ayahs": 55,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "tiwal_mufassal"
+    },
+    {
+      "n": 55,
+      "name_ru": "ар-Рахман",
+      "ayahs": 78,
+      "revelation": "medinan",
+      "revelation_disputed": true,
+      "period": "mufassal",
+      "mufassal_sub": "tiwal_mufassal"
+    },
+    {
+      "n": 56,
+      "name_ru": "аль-Ваки'а",
+      "ayahs": 96,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "tiwal_mufassal"
+    },
+    {
+      "n": 57,
+      "name_ru": "аль-Хадид",
+      "ayahs": 29,
+      "revelation": "medinan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "tiwal_mufassal",
+      "musabbihat": "core"
+    },
+    {
+      "n": 58,
+      "name_ru": "аль-Муджадила",
+      "ayahs": 22,
+      "revelation": "medinan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "tiwal_mufassal"
+    },
+    {
+      "n": 59,
+      "name_ru": "аль-Хашр",
+      "ayahs": 24,
+      "revelation": "medinan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "tiwal_mufassal",
+      "musabbihat": "core"
+    },
+    {
+      "n": 60,
+      "name_ru": "аль-Мумтахана",
+      "ayahs": 13,
+      "revelation": "medinan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "tiwal_mufassal"
+    },
+    {
+      "n": 61,
+      "name_ru": "ас-Сафф",
+      "ayahs": 14,
+      "revelation": "medinan",
+      "revelation_disputed": true,
+      "period": "mufassal",
+      "mufassal_sub": "tiwal_mufassal",
+      "musabbihat": "core"
+    },
+    {
+      "n": 62,
+      "name_ru": "аль-Джум'а",
+      "ayahs": 11,
+      "revelation": "medinan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "tiwal_mufassal",
+      "musabbihat": "core"
+    },
+    {
+      "n": 63,
+      "name_ru": "аль-Мунафикун",
+      "ayahs": 11,
+      "revelation": "medinan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "tiwal_mufassal"
+    },
+    {
+      "n": 64,
+      "name_ru": "ат-Тагабун",
+      "ayahs": 18,
+      "revelation": "medinan",
+      "revelation_disputed": true,
+      "period": "mufassal",
+      "mufassal_sub": "tiwal_mufassal",
+      "musabbihat": "core"
+    },
+    {
+      "n": 65,
+      "name_ru": "ат-Талак",
+      "ayahs": 12,
+      "revelation": "medinan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "tiwal_mufassal"
+    },
+    {
+      "n": 66,
+      "name_ru": "ат-Тахрим",
+      "ayahs": 12,
+      "revelation": "medinan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "tiwal_mufassal"
+    },
+    {
+      "n": 67,
+      "name_ru": "аль-Мульк",
+      "ayahs": 30,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "tiwal_mufassal"
+    },
+    {
+      "n": 68,
+      "name_ru": "аль-Калям",
+      "ayahs": 52,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "tiwal_mufassal",
+      "muqattaat": "Н",
+      "muqattaat_family": "nun"
+    },
+    {
+      "n": 69,
+      "name_ru": "аль-Хакка",
+      "ayahs": 52,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "tiwal_mufassal"
+    },
+    {
+      "n": 70,
+      "name_ru": "аль-Ма'аридж",
+      "ayahs": 44,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "tiwal_mufassal"
+    },
+    {
+      "n": 71,
+      "name_ru": "Нух",
+      "ayahs": 28,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "tiwal_mufassal"
+    },
+    {
+      "n": 72,
+      "name_ru": "аль-Джинн",
+      "ayahs": 28,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "tiwal_mufassal"
+    },
+    {
+      "n": 73,
+      "name_ru": "аль-Муззаммиль",
+      "ayahs": 20,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "tiwal_mufassal"
+    },
+    {
+      "n": 74,
+      "name_ru": "аль-Муддассир",
+      "ayahs": 56,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "tiwal_mufassal"
+    },
+    {
+      "n": 75,
+      "name_ru": "аль-Кияма",
+      "ayahs": 40,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "tiwal_mufassal"
+    },
+    {
+      "n": 76,
+      "name_ru": "аль-Инсан",
+      "ayahs": 31,
+      "revelation": "medinan",
+      "revelation_disputed": true,
+      "period": "mufassal",
+      "mufassal_sub": "tiwal_mufassal"
+    },
+    {
+      "n": 77,
+      "name_ru": "аль-Мурсалят",
+      "ayahs": 50,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "tiwal_mufassal"
+    },
+    {
+      "n": 78,
+      "name_ru": "ан-Наба",
+      "ayahs": 40,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "awsat_mufassal"
+    },
+    {
+      "n": 79,
+      "name_ru": "ан-Нази'ат",
+      "ayahs": 46,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "awsat_mufassal"
+    },
+    {
+      "n": 80,
+      "name_ru": "Абаса",
+      "ayahs": 42,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "awsat_mufassal"
+    },
+    {
+      "n": 81,
+      "name_ru": "ат-Таквир",
+      "ayahs": 29,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "awsat_mufassal"
+    },
+    {
+      "n": 82,
+      "name_ru": "аль-Инфитар",
+      "ayahs": 19,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "awsat_mufassal"
+    },
+    {
+      "n": 83,
+      "name_ru": "аль-Мутаффифин",
+      "ayahs": 36,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "awsat_mufassal"
+    },
+    {
+      "n": 84,
+      "name_ru": "аль-Иншикак",
+      "ayahs": 25,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "awsat_mufassal"
+    },
+    {
+      "n": 85,
+      "name_ru": "аль-Бурудж",
+      "ayahs": 22,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "awsat_mufassal"
+    },
+    {
+      "n": 86,
+      "name_ru": "ат-Тарик",
+      "ayahs": 17,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "awsat_mufassal"
+    },
+    {
+      "n": 87,
+      "name_ru": "аль-А'ля",
+      "ayahs": 19,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "awsat_mufassal",
+      "musabbihat": "extended"
+    },
+    {
+      "n": 88,
+      "name_ru": "аль-Гашия",
+      "ayahs": 26,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "awsat_mufassal"
+    },
+    {
+      "n": 89,
+      "name_ru": "аль-Фаджр",
+      "ayahs": 30,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "awsat_mufassal"
+    },
+    {
+      "n": 90,
+      "name_ru": "аль-Баляд",
+      "ayahs": 20,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "awsat_mufassal"
+    },
+    {
+      "n": 91,
+      "name_ru": "аш-Шамс",
+      "ayahs": 15,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "awsat_mufassal"
+    },
+    {
+      "n": 92,
+      "name_ru": "аль-Лейль",
+      "ayahs": 21,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "awsat_mufassal"
+    },
+    {
+      "n": 93,
+      "name_ru": "ад-Духа",
+      "ayahs": 11,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "qisar_mufassal"
+    },
+    {
+      "n": 94,
+      "name_ru": "аш-Шарх",
+      "ayahs": 8,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "qisar_mufassal"
+    },
+    {
+      "n": 95,
+      "name_ru": "ат-Тин",
+      "ayahs": 8,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "qisar_mufassal"
+    },
+    {
+      "n": 96,
+      "name_ru": "аль-Аляк",
+      "ayahs": 19,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "qisar_mufassal"
+    },
+    {
+      "n": 97,
+      "name_ru": "аль-Кадр",
+      "ayahs": 5,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "qisar_mufassal"
+    },
+    {
+      "n": 98,
+      "name_ru": "аль-Баййина",
+      "ayahs": 8,
+      "revelation": "medinan",
+      "revelation_disputed": true,
+      "period": "mufassal",
+      "mufassal_sub": "qisar_mufassal"
+    },
+    {
+      "n": 99,
+      "name_ru": "аз-Зальзаля",
+      "ayahs": 8,
+      "revelation": "medinan",
+      "revelation_disputed": true,
+      "period": "mufassal",
+      "mufassal_sub": "qisar_mufassal"
+    },
+    {
+      "n": 100,
+      "name_ru": "аль-Адият",
+      "ayahs": 11,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "qisar_mufassal"
+    },
+    {
+      "n": 101,
+      "name_ru": "аль-Кари'а",
+      "ayahs": 11,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "qisar_mufassal"
+    },
+    {
+      "n": 102,
+      "name_ru": "ат-Такасур",
+      "ayahs": 8,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "qisar_mufassal"
+    },
+    {
+      "n": 103,
+      "name_ru": "аль-Аср",
+      "ayahs": 3,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "qisar_mufassal"
+    },
+    {
+      "n": 104,
+      "name_ru": "аль-Хумаза",
+      "ayahs": 9,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "qisar_mufassal"
+    },
+    {
+      "n": 105,
+      "name_ru": "аль-Филь",
+      "ayahs": 5,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "qisar_mufassal"
+    },
+    {
+      "n": 106,
+      "name_ru": "Курайш",
+      "ayahs": 4,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "qisar_mufassal"
+    },
+    {
+      "n": 107,
+      "name_ru": "аль-Ма'ун",
+      "ayahs": 7,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "qisar_mufassal"
+    },
+    {
+      "n": 108,
+      "name_ru": "аль-Каусар",
+      "ayahs": 3,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "qisar_mufassal"
+    },
+    {
+      "n": 109,
+      "name_ru": "аль-Кафирун",
+      "ayahs": 6,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "qisar_mufassal"
+    },
+    {
+      "n": 110,
+      "name_ru": "ан-Наср",
+      "ayahs": 3,
+      "revelation": "medinan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "qisar_mufassal"
+    },
+    {
+      "n": 111,
+      "name_ru": "аль-Масад",
+      "ayahs": 5,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "qisar_mufassal"
+    },
+    {
+      "n": 112,
+      "name_ru": "аль-Ихляс",
+      "ayahs": 4,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "qisar_mufassal"
+    },
+    {
+      "n": 113,
+      "name_ru": "аль-Фаляк",
+      "ayahs": 5,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "qisar_mufassal"
+    },
+    {
+      "n": 114,
+      "name_ru": "ан-Нас",
+      "ayahs": 6,
+      "revelation": "meccan",
+      "revelation_disputed": false,
+      "period": "mufassal",
+      "mufassal_sub": "qisar_mufassal"
+    }
+  ]
+}

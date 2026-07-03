@@ -41,7 +41,8 @@ fonts/              ← самохостимые шрифты (.woff2)
 - **Реестр `SOURCES`** в начале `<script>` в `index.html` — для каждого КЛАССА
   ресурса `{baseUrl, pathTemplate}`. Классы: `config`, `coverage`, `quran_text`,
   `tafsir_text`, `tafsir_monolith`, `search_index`, `glosses`, `morphology`,
-  `about`, `mushaf_glyphs`, `mushaf_fonts`, **`mushaf_scans`** (webp-страницы скана),
+  `about`, `surah_meta` (классификации сур для оверлеев карты хифза),
+  `mushaf_glyphs`, `mushaf_fonts`, **`mushaf_scans`** (webp-страницы скана),
   **`scan_maps`** (карты-списки страниц скана), `audio` (задел), `arabic_volumes` (задел).
 - **Все URL к данным — только через `resolveUrl(class, params)`.** Прямых/«зашитых»
   путей в коде нет. Чтобы перенести класс на другое хранилище, меняется ТОЛЬКО
