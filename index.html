@@ -4372,7 +4372,12 @@ applyView();
 applyMushafFull();
 ST.arFont=gs("arFont","qpc1"); // default: печатный мусхаф
 applyArFont();
-ST.skin=gs("skin","none");ST.ruFont=gs("ruFont","std"); // оформление чтения (манускрипт)
+// Оформление чтения: у НОВЫХ пользователей (нет сохранённого выбора) скин по
+// умолчанию — пергамент, а при тёмной теме — тёмный манускрипт. Явный выбор
+// пользователя (включая «Обычный») сохраняется и уважается. Шрифт — обычный.
+ST.skin=gs("skin",null);
+if(ST.skin==null)ST.skin=(ST.theme==="dark")?"dark":"parchment";
+ST.ruFont=gs("ruFont","std");
 applySkin();
 ST.navUnit=gs("navUnit","surah");
 ST.srcBarOpen=gs("srcBarOpen",false);     // шапка режима источника: развёрнута? (по умолчанию свёрнута)
