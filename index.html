@@ -1733,6 +1733,7 @@ async function openHifz(){
   HF.tab="map";HF.sess=null;HF.open={};
   HF.zoom={level:2,juz:null,surah:null};                   // вид по умолчанию — уровень сур
   HF.ovl={group:null,value:null,sub:null};                 // оверлей-фильтры выключены при открытии
+  HF.ord="mushaf";                                         // порядок сур: mushaf | chrono | length
   _hifzJuzOrds=null;                                       // пересобрать статику джузов на свежей мете
   hfoLoad();                                               // классификации сур — лениво, один раз, в память
   let ov=document.getElementById("hifzOvl");
@@ -2153,16 +2154,31 @@ function hifzL1HTML(agg){
   }
   return `<div class="hfz-grid">${cells}</div>`;
 }
-// Уровень 2 — все 114 сур плотной сеткой («таблица Менделеева»), порядок мусхафа.
-// Группировка по джузам — ненавязчивые чипы «дж N» на сурах, где джуз начинается.
+// Порядки сур для уровня 2: мусхафный (общепринятый), хронологический
+// (тартиб ан-нузуль из surah-classifications.json, египетская хронология —
+// та же разметка, что в мусхафе Короля Фахда) и по длине (от коротких —
+// естественный порядок заучивания). Порядок — только способ РАССТАНОВКИ
+// ячеек; состояние, заливки и охват не меняются.
+function hifzOrdChip(v,lab,title){return `<button class="chip ${HF.ord===v?"on":""}" title="${escAttr(title)}" onclick="hifzSetOrd('${v}')">${lab}</button>`;}
+function hifzSetOrd(v){HF.ord=v;renderHifz();}
+function hifzOrderedSuras(){
+  if(HF.ord==="chrono"&&HFO)return [...SURAHS].sort((a,b)=>((HFO.by[a.id]||{}).chrono||999)-((HFO.by[b.id]||{}).chrono||999));
+  if(HF.ord==="length")return [...SURAHS].sort((a,b)=>a.n-b.n||a.id-b.id);
+  return SURAHS;                                           // мусхафный — как есть
+}
+// Уровень 2 — все 114 сур плотной сеткой («таблица Менделеева»).
+// Группировка по джузам (чипы «дж N») — только в мусхафном порядке; в
+// хронологическом вместо неё — номер ниспослания.
 function hifzL2HTML(agg){
   const js=qpcMeta.juzStart;
   const juzAt={};for(let j=2;j<=30;j++)juzAt[js[j].surah]=(juzAt[js[j].surah]||[]).concat(j);
+  const mushaf=HF.ord==="mushaf",chrono=HF.ord==="chrono";
   let cells="";
-  for(const su of SURAHS){
+  for(const su of hifzOrderedSuras()){
     const o=agg.bySura[su.id];
     const g=(o.mast/o.n*100),y=(o.part/o.n*100);
-    const chips=(juzAt[su.id]||[]).map(j=>`дж ${j}`).join(",");
+    const chips=mushaf?(juzAt[su.id]||[]).map(j=>`дж ${j}`).join(","):
+      (chrono&&HFO&&HFO.by[su.id]?`${HFO.by[su.id].chrono}-я`:"");  // в хронологии — номер ниспослания
     const focus=HF.zoom.juz&&juzOfSurah(su.id)===HF.zoom.juz;
     // оверлей: m=null (фильтра нет) / false (притушить) / бейдж; заливку и контур не трогаем
     const m=hfoMatch(su.id);
@@ -2247,7 +2263,12 @@ function hifzMapHTML(){
       <span style="margin-left:6px">красные провалы — на уровне аятов</span></div>`;
   const hint=z.level===3?"":`<div class="hf-muted" style="margin-top:7px">${z.level===1?"Тап по джузу — к его сурам.":"Тап по суре — её аятная карта; «Назад» поднимает на уровень выше."}</div>`;
   const overlay=z.level<3?hfoChipsHTML():"";               // оверлей-фильтры — только на обзорных уровнях
-  return summary+scope+`<div class="prog-card"><h3>Карта памяти</h3>${hifzBcHTML()}${overlay}${level}${legend}${hint}</div>`;
+  // переключатель порядка сур — только на уровне сур (джузы и аяты — сущности мусхафа)
+  const order=z.level===2?`<div class="hfo-chips"><span class="lbl">Порядок:</span>`
+    +hifzOrdChip("mushaf","мусхаф","общепринятый порядок мусхафа (1 → 114)")
+    +(HFO?hifzOrdChip("chrono","ниспослание","хронологический — тартиб ан-нузуль (египетская хронология, как в мусхафе Короля Фахда)"):"")
+    +hifzOrdChip("length","по длине","от коротких к длинным — естественный порядок заучивания")+`</div>`:"";
+  return summary+scope+`<div class="prog-card"><h3>Карта памяти</h3>${hifzBcHTML()}${order}${overlay}${level}${legend}${hint}</div>`;
 }
 function hifzSuraHTML(rng){
   const c=hifzRangeCounts(rng.surah,rng.from,rng.to);
