@@ -2029,12 +2029,20 @@ function hifzBcHTML(){                                     // хлебная к�
 // ИНВАРИАНТ: заливка = истина заучивания, контур = декларация; оверлей их не
 // перекрашивает — несовпадающие ячейки притушаются, совпадающие получают бейдж.
 let HFO=null,_hfoLoading=false;
+// ДВЕ ПОВЕРХНОСТИ, одна механика: те же чипы фильтров/порядков и матчинг
+// обслуживают (а) карту хифза (когда открыт её оверлей — hifzOpen) и
+// (б) таблицу Корана на Главной (QT). У каждой — своё независимое состояние;
+// _ovlEnv() решает, чьё сейчас активно, по факту открытости оверлея хифза
+// (пока он открыт, Главная под ним недоступна — конфликтов нет).
+const QT={level:"suras",juz:null,ovl:{group:null,value:null,sub:null},ord:"mushaf"};
+function _ovlEnv(){return hifzOpen?[HF,renderHifz]:[QT,renderQuranTable];}
 function hfoLoad(){
   if(HFO||_hfoLoading)return;
   _hfoLoading=true;
   fetch(resolveUrl("surah_meta")).then(r=>r.ok?r.json():null).then(d=>{
     if(d&&Array.isArray(d.surahs)){HFO={data:d,by:{}};for(const s of d.surahs)HFO.by[s.n]=s;}
-    _hfoLoading=false;if(hifzOpen)renderHifz();
+    _hfoLoading=false;
+    if(hifzOpen)renderHifz();else if(ST.homeMode)renderQuranTable();
   }).catch(()=>{_hfoLoading=false;});
 }
 // Стабильные оттенки: семействам мукатта'ат — по порядку в families_legend, парам — по индексу.
@@ -2049,7 +2057,7 @@ const HFO_SUBS=[["tiwal_mufassal","длинный"],["awsat_mufassal","сред�
 // Матчинг суры против активного чипа: null = фильтра нет, false = притушить,
 // объект = совпала (бейдж {t:текст, c:цвет, title}).
 function hfoMatch(sid){
-  const o=HF.ovl;if(!o||!o.group||!HFO)return null;
+  const o=_ovlEnv()[0].ovl;if(!o||!o.group||!HFO)return null;
   const c=HFO.by[sid];if(!c)return false;
   if(o.group==="rev"){
     if(c.revelation!==o.value)return false;
@@ -2097,17 +2105,18 @@ function hfoJuzCounts(){
   return out;
 }
 // Чипы: активна ОДНА группа за раз, повторный тап по активному — снимает.
+// Работают в активном контексте (_ovlEnv): карта хифза или таблица на Главной.
 function hfoChip(group,value){
-  const o=HF.ovl;
-  if(o.group===group&&(o.value||null)===(value||null))HF.ovl={group:null,value:null,sub:null};
-  else HF.ovl={group,value:value||null,sub:null};
-  renderHifz();
+  const [S,rr]=_ovlEnv(),o=S.ovl;
+  if(o.group===group&&(o.value||null)===(value||null))S.ovl={group:null,value:null,sub:null};
+  else S.ovl={group,value:value||null,sub:null};
+  rr();
 }
-function hfoSub(sub){HF.ovl.sub=(HF.ovl.sub===sub?null:sub);renderHifz();}
-function hfoFam(fam){HF.ovl.value=(HF.ovl.value===fam?null:fam);renderHifz();}
+function hfoSub(sub){const [S,rr]=_ovlEnv();S.ovl.sub=(S.ovl.sub===sub?null:sub);rr();}
+function hfoFam(fam){const [S,rr]=_ovlEnv();S.ovl.value=(S.ovl.value===fam?null:fam);rr();}
 function hfoChipsHTML(){
   if(!HFO)return _hfoLoading?`<div class="hf-muted" style="margin-top:8px">Загружаю классификации сур…</div>`:"";
-  const o=HF.ovl;
+  const o=_ovlEnv()[0].ovl;
   const chip=(g,v,lab,title)=>`<button class="chip ${o.group===g&&(o.value||null)===(v||null)?"on":""}" ${title?`title="${escAttr(title)}"`:""} onclick="hfoChip('${g}'${v?`,'${v}'`:""})">${lab}</button>`;
   let row=`<div class="hfo-chips"><span class="lbl">Фильтр:</span>`
     +chip("rev","meccan","Мекка")+chip("rev","medinan","Медина")
@@ -2126,7 +2135,7 @@ function hfoChipsHTML(){
 }
 // Компактная сворачиваемая легенда активного фильтра (из families_legend / meta).
 function hfoLegendHTML(){
-  const o=HF.ovl;if(!o.group)return "";
+  const o=_ovlEnv()[0].ovl;if(!o.group)return "";
   const M=HFO.data.meta||{};let body="";
   if(o.group==="rev")body=esc(M.revelation_basis||"")+" Бейдж «?» — место ниспослания оспаривается.";
   else if(o.group==="period")body=esc(M.period_rule||"");
@@ -2159,11 +2168,18 @@ function hifzL1HTML(agg){
 // та же разметка, что в мусхафе Короля Фахда) и по длине (от коротких —
 // естественный порядок заучивания). Порядок — только способ РАССТАНОВКИ
 // ячеек; состояние, заливки и охват не меняются.
-function hifzOrdChip(v,lab,title){return `<button class="chip ${HF.ord===v?"on":""}" title="${escAttr(title)}" onclick="hifzSetOrd('${v}')">${lab}</button>`;}
-function hifzSetOrd(v){HF.ord=v;renderHifz();}
+function hifzOrdChip(v,lab,title){return `<button class="chip ${_ovlEnv()[0].ord===v?"on":""}" title="${escAttr(title)}" onclick="hifzSetOrd('${v}')">${lab}</button>`;}
+function hifzSetOrd(v){const [S,rr]=_ovlEnv();S.ord=v;rr();}
+function hifzOrdRowHTML(){
+  return `<div class="hfo-chips"><span class="lbl">Порядок:</span>`
+    +hifzOrdChip("mushaf","мусхаф","общепринятый порядок мусхафа (1 → 114)")
+    +(HFO?hifzOrdChip("chrono","ниспослание","хронологический — тартиб ан-нузуль (египетская хронология, как в мусхафе Короля Фахда)"):"")
+    +hifzOrdChip("length","по длине","от коротких к длинным — естественный порядок заучивания")+`</div>`;
+}
 function hifzOrderedSuras(){
-  if(HF.ord==="chrono"&&HFO)return [...SURAHS].sort((a,b)=>((HFO.by[a.id]||{}).chrono||999)-((HFO.by[b.id]||{}).chrono||999));
-  if(HF.ord==="length")return [...SURAHS].sort((a,b)=>a.n-b.n||a.id-b.id);
+  const ord=_ovlEnv()[0].ord;
+  if(ord==="chrono"&&HFO)return [...SURAHS].sort((a,b)=>((HFO.by[a.id]||{}).chrono||999)-((HFO.by[b.id]||{}).chrono||999));
+  if(ord==="length")return [...SURAHS].sort((a,b)=>a.n-b.n||a.id-b.id);
   return SURAHS;                                           // мусхафный — как есть
 }
 // Уровень 2 — все 114 сур плотной сеткой («таблица Менделеева»).
@@ -2191,6 +2207,58 @@ function hifzL2HTML(agg){
   }
   return `<div class="hfz-grid suras">${cells}</div>`;
 }
+// ═══ ТАБЛИЦА КОРАНА НА ГЛАВНОЙ (навигатор структуры мусхафа) ═══
+// Та же сетка/чипы/фильтры/порядки, что на карте хифза, но БЕЗ слоя заучивания
+// (ни заливок, ни контуров деклараций) — это обзор Корана, не карта памяти.
+// Изначальный вид — 114 сур; вид «джузы» — второй уровень (тап по джузу
+// возвращает к сурам с фокусом на нём). Тап по суре открывает её чтение.
+// Состояние — QT (сессионное); классификации грузятся тем же hfoLoad.
+function renderQuranTable(){const box=document.getElementById("qtBox");if(box)box.innerHTML=quranTableHTML();}
+function quranTableHTML(){
+  if(!qpcMeta||!qpcMeta.juzStart||!hifzJuzOrds())return "";   // мета мусхафа ещё грузится — секция появится при следующем рендере
+  hfoLoad();                                                  // классификации — лениво, один раз
+  const view=`<div class="hfo-chips"><span class="lbl">Вид:</span>
+    <button class="chip ${QT.level==="suras"?"on":""}" onclick="qtLevel('suras')">суры</button>
+    <button class="chip ${QT.level==="juz"?"on":""}" onclick="qtLevel('juz')">джузы</button></div>`;
+  const order=QT.level==="suras"?hifzOrdRowHTML():"";
+  return `<div class="home-sec"><div class="home-sec-h">Коран · суры и джузы</div>
+    ${view}${order}${hfoChipsHTML()}${QT.level==="suras"?qtSurasHTML():qtJuzHTML()}</div>`;
+}
+function qtSurasHTML(){
+  const js=qpcMeta.juzStart;
+  const juzAt={};for(let j=2;j<=30;j++)juzAt[js[j].surah]=(juzAt[js[j].surah]||[]).concat(j);
+  const mushaf=QT.ord==="mushaf",chrono=QT.ord==="chrono";
+  let cells="";
+  for(const su of hifzOrderedSuras()){
+    const m=hfoMatch(su.id);
+    const chips=mushaf?(juzAt[su.id]||[]).map(j=>`дж ${j}`).join(","):
+      (chrono&&HFO&&HFO.by[su.id]?`${HFO.by[su.id].chrono}-я`:"");
+    const anom=HFO&&HFO.by[su.id]&&HFO.by[su.id].no_basmala?`<span class="anom" title="${escAttr(su.ru)}: единственная сура без басмалы">٭</span>`:"";
+    const focus=QT.juz&&juzOfSurah(su.id)===QT.juz;
+    cells+=`<div class="hfz-cell ${focus?"focus":""} ${m===false?"hfo-dim":""}" onclick="goSurah(${su.id})" title="${su.id}. ${escAttr(su.ru)} · ${su.n} аятов — открыть${m?` · ${escAttr(m.title)}`:""}">
+      <div class="num">${su.id}</div>${chips?`<div class="jz">${chips}</div>`:""}
+      <div class="nm">${esc(su.ru)}</div><div class="sub">${su.n}</div>${anom}${hfoBadge(m)}</div>`;
+  }
+  return `<div class="hfz-grid suras" style="margin-top:9px">${cells}</div>`;
+}
+function qtJuzHTML(){
+  const jc=QT.ovl.group&&HFO?hfoJuzCounts():null;
+  const jOrd=hifzJuzOrds();
+  let cells="";
+  for(let j=1;j<=30;j++){
+    const cnt=jc?(jc[j]||0):null;
+    cells+=`<div class="hfz-cell jcell ${jc&&!cnt?"hfo-dim":""}" onclick="qtJuz(${j})" title="Джуз ${j} — показать его суры${cnt?`; совпадений: ${cnt}`:""}">
+      <div class="big">${j}</div><div class="sub">${hifzJuzSuraCount(j)} сур · ${jOrd[j+1]-jOrd[j]} а.</div>
+      ${cnt?`<span class="ob" title="совпадающих сур в джузе">${cnt}</span>`:""}</div>`;
+  }
+  return `<div class="hfz-grid" style="margin-top:9px">${cells}</div>`;
+}
+function qtLevel(v){QT.level=v;if(v==="juz")QT.juz=null;renderQuranTable();}
+function qtJuz(j){
+  QT.level="suras";QT.juz=j;renderQuranTable();
+  setTimeout(()=>{const el=document.querySelector("#qtBox .hfz-cell.focus");if(el)el.scrollIntoView({block:"center"});},30);
+}
+
 // Уровень 3 — аяты: СУЩЕСТВУЮЩАЯ аятная тепловая карта суры (hifzSuraHTML),
 // без изменений; сюда же — декларации и 🎯.
 function hifzL3HTML(){
@@ -2264,10 +2332,7 @@ function hifzMapHTML(){
   const hint=z.level===3?"":`<div class="hf-muted" style="margin-top:7px">${z.level===1?"Тап по джузу — к его сурам.":"Тап по суре — её аятная карта; «Назад» поднимает на уровень выше."}</div>`;
   const overlay=z.level<3?hfoChipsHTML():"";               // оверлей-фильтры — только на обзорных уровнях
   // переключатель порядка сур — только на уровне сур (джузы и аяты — сущности мусхафа)
-  const order=z.level===2?`<div class="hfo-chips"><span class="lbl">Порядок:</span>`
-    +hifzOrdChip("mushaf","мусхаф","общепринятый порядок мусхафа (1 → 114)")
-    +(HFO?hifzOrdChip("chrono","ниспослание","хронологический — тартиб ан-нузуль (египетская хронология, как в мусхафе Короля Фахда)"):"")
-    +hifzOrdChip("length","по длине","от коротких к длинным — естественный порядок заучивания")+`</div>`:"";
+  const order=z.level===2?hifzOrdRowHTML():"";
   return summary+scope+`<div class="prog-card"><h3>Карта памяти</h3>${hifzBcHTML()}${order}${overlay}${level}${legend}${hint}</div>`;
 }
 function hifzSuraHTML(rng){
@@ -3580,7 +3645,10 @@ function renderHome(el){
     }
     html+=`</div>`;
   }
-  html+=`</div></div></div>`;
+  html+=`</div>`;
+  // — Таблица Корана (суры/джузы, порядки и фильтры структуры мусхафа) —
+  html+=`<div id="qtBox">${quranTableHTML()}</div>`;
+  html+=`</div></div>`;
   el.innerHTML=html;
 }
 function homeResume(){                                // «Продолжить чтение» — восстановить последнюю позицию
