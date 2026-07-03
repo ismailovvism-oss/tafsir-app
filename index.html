@@ -5628,7 +5628,14 @@ function addTag(val){
   for(const p of parts){let f=cur.find(n=>n.name===p);if(!f){f={name:p,children:[]};cur.push(f);}cur=f.children;}
   setTagTree(tree);renderSB();
 }
-function selectTag(path){ST.selectedTag=path;ST.bookIntro=false;if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}render();}
+// Выбор тега открывает его результаты в ГЛАВНОМ окне — поэтому сбрасываем все
+// экраны, которые renderCenter проверяет РАНЬШЕ selectedTag (Главная, скан,
+// режим источника, введение): иначе тап по тегу оттуда молча ничего не делал.
+function selectTag(path){
+  ST.selectedTag=path;ST.bookIntro=false;ST.homeMode=false;ST.scanSource=null;ST.srcMode=false;
+  if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
+  render();
+}
 function renameTag(path){
   const parts=path.split("/");const oldName=parts[parts.length-1];
   const newName=prompt("Новое название:",oldName);
