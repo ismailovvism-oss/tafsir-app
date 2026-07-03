@@ -777,7 +777,9 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
 .hf-decl button.s.on{background:#e0a030;color:#fff}
 .hf-decl button.n.on{background:#e05252;color:#fff}
 .hf-heat{display:grid;grid-template-columns:repeat(auto-fill,minmax(30px,1fr));gap:3px;margin-top:9px}
-.hf-cell{height:22px;border-radius:4px;background:var(--bg-alt);border:2px solid transparent;font-size:9px;color:var(--text-muted);display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap}
+.hf-cell{height:22px;border-radius:4px;background:var(--bg-alt);border:2px solid transparent;font-size:9px;color:var(--text-muted);display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap;cursor:pointer}
+.hf-go{border:1px solid var(--border);background:var(--bg);border-radius:7px;font-size:13px;line-height:1;padding:4px 8px;cursor:pointer}
+.hf-go:hover{border-color:var(--accent)}
 .hf-cell.v-weak{background:#e05252;color:#fff}
 .hf-cell.v-mid{background:#e0a030;color:#fff}
 .hf-cell.v-strong{background:rgba(46,160,110,.55);color:#fff}
@@ -1236,13 +1238,15 @@ const Progress=(()=>{
   //   будущий движок «швов»): оценка аята b, вспомненного в цепочке после a, — это
   //   одновременно свидетельство шва a→b. Ключ всегда в ПОРЯДКЕ ТЕКСТА.
   let _hifzPg=null;                                       // кэш агрегации по страницам (сбрасывается при записи)
-  // Пред-разметка: декларация СУРОЙ ЦЕЛИКОМ (level: "know"|"shaky"|"no"; null = снять).
-  // Ставит declared всем аятам суры; verified/srs НЕ трогает (свидетельство сильнее).
-  function hifzDeclareSurah(surahId,level){
+  // Пред-разметка ДИАПАЗОНОМ (блок теплокарты или вся сура; level: "know"|"shaky"|
+  // "no"; null = снять). Ставит declared аятам диапазона; verified/srs НЕ трогает
+  // (свидетельство сильнее). suraDecl — только сводка для контрола суры: единый
+  // уровень всех аятов, иначе (смешанная разметка) снимается.
+  function hifzDeclareRange(surahId,from,to,level){
     const su=SURAHS.find(s=>s.id===surahId);if(!su)return;
     const H=state.hifz,t=today();
-    if(level==null)delete H.suraDecl[surahId];else H.suraDecl[surahId]=level;
-    for(let a=1;a<=su.n;a++){
+    from=Math.max(1,from|0);to=Math.min(su.n,to|0);
+    for(let a=from;a<=to;a++){
       const vk=surahId+":"+a;let r=H.ayahs[vk];
       if(level==null){                                    // снятие декларации: пустые записи вычищаем
         if(r){r.declared=null;if(r.verified==null&&!(r.log&&r.log.length))delete H.ayahs[vk];}
@@ -1251,8 +1255,13 @@ const Progress=(()=>{
       if(!r)r=H.ayahs[vk]={declared:null,verified:null,srs:null,log:[]};
       r.declared=level;r.up=t;
     }
+    let uni;                                              // сводка: единый уровень или смешано
+    for(let a=1;a<=su.n;a++){const r=H.ayahs[surahId+":"+a];const d=(r&&r.declared)||null;
+      if(uni===undefined)uni=d;else if(uni!==d){uni=null;break;}}
+    if(uni)H.suraDecl[surahId]=uni;else delete H.suraDecl[surahId];
     _hifzPg=null;save();
   }
+  function hifzDeclareSurah(surahId,level){const su=SURAHS.find(s=>s.id===surahId);if(su)hifzDeclareRange(surahId,1,su.n,level);}
   // Свидетельство проверки: grade 0=не помню / 1=с трудом / 2=уверенно. Обновляет
   // verified + SRS по-аятно. neighborVk — сосед по цепочке (показанный/оценённый
   // перед этим аятом): по нему пишется junction-состояние шва (в порядке текста).
@@ -1414,7 +1423,7 @@ const Progress=(()=>{
     wipe(){state=def();save();}
   };
   return {recordActivity,updateResume,setGoal,getSummary,getResume,getCoverage,getPageStatus,getHifzStatus,
-    hifzDeclareSurah,hifzRecordReview,hifzStage,hifzAyahs,hifzSuraDecl,hifzGetAyah,hifzSettings,hifzSetSettings,
+    hifzDeclareSurah,hifzDeclareRange,hifzRecordReview,hifzStage,hifzAyahs,hifzSuraDecl,hifzGetAyah,hifzSettings,hifzSetSettings,
     todayISO:today,HIFZ_MASTER,
     exportState,importState,verseToPage,ensureInit,markAction,debug,TOTAL_PAGES};
 })();
@@ -1774,7 +1783,7 @@ function hifzMapHTML(){
     <span><span class="sw" style="border:2px solid #e0a030"></span>нетвёрдо</span>
     <span><span class="sw" style="border:2px solid #e05252"></span>не знаю</span></div>`;
   return scope+`<div class="prog-card"><h3>Суры охвата · декларация и карта</h3>
-    <div class="hf-muted">Отметьте гипотезу («знаю / нетвёрдо / не знаю») — она сеет карту контуром. Финальна только проверка: заливка появляется по свидетельству и переопределяет декларацию.</div>
+    <div class="hf-muted">Отметьте гипотезу («знаю / нетвёрдо / не знаю») — она сеет карту контуром; в развёрнутой суре тап по блоку помечает только его. Финальна только проверка: заливка появляется по свидетельству и переопределяет декларацию. 🎯 — сразу проверить суру.</div>
     ${suras.map(hifzSuraHTML).join("")}${legend}</div>`;
 }
 function hifzSuraHTML(rng){
@@ -1799,12 +1808,14 @@ function hifzSuraHTML(rng){
       if(weak)cls="v-weak";else if(mid)cls="v-mid";else if(untested)cls="";else if(strong)cls="v-strong";else cls="v-mast";
       if(dcl)cls+=" d-"+dcl;
       const lab=u.from===u.to?u.from:(u.from+"–"+u.to);
-      return `<div class="hf-cell ${cls}" title="${rng.surah}:${u.from}${u.from===u.to?"":"–"+u.to}">${lab}</div>`;
-    }).join("")+`</div>`;
+      // тап по блоку — цикл декларации ЭТОГО блока (не всей суры)
+      return `<div class="hf-cell ${cls}" onclick="hifzCellDecl(${rng.surah},${u.from},${u.to})" title="${rng.surah}:${u.from}${u.from===u.to?"":"–"+u.to} · тап: знаю → нетвёрдо → не знаю → снять">${lab}</div>`;
+    }).join("")+`</div><div class="hf-muted" style="margin-top:6px">Тап по блоку — пометить его: знаю → нетвёрдо → не знаю → снять.</div>`;
   }
   return `<div class="hf-sura ${mastered?"mastered":""}">
     <div class="hf-sura-head">
       <span class="hf-sura-name" onclick="hifzSuraToggle(${rng.surah})">${mastered?"✅":open?"▼":"▶"} ${rng.surah}. ${esc(rng.su.ru)} <small>${rng.from>1||rng.to<rng.su.n?`аяты ${rng.from}–${rng.to}`:rng.su.n+" аятов"}</small></span>
+      ${mastered?"":`<button class="hf-go" onclick="hifzQuizSura(${rng.surah})" title="Проверить эту суру">🎯</button>`}
       <span class="hf-decl">${declBtn("know","k","знаю")}${declBtn("shaky","s","нетвёрдо")}${declBtn("no","n","не знаю")}</span>
     </div>
     ${mastered?`<div class="hf-muted" style="margin-top:5px">Закреплено полностью — в пул проверки не входит.</div>`:bar+heat}
@@ -1821,6 +1832,22 @@ function hifzDecl(s,lv){
   const cur=Progress.hifzSuraDecl()[s]||null;
   Progress.hifzDeclareSurah(s,cur===lv?null:lv);
   renderHifz();
+}
+// Тап по блоку теплокарты — цикл декларации ДИАПАЗОНА: нет → знаю → нетвёрдо →
+// не знаю → нет. Стартуем от единого уровня блока (смешанный блок = «нет»).
+function hifzCellDecl(s,from,to){
+  const A=Progress.hifzAyahs();let uni;
+  for(let a=from;a<=to;a++){const d=(A[s+":"+a]||{}).declared||null;
+    if(uni===undefined)uni=d;else if(uni!==d){uni=null;break;}}
+  const order=[null,"know","shaky","no"];
+  Progress.hifzDeclareRange(s,from,to,order[(order.indexOf(uni||null)+1)%4]);
+  renderHifz();
+}
+// 🎯 из строки суры: сузить охват до этой суры и сразу начать проверку.
+function hifzQuizSura(s){
+  HF.scope.surah=s;HF.scope.from=null;HF.scope.to=null;
+  Progress.hifzSetSettings({scope:HF.scope});
+  HF.sess=null;hifzTab('quiz');
 }
 
 function hifzQuizHTML(){
