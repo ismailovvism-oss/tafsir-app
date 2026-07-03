@@ -1291,11 +1291,19 @@ const Progress=(()=>{
     _hifzPg=null;save();
   }
   function hifzDeclareSurah(surahId,level){const su=SURAHS.find(s=>s.id===surahId);if(su)hifzDeclareRange(surahId,1,su.n,level);}
+  // Снапшоты «до последней оценки» — ТОЛЬКО в памяти (не персистятся): ошибочный
+  // тап можно поправить, пока открыто приложение; после — только перепроверкой
+  // (свидетельство руками не редактируется, эпистемика не размывается).
+  const _hifzUndo={};
   // Свидетельство проверки: grade 0=не помню / 1=с трудом / 2=уверенно. Обновляет
   // verified + SRS по-аятно. neighborVk — сосед по цепочке (показанный/оценённый
   // перед этим аятом): по нему пишется junction-состояние шва (в порядке текста).
   function hifzRecordReview(vk,grade,neighborVk){
     const H=state.hifz,t=today();
+    // снапшот состояния ДО оценки — для hifzAmendReview (замена ошибочного тапа)
+    const jk0=neighborVk?(progVerseOrdinal(neighborVk)<progVerseOrdinal(vk)?neighborVk+">"+vk:vk+">"+neighborVk):null;
+    _hifzUndo[vk]={ayah:H.ayahs[vk]?JSON.parse(JSON.stringify(H.ayahs[vk])):null,
+      jk:jk0,junction:jk0&&H.junctions[jk0]?JSON.parse(JSON.stringify(H.junctions[jk0])):null};
     const r=H.ayahs[vk]||(H.ayahs[vk]={declared:null,verified:null,srs:null,log:[]});
     const s=r.srs||{interval:0,ease:2.5,due:t};
     if(grade===0){s.interval=0;s.ease=Math.max(1.3,s.ease-0.2);s.due=t;}   // забыт → снова в работу сегодня
@@ -1312,6 +1320,18 @@ const Progress=(()=>{
     // ИНВАРИАНТ СЛОЁВ: проверка памяти — НЕ чтение. В CREDITED (серия/цель/покрытие)
     // сессия попадает ТОЛЬКО по явному флагу настроек «засчитывать проверку».
     if(H.settings.feedActivity)recordActivity(0,[vk]);
+  }
+  // Поправка ошибочного тапа: откатывает ПОСЛЕДНЮЮ оценку аята (и её шов) к
+  // снапшоту и применяет новую — SRS-шаг ЗАМЕНЯЕТСЯ, а не удваивается.
+  // Работает, пока приложение открыто (см. _hifzUndo); иначе — перепроверкой.
+  function hifzAmendReview(vk,grade,neighborVk){
+    const u=_hifzUndo[vk];if(!u)return false;
+    const H=state.hifz;
+    if(u.ayah)H.ayahs[vk]=u.ayah;else delete H.ayahs[vk];
+    if(u.jk){if(u.junction)H.junctions[u.jk]=u.junction;else delete H.junctions[u.jk];}
+    delete _hifzUndo[vk];
+    hifzRecordReview(vk,grade,neighborVk);
+    return true;
   }
   // Производная ступень памяти аята (НЕ хранится):
   //   "mastered" — подтверждённо освоен (уверенно, interval ≥ HIFZ_MASTER, срок не вышел);
@@ -1401,6 +1421,9 @@ const Progress=(()=>{
   function speedRuns(){return state.speed.runs;}          // живая ссылка — ТОЛЬКО чтение
   function speedSettings(){return JSON.parse(JSON.stringify(state.speed.settings));}
   function speedSetSettings(patch){Object.assign(state.speed.settings,patch||{});save();}
+  // Сброс замеров: вся история или одна страница (рекорды — производные, уйдут сами).
+  function speedClearAll(){state.speed.runs=[];save();}
+  function speedClearPage(pageId){state.speed.runs=state.speed.runs.filter(r=>r.pageId!==pageId);save();}
   // ═══ ПРОИЗВОДНЫЕ (считаются, не хранятся) ═══
   function coveredPages(){const s=new Set();for(const d of state.activityDays)for(const vk of d.verseKeys){const p=verseToPage(vk,state.settings.mushafId);if(p)s.add(p);}return s;}
   function lifeAyahs(){const s=new Set();for(const d of state.activityDays)for(const vk of d.verseKeys)s.add(vk);return s.size;}
@@ -1530,8 +1553,8 @@ const Progress=(()=>{
     wipe(){state=def();save();}
   };
   return {recordActivity,updateResume,setGoal,getSummary,getResume,getCoverage,getPageStatus,getHifzStatus,
-    hifzDeclareSurah,hifzDeclareRange,hifzRecordReview,hifzStage,hifzAyahs,hifzSuraDecl,hifzGetAyah,hifzSettings,hifzSetSettings,
-    startPageRun,finishPageRun,cancelPageRun,runInfo,getPageBest,getSpeedTrend,speedRuns,speedSettings,speedSetSettings,
+    hifzDeclareSurah,hifzDeclareRange,hifzRecordReview,hifzAmendReview,hifzStage,hifzAyahs,hifzSuraDecl,hifzGetAyah,hifzSettings,hifzSetSettings,
+    startPageRun,finishPageRun,cancelPageRun,runInfo,getPageBest,getSpeedTrend,speedRuns,speedSettings,speedSetSettings,speedClearAll,speedClearPage,
     todayISO:today,HIFZ_MASTER,
     exportState,importState,verseToPage,ensureInit,markAction,debug,TOTAL_PAGES};
 })();
@@ -1826,12 +1849,21 @@ async function hifzNextRound(){
 function hifzReveal(){if(HF.sess&&HF.sess.round)HF.sess.round.revealed=true;renderHifz();}
 // Само-оценка звена: 0=не помню / 1=с трудом / 2=уверенно. Свидетельство уходит
 // в store по-аятно; сосед по порядку вспоминания даёт junction-состояние шва.
+// Ошибочный тап МОЖНО поправить, нажав другую кнопку: SRS-шаг заменяется через
+// hifzAmendReview (откат к снапшоту + новая оценка), а не удваивается.
 function hifzGrade(i,g){
   const R=HF.sess&&HF.sess.round;
-  if(!R||!R.revealed||R.grades[i]!=null)return;            // повторная оценка не пишется (иначе двойной SRS-шаг)
-  R.grades[i]=g;HF.sess.g[g]++;
+  if(!R||!R.revealed)return;
+  const old=R.grades[i];
+  if(old===g)return;                                       // та же кнопка — ничего не делаем
   const nb=i===0?R.start:R.chain[i-1];
-  Progress.hifzRecordReview(R.chain[i],g,nb||null);
+  if(old!=null){                                           // поправка ошибочной оценки
+    if(!Progress.hifzAmendReview(R.chain[i],g,nb||null))return;
+    HF.sess.g[old]--;
+  }else{
+    Progress.hifzRecordReview(R.chain[i],g,nb||null);
+  }
+  R.grades[i]=g;HF.sess.g[g]++;
   renderHifz();
 }
 
@@ -2004,7 +2036,7 @@ function hifzQuizHTML(){
       const ru=hifzRuText(s,a);
       const main=S2.lang==="ar"?ar+(ru?`<div class="hf-ru sec">${esc(ru)}</div>`:""):`<div class="hf-ru">${esc(ru)||"<i>нет текста перевода</i>"}</div>`+ar;
       const g=R.grades[i];
-      const btn=(gv,lab)=>`<button class="g${gv} ${g===gv?"on":""}" ${g!=null?"disabled":""} onclick="hifzGrade(${i},${gv})">${lab}</button>`;
+      const btn=(gv,lab)=>`<button class="g${gv} ${g===gv?"on":""}" onclick="hifzGrade(${i},${gv})">${lab}</button>`;
       return `<div class="hf-chain-item"><div class="hf-ref">${s}:${a}</div>${main}
         <div class="hf-grade">${btn(0,"не помню")}${btn(1,"с трудом")}${btn(2,"уверенно")}</div></div>`;
     }).join("");
@@ -2012,7 +2044,8 @@ function hifzQuizHTML(){
     bodyHtml=items+`<div class="prog-btns" style="margin-top:13px">
       <button class="prog-cont" style="margin-top:0" onclick="hifzNextRound()">Следующая точка →</button>
       <button onclick="hifzTab('map')">К карте</button></div>
-      ${graded<R.chain.length?`<div class="hf-muted" style="margin-top:7px">Оценено ${graded} из ${R.chain.length} — неоценённые звенья в SRS не запишутся.</div>`:""}`;
+      ${graded<R.chain.length?`<div class="hf-muted" style="margin-top:7px">Оценено ${graded} из ${R.chain.length} — неоценённые звенья в SRS не запишутся.</div>`
+        :`<div class="hf-muted" style="margin-top:7px">Ошиблись кнопкой? Просто нажмите другую — оценка заменится.</div>`}`;
   }
   return set+`<div class="prog-card"><h3>Точка входа</h3>${stats}<div class="hf-quiz-card">${prompt}</div>${bodyHtml}</div>`;
 }
@@ -2178,7 +2211,8 @@ function renderSpeed(){
       <div class="spd-kpi"><b>${pb.bestWpm}</b><span>рекорд WPM</span></div>
       <div class="spd-kpi"><b>${spdFmt(pb.bestSeconds)}</b><span>лучшее время</span></div>
       <div class="spd-kpi"><b>${pb.avgWpm}</b><span>средний WPM</span></div>
-      <div class="spd-kpi"><b>${pb.count}</b><span>замер${pb.count===1?"":pb.count<5?"а":"ов"}</span></div></div>`
+      <div class="spd-kpi"><b>${pb.count}</b><span>замер${pb.count===1?"":pb.count<5?"а":"ов"}</span></div>
+      <div class="spd-kpi"><button class="hf-go" onclick="spdClearPage(${p})" title="Стереть историю замеров этой страницы (рекорд уйдёт вместе с ней)">сбросить страницу</button></div></div>`
       :`<div class="hf-muted">Эта страница ещё не замерялась. Личный рекорд по конкретной странице — честная метрика: перечитывание фиксирует её сложность.</div>`}
     <button class="prog-cont" onclick="spdStart()">▶ ${ST.pageMode?"Начать замер":"Открыть мусхаф и начать замер"}</button>
     <div class="hf-muted" style="margin-top:8px">Явные старт/финиш; при простое и скрытой вкладке секундомер сам встаёт на паузу. Финиш зачтёт время и аяты в дневную цель.</div></div>`;
@@ -2206,7 +2240,8 @@ function renderSpeed(){
     const best=Progress.getPageBest(r.pageId).bestWpm===r.wpm?` <span class="spd-rec">🏆</span>`:"";
     return `<div class="r"><span>${ds}</span><span>стр. <b>${r.pageId}</b></span><span>${spdFmt(r.seconds)}</span><span><b>${r.wpm}</b> WPM${best}</span></div>`;
   }).join("");
-  const last=runs.length?`<div class="prog-card"><h3>Последние замеры</h3><div class="spd-runs">${rows}</div></div>`:"";
+  const last=runs.length?`<div class="prog-card"><h3>Последние замеры</h3><div class="spd-runs">${rows}</div>
+    <div style="margin-top:10px"><button class="hf-go" onclick="spdClearAll()">Стереть все замеры…</button></div></div>`:"";
   body.innerHTML=`<div class="prog-h">Скорость чтения</div><div class="prog-sub">Осознанные замеры · рекорды страниц · беглость, не гонка</div>`
     +resCard+cur+goal+trend+last;
 }
@@ -2216,6 +2251,15 @@ function spdGoal(d){
   renderSpeed();
 }
 function spdGoalOff(){Progress.speedSetSettings({targetWpm:null});renderSpeed();}
+// Сброс истории: страница (рекорд/среднее пересчитаются сами — производные) или всё.
+function spdClearPage(p){
+  if(!confirm(`Стереть замеры страницы ${p}? Её рекорд и среднее исчезнут.`))return;
+  Progress.speedClearPage(p);SPD.result=null;renderSpeed();
+}
+function spdClearAll(){
+  if(!confirm("Стереть ВСЕ замеры скорости? История и рекорды всех страниц исчезнут (дневная цель/серия не пострадают)."))return;
+  Progress.speedClearAll();SPD.result=null;renderSpeed();
+}
 
 // --- Быстрые ссылки на Главной (пользователь правит текстом) ---
 // Грамматика: элементы через запятую/перенос строки. «N» = вся сура; «N/A» = аят;
