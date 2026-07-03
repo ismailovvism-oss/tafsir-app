@@ -13,6 +13,18 @@
 @font-face{font-family:'KFGQPC Uthmanic';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/UthmanicHafs.woff2') format('woff2')}
 /* Amiri Quran (SIL OFL) — открытый мусхафный насх (self-hosted) */
 @font-face{font-family:'Amiri Quran';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/AmiriQuran.woff2') format('woff2')}
+/* Старинные русские шрифты (OFL): Ruslan Display — вязь для заголовков скинов;
+   Old Standard TT — старинный читаемый текст (опция в ⚙ Вид → Оформление) */
+@font-face{font-family:'Ruslan Display';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/RuslanDisplay-400-cyrillic.woff2') format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:'Ruslan Display';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/RuslanDisplay-400-latin.woff2') format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2212,U+FEFF,U+FFFD}
+@font-face{font-family:'Old Standard TT';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/OldStandardTT-400-cyrillic.woff2') format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:'Old Standard TT';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/OldStandardTT-400-latin.woff2') format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2212,U+FEFF,U+FFFD}
+@font-face{font-family:'Old Standard TT';font-style:normal;font-weight:700;font-display:swap;src:url('fonts/OldStandardTT-700-cyrillic.woff2') format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:'Old Standard TT';font-style:normal;font-weight:700;font-display:swap;src:url('fonts/OldStandardTT-700-latin.woff2') format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2212,U+FEFF,U+FFFD}
+@font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:400 700;font-display:swap;src:url('fonts/CormorantGaramond-400-cyrillic.woff2') format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:400 700;font-display:swap;src:url('fonts/CormorantGaramond-400-latin.woff2') format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2212,U+FEFF,U+FFFD}
+@font-face{font-family:'Marck Script';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/MarckScript-400-cyrillic.woff2') format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:'Marck Script';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/MarckScript-400-latin.woff2') format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2212,U+FEFF,U+FFFD}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 
 /* ===== THEMES ===== */
@@ -29,6 +41,36 @@
   --sidebar-w:240px;
 }
 [data-theme="dark"]{--note-bg:#2A2818;--note-border:#4A4520;--note-color:#C8A830;--tag-bg:#2A2440;--tag-color:#9E8DE0}
+
+/* ===== СКИНЫ ЧТЕНИЯ («манускрипт», ⚙ Вид → Оформление) =====
+   Палитра переопределяется ЛОКАЛЬНО на .reading: внутренние элементы читают те
+   же var(--…) каскадом, поэтому лента перекрашивается целиком, а интерфейс
+   вокруг (шапка, панели, попапы) остаётся в основной теме. Текстура —
+   градиенты + SVG-шум data-URI: ноль внешних картинок, работает офлайн. */
+body[data-skin="parchment"]{--skin-bg:#f2e7cd;--skin-grad:linear-gradient(160deg,#f7efdc 0%,#f0e3c4 45%,#e6d4aa 100%);--skin-vin:radial-gradient(ellipse at 50% 25%,rgba(255,252,240,.55),rgba(158,118,58,.16) 135%);--skin-noise:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.38 0 0 0 0 0.27 0 0 0 0 0.12 0 0 0 0.11 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E")}
+body[data-skin="sepia"]{--skin-bg:#e3d1a6;--skin-grad:linear-gradient(165deg,#ecdcb6 0%,#e0cb99 50%,#d2b87e 100%);--skin-vin:radial-gradient(ellipse at 50% 20%,rgba(250,240,214,.45),rgba(122,82,30,.24) 130%);--skin-noise:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.34 0 0 0 0 0.22 0 0 0 0 0.08 0 0 0 0.16 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E")}
+body[data-skin="dark"]{--skin-bg:#251d12;--skin-grad:linear-gradient(160deg,#2c2316 0%,#251d12 50%,#1c150c 100%);--skin-vin:radial-gradient(ellipse at 50% 25%,rgba(80,64,36,.28),rgba(0,0,0,.5) 135%);--skin-noise:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.85 0 0 0 0 0.74 0 0 0 0 0.5 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E")}
+/* Пятна старины: крупноблочный SVG-шум (низкая частота = разводы) + несколько
+   явных «пятен»-градиентов (потёки, кофейное кольцо). У тёмного скина — нет. */
+body[data-skin="parchment"]{--skin-blotch:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='700' height='700'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.011' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.36 0 0 0 0 0.15 0 0 0 0.09 0'/%3E%3C/filter%3E%3Crect width='700' height='700' filter='url(%23b)'/%3E%3C/svg%3E"),radial-gradient(220px 160px at 84% 10%,rgba(139,101,38,.09),transparent 70%),radial-gradient(170px 130px at 10% 76%,rgba(120,84,30,.08),transparent 70%),radial-gradient(110px 85px at 66% 90%,rgba(139,101,38,.07),transparent 70%)}
+body[data-skin="sepia"]{--skin-blotch:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='700' height='700'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012' numOctaves='3' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.42 0 0 0 0 0.28 0 0 0 0 0.09 0 0 0 0.14 0'/%3E%3C/filter%3E%3Crect width='700' height='700' filter='url(%23b)'/%3E%3C/svg%3E"),radial-gradient(240px 170px at 80% 14%,rgba(122,84,26,.13),transparent 70%),radial-gradient(180px 140px at 8% 70%,rgba(104,70,20,.12),transparent 70%),radial-gradient(150px 115px at 74% 32%,transparent 56%,rgba(110,74,24,.12) 62%,transparent 68%),radial-gradient(130px 100px at 30% 92%,rgba(122,84,26,.10),transparent 70%)}
+body[data-skin] .reading{background-color:var(--skin-bg);background-image:var(--skin-noise),var(--skin-blotch,none),var(--skin-vin),var(--skin-grad)}
+body[data-skin="parchment"] .reading,body[data-skin="sepia"] .reading{--bg-card:rgba(255,252,242,.55);--bg-alt:rgba(244,232,202,.65);--border:#c2ab77;--border-light:#d3c090;--text:#382a10;--text-sec:#4c3a1c;--text-muted:#93805a}
+body[data-skin="sepia"] .reading{--bg-card:rgba(252,243,218,.5);--bg-alt:rgba(236,220,182,.6);--border:#af9460;--border-light:#c3ab74}
+body[data-skin="dark"] .reading{--bg-card:rgba(255,244,214,.05);--bg-alt:rgba(255,244,214,.08);--border:#4a3d26;--border-light:#3c3220;--text:#e7d8b4;--text-sec:#cbbb92;--text-muted:#8c7c5a}
+body[data-skin] .reading .ayah-block{box-shadow:0 1px 6px rgba(50,34,10,.16)}
+/* Заголовки ленты — старорусская вязь (Ruslan Display) */
+body[data-skin] .reading .ab-entry-label,body[data-skin] .reading .sura-intro-head,body[data-skin] .reading .ab-num{font-family:'Ruslan Display','IBM Plex Sans',sans-serif;font-weight:400}
+/* Старинный русский шрифт текста (независим от скина): лента наследует выбранный
+   шрифт; арабские элементы не задеты — у них font-family задан явно.
+   old = Old Standard TT (книжный XIX в.) · corm = Cormorant Garamond (антиква
+   XVI в.) · marck = Marck Script (рукописный). Кегль чуть крупнее: эти шрифты
+   визуально мельче IBM Plex при равном размере. */
+body[data-rufont="old"] .reading{font-family:'Old Standard TT',Georgia,serif}
+body[data-rufont="corm"] .reading{font-family:'Cormorant Garamond',Georgia,serif}
+body[data-rufont="marck"] .reading{font-family:'Marck Script',cursive}
+body[data-rufont="old"] .ab-entry-text,body[data-rufont="old"] .col-table td{font-size:calc(14px*var(--rs-ru,1))}
+body[data-rufont="corm"] .ab-entry-text,body[data-rufont="corm"] .col-table td,body[data-rufont="marck"] .ab-entry-text,body[data-rufont="marck"] .col-table td{font-size:calc(15px*var(--rs-ru,1))}
 
 body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;background:var(--bg);color:var(--text);height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;-webkit-user-select:none;user-select:none}
 .selectable{-webkit-user-select:text;user-select:text}
@@ -163,7 +205,7 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 @media(max-width:760px){.tg-items{grid-template-columns:1fr 1fr}}  /* на узкой панели — всегда 2 в ряд */
 .tg-items .t-item{background:var(--bg-card);padding:7px 9px;align-items:flex-start;flex-wrap:wrap;min-width:0;overflow:hidden}
 .tg-items .t-item:hover{background:var(--bg-alt)}
-.tg-items .t-item.approved{background:rgba(40,160,95,.10)}
+.tg-items .t-item.approved{background:rgba(198,163,67,.08);box-shadow:inset 0 0 0 1px rgba(193,154,63,.5)}
 .tg-items .t-check{display:none}
 .tg-items .t-info-btn{padding:2px 6px;font-size:11px}
 .tg-items .t-meta{gap:2px}
@@ -250,12 +292,11 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .ab-entry-label .lbl-ar{font-family:'Amiri',serif;color:var(--text-muted);font-weight:400}
 .cp-chip{margin-left:6px;font-size:9px;font-weight:600;color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent);border-radius:10px;padding:0 6px;line-height:15px;cursor:pointer;white-space:nowrap}
 .cp-chip:hover{background:var(--accent);color:#fff}
-.seg-cred{margin-left:6px;white-space:nowrap}
-.seg-cred.ok{color:#1e874e;font-size:11px;font-weight:800;letter-spacing:-1.5px}
-/* Одобренность — мягкая зелёная ЗАЛИВКА (фикс. зелёный, не тема; не путать с
-   полосами покрытия). Непроверенное — без заливки (дефолт). */
-.ab-entry.approved{background:rgba(40,160,95,.09);border-radius:6px;padding:4px 8px;margin-left:-8px;margin-right:-8px}
-.t-item.approved{background:rgba(40,160,95,.10)}
+/* Одобренность — «сургучная печать»: круглая восковая ✓✓ у заголовка блока
+   (segCredit → .appr-seal). Нейтральна к любому скину — не спорит с пергаментом,
+   в отличие от прежней зелёной заливки. Непроверенное — без печати (дефолт). */
+.appr-seal{display:inline-block;margin-left:7px;width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;background:radial-gradient(circle at 35% 30%,#b23c2c,#7a1d13);color:#f3e3c3;font-size:9px;font-weight:800;letter-spacing:-1px;box-shadow:0 1px 3px rgba(0,0,0,.35),inset 0 0 4px rgba(0,0,0,.25);vertical-align:middle;cursor:help}
+.t-item.approved{background:rgba(198,163,67,.08);box-shadow:inset 0 0 0 1px rgba(193,154,63,.5)}
 .t-pill.appr{background:rgba(40,160,95,.14);color:#1e874e;border:1px solid rgba(40,160,95,.45);font-weight:700}
 .ab-entry-text{font-size:calc(13px*var(--rs-ru,1));line-height:calc(1.85*var(--lh-ru,1));color:var(--text-sec);white-space:pre-wrap}
 .ab-entry-text.selectable{-webkit-user-select:text;user-select:text}
@@ -943,6 +984,8 @@ let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,imme
   enabled:{_arabic:true,kuliev:true},
   selectedTag:null,bookIntro:false,
   theme:"green",
+  skin:"none",       // скин чтения: none|parchment|sepia|dark (⚙ Вид → Оформление)
+  ruFont:"std",      // русский шрифт текста ленты: std|old (Old Standard TT)
   rpFilter:"",
   fsAr:1,            // Arabic reading text size (⚙ Вид)
   fsRu:1,            // Russian reading text size (⚙ Вид)
@@ -2429,7 +2472,7 @@ function segCredit(t){
   const seg=(Array.isArray(t.segments)&&t.segments.length>=2)?segForSura(t,ST.surah):null;
   const approved=seg?seg.approved:t.approved;
   if(!approved)return"";
-  return `<span class="seg-cred ok" title="Выверено и одобрено">✓✓</span>`;
+  return `<span class="appr-seal" title="Перевод выверен и одобрен">✓✓</span>`;
 }
 // Одобрено ли ЗДЕСЬ (для текущей суры, с учётом сегментов составного источника).
 function isApprovedHere(t){
@@ -3689,6 +3732,15 @@ function applyView(){
   s.setProperty("--sb",ST.sbScale);
 }
 function refitIfPage(){if(ST.pageMode){const host=document.getElementById("mushafPage");if(host)fitMushafLines(host);}}
+// Скин чтения («манускрипт») и старинный русский шрифт — ⚙ Вид → Оформление.
+function applySkin(){
+  if(ST.skin&&ST.skin!=="none")document.body.setAttribute("data-skin",ST.skin);
+  else document.body.removeAttribute("data-skin");
+  if(ST.ruFont&&ST.ruFont!=="std")document.body.setAttribute("data-rufont",ST.ruFont);
+  else document.body.removeAttribute("data-rufont");
+}
+function setSkin(s){ST.skin=s;ss("skin",s);applySkin();renderViewPanel();}
+function setRuFont(v){ST.ruFont=v;ss("ruFont",v);applySkin();renderViewPanel();}
 // «Мусхаф на всю ширину»: только в режиме «Мусхаф»; off by default (поведение
 // по умолчанию не меняется). Шире страница → fit-to-width даёт крупнее кегль.
 function applyMushafFull(){document.body.classList.toggle("mushaf-full",!!ST.mushafFull);}
@@ -3756,6 +3808,13 @@ function renderViewPanel(){
   const themeGroup=`<div class="vp-group"><div class="vp-label">Тема</div><div class="theme-dots vp-themes">`+
     [["green","#1B5E3B"],["blue","#1B4E8E"],["gold","#8B6914"],["dark","#333"]].map(([t,c])=>`<span class="theme-dot ${ST.theme===t?'active':''}" style="background:${c}" title="${t}" onclick="setTheme('${t}')"></span>`).join("")+
     `</div></div>`;
+  const SKINS=[["none","Обычный"],["parchment","Пергамент"],["sepia","Старая бумага"],["dark","Тёмный манускрипт"]];
+  const RUFONTS=[["std","Обычный"],["old","Книжный XIX в."],["corm","Антиква XVI в."],["marck","Рукописный"]];
+  const skinGroup=`<div class="vp-group"><div class="vp-label">Оформление чтения</div><div class="vp-fonts">`+
+    SKINS.map(([id,name])=>`<button class="vp-font ${ST.skin===id?"on":""}" onclick="setSkin('${id}')">${name}</button>`).join("")+`</div>`+
+    `<div class="vp-label" style="margin-top:8px">Русский шрифт текста</div><div class="vp-fonts">`+
+    RUFONTS.map(([id,name])=>`<button class="vp-font ${ST.ruFont===id?"on":""}" onclick="setRuFont('${id}')">${name}</button>`).join("")+`</div>`+
+    `<div class="vp-note">Скин красит ленту чтения под пергамент/манускрипт, заголовки — старорусской вязью; печать ✓✓ у одобренных переводов. Цветовая тема интерфейса — отдельно, выше.</div></div>`;
   const backupGroup=`<div class="vp-group"><div class="vp-label">Резервная копия · заметки · закладки · теги</div>`+
     `<div class="data-io-btns">`+
       `<button class="data-io-btn" onclick="exportPersonalData()" title="Скачать .json со всеми личными данными">⬆ Экспорт</button>`+
@@ -3783,7 +3842,7 @@ function renderViewPanel(){
     `<div class="vp-group"><div class="vp-label">Межстрочный интервал</div>${step("Арабский","lhAr",pct("lhAr"))}${step("Русский","lhRu",pct("lhRu"))}</div>`+
     `<div class="vp-group"><div class="vp-label">Поля</div>${step("Отступы по краям","mar",ST.mar+"px")}</div>`+
     `<div class="vp-group"><div class="vp-label">Боковая панель (суры, теги)</div>${step("Размер","sbScale",pct("sbScale"))}</div>`+
-    themeGroup+navGroup+ntGroup+backupGroup+aboutRow+resetBtn+`<button class="vp-close" onclick="toggleViewPanel()">Готово</button>`;
+    skinGroup+themeGroup+navGroup+ntGroup+backupGroup+aboutRow+resetBtn+`<button class="vp-close" onclick="toggleViewPanel()">Готово</button>`;
 }
 
 // --- 📑 Переход: jump by surah / juz / rub al-hizb / page (both modes) -------
@@ -4313,6 +4372,8 @@ applyView();
 applyMushafFull();
 ST.arFont=gs("arFont","qpc1"); // default: печатный мусхаф
 applyArFont();
+ST.skin=gs("skin","none");ST.ruFont=gs("ruFont","std"); // оформление чтения (манускрипт)
+applySkin();
 ST.navUnit=gs("navUnit","surah");
 ST.srcBarOpen=gs("srcBarOpen",false);     // шапка режима источника: развёрнута? (по умолчанию свёрнута)
 ST.collapsedKinds=gs("collapsedKinds",{translation:true}); // под аятом: какие группы свёрнуты (переводы — по умолч.)
