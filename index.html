@@ -803,6 +803,26 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
 .hf-muted{font-size:12px;color:var(--text-muted)}
 .hf-legend{display:flex;gap:11px;flex-wrap:wrap;margin-top:9px;font-size:10px;color:var(--text-muted);align-items:center}
 .hf-legend .sw{width:12px;height:12px;border-radius:3px;display:inline-block;vertical-align:-2px;margin-right:3px}
+/* обзорные уровни зума карты хифза (джузы/суры); аятный уровень — прежние .hf-cell */
+.hfz-bc{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-top:4px;font-size:12px}
+.hfz-bc button{font-family:inherit;font-size:12px;border:none;background:none;color:var(--accent);cursor:pointer;padding:0;text-decoration:underline}
+.hfz-bc .cur{color:var(--text);font-weight:600}
+.hfz-bc .sep{color:var(--text-muted)}
+.hfz-grid{display:grid;gap:7px;margin-top:11px;grid-template-columns:repeat(auto-fill,minmax(72px,1fr))}
+.hfz-grid.suras{grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:5px}
+.hfz-cell{position:relative;height:60px;border:2px solid var(--border);border-radius:8px;background:var(--bg);overflow:hidden;cursor:pointer}
+.hfz-cell.jcell{height:66px}
+.hfz-cell .fg{position:absolute;left:0;right:0;bottom:0;background:rgba(46,160,110,.5)}   /* заливка: подтверждённо закреплено */
+.hfz-cell .fy{position:absolute;left:0;right:0;background:rgba(224,160,48,.42)}           /* «жёлтый градус»: проверено, в работе */
+.hfz-cell .num{position:absolute;top:2px;left:5px;font-size:9px;color:var(--text-muted);z-index:1}
+.hfz-cell .jz{position:absolute;top:2px;right:3px;font-size:8px;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:0 3px;z-index:1;background:var(--bg)}
+.hfz-cell .nm{position:absolute;inset:10px 2px 12px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:9.5px;line-height:1.15;color:var(--text);z-index:1;overflow:hidden}
+.hfz-cell .sub{position:absolute;bottom:2px;left:0;right:0;text-align:center;font-size:8px;color:var(--text-muted);z-index:1;white-space:nowrap;overflow:hidden}
+.hfz-cell .big{position:absolute;top:9px;left:0;right:0;text-align:center;font-size:19px;font-weight:700;color:var(--text);z-index:1}
+.hfz-cell.focus{box-shadow:0 0 0 2px var(--accent)}
+.hfz-cell.d-know{border-color:#2ea06e}
+.hfz-cell.d-shaky{border-color:#e0a030}
+.hfz-cell.d-no{border-color:#e05252}
 
 /* ── Скорость чтения (осознанные замеры беглости) ── */
 .spd-pill{position:fixed;left:50%;transform:translateX(-50%);bottom:74px;z-index:60;display:flex;align-items:center;gap:10px;
@@ -1693,6 +1713,8 @@ async function openHifz(){
   _progPageIdx=null;
   HF.scope=Progress.hifzSettings().scope||{juz:30,surah:null,from:null,to:null};
   HF.tab="map";HF.sess=null;HF.open={};
+  HF.zoom={level:2,juz:null,surah:null};                   // вид по умолчанию — уровень сур
+  _hifzJuzOrds=null;                                       // пересобрать статику джузов на свежей мете
   let ov=document.getElementById("hifzOvl");
   if(!ov){ov=document.createElement("div");ov.id="hifzOvl";ov.className="about-ovl";ov.onclick=e=>{if(e.target===ov)closeHifz();};document.body.appendChild(ov);}
   ov.innerHTML=`<div class="about-box prog-box" role="dialog" aria-modal="true"><button class="about-close" onclick="closeHifz()" aria-label="Закрыть">×</button><div id="hifzBody"></div></div>`;
@@ -1889,47 +1911,196 @@ function renderHifz(){
 }
 function hifzTab(t){HF.tab=t;if(t==="quiz"&&!HF.sess)hifzBeginSession();else renderHifz();}
 
-function hifzMapHTML(){
-  const suras=hifzScopeSuras();
-  if(!suras.length){
-    if(!hifzJuzRange(HF.scope.juz))return `<div class="prog-card"><div class="hf-muted">Границы джузов не загрузились (нет сети?) — карта и охват недоступны.</div></div>`;
-    // охват есть, но пассаж сужен до пустоты (например, «от» больше «до»)
-    return `<div class="prog-card"><h3>Охват</h3><div class="hf-muted">Пустой охват — проверьте диапазон аятов.</div>
-      <button class="prog-cont" onclick="hifzSetScope('juz',${HF.scope.juz})">Сбросить сужение</button></div>`;
+// ═══ ОБЗОРНАЯ КАРТА: единая иерархия зума джузы → суры → аяты ═══
+// Один компонент с тремя ступенями детализации. Все уровни — ЧИСТЫЕ рендеры
+// производных агрегатов от одних и тех же по-аятных hifz-состояний store:
+// никаких отдельных хранилищ, агрегат считается ОДИН раз на рендер (hifzAggAll)
+// и передаётся вниз. Эпистемика везде одна: КОНТУР = декларация, ЗАЛИВКА =
+// только подтверждённое проверками (красные провалы — лишь на уровне аятов).
+// Состояние зума — HF.zoom={level:1|2|3, juz, surah}; по умолчанию уровень 2.
+
+// Ординалы начал джузов (статика из qpcMeta на сессию; [31] — конец Корана+1).
+let _hifzJuzOrds=null;
+function hifzJuzOrds(){
+  if(_hifzJuzOrds)return _hifzJuzOrds;
+  const js=qpcMeta&&qpcMeta.juzStart;if(!js)return null;
+  const arr=[];
+  for(let j=1;j<=30;j++){const a=js[j];if(!a)return null;arr[j]=progVerseOrdinal(a.surah+":"+a.ayah);}
+  arr[31]=PROG_AYAH_OFFSET[114]+1;
+  _hifzJuzOrds=arr;return arr;
+}
+function hifzJuzSuraCount(j){                             // сколько сур пересекает джуз j
+  const js=qpcMeta.juzStart,a=js[j],b=js[j+1];
+  const endS=b?(b.ayah>1?b.surah:b.surah-1):114;
+  return endS-a.surah+1;
+}
+// ЕДИНЫЙ агрегат для обзорных уровней: один проход по записям hifz-слоя
+// (только тронутые аяты), суммы по сурам и джузам. Не хранится — на рендер.
+function hifzAggAll(){
+  const A=Progress.hifzAyahs();
+  const bySura={};for(const su of SURAHS)bySura[su.id]={n:su.n,mast:0,part:0,dWorst:null};
+  const jOrd=hifzJuzOrds();
+  const byJuz={};if(jOrd)for(let j=1;j<=30;j++)byJuz[j]={total:jOrd[j+1]-jOrd[j],mast:0,part:0,dWorst:null};
+  const rank=d=>d==="no"?3:d==="shaky"?2:d==="know"?1:0;
+  for(const vk in A){
+    const s=+vk.split(":")[0];const o=bySura[s];if(!o)continue;
+    const st=Progress.hifzStage(vk);
+    const d=A[vk].declared||null;
+    if(rank(d)>rank(o.dWorst))o.dWorst=d;
+    if(st==="mastered")o.mast++;
+    else if(st==="strong"||st==="mid"||st==="weak")o.part++;   // «жёлтый градус»: проверено, в работе
+    if(jOrd){
+      const ord=progVerseOrdinal(vk);
+      let j=1;while(j<30&&jOrd[j+1]<=ord)j++;
+      const J=byJuz[j];
+      if(rank(d)>rank(J.dWorst))J.dWorst=d;
+      if(st==="mastered")J.mast++;else if(st==="strong"||st==="mid"||st==="weak")J.part++;
+    }
   }
+  return {bySura,byJuz};
+}
+// Ближайшие белые/слабые места в текущем окне работы (охвате): непрерывные
+// куски не-освоенных аятов, первые maxN. Производная, не хранится.
+function hifzWeakSpots(maxN){
+  const out=[];
+  for(const r of hifzScopeSuras()){
+    let cur=null;
+    for(let a=r.from;a<=r.to;a++){
+      if(Progress.hifzStage(r.surah+":"+a)!=="mastered"){
+        if(cur)cur.to=a;else cur={s:r.surah,from:a,to:a};
+      }else if(cur){out.push(cur);cur=null;if(out.length>=maxN)return out;}
+    }
+    if(cur){out.push(cur);if(out.length>=maxN)return out;}
+  }
+  return out;
+}
+// Навигация зума. «Назад» (аппаратная/жест) поднимает на уровень выше — см.
+// hifzZoomBack, встроенный в общий popstate-обработчик.
+function hifzZoomTo(level,juz,surah){
+  if(level===3&&surah&&!juz)juz=juzOfSurah(surah);
+  HF.zoom={level,juz:juz||null,surah:surah||null};
+  if(level===3&&surah)HF.open[surah]=true;                // аятный уровень — сура сразу развёрнута
+  renderHifz();
+  if(level===2&&juz)setTimeout(()=>{const el=document.querySelector(".hfz-cell.focus");if(el)el.scrollIntoView({block:"center"});},30);
+}
+function hifzZoomBack(){                                   // true = поднялись; false = уровень 1, пусть закрывается
+  if(HF.tab==="quiz"){HF.tab="map";renderHifz();return true;}
+  const z=HF.zoom||{};
+  if(z.level===3){hifzZoomTo(2,z.juz);return true;}
+  if(z.level===2){hifzZoomTo(1);return true;}
+  return false;
+}
+function hifzBcHTML(){                                     // хлебная крошка: Коран → Джуз N → Сура M
+  const z=HF.zoom,parts=[];
+  parts.push(z.level===1?`<span class="cur">Коран</span>`:`<button onclick="hifzZoomTo(1)">Коран</button>`);
+  if(z.level>=2&&z.juz)parts.push(z.level===2?`<span class="cur">Джуз ${z.juz}</span>`:`<button onclick="hifzZoomTo(2,${z.juz})">Джуз ${z.juz}</button>`);
+  if(z.level===2&&!z.juz)parts.push(`<span class="cur">Все суры</span>`);
+  if(z.level===3){const su=SURAHS.find(x=>x.id===z.surah);parts.push(`<span class="cur">${z.surah}. ${su?esc(su.ru):""}</span>`);}
+  const whole=z.level===2?`<button class="hf-go" style="margin-left:auto" onclick="hifzZoomTo(1)">весь Коран</button>`:"";
+  return `<div class="hfz-bc">${parts.join(`<span class="sep">→</span>`)}${whole}</div>`;
+}
+// Уровень 1 — джузы: 30 ячеек, заливка «уровнем жидкости» по доле закреплённого.
+function hifzL1HTML(agg){
+  let cells="";
+  for(let j=1;j<=30;j++){
+    const J=agg.byJuz[j]||{total:1,mast:0,part:0,dWorst:null};
+    const g=(J.mast/J.total*100),y=(J.part/J.total*100);
+    cells+=`<div class="hfz-cell jcell ${J.dWorst?"d-"+J.dWorst:""}" onclick="hifzZoomTo(2,${j})" title="Джуз ${j}: закреплено ${J.mast} из ${J.total} аятов">
+      <div class="fg" style="height:${g.toFixed(1)}%"></div><div class="fy" style="bottom:${g.toFixed(1)}%;height:${y.toFixed(1)}%"></div>
+      <div class="big">${j}</div><div class="sub">${hifzJuzSuraCount(j)} сур · ${J.total} а.</div></div>`;
+  }
+  return `<div class="hfz-grid">${cells}</div>`;
+}
+// Уровень 2 — все 114 сур плотной сеткой («таблица Менделеева»), порядок мусхафа.
+// Группировка по джузам — ненавязчивые чипы «дж N» на сурах, где джуз начинается.
+function hifzL2HTML(agg){
+  const js=qpcMeta.juzStart;
+  const juzAt={};for(let j=2;j<=30;j++)juzAt[js[j].surah]=(juzAt[js[j].surah]||[]).concat(j);
+  let cells="";
+  for(const su of SURAHS){
+    const o=agg.bySura[su.id];
+    const g=(o.mast/o.n*100),y=(o.part/o.n*100);
+    const chips=(juzAt[su.id]||[]).map(j=>`дж ${j}`).join(",");
+    const focus=HF.zoom.juz&&juzOfSurah(su.id)===HF.zoom.juz;
+    cells+=`<div class="hfz-cell ${o.dWorst?"d-"+o.dWorst:""} ${focus?"focus":""}" onclick="hifzZoomTo(3,null,${su.id})" title="${su.id}. ${escAttr(su.ru)}: закреплено ${o.mast} из ${o.n}">
+      <div class="fg" style="height:${g.toFixed(1)}%"></div><div class="fy" style="bottom:${g.toFixed(1)}%;height:${y.toFixed(1)}%"></div>
+      <div class="num">${su.id}</div>${chips?`<div class="jz">${chips}</div>`:""}
+      <div class="nm">${esc(su.ru)}</div><div class="sub">${su.n}</div></div>`;
+  }
+  return `<div class="hfz-grid suras">${cells}</div>`;
+}
+// Уровень 3 — аяты: СУЩЕСТВУЮЩАЯ аятная тепловая карта суры (hifzSuraHTML),
+// без изменений; сюда же — декларации и 🎯.
+function hifzL3HTML(){
+  const su=SURAHS.find(x=>x.id===HF.zoom.surah);
+  if(!su)return "";
+  return hifzSuraHTML({surah:su.id,from:1,to:su.n,su});
+}
+function hifzMapHTML(){
+  if(!qpcMeta||!qpcMeta.juzStart||!hifzJuzOrds())
+    return `<div class="prog-card"><div class="hf-muted">Границы джузов не загрузились (нет сети?) — карта и охват недоступны.</div></div>`;
+  const agg=hifzAggAll();                                  // единственный пересчёт долей на рендер
+  // — сводка (не зависит от уровня зума) —
+  let mastQ=0,green=0;
+  for(const su of SURAHS){const o=agg.bySura[su.id];mastQ+=o.mast;if(o.mast===o.n)green++;}
+  const pctQ=Math.round(mastQ/PROG_AYAH_OFFSET[114]*1000)/10;
+  const spots=hifzWeakSpots(3).map(x=>`${x.s}:${x.from}${x.from===x.to?"":"–"+x.to}`).join(", ");
+  const summary=`<div class="prog-card"><h3>Сводка</h3><div class="spd-row">
+    <div class="spd-kpi"><b>${pctQ}%</b><span>Корана закреплено</span></div>
+    <div class="spd-kpi"><b>${mastQ}</b><span>аятов подтверждено</span></div>
+    <div class="spd-kpi"><b>${green}</b><span>полностью зелёных сур</span></div></div>
+    ${spots?`<div class="hf-muted" style="margin-top:8px">Ближайшие слабые места в охвате: <b>${spots}</b></div>`:""}</div>`;
+  // — охват проверок (существующий селектор; вызывается с любого уровня) —
   const sc=HF.scope;
   const juzOpts=Array.from({length:30},(_,i)=>`<option value="${i+1}" ${i+1===sc.juz?"selected":""}>Джуз ${i+1}</option>`).join("");
   const inJuz=hifzJuzRange(sc.juz);
   const suraOpts=[`<option value="0">все суры</option>`];
   for(let s=inJuz.from.s;s<=inJuz.to.s;s++){const su=SURAHS.find(x=>x.id===s);if(su)suraOpts.push(`<option value="${s}" ${s===sc.surah?"selected":""}>${s}. ${esc(su.ru)}</option>`);}
-  const one=sc.surah?suras[0]:null;
+  const suras=hifzScopeSuras();
+  const one=sc.surah&&suras.length?suras[0]:null;
   const range=one?`<span>аяты</span><input id="hfFrom" type="number" min="1" placeholder="${one.from}" value="${sc.from||""}" onchange="hifzSetScope('range')"><span>—</span><input id="hfTo" type="number" min="1" placeholder="${one.to}" value="${sc.to||""}" onchange="hifzSetScope('range')">`:"";
-  const st=hifzScopeStats();
-  const pct=st.total?Math.round(st.mast/st.total*100):0;
-  const seg=(n,color)=>n?`<i style="width:${(n/st.total*100).toFixed(2)}%;background:${color}"></i>`:"";
-  // «Сжатие белой области»: закреплённое растёт слева, непроверенное тает справа
-  const bar=`<div class="hf-bar">${seg(st.mast,"#2ea06e")}${seg(st.agg.strong,"rgba(46,160,110,.55)")}${seg(st.agg.mid,"#e0a030")}${seg(st.agg.weak,"#e05252")}</div>`;
-  const scope=`<div class="prog-card"><h3>Охват</h3>
+  let scopeBody;
+  if(!suras.length){                                       // пассаж сужен до пустоты
+    scopeBody=`<div class="hf-muted" style="margin-top:11px">Пустой охват — проверьте диапазон аятов.</div>
+      <button class="prog-cont" onclick="hifzSetScope('juz',${sc.juz})">Сбросить сужение</button>`;
+  }else{
+    const st=hifzScopeStats();
+    const pct=st.total?Math.round(st.mast/st.total*100):0;
+    const seg=(n,color)=>n?`<i style="width:${(n/st.total*100).toFixed(2)}%;background:${color}"></i>`:"";
+    // «Сжатие белой области»: закреплённое растёт слева, непроверенное тает справа
+    scopeBody=`<div class="hf-muted" style="margin-top:11px">Освоено <b style="color:var(--accent)">${pct}%</b> охвата (${st.mast} из ${st.total} аятов) · осталось: <b>${st.total-st.mast}</b> аятов / <b>${st.places}</b> мест</div>
+    <div class="hf-bar">${seg(st.mast,"#2ea06e")}${seg(st.agg.strong,"rgba(46,160,110,.55)")}${seg(st.agg.mid,"#e0a030")}${seg(st.agg.weak,"#e05252")}</div>
+    <button class="prog-cont" onclick="hifzTab('quiz')">▶ Начать проверку</button>`;
+  }
+  const scope=`<div class="prog-card"><h3>Охват проверки</h3>
     <div class="hf-scope">
       <select onchange="hifzSetScope('juz',this.value)">${juzOpts}</select>
       <select onchange="hifzSetScope('surah',this.value)">${suraOpts.join("")}</select>
       ${range}
-    </div>
-    <div class="hf-muted" style="margin-top:11px">Освоено <b style="color:var(--accent)">${pct}%</b> охвата (${st.mast} из ${st.total} аятов) · осталось: <b>${st.total-st.mast}</b> аятов / <b>${st.places}</b> мест</div>
-    ${bar}
-    <button class="prog-cont" onclick="hifzTab('quiz')">▶ Начать проверку</button></div>`;
-  const legend=`<div class="hf-legend"><span>заливка = проверено:</span>
-    <span><span class="sw" style="background:#e05252"></span>не помню</span>
-    <span><span class="sw" style="background:#e0a030"></span>с трудом</span>
-    <span><span class="sw" style="background:rgba(46,160,110,.55)"></span>уверенно</span>
-    <span><span class="sw" style="background:#2ea06e"></span>закреплено</span>
-    <span style="margin-left:6px">контур = декларировано:</span>
-    <span><span class="sw" style="border:2px solid #2ea06e"></span>знаю</span>
-    <span><span class="sw" style="border:2px solid #e0a030"></span>нетвёрдо</span>
-    <span><span class="sw" style="border:2px solid #e05252"></span>не знаю</span></div>`;
-  return scope+`<div class="prog-card"><h3>Суры охвата · декларация и карта</h3>
-    <div class="hf-muted">Отметьте гипотезу («знаю / нетвёрдо / не знаю») — она сеет карту контуром; в развёрнутой суре тап по блоку помечает только его. Финальна только проверка: заливка появляется по свидетельству и переопределяет декларацию. 🎯 — сразу проверить суру.</div>
-    ${suras.map(hifzSuraHTML).join("")}${legend}</div>`;
+    </div>${scopeBody}</div>`;
+  // — карта с зумом —
+  const z=HF.zoom;
+  const level=z.level===1?hifzL1HTML(agg):z.level===2?hifzL2HTML(agg):hifzL3HTML();
+  const legend=z.level===3
+    ?`<div class="hf-legend"><span>заливка = проверено:</span>
+      <span><span class="sw" style="background:#e05252"></span>не помню</span>
+      <span><span class="sw" style="background:#e0a030"></span>с трудом</span>
+      <span><span class="sw" style="background:rgba(46,160,110,.55)"></span>уверенно</span>
+      <span><span class="sw" style="background:#2ea06e"></span>закреплено</span>
+      <span style="margin-left:6px">контур = декларировано:</span>
+      <span><span class="sw" style="border:2px solid #2ea06e"></span>знаю</span>
+      <span><span class="sw" style="border:2px solid #e0a030"></span>нетвёрдо</span>
+      <span><span class="sw" style="border:2px solid #e05252"></span>не знаю</span></div>`
+    :`<div class="hf-legend"><span>заливка снизу вверх:</span>
+      <span><span class="sw" style="background:rgba(46,160,110,.5)"></span>закреплено</span>
+      <span><span class="sw" style="background:rgba(224,160,48,.42)"></span>проверено, в работе</span>
+      <span style="margin-left:6px">контур = декларировано:</span>
+      <span><span class="sw" style="border:2px solid #2ea06e"></span>знаю</span>
+      <span><span class="sw" style="border:2px solid #e0a030"></span>нетвёрдо</span>
+      <span><span class="sw" style="border:2px solid #e05252"></span>не знаю</span>
+      <span style="margin-left:6px">красные провалы — на уровне аятов</span></div>`;
+  const hint=z.level===3?"":`<div class="hf-muted" style="margin-top:7px">${z.level===1?"Тап по джузу — к его сурам.":"Тап по суре — её аятная карта; «Назад» поднимает на уровень выше."}</div>`;
+  return summary+scope+`<div class="prog-card"><h3>Карта памяти</h3>${hifzBcHTML()}${level}${legend}${hint}</div>`;
 }
 function hifzSuraHTML(rng){
   const c=hifzRangeCounts(rng.surah,rng.from,rng.to);
@@ -4575,6 +4746,10 @@ function scrollToAyah(ayah){
 }
 window.addEventListener("popstate",()=>{
   if(navBack){navBack=false;return;}          // this back() was our own overlay consume
+  // «Назад» внутри тренажёра хифза — подъём по уровням карты (аяты → суры →
+  // джузы; проверка → карта); наша overlay-запись уже снята этим back —
+  // возвращаем её, чтобы следующий «Назад» тоже пришёл к нам.
+  if(hifzOpen&&hifzOvlOpen()&&hifzZoomBack()){pushOverlay();return;}
   if(anyOverlayOpen()){closeAllPanelsUI();return;}
   applyHash(false);
 });
