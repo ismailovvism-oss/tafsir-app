@@ -28,10 +28,13 @@
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 
 /* ===== THEMES ===== */
-[data-theme="green"]{--accent:#1B5E3B;--accent-bg:#E8F3EC;--accent-hover:#24794E;--header-bg:#14331F;--header-text:#EDE8DD}
-[data-theme="blue"]{--accent:#1B4E8E;--accent-bg:#E3EDF8;--accent-hover:#2868B0;--header-bg:#132D4F;--header-text:#E0E8F0}
-[data-theme="gold"]{--accent:#8B6914;--accent-bg:#FDF5E6;--accent-hover:#A67C1A;--header-bg:#3D2E0A;--header-text:#F0E8D0}
-[data-theme="dark"]{--accent:#5DA87E;--accent-bg:#1E2E24;--accent-hover:#6FC090;--header-bg:#0D0D0D;--header-text:#C8C8C0;--bg:#1A1A18;--bg-alt:#222220;--bg-card:#2A2A28;--border:#3A3A36;--border-light:#333330;--text:#D8D4CC;--text-sec:#AAA89E;--text-muted:#706E66}
+/* --accent-rgb — акцент в RGB-компонентах для полупрозрачных оттенков
+   rgba(var(--accent-rgb),α): им красятся декоративные поверхности (таблица
+   Корана, плитки Главной, чипы, карточки) — так смена темы реально меняет вид */
+[data-theme="green"]{--accent:#1B5E3B;--accent-bg:#E8F3EC;--accent-hover:#24794E;--header-bg:#14331F;--header-text:#EDE8DD;--accent-rgb:27,94,59}
+[data-theme="blue"]{--accent:#1B4E8E;--accent-bg:#E3EDF8;--accent-hover:#2868B0;--header-bg:#132D4F;--header-text:#E0E8F0;--accent-rgb:27,78,142}
+[data-theme="gold"]{--accent:#8B6914;--accent-bg:#FDF5E6;--accent-hover:#A67C1A;--header-bg:#3D2E0A;--header-text:#F0E8D0;--accent-rgb:139,105,20}
+[data-theme="dark"]{--accent:#5DA87E;--accent-bg:#1E2E24;--accent-hover:#6FC090;--header-bg:#0D0D0D;--header-text:#C8C8C0;--bg:#1A1A18;--bg-alt:#222220;--bg-card:#2A2A28;--border:#3A3A36;--border-light:#333330;--text:#D8D4CC;--text-sec:#AAA89E;--text-muted:#706E66;--accent-rgb:93,168,126}
 
 :root,[data-theme="green"],[data-theme="blue"],[data-theme="gold"]{
   --bg:#FAF8F5;--bg-alt:#F0EDE6;--bg-card:#fff;--border:#E5E0D8;--border-light:#E8E3DA;
@@ -658,14 +661,14 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
 /* — Главная (5-й режим) — */
 .home{flex:1;overflow:auto;-webkit-overflow-scrolling:touch}
 .home-inner{max-width:680px;margin:0 auto;padding:18px 16px 40px}
-.home-cont{background:var(--accent);color:#fff;border-radius:14px;padding:16px 18px;cursor:pointer;margin-bottom:22px;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+.home-cont{background:linear-gradient(135deg,var(--accent) 0%,var(--accent-hover) 100%);color:#fff;border-radius:14px;padding:16px 18px;cursor:pointer;margin-bottom:22px;box-shadow:0 4px 16px rgba(var(--accent-rgb),.35)}
 .home-cont:active{opacity:.9}
 .home-cont .hc-lbl{font-size:12px;opacity:.85;margin-bottom:6px;letter-spacing:.02em}
 .home-cont .hc-main{font-size:21px;font-weight:600}
 .home-cont .hc-main .ar{font-size:18px;opacity:.9;margin-right:4px}
 .home-cont .hc-sub{font-size:13px;opacity:.85;margin-top:4px}
 .home-sec{margin-bottom:24px}
-.home-sec-h{font-size:13px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.home-sec-h{font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;display:flex;align-items:center;gap:8px;border-left:3px solid var(--accent);padding-left:8px}
 .home-edit-btn{margin-left:auto;background:none;border:none;cursor:pointer;font-size:14px;padding:2px 6px;border-radius:6px;color:var(--text-muted)}
 .home-edit-btn:hover{background:var(--border)}
 .home-recent{display:flex;flex-direction:column;gap:2px}
@@ -675,8 +678,8 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
 .home-rrow .hr-name .ar{opacity:.7;margin-right:4px;font-size:15px}
 .home-rrow .hr-sub{font-size:12px;color:var(--text-muted);white-space:nowrap}
 .home-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
-.home-tile{border:1px solid var(--border);border-radius:12px;padding:13px 14px;cursor:pointer;display:flex;flex-direction:column;gap:3px;background:var(--card,transparent);transition:border-color .12s}
-.home-tile:hover{border-color:var(--accent)}
+.home-tile{border:1px solid rgba(var(--accent-rgb),.25);border-radius:12px;padding:13px 14px;cursor:pointer;display:flex;flex-direction:column;gap:3px;background:linear-gradient(180deg,transparent 0%,rgba(var(--accent-rgb),.06) 100%);transition:border-color .12s,box-shadow .12s}
+.home-tile:hover{border-color:var(--accent);box-shadow:0 3px 10px rgba(var(--accent-rgb),.22)}
 .home-tile:active{opacity:.85}
 .home-tile .ht-main{font-size:15px;font-weight:500;line-height:1.25}
 .home-tile .ht-ar{font-size:14px;opacity:.6}
@@ -704,8 +707,8 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
 .prog-box{max-width:660px;width:100%;text-align:left}
 .prog-h{font-size:18px;font-weight:700;margin:0 0 2px;color:var(--text)}
 .prog-sub{font-size:12px;color:var(--text-muted);margin-bottom:16px}
-.prog-card{background:var(--bg-alt);border:1px solid var(--border);border-radius:12px;padding:14px 15px;margin-bottom:12px}
-.prog-card h3{font-size:12px;font-weight:600;color:var(--text-muted);margin:0 0 11px;text-transform:uppercase;letter-spacing:.04em}
+.prog-card{background:var(--bg-alt);border:1px solid rgba(var(--accent-rgb),.2);border-radius:12px;padding:14px 15px;margin-bottom:12px}
+.prog-card h3{font-size:12px;font-weight:700;color:var(--accent);margin:0 0 11px;text-transform:uppercase;letter-spacing:.05em}
 .prog-row{display:flex;align-items:center;gap:14px}
 .prog-grow{flex:1;min-width:0}
 .prog-big{font-size:26px;font-weight:700;line-height:1;color:var(--text)}
@@ -810,15 +813,18 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
 .hfz-bc .sep{color:var(--text-muted)}
 .hfz-grid{display:grid;gap:7px;margin-top:11px;grid-template-columns:repeat(auto-fill,minmax(72px,1fr))}
 .hfz-grid.suras{grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:5px}
-.hfz-cell{position:relative;height:60px;border:2px solid var(--border);border-radius:8px;background:var(--bg);overflow:hidden;cursor:pointer}
-.hfz-cell.jcell{height:66px}
+/* ячейка живёт в тонах ТЕКУЩЕЙ ТЕМЫ (тонированный градиент + акцентная рамка);
+   семантические цвета памяти (зелёный/янтарный/красный) — поверх, без изменений */
+.hfz-cell{position:relative;height:60px;border:2px solid rgba(var(--accent-rgb),.28);border-radius:9px;background:linear-gradient(180deg,var(--bg) 0%,rgba(var(--accent-rgb),.09) 100%);overflow:hidden;cursor:pointer;transition:border-color .12s,box-shadow .12s,transform .12s}
+.hfz-cell:hover{border-color:var(--accent);box-shadow:0 3px 10px rgba(var(--accent-rgb),.28);transform:translateY(-1px)}
+.hfz-cell.jcell{height:66px;background:linear-gradient(180deg,rgba(var(--accent-rgb),.05) 0%,rgba(var(--accent-rgb),.14) 100%)}
 .hfz-cell .fg{position:absolute;left:0;right:0;bottom:0;background:rgba(46,160,110,.5)}   /* заливка: подтверждённо закреплено */
 .hfz-cell .fy{position:absolute;left:0;right:0;background:rgba(224,160,48,.42)}           /* «жёлтый градус»: проверено, в работе */
-.hfz-cell .num{position:absolute;top:2px;left:5px;font-size:9px;color:var(--text-muted);z-index:1}
-.hfz-cell .jz{position:absolute;top:2px;right:3px;font-size:8px;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:0 3px;z-index:1;background:var(--bg)}
-.hfz-cell .nm{position:absolute;inset:10px 2px 12px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:9.5px;line-height:1.15;color:var(--text);z-index:1;overflow:hidden}
+.hfz-cell .num{position:absolute;top:2px;left:5px;font-size:9px;color:var(--accent);font-weight:700;z-index:1}
+.hfz-cell .jz{position:absolute;top:2px;right:3px;font-size:8px;color:var(--accent);border:1px solid rgba(var(--accent-rgb),.45);border-radius:4px;padding:0 3px;z-index:1;background:var(--accent-bg)}
+.hfz-cell .nm{position:absolute;inset:10px 2px 12px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:9.5px;line-height:1.15;color:var(--text);z-index:1;overflow:hidden;font-weight:500}
 .hfz-cell .sub{position:absolute;bottom:2px;left:0;right:0;text-align:center;font-size:8px;color:var(--text-muted);z-index:1;white-space:nowrap;overflow:hidden}
-.hfz-cell .big{position:absolute;top:9px;left:0;right:0;text-align:center;font-size:19px;font-weight:700;color:var(--text);z-index:1}
+.hfz-cell .big{position:absolute;top:9px;left:0;right:0;text-align:center;font-size:19px;font-weight:700;color:var(--accent);z-index:1}
 .hfz-cell.focus{box-shadow:0 0 0 2px var(--accent)}
 .hfz-cell.d-know{border-color:#2ea06e}
 .hfz-cell.d-shaky{border-color:#e0a030}
@@ -830,7 +836,8 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
 .hfz-cell .anom{position:absolute;bottom:1px;left:2px;z-index:2;font-size:8px;line-height:1.2;color:#e05252;border:1px solid #e05252;border-radius:4px;padding:0 2px;background:var(--bg)}
 .hfo-chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px;align-items:center}
 .hfo-chips .lbl{font-size:10px;color:var(--text-muted)}
-.hfo-chips .chip{font-family:inherit;font-size:11px;padding:4px 9px;border-radius:999px;border:1px solid var(--border);background:var(--bg);color:var(--text-sec);cursor:pointer}
+.hfo-chips .chip{font-family:inherit;font-size:11px;padding:4px 9px;border-radius:999px;border:1px solid rgba(var(--accent-rgb),.35);background:rgba(var(--accent-rgb),.06);color:var(--text-sec);cursor:pointer;transition:border-color .12s,color .12s}
+.hfo-chips .chip:hover{border-color:var(--accent);color:var(--accent)}
 .hfo-chips .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .hfo-leg{margin-top:7px;font-size:11px;color:var(--text-sec)}
 .hfo-leg summary{cursor:pointer;color:var(--text-muted);font-size:11px}
@@ -875,6 +882,13 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
 .vp-wrap{padding:10px 12px 34px}
 /* панель закладок: кнопка разворота в главное окно */
 .bm-tools{padding:9px 10px 3px}
+/* «недавнее» на Главной — акцентный ховер в тон темы */
+.home-rrow:hover{background:rgba(var(--accent-rgb),.07)}
+/* степпер плотности сетки (ячеек в ряду) таблицы Корана / карты хифза */
+.hfz-bc .lbl{font-size:10px;color:var(--text-muted)}
+.qt-step{display:inline-flex;align-items:center;gap:6px}
+.qt-step button{width:22px;height:22px;border:1px solid rgba(var(--accent-rgb),.35);border-radius:6px;background:rgba(var(--accent-rgb),.06);color:var(--text);cursor:pointer;font-size:13px;line-height:1;font-family:inherit}
+.qt-step b{min-width:34px;text-align:center;font-size:11px;color:var(--text)}
 </style>
 </head>
 <body data-theme="green">
@@ -2036,7 +2050,8 @@ function hifzBcHTML(){                                     // хлебная к�
   if(z.level===2&&!z.juz)parts.push(`<span class="cur">Все суры</span>`);
   if(z.level===3){const su=SURAHS.find(x=>x.id===z.surah);parts.push(`<span class="cur">${z.surah}. ${su?esc(su.ru):""}</span>`);}
   const whole=z.level===2?`<button class="hf-go" style="margin-left:auto" onclick="hifzZoomTo(1)">весь Коран</button>`:"";
-  return `<div class="hfz-bc">${parts.join(`<span class="sep">→</span>`)}${whole}</div>`;
+  const cols=z.level<3?`<span style="margin-left:${z.level===2?"8px":"auto"}"></span>${qtColsCtl()}`:"";
+  return `<div class="hfz-bc">${parts.join(`<span class="sep">→</span>`)}${whole}${cols}</div>`;
 }
 // ═══ ОВЕРЛЕЙ-ФИЛЬТРЫ структуры мусхафа (Мекка/Медина, периоды, мукатта'ат,
 // мусаббихат, пары) — чисто ВИЗУАЛЬНЫЙ слой поверх уровней 1–2 карты. ═══
@@ -2053,6 +2068,21 @@ let HFO=null,_hfoLoading=false;
 // активно, по активному режиму (режимы взаимоисключающие — конфликтов нет).
 const QT={level:"suras",juz:null,ovl:{group:null,value:null,sub:null},ord:"mushaf"};
 function _ovlEnv(){return ST.hifzMode?[HF,renderHifz]:[QT,renderQuranTable];}
+// Плотность сетки таблицы (ячеек в ряду): 0 = авто (по ширине экрана), 3–16 —
+// фиксированно. Общая настройка для таблицы Главной и карты хифза (tl_qtCols).
+function qtGridCols(){const c=gs("qtCols",0);return c?`grid-template-columns:repeat(${c},1fr);`:"";}
+function qtGridStyle(){const d=qtGridCols();return d?` style="${d}"`:"";}
+function qtColsBump(d){
+  let c=gs("qtCols",0);
+  if(d>0)c=c?Math.min(16,c+1):4;                          // из «авто» плюс начинает с 4
+  else c=(c&&c>3)?c-1:0;                                  // ниже 3 — обратно в «авто»
+  ss("qtCols",c);
+  _ovlEnv()[1]();                                         // перерисовать активную поверхность
+}
+function qtColsCtl(){
+  const c=gs("qtCols",0);
+  return `<span class="lbl">Сетка:</span><span class="qt-step"><button onclick="qtColsBump(-1)" title="Меньше ячеек в ряду">−</button><b>${c||"авто"}</b><button onclick="qtColsBump(1)" title="Больше ячеек в ряду">+</button></span>`;
+}
 function hfoLoad(){
   if(HFO||_hfoLoading)return;
   _hfoLoading=true;
@@ -2178,7 +2208,7 @@ function hifzL1HTML(agg){
       <div class="big">${j}</div><div class="sub">${hifzJuzSuraCount(j)} сур · ${J.total} а.</div>
       ${cnt?`<span class="ob" title="совпадающих сур в джузе">${cnt}</span>`:""}</div>`;
   }
-  return `<div class="hfz-grid">${cells}</div>`;
+  return `<div class="hfz-grid"${qtGridStyle()}>${cells}</div>`;
 }
 // Порядки сур для уровня 2: мусхафный (общепринятый), хронологический
 // (тартиб ан-нузуль из surah-classifications.json, египетская хронология —
@@ -2222,7 +2252,7 @@ function hifzL2HTML(agg){
       <div class="num">${su.id}</div>${chips?`<div class="jz">${chips}</div>`:""}
       <div class="nm">${esc(su.ru)}</div><div class="sub">${su.n}</div>${anom}${hfoBadge(m)}</div>`;
   }
-  return `<div class="hfz-grid suras">${cells}</div>`;
+  return `<div class="hfz-grid suras"${qtGridStyle()}>${cells}</div>`;
 }
 // ═══ ТАБЛИЦА КОРАНА НА ГЛАВНОЙ (навигатор структуры мусхафа) ═══
 // Та же сетка/чипы/фильтры/порядки, что на карте хифза, но БЕЗ слоя заучивания
@@ -2236,7 +2266,8 @@ function quranTableHTML(){
   hfoLoad();                                                  // классификации — лениво, один раз
   const view=`<div class="hfo-chips"><span class="lbl">Вид:</span>
     <button class="chip ${QT.level==="suras"?"on":""}" onclick="qtLevel('suras')">суры</button>
-    <button class="chip ${QT.level==="juz"?"on":""}" onclick="qtLevel('juz')">джузы</button></div>`;
+    <button class="chip ${QT.level==="juz"?"on":""}" onclick="qtLevel('juz')">джузы</button>
+    <span style="margin-left:8px"></span>${qtColsCtl()}</div>`;
   const order=QT.level==="suras"?hifzOrdRowHTML():"";
   return `<div class="home-sec"><div class="home-sec-h">Коран · суры и джузы</div>
     ${view}${order}${hfoChipsHTML()}${QT.level==="suras"?qtSurasHTML():qtJuzHTML()}</div>`;
@@ -2256,7 +2287,7 @@ function qtSurasHTML(){
       <div class="num">${su.id}</div>${chips?`<div class="jz">${chips}</div>`:""}
       <div class="nm">${esc(su.ru)}</div><div class="sub">${su.n}</div>${anom}${hfoBadge(m)}</div>`;
   }
-  return `<div class="hfz-grid suras" style="margin-top:9px">${cells}</div>`;
+  return `<div class="hfz-grid suras" style="margin-top:9px;${qtGridCols()}">${cells}</div>`;
 }
 function qtJuzHTML(){
   const jc=QT.ovl.group&&HFO?hfoJuzCounts():null;
@@ -2268,7 +2299,7 @@ function qtJuzHTML(){
       <div class="big">${j}</div><div class="sub">${hifzJuzSuraCount(j)} сур · ${jOrd[j+1]-jOrd[j]} а.</div>
       ${cnt?`<span class="ob" title="совпадающих сур в джузе">${cnt}</span>`:""}</div>`;
   }
-  return `<div class="hfz-grid" style="margin-top:9px">${cells}</div>`;
+  return `<div class="hfz-grid" style="margin-top:9px;${qtGridCols()}">${cells}</div>`;
 }
 function qtLevel(v){QT.level=v;if(v==="juz")QT.juz=null;renderQuranTable();}
 function qtJuz(j){
