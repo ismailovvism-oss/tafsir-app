@@ -171,6 +171,10 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .facet-chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
 .facet-reset{align-self:flex-start;font-family:inherit;font-size:10px;color:var(--accent);background:none;border:none;cursor:pointer;padding:1px 0;margin-top:1px}
 .rp-sec-head{padding:7px 12px 3px;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-muted)}
+/* блок «Оригинал» (арабский текст) в панели источников */
+.rp-quran{padding:0 12px 8px;border-bottom:1px solid var(--border)}
+.rp-quran .rp-sec-head{padding-left:0;padding-right:0}
+.rp-q-body{padding:2px 0}
 .t-meta{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px}
 .t-pill{font-size:8px;line-height:1.4;padding:0 5px;border-radius:6px;background:var(--tag-bg);color:var(--tag-color);white-space:nowrap}
 .t-pill.warn{background:var(--note-bg);color:var(--note-color);border:1px solid var(--note-border);font-weight:600}
@@ -554,6 +558,17 @@ body.immersive .immersive-exit:hover{opacity:1;background:rgba(0,0,0,.32)}
 .qpc-w[data-loc]:hover{background:var(--accent-bg)}
 .qpc-end{display:inline-block;margin:0 1px}
 @media(max-width:768px){.qpc-line{font-size:calc(25px*var(--rs-ar,1))}}
+/* Таджвид-пак (qpc4t) на тёмном фоне: авторская тёмная CPAL-палитра из самого шрифта
+   (белая база букв, приглушённые цвета правил) — только аятный/пословный режимы;
+   страничный мусхаф не трогаем, он всегда на светлой «бумаге» .mushaf-page. */
+[data-theme="dark"][data-arfont="qpc4t"] .qpc-line,
+[data-theme="dark"][data-arfont="qpc4t"] .wbw-ar{font-palette:--qpc4t-dark}
+/* фолбэк для старых браузеров без font-palette: светлая подложка под арабским */
+@supports not (font-palette: dark){
+  [data-theme="dark"][data-arfont="qpc4t"] .qpc-line,
+  [data-theme="dark"][data-arfont="qpc4t"] .wbw-ar{background:#fdfcf5;color:#1a1a1a;border-radius:6px}
+  [data-theme="dark"][data-arfont="qpc4t"] .qpc-line{padding:2px 8px}
+}
 /* Mushaf page mode */
 .mushaf-shell{height:100%;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:18px 12px;background:var(--bg-alt)}
 .mushaf-page{width:100%;max-width:680px;background:#fdfcf5;color:#1a1a1a;border:1px solid #e6e0c8;border-radius:6px;box-shadow:0 2px 14px rgba(0,0,0,.08);padding:26px calc(30px + var(--mar,0px))}
@@ -1019,6 +1034,9 @@ const SOURCES={
   //   задаёт пакет (PACKS), база — отсюда (можно унести на CDN сменой baseUrl) —
   mushaf_glyphs:   {baseUrl:"data",  pathTemplate:"{baseUrl}/{path}"},
   mushaf_fonts:    {baseUrl:"fonts", pathTemplate:"{baseUrl}/{path}"},
+  // — постраничные шрифты цветного таджвид-мусхафа (QPC v4, COLR): тяжёлый бинарь,
+  //   как и сканы — на R2 (зеркало r2-data/fonts/, заливка upload_r2.sh) —
+  mushaf_fonts_r2: {baseUrl:"https://pub-d99a56b61d914461b5864f421a013097.r2.dev/fonts", pathTemplate:"{baseUrl}/{path}"},
   // — тяжёлый бинарь: webp-страницы скан-источника (kind:image) — на объектном
   //   хранилище Cloudflare R2; {dir}=imgdir источника, {file}=pNNN.webp из карты —
   mushaf_scans:    {baseUrl:"https://pub-d99a56b61d914461b5864f421a013097.r2.dev",  pathTemplate:"{baseUrl}/{dir}/{file}"},
@@ -1141,7 +1159,7 @@ let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,imme
   viewOpen:false,    // ⚙ Вид panel open
   navUnit:"surah",   // bottom nav step/jump unit: surah|page|juz|hizb
   scrollToAyah:null, // pending ayah to scroll to after a jump (ayah mode)
-  arFont:"qpc1",     // Arabic typeface: "naskh" | "hafs" | "amiri" | "qpc1" | "kufi"
+  arFont:"qpc1",     // Arabic typeface: "naskh" | "hafs" | "amiri" | "qpc1" | "qpc4t" | "kufi"
   pageMode:false,    // mushaf page view (faithful page-by-page QPC layout)
   wbwMode:false,     // word-by-word view: grid of words + per-word gloss + grammar card
   noTouch:false,     // «Режим без касания»: чтение/листание без касания текста (кнопочная панель)
@@ -4748,6 +4766,31 @@ function tItem(t,on,reorder){
   </div>`;
 }
 
+// --- Блок «Оригинал» в панели источников: ВСЁ про арабский текст в одном месте
+// (редакции-источники, начертание, цвета таджвида). Принцип: 📚 отвечает «что
+// читать», ⚙ Вид — «как выглядит» (размеры/интервалы/темы). Начертание живёт
+// здесь же, потому что печатный мусхаф и таджвид для пользователя — свойства
+// самого арабского текста, а не оформления.
+const AR_UI_FONTS=["naskh","hafs","amiri","kufi","qpc1"]; // «Печатный» покрывает qpc1 И qpc4t
+function isPrintedFont(){return ST.arFont==="qpc1"||ST.arFont==="qpc4t";}
+function quranBlockHTML(){
+  const variants=[["_arabic","С огласовками"],["_arabic_clean","Без огласовок"],["_arabic_rasm","Без точек (расм)"]];
+  const rows=variants.map(([id,name])=>`<label class="vp-check"><input type="checkbox" ${ST.enabled[id]?"checked":""} onchange="toggleEn('${id}')"> ${name}</label>`).join("");
+  const fonts=AR_UI_FONTS.map(f=>{
+    const on=f==="qpc1"?isPrintedFont():ST.arFont===f;
+    return `<button class="vp-font ${on?"on":""}" title="${AR_FONT_TITLES[f]}" onclick="setArFontUI('${f}')">${AR_FONT_NAMES[f]}</button>`;}).join("");
+  const tj=isPrintedFont()?`<label class="vp-check" style="margin-top:4px"><input type="checkbox" ${ST.arFont==="qpc4t"?"checked":""} onchange="toggleTajweed()"> Цвета таджвида</label>`:"";
+  return `<div class="rp-quran"><div class="rp-sec-head">🕋 Оригинал (арабский текст)</div>
+    <div class="rp-q-body">${rows}
+    <div class="vp-label" style="margin-top:6px">Начертание</div><div class="vp-fonts">${fonts}</div>${tj}
+    <div class="vp-note">Печатные начертания (мусхаф) действуют для редакции «С огласовками»; размеры и интервалы — в ⚙ Вид.</div></div></div>`;
+}
+function setArFontUI(f){
+  if(f==="qpc1"&&isPrintedFont())return; // уже печатный (возможно, с таджвидом) — не сбрасывать
+  setArFont(f);renderRP();
+}
+function toggleTajweed(){setArFont(ST.arFont==="qpc4t"?"qpc1":"qpc4t");renderRP();}
+
 function renderRP(){
   const el=document.getElementById("rpList");
   if(!el)return;
@@ -4757,7 +4800,10 @@ function renderRP(){
   // Карта покрытия (Уровень 3) — где какой источник есть, где дыры
   html+=`<button class="cov-map-open" onclick="setMode('source')">🗺 Карта покрытия · чтение по источнику</button>`;
 
-  // 1. Enabled (pinned, reorderable). Quran-text variants live in ⚙ Вид, not here.
+  // 0. Оригинал: редакции арабского + начертание + таджвид (см. quranBlockHTML)
+  html+=quranBlockHTML();
+
+  // 1. Enabled (pinned, reorderable) — переводы/тафсиры; арабский — в блоке выше.
   const enAll=getEnabledList().filter(t=>t.id!=="_notes");
   if(enAll.length){
     html+=`<div class="rp-sec-head">✓ Включено · ${enAll.length}</div>`;
@@ -5275,11 +5321,16 @@ function resetView(){
   for(const k in VIEW_DEFAULTS){ST[k]=VIEW_DEFAULTS[k];ss(k,ST[k]);}
   applyView();
   // "исходные = печатный": also reset the typeface to the printed mushaf
-  if(ST.arFont!=="qpc1"){ST.arFont="qpc1";ss("arFont","qpc1");applyArFont();renderCenter();}
-  refitIfPage();renderViewPanel();
+  if(ST.arFont!=="qpc1"){ST.arFont="qpc1";ss("arFont","qpc1");applyArFont();loadQpcMeta().then(()=>renderCenter());}
+  refitIfPage();renderViewPanel();renderRP();
 }
 // ⚙ в шапке: открыть боковую панель на вкладке «Вид» (настройки живут там,
 // в единой системе вкладок панели); повторный тап — закрыть панель.
+// Из подсказки в ⚙ Вид: закрыть боковую панель и открыть панель источников 📚
+function toggleViewPanelToRP(){
+  if(ST.sidebarOpen)toggleSidebar();
+  if(!ST.rpanelOpen)toggleRPanel();
+}
 function toggleViewPanel(){
   if(ST.sidebarOpen&&ST.sbTab==="view"){toggleSidebar();renderCB();return;}
   if(!ST.sidebarOpen)toggleSidebar();
@@ -5332,11 +5383,10 @@ function viewPanelHTML(){
       `<div class="vp-group"><div class="vp-label">Боковая панель (суры, теги)</div>${step("Размер","sbScale",pct("sbScale"))}</div>`+
       themeGroup+navGroup+ntGroup+backupGroup+aboutRow+resetBtn;
   }
-  const variants=[["_arabic","С огласовками"],["_arabic_clean","Без огласовок"],["_arabic_rasm","Без точек (расм)"]];
-  return `<div class="vp-group"><div class="vp-label">Оригинал (текст Корана)</div>`+
-      variants.map(([id,name])=>`<label class="vp-check"><input type="checkbox" ${ST.enabled[id]?"checked":""} onchange="toggleEn('${id}')"> ${name}</label>`).join("")+`</div>`+
-    `<div class="vp-group"><div class="vp-label">Шрифт арабского</div><div class="vp-fonts">`+
-      AR_FONTS.map(f=>`<button class="vp-font ${ST.arFont===f?"on":""}" title="${AR_FONT_TITLES[f]}" onclick="setArFont('${f}')">${AR_FONT_NAMES[f]}</button>`).join("")+`</div></div>`+
+  // Редакции арабского, начертание и таджвид переехали в панель источников 📚
+  // (блок «Оригинал», quranBlockHTML): 📚 = что читать, ⚙ Вид = как выглядит.
+  const quranHint=`<div class="vp-group"><div class="vp-note">Арабский текст — редакции (огласовки/расм), начертание и цвета таджвида — в панели источников <a href="#" onclick="toggleViewPanelToRP();return false">📚 Источники</a>.</div></div>`;
+  return quranHint+
     `<div class="vp-group"><div class="vp-label">Размер шрифта</div>${step("Арабский","fsAr",pct("fsAr"))}${step("Русский","fsRu",pct("fsRu"))}</div>`+
     `<div class="vp-group"><div class="vp-label">Межстрочный интервал</div>${step("Арабский","lhAr",pct("lhAr"))}${step("Русский","lhRu",pct("lhRu"))}</div>`+
     `<div class="vp-group"><div class="vp-label">Поля</div>${step("Отступы по краям","mar",ST.mar+"px")}</div>`+
@@ -5518,15 +5568,16 @@ function toggleSwipeNav(){ST.swipeNav=!ST.swipeNav;ss("swipeNav",ST.swipeNav);} 
 
 // Arabic typeface (chosen in the ⚙ Вид panel; persisted). Names are russified.
 function applyArFont(){document.body.setAttribute("data-arfont",ST.arFont);}
-const AR_FONTS=["naskh","hafs","amiri","qpc1","kufi"];
-const AR_FONT_NAMES={naskh:"Насх",hafs:"Каллиграфический",amiri:"Амири",qpc1:"Печатный",kufi:"Куфи"};
-const AR_FONT_TITLES={naskh:"Обычный насх (по умолчанию)",hafs:"Каллиграфический насх (Усман Таха)",amiri:"Амири (каллиграфия)",qpc1:"Печатный мусхаф — постраничные глифы (QPC v1)",kufi:"Куфи (Reem Kufi)"};
+const AR_FONTS=["naskh","hafs","amiri","qpc1","qpc4t","kufi"];
+const AR_FONT_NAMES={naskh:"Насх",hafs:"Каллиграфический",amiri:"Амири",qpc1:"Печатный",qpc4t:"Таджвид",kufi:"Куфи"};
+const AR_FONT_TITLES={naskh:"Обычный насх (по умолчанию)",hafs:"Каллиграфический насх (Усман Таха)",amiri:"Амири (каллиграфия)",qpc1:"Печатный мусхаф — постраничные глифы (QPC v1)",qpc4t:"Печатный мусхаф с цветами таджвида (QPC v4, печать 1441 г.х.)",kufi:"Куфи (Reem Kufi)"};
 function setArFont(id){
   if(!AR_FONTS.includes(id)||id===ST.arFont)return;
   const prev=ST.arFont;
   ST.arFont=id;ss("arFont",id);applyArFont();
-  // QPC packs swap content (glyphs + per-page fonts), not just a CSS font-family
-  if(prev==="qpc1"||id==="qpc1")renderCenter();
+  // QPC packs swap content (glyphs + per-page fonts), not just a CSS font-family;
+  // qpcMeta тоже попаковая — сначала переключить её, потом перерисовать
+  if(PACKS[prev]||PACKS[id])loadQpcMeta().then(()=>{renderCenter();if(ST.sbTab==="surahs")renderSB();});
   renderViewPanel();
 }
 
@@ -5535,11 +5586,29 @@ function setArFont(id){
 // that page's own font. Registry is extensible: add Indopak / Warsh / v2 here.
 const PACKS={
   // dataDir/pageDir/meta/fontFile — ОТНОСИТЕЛЬНАЯ структура пакета (внутри хранилища);
-  // конечный URL собирает resolveUrl (база — из SOURCES.mushaf_glyphs / mushaf_fonts).
+  // конечный URL собирает resolveUrl (база — из SOURCES.mushaf_glyphs, шрифты — из
+  // класса fontSrc пака, по умолчанию SOURCES.mushaf_fonts).
   qpc1:{id:"qpc1",type:"page-font",dataDir:"qpc/v1/surah",pageDir:"qpc/v1/page",meta:"qpc/v1/meta.json",
-    fontFamily:p=>`qpc1-p${p}`,fontFile:p=>`qpc-v1/p${p}.woff2`}
+    fontFamily:p=>`qpc1-p${p}`,fontFile:p=>`qpc-v1/p${p}.woff2`},
+  // Цветной таджвид-мусхаф КФГКПК (печать 1441 г.х., «QPC v4 Tajweed»): цвета правил
+  // зашиты в COLR-таблицу постраничных шрифтов (данные собирает build_qpc4t.py,
+  // шрифты — на R2). Раскладка 1441H отличается от v1 разрывами строк, а на 25
+  // страницах — и верхним аятом страницы (старты сур/джузов совпадают все) —
+  // поэтому у пака СВОИ данные страниц И своя мета: qpcMeta всегда отражает
+  // ОТОБРАЖАЕМЫЙ пак (см. loadQpcMeta), номера страниц консистентны с картинкой.
+  // Вес шрифтов (ленивая постраничная подгрузка, кэшируется браузером): в среднем
+  // ~82 КБ/страница; типичная сессия — постраничное чтение 10 стр ≈ 0,8 МБ,
+  // Ясин в аятном режиме ≈ 0,6 МБ, вся Бакара ≈ 4,3 МБ, все 604 стр ≈ 48 МБ.
+  // darkPalette: номер CPAL-палитры для тёмного фона (белая база букв, приглушённые
+  // цвета правил) — авторская, из самого шрифта; включается CSS-правилом font-palette
+  // ТОЛЬКО в аятном/пословном режимах (страничный мусхаф всегда на светлой «бумаге»).
+  qpc4t:{id:"qpc4t",type:"page-font",dataDir:"qpc/v4t/surah",pageDir:"qpc/v4t/page",meta:"qpc/v4t/meta.json",
+    fontSrc:"mushaf_fonts_r2",darkPalette:1,fontFamily:p=>`qpc4t-p${p}`,fontFile:p=>`qpc-v4-tajweed/p${p}.woff2`}
 };
 function activePack(){return PACKS[ST.arFont]||null;}
+// Пак, которым рисуется ПОСТРАНИЧНЫЙ мусхаф и пословный режим: выбранный в ⚙ Вид,
+// а если выбран обычный CSS-шрифт (насх/амири/…) — печатный qpc1 по умолчанию.
+function pagePack(){const p=activePack();return p&&p.type==="page-font"?p:PACKS.qpc1;}
 // Lazily inject one @font-face per page the first time that page is shown.
 const _packFontsLoaded=new Set();
 function ensurePageFont(pack,page){
@@ -5547,7 +5616,11 @@ function ensurePageFont(pack,page){
   if(_packFontsLoaded.has(key))return;
   _packFontsLoaded.add(key);
   const st=document.createElement("style");
-  st.textContent=`@font-face{font-family:'${pack.fontFamily(page)}';src:url('${resolveUrl("mushaf_fonts",{path:pack.fontFile(page)})}') format('woff2');font-display:swap}`;
+  let css=`@font-face{font-family:'${pack.fontFamily(page)}';src:url('${resolveUrl(pack.fontSrc||"mushaf_fonts",{path:pack.fontFile(page)})}') format('woff2');font-display:swap}`;
+  // именованная тёмная палитра пака: одно имя --<pack>-dark на все постраничные
+  // семейства (правила @font-palette-values матчатся парой имя+font-family)
+  if(pack.darkPalette!=null)css+=`@font-palette-values --${pack.id}-dark{font-family:'${pack.fontFamily(page)}';base-palette:${pack.darkPalette}}`;
+  st.textContent=css;
   document.head.appendChild(st);
 }
 // Per-surah glyph data: {ayah:{"w":[[glyph,page],...],"e":[glyph,page]|null}}
@@ -5574,18 +5647,35 @@ function renderPackAyah(pack,entry,loc){
 }
 
 // --- Mushaf page mode: faithful page-by-page layout (QPC v1) ----------------
+// qpcMeta — мета ТЕКУЩЕГО отображаемого пака (pagePack()): границы страниц/джузов,
+// старты сур. Прогресс/хифз/закладки якорятся на verse_key, страница всегда
+// ПРОИЗВОДИТСЯ из меты — поэтому смена пака просто меняет систему координат
+// страниц целиком, консистентно с тем, что нарисовано. Кэш — по пакам.
 let qpcMeta=null;
+const _qpcMetaCache={};
 let mushafResizeObs=null; // re-fits line scaling when the column width changes
 async function loadQpcMeta(){
-  if(qpcMeta)return qpcMeta;
-  try{const r=await fetch(resolveUrl("mushaf_glyphs",{path:PACKS.qpc1.meta}));qpcMeta=r.ok?await r.json():null;}catch(e){qpcMeta=null;}
+  const pack=pagePack();
+  if(_qpcMetaCache[pack.id]===undefined){
+    try{const r=await fetch(resolveUrl("mushaf_glyphs",{path:pack.meta}));_qpcMetaCache[pack.id]=r.ok?await r.json():null;}
+    catch(e){_qpcMetaCache[pack.id]=null;}
+  }
+  qpcMeta=_qpcMetaCache[pack.id];
+  if(!qpcMeta&&pack.id!=="qpc1"){ // мета пака не загрузилась — геометрия v1 как фолбэк
+    if(_qpcMetaCache.qpc1===undefined){
+      try{const r=await fetch(resolveUrl("mushaf_glyphs",{path:PACKS.qpc1.meta}));_qpcMetaCache.qpc1=r.ok?await r.json():null;}
+      catch(e){_qpcMetaCache.qpc1=null;}
+    }
+    qpcMeta=_qpcMetaCache.qpc1;
+  }
   return qpcMeta;
 }
-const qpcPageCache={};
-async function loadQpcPage(p){
-  if(qpcPageCache[p]!==undefined)return qpcPageCache[p];
-  try{const r=await fetch(resolveUrl("mushaf_glyphs",{path:`${PACKS.qpc1.pageDir}/${p}.json`}));qpcPageCache[p]=r.ok?await r.json():null;}catch(e){qpcPageCache[p]=null;}
-  return qpcPageCache[p];
+const qpcPageCache={}; // ключ "<packId>|<page>" — контент страницы зависит от пака
+async function loadQpcPage(pack,p){
+  const k=pack.id+"|"+p;
+  if(qpcPageCache[k]!==undefined)return qpcPageCache[k];
+  try{const r=await fetch(resolveUrl("mushaf_glyphs",{path:`${pack.pageDir}/${p}.json`}));qpcPageCache[k]=r.ok?await r.json():null;}catch(e){qpcPageCache[k]=null;}
+  return qpcPageCache[k];
 }
 async function togglePageMode(){
   const meta=await loadQpcMeta();
@@ -5641,11 +5731,11 @@ function fitMushafLines(host){
   }
 }
 async function renderMushafPage(el){
-  const pack=PACKS.qpc1;
+  const pack=pagePack();
   const meta=await loadQpcMeta();const total=meta?.pages||604;
   let pg=Math.max(1,Math.min(total,ST.mushafPage||1));ST.mushafPage=pg;
   el.innerHTML=`<div class="mushaf-shell"><div id="mushafPage" class="mushaf-page"><div style="text-align:center;color:var(--text-muted);padding:40px">Загрузка страницы ${pg}…</div></div></div>`;
-  const data=await loadQpcPage(pg);
+  const data=await loadQpcPage(pack,pg);
   const host=document.getElementById("mushafPage");if(!host)return;
   if(!data){host.innerHTML=`<div style="padding:40px;text-align:center;color:var(--text-muted)">Нет данных для страницы ${pg}</div>`;}
   else{
@@ -5700,8 +5790,8 @@ async function renderWbw(el){
   const ayahIds=getAyahIds(surah);
   el.innerHTML=`<div class="wbw" id="wbwArea"><div style="text-align:center;color:var(--text-muted);padding:30px">Загрузка…</div></div>`;
   loadWbwMorph(surah); // warm this surah's grammar data so the first tap is instant
-  const pack=PACKS.qpc1;
-  const [qpc,words]=await Promise.all([loadPackSurah("qpc1",surah),loadWbwWords(surah)]);
+  const pack=pagePack();
+  const [qpc,words]=await Promise.all([loadPackSurah(pack.id,surah),loadWbwWords(surah)]);
   const area=document.getElementById("wbwArea");
   if(!area)return;
   if(!qpc){area.innerHTML=`<div style="text-align:center;color:var(--text-muted);padding:30px">Нет пословных данных для этой суры</div>`;return;}
