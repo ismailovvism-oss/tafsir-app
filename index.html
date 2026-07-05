@@ -4766,29 +4766,26 @@ function tItem(t,on,reorder){
   </div>`;
 }
 
-// --- Блок «Оригинал» в панели источников: ВСЁ про арабский текст в одном месте
-// (редакции-источники, начертание, цвета таджвида). Принцип: 📚 отвечает «что
-// читать», ⚙ Вид — «как выглядит» (размеры/интервалы/темы). Начертание живёт
-// здесь же, потому что печатный мусхаф и таджвид для пользователя — свойства
-// самого арабского текста, а не оформления.
+// --- Блок «Оригинал» в панели источников: ЧТО читать по-арабски — редакции-
+// источники и цвета таджвида. Галочка таджвида живёт здесь (для пользователя
+// это свойство текста), но технически включает печатное начертание qpc4t:
+// цвета существуют только в печатных глифах. Начертания и размеры — в ⚙ Вид.
 const AR_UI_FONTS=["naskh","hafs","amiri","kufi","qpc1"]; // «Печатный» покрывает qpc1 И qpc4t
 function isPrintedFont(){return ST.arFont==="qpc1"||ST.arFont==="qpc4t";}
 function quranBlockHTML(){
   const variants=[["_arabic","С огласовками"],["_arabic_clean","Без огласовок"],["_arabic_rasm","Без точек (расм)"]];
   const rows=variants.map(([id,name])=>`<label class="vp-check"><input type="checkbox" ${ST.enabled[id]?"checked":""} onchange="toggleEn('${id}')"> ${name}</label>`).join("");
-  const fonts=AR_UI_FONTS.map(f=>{
-    const on=f==="qpc1"?isPrintedFont():ST.arFont===f;
-    return `<button class="vp-font ${on?"on":""}" title="${AR_FONT_TITLES[f]}" onclick="setArFontUI('${f}')">${AR_FONT_NAMES[f]}</button>`;}).join("");
-  const tj=isPrintedFont()?`<label class="vp-check" style="margin-top:4px"><input type="checkbox" ${ST.arFont==="qpc4t"?"checked":""} onchange="toggleTajweed()"> Цвета таджвида</label>`:"";
+  const tj=`<label class="vp-check" style="margin-top:4px"><input type="checkbox" ${ST.arFont==="qpc4t"?"checked":""} onchange="toggleTajweed()"> Цвета таджвида</label>`;
   return `<div class="rp-quran"><div class="rp-sec-head">🕋 Оригинал (арабский текст)</div>
-    <div class="rp-q-body">${rows}
-    <div class="vp-label" style="margin-top:6px">Начертание</div><div class="vp-fonts">${fonts}</div>${tj}
-    <div class="vp-note">Печатные начертания (мусхаф) действуют для редакции «С огласовками»; размеры и интервалы — в ⚙ Вид.</div></div></div>`;
+    <div class="rp-q-body">${rows}${tj}
+    <div class="vp-note">Цвета правил чтения (издание 1441 г.х.) — галочка сама включает печатное начертание; действует для редакции «С огласовками». Начертания и размеры — в ⚙ Вид.</div></div></div>`;
 }
+// Кнопка «Печатный» в ⚙ Вид: не сбрасывать таджвид повторным тапом
 function setArFontUI(f){
-  if(f==="qpc1"&&isPrintedFont())return; // уже печатный (возможно, с таджвидом) — не сбрасывать
+  if(f==="qpc1"&&isPrintedFont())return; // уже печатный (возможно, с таджвидом)
   setArFont(f);renderRP();
 }
+// Галочка в 📚: вкл — печатный с цветами (из любого шрифта); выкл — печатный без цветов
 function toggleTajweed(){setArFont(ST.arFont==="qpc4t"?"qpc1":"qpc4t");renderRP();}
 
 function renderRP(){
@@ -5383,10 +5380,14 @@ function viewPanelHTML(){
       `<div class="vp-group"><div class="vp-label">Боковая панель (суры, теги)</div>${step("Размер","sbScale",pct("sbScale"))}</div>`+
       themeGroup+navGroup+ntGroup+backupGroup+aboutRow+resetBtn;
   }
-  // Редакции арабского, начертание и таджвид переехали в панель источников 📚
-  // (блок «Оригинал», quranBlockHTML): 📚 = что читать, ⚙ Вид = как выглядит.
-  const quranHint=`<div class="vp-group"><div class="vp-note">Арабский текст — редакции (огласовки/расм), начертание и цвета таджвида — в панели источников <a href="#" onclick="toggleViewPanelToRP();return false">📚 Источники</a>.</div></div>`;
-  return quranHint+
+  // Редакции арабского и галочка таджвида — в панели источников 📚 (блок
+  // «Оригинал», quranBlockHTML): 📚 = что читать, ⚙ Вид = как выглядит.
+  const quranHint=`<div class="vp-group"><div class="vp-note">Редакции арабского (огласовки/расм) и цвета таджвида — в панели источников <a href="#" onclick="toggleViewPanelToRP();return false">📚 Источники</a>.</div></div>`;
+  const fontGroup=`<div class="vp-group"><div class="vp-label">Шрифт арабского</div><div class="vp-fonts">`+
+    AR_UI_FONTS.map(f=>{const on=f==="qpc1"?isPrintedFont():ST.arFont===f;
+      return `<button class="vp-font ${on?"on":""}" title="${AR_FONT_TITLES[f]}" onclick="setArFontUI('${f}')">${AR_FONT_NAMES[f]}</button>`;}).join("")+
+    `</div>${ST.arFont==="qpc4t"?`<div class="vp-note">Включены цвета таджвида (галочка — в 📚 Источниках).</div>`:""}</div>`;
+  return quranHint+fontGroup+
     `<div class="vp-group"><div class="vp-label">Размер шрифта</div>${step("Арабский","fsAr",pct("fsAr"))}${step("Русский","fsRu",pct("fsRu"))}</div>`+
     `<div class="vp-group"><div class="vp-label">Межстрочный интервал</div>${step("Арабский","lhAr",pct("lhAr"))}${step("Русский","lhRu",pct("lhRu"))}</div>`+
     `<div class="vp-group"><div class="vp-label">Поля</div>${step("Отступы по краям","mar",ST.mar+"px")}</div>`+
