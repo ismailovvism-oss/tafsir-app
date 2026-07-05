@@ -569,6 +569,20 @@ body.immersive .immersive-exit:hover{opacity:1;background:rgba(0,0,0,.32)}
   [data-theme="dark"][data-arfont="qpc4t"] .wbw-ar{background:#fdfcf5;color:#1a1a1a;border-radius:6px}
   [data-theme="dark"][data-arfont="qpc4t"] .qpc-line{padding:2px 8px}
 }
+/* Таджвид, фаза B: раскраска текстового рендера (data/tajweed, cpfair).
+   Палитра согласована с цветным печатным изданием (KFGQPC 1441 г.х.):
+   оттенки красного — мадды, зелёный — гунна/носовые, синий — калькаля,
+   серый — не читается/слияние. Тёмная тема — приглушённые варианты. */
+:root{--tj-gh:#09b000;--tj-sl:#a0a0a0;--tj-ql:#3f48e6;--tj-m6:#b50000;--tj-mt:#f40000;--tj-mf:#ff7b00;--tj-m2:#ce9e00}
+[data-theme="dark"]{--tj-gh:#26b55d;--tj-sl:#8a8a85;--tj-ql:#6b9fe8;--tj-m6:#e05252;--tj-mt:#ff6b6b;--tj-mf:#ff8e3b;--tj-m2:#d9b13b}
+/* палитра следует за ПОВЕРХНОСТЬЮ чтения, а не темой: скины пергамент/сепия
+   светлые даже в тёмной теме, «тёмный манускрипт» тёмный даже в светлой */
+body[data-skin="parchment"] .reading,body[data-skin="sepia"] .reading{--tj-gh:#0a8c00;--tj-sl:#8d8574;--tj-ql:#3f48e6;--tj-m6:#b50000;--tj-mt:#f40000;--tj-mf:#e06a00;--tj-m2:#b08600}
+body[data-skin="dark"] .reading{--tj-gh:#26b55d;--tj-sl:#8a8a85;--tj-ql:#6b9fe8;--tj-m6:#e05252;--tj-mt:#ff6b6b;--tj-mf:#ff8e3b;--tj-m2:#d9b13b}
+.tj{cursor:pointer}
+.tj-gh{color:var(--tj-gh)}.tj-sl{color:var(--tj-sl)}.tj-ql{color:var(--tj-ql)}.tj-m6{color:var(--tj-m6)}
+.tj-mt{color:var(--tj-mt)}.tj-mf{color:var(--tj-mf)}.tj-m2{color:var(--tj-m2)}
+.tj-legend-link{font-size:11px;color:var(--accent);margin-left:6px;text-decoration:none;border-bottom:1px dotted var(--accent)}
 /* Mushaf page mode */
 .mushaf-shell{height:100%;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:18px 12px;background:var(--bg-alt)}
 .mushaf-page{width:100%;max-width:680px;background:#fdfcf5;color:#1a1a1a;border:1px solid #e6e0c8;border-radius:6px;box-shadow:0 2px 14px rgba(0,0,0,.08);padding:26px calc(30px + var(--mar,0px))}
@@ -1037,6 +1051,9 @@ const SOURCES={
   // — постраничные шрифты цветного таджвид-мусхафа (QPC v4, COLR): тяжёлый бинарь,
   //   как и сканы — на R2 (зеркало r2-data/fonts/, заливка upload_r2.sh) —
   mushaf_fonts_r2: {baseUrl:"https://pub-d99a56b61d914461b5864f421a013097.r2.dev/fonts", pathTemplate:"{baseUrl}/{path}"},
+  // — посимвольная разметка правил таджвида для раскраски ТЕКСТОВОГО рендера
+  //   (build_tajweed.py из данных cpfair/quran-tajweed) —
+  tajweed_spans:   {baseUrl:"data",  pathTemplate:"{baseUrl}/tajweed/{sura}.json"},
   // — тяжёлый бинарь: webp-страницы скан-источника (kind:image) — на объектном
   //   хранилище Cloudflare R2; {dir}=imgdir источника, {file}=pNNN.webp из карты —
   mushaf_scans:    {baseUrl:"https://pub-d99a56b61d914461b5864f421a013097.r2.dev",  pathTemplate:"{baseUrl}/{dir}/{file}"},
@@ -3880,7 +3897,9 @@ function buildAyahBody(aid,enabled,loaded){
     }
     const at=loaded[qt.id]?.[String(aid)];
     if(!at)continue;
-    html+=`<div class="ab-entry">${lbl}<div class="ab-entry-text arabic-main selectable">${at}</div></div>`;
+    // раскраска таджвида (фаза B) — только огласованная редакция, текстовые шрифты
+    const tjs=qt.id==="_arabic"&&loaded.__tj&&loaded.__tj[String(aid)];
+    html+=`<div class="ab-entry">${lbl}<div class="ab-entry-text arabic-main selectable">${tjs?tajweedHTML(at,tjs):at}</div></div>`;
   }
   // Заголовки групп «Переводы»/«Тафсиры» под аятом — только если включены оба вида сразу.
   const realSrc=enabled.filter(t=>t.id!=="_notes");
@@ -4143,6 +4162,7 @@ async function renderSourceMode(el){
   const loaded={};
   await Promise.all([src,...quranTexts].map(async t=>{loaded[t.id]=await loadChunk(t.id,ST.surah);}));
   if(activePack())loaded["__qpc"]=await loadPackSurah(ST.arFont,ST.surah);
+  if(tajweedActive())loaded["__tj"]=await loadTajweed(ST.surah); // спаны раскраски таджвида
 
   // компактная сворачиваемая панель режима источника (по умолчанию — одна строка)
   const su=SURAHS.find(s=>s.id===ST.surah);
@@ -4456,6 +4476,7 @@ async function renderReading(el){
   await Promise.all([...adHocSet].map(async id=>{loaded[id]=await loadChunk(id,ST.surah);}));
   // Mushaf pack glyphs (QPC v1 …) for the main Arabic line, if a pack font is active
   if(activePack())loaded["__qpc"]=await loadPackSurah(ST.arFont,ST.surah);
+  if(tajweedActive())loaded["__tj"]=await loadTajweed(ST.surah); // спаны раскраски таджвида
 
   const area=document.getElementById("readingArea");
   if(!area)return;
@@ -4520,7 +4541,8 @@ async function renderReading(el){
             html+=`<td class="arabic-main">${renderPackAyah(pk,qd[String(aid)])}</td>`;
           }else{
             const arText=col.data?.[String(aid)]||"";
-            html+=`<td class="arabic-main selectable">${arText||'—'}</td>`;
+            const tjs=arText&&col.id==="_arabic"&&loaded.__tj&&loaded.__tj[String(aid)];
+            html+=`<td class="arabic-main selectable">${tjs?tajweedHTML(arText,tjs):(arText||'—')}</td>`;
           }
         } else if(col.isNote){
           const note=getNote(ST.surah,aid);
@@ -4775,18 +4797,28 @@ function isPrintedFont(){return ST.arFont==="qpc1"||ST.arFont==="qpc4t";}
 function quranBlockHTML(){
   const variants=[["_arabic","С огласовками"],["_arabic_clean","Без огласовок"],["_arabic_rasm","Без точек (расм)"]];
   const rows=variants.map(([id,name])=>`<label class="vp-check"><input type="checkbox" ${ST.enabled[id]?"checked":""} onchange="toggleEn('${id}')"> ${name}</label>`).join("");
-  const tj=`<label class="vp-check" style="margin-top:4px"><input type="checkbox" ${ST.arFont==="qpc4t"?"checked":""} onchange="toggleTajweed()"> Цвета таджвида</label>`;
+  const tj=`<label class="vp-check" style="margin-top:4px"><input type="checkbox" ${ST.tajweed?"checked":""} onchange="toggleTajweed()"> Цвета таджвида <a href="#" class="tj-legend-link" onclick="showTjLegend(this);return false">легенда</a></label>`;
   return `<div class="rp-quran"><div class="rp-sec-head">🕋 Оригинал (арабский текст)</div>
     <div class="rp-q-body">${rows}${tj}
-    <div class="vp-note">Цвета правил чтения (издание 1441 г.х.) — галочка сама включает печатное начертание; действует для редакции «С огласовками». Начертания и размеры — в ⚙ Вид.</div></div></div>`;
+    <div class="vp-note">Правила чтения цветом — в любом начертании: в печатном это цветное издание 1441 г.х., в остальных — раскраска текста. Действует для редакции «С огласовками»; касание окрашенной буквы — название правила.</div></div></div>`;
 }
-// Кнопка «Печатный» в ⚙ Вид: не сбрасывать таджвид повторным тапом
+// Кнопка «Печатный» в ⚙ Вид: не сбрасывать таджвид повторным тапом; при
+// включённой галочке печатный = цветной пак qpc4t
 function setArFontUI(f){
-  if(f==="qpc1"&&isPrintedFont())return; // уже печатный (возможно, с таджвидом)
+  if(f==="qpc1"){
+    if(isPrintedFont())return; // уже печатный (возможно, с таджвидом)
+    if(ST.tajweed)f="qpc4t";
+  }
   setArFont(f);renderRP();
 }
-// Галочка в 📚: вкл — печатный с цветами (из любого шрифта); выкл — печатный без цветов
-function toggleTajweed(){setArFont(ST.arFont==="qpc4t"?"qpc1":"qpc4t");renderRP();}
+// Галочка «Цвета таджвида» в 📚: работает в ЛЮБОМ начертании — в печатном
+// переключает пак qpc1↔qpc4t, в текстовых включает раскраску по разметке
+function toggleTajweed(){
+  ST.tajweed=!ST.tajweed;ss("tajweed",ST.tajweed);
+  if(isPrintedFont())setArFont(ST.tajweed?"qpc4t":"qpc1"); // сам перерисует
+  else renderCenter();
+  renderRP();renderViewPanel();
+}
 
 function renderRP(){
   const el=document.getElementById("rpList");
@@ -5317,7 +5349,8 @@ function bumpView(key,dir){
 function resetView(){
   for(const k in VIEW_DEFAULTS){ST[k]=VIEW_DEFAULTS[k];ss(k,ST[k]);}
   applyView();
-  // "исходные = печатный": also reset the typeface to the printed mushaf
+  // "исходные = печатный без цветов": also reset typeface + tajweed flag
+  if(ST.tajweed){ST.tajweed=false;ss("tajweed",false);}
   if(ST.arFont!=="qpc1"){ST.arFont="qpc1";ss("arFont","qpc1");applyArFont();loadQpcMeta().then(()=>renderCenter());}
   refitIfPage();renderViewPanel();renderRP();
 }
@@ -5386,7 +5419,7 @@ function viewPanelHTML(){
   const fontGroup=`<div class="vp-group"><div class="vp-label">Шрифт арабского</div><div class="vp-fonts">`+
     AR_UI_FONTS.map(f=>{const on=f==="qpc1"?isPrintedFont():ST.arFont===f;
       return `<button class="vp-font ${on?"on":""}" title="${AR_FONT_TITLES[f]}" onclick="setArFontUI('${f}')">${AR_FONT_NAMES[f]}</button>`;}).join("")+
-    `</div>${ST.arFont==="qpc4t"?`<div class="vp-note">Включены цвета таджвида (галочка — в 📚 Источниках).</div>`:""}</div>`;
+    `</div>${ST.tajweed?`<div class="vp-note">Включены цвета таджвида (галочка — в 📚 Источниках).</div>`:""}</div>`;
   return quranHint+fontGroup+
     `<div class="vp-group"><div class="vp-label">Размер шрифта</div>${step("Арабский","fsAr",pct("fsAr"))}${step("Русский","fsRu",pct("fsRu"))}</div>`+
     `<div class="vp-group"><div class="vp-label">Межстрочный интервал</div>${step("Арабский","lhAr",pct("lhAr"))}${step("Русский","lhRu",pct("lhRu"))}</div>`+
@@ -5608,8 +5641,72 @@ const PACKS={
 };
 function activePack(){return PACKS[ST.arFont]||null;}
 // Пак, которым рисуется ПОСТРАНИЧНЫЙ мусхаф и пословный режим: выбранный в ⚙ Вид,
-// а если выбран обычный CSS-шрифт (насх/амири/…) — печатный qpc1 по умолчанию.
-function pagePack(){const p=activePack();return p&&p.type==="page-font"?p:PACKS.qpc1;}
+// а если выбран обычный CSS-шрифт (насх/амири/…) — печатный; галочка «Цвета
+// таджвида» действует и здесь (qpc4t вместо qpc1).
+function pagePack(){const p=activePack();return p&&p.type==="page-font"?p:(ST.tajweed?PACKS.qpc4t:PACKS.qpc1);}
+
+// --- Таджвид, фаза B: раскраска ТЕКСТОВОГО рендера ---------------------------
+// Разметка — data/tajweed/<sura>.json (build_tajweed.py из cpfair/quran-tajweed):
+// {аят:[[start,end,ruleIdx],…]}, индексы — кодпоинты текста _arabic (только
+// редакция «С огласовками»). Печатные начертания красит сам шрифт (пак qpc4t),
+// текстовые — эти спаны. Порядок правил = data/tajweed/meta.json.
+const TJ_RULES=[ // [css-класс, название, короткое пояснение для карточки]
+  ["gh","Гунна","Носовое звучание удвоенных ن/م — 2 хараката."],
+  ["sl","Хамзат аль-васль","Читается только в начале речи, внутри — опускается."],
+  ["gh","Идгам с гунной","Нун сакина/танвин сливается со следующей буквой (ي ن م و) с гунной."],
+  ["sl","Идгам мутаджанисайн","Слияние однородных букв (одно место артикуляции)."],
+  ["sl","Идгам мутакарибайн","Слияние близких по артикуляции букв."],
+  ["sl","Идгам без гунны","Нун сакина/танвин сливается с ل или ر без гунны."],
+  ["gh","Идгам шафави","Мим сакина сливается со следующей م, с гунной."],
+  ["gh","Ихфа","Сокрытие нун сакина/танвина перед 15 буквами, с гунной."],
+  ["gh","Ихфа шафави","Сокрытие мим сакина перед ب, с гунной."],
+  ["gh","Иклаб","Нун сакина/танвин произносится как م перед ب."],
+  ["sl","Лям шамсийя","Лям артикля не читается — следующая буква удваивается."],
+  ["m2","Мадд табиги","Естественное удлинение — 2 хараката."],
+  ["m2","Мадд аль-‘арид / аль-лин","Удлинение перед паузой — 2, 4 или 6 харакатов."],
+  ["m6","Мадд лязим","Обязательное удлинение — 6 харакатов."],
+  ["mf","Мадд мунфасыль","Хамза в начале следующего слова — 4–5 харакатов."],
+  ["mt","Мадд муттасыль","Хамза в том же слове — 4–5 харакатов."],
+  ["ql","Калькаля","«Отскок» на ق ط ب ج د с сукуном."],
+  ["sl","Не читается","Буква пишется, но не произносится."]];
+const tjCache={};
+async function loadTajweed(surah){
+  if(tjCache[surah]!==undefined)return tjCache[surah];
+  try{const r=await fetch(resolveUrl("tajweed_spans",{sura:surah}));tjCache[surah]=r.ok?await r.json():null;}
+  catch(e){tjCache[surah]=null;}
+  return tjCache[surah];
+}
+// Красить ли текстовый рендер: галочка включена и активен НЕ печатный пак
+function tajweedActive(){return ST.tajweed&&!activePack();}
+// Обернуть диапазоны правил в цветные спаны (текст — доверенные локальные данные,
+// вставляется без экранирования, как и обычный рендер арабского)
+function tajweedHTML(text,spans){
+  let h="",pos=0;
+  for(const [s,e,ri] of spans){
+    if(s>pos)h+=text.slice(pos,s);
+    h+=`<span class="tj tj-${TJ_RULES[ri][0]}" data-tj="${ri}">${text.slice(s,e)}</span>`;
+    pos=e;
+  }
+  return h+text.slice(pos);
+}
+// Карточка правила (тап по окрашенной букве) — общий попап word-card
+function showTjCard(el){
+  const ri=+el.dataset.tj,[cls,name,desc]=TJ_RULES[ri];
+  showWordCardEl(el,`<b style="color:var(--tj-${cls})">${name}</b><br>${desc}`);
+}
+// Легенда цветов — из блока «Оригинал» панели источников
+function showTjLegend(el){
+  const row=(cls,txt)=>`<div style="margin:2px 0"><b style="color:var(--tj-${cls})">●</b> ${txt}</div>`;
+  showWordCardEl(el,`<b>Цвета таджвида</b>`+
+    row("m6","Мадд лязим — 6 харакатов")+
+    row("mt","Мадд муттасыль — 4–5")+
+    row("mf","Мадд мунфасыль — 4–5")+
+    row("m2","Мадд табиги / аль-‘арид — 2 (2–6)")+
+    row("gh","Гунна: идгам, ихфа, иклаб (носовое)")+
+    row("ql","Калькаля («отскок»)")+
+    row("sl","Не читается / слияние")+
+    `<div style="margin-top:4px;color:var(--text-muted)">Касание окрашенной буквы — название правила.</div>`);
+}
 // Lazily inject one @font-face per page the first time that page is shown.
 const _packFontsLoaded=new Set();
 function ensurePageFont(pack,page){
@@ -5977,6 +6074,10 @@ ST.mushafFull=gs("mushafFull",false); // «Мусхаф на всю ширину
 applyView();
 applyMushafFull();
 ST.arFont=gs("arFont","qpc1"); // default: печатный мусхаф
+// «Цвета таджвида» — отдельный флаг (фаза B): в печатном начертании — пак qpc4t,
+// в текстовых — раскраска по data/tajweed. Миграция: раньше таджвид жил в arFont.
+ST.tajweed=gs("tajweed",ST.arFont==="qpc4t");
+if(ST.arFont==="qpc1"||ST.arFont==="qpc4t")ST.arFont=ST.tajweed?"qpc4t":"qpc1"; // нормализовать связку
 applyArFont();
 // Оформление чтения: у НОВЫХ пользователей (нет сохранённого выбора) скин по
 // умолчанию — пергамент, а при тёмной теме — тёмный манускрипт. Явный выбор
@@ -6008,6 +6109,9 @@ document.addEventListener("click",e=>{
   // skip when the user is selecting text so copying isn't interrupted.
   const loc=e.target.closest("[data-loc]");
   if(loc&&(window.getSelection?window.getSelection().isCollapsed:true)){openMorphCard(loc);return;}
+  // окрашенная буква таджвида → карточка с названием правила
+  const tj=e.target.closest(".tj");
+  if(tj&&(window.getSelection?window.getSelection().isCollapsed:true)){showTjCard(tj);return;}
   const w=e.target.closest(".wcard");
   if(w){showWordCard(w);return;}
   if(!e.target.closest("#wordCard"))hideWordCard();
