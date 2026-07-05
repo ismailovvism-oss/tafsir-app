@@ -96,6 +96,24 @@ data/index/ibn_masud.json
 data/tafsirs/ata.json
 data/tafsirs/ata/
 data/index/ata.json
+# Тяжёлые русские переводы/тафсиры и Ибн Аби Хатим → на R2 (dataBase),
+# в репо НЕ коммитим (локальные копии остаются для пересборки/валидации).
+data/tafsirs/saadi_ru.json
+data/tafsirs/saadi_ru.js
+data/tafsirs/saadi_ru/
+data/index/saadi_ru.json
+data/tafsirs/muntahab.json
+data/tafsirs/muntahab.js
+data/tafsirs/muntahab/
+data/index/muntahab.json
+data/tafsirs/abuadel.json
+data/tafsirs/abuadel.js
+data/tafsirs/abuadel/
+data/index/abuadel.json
+data/tafsirs/ibn_abi_hatim.json
+data/tafsirs/ibn_abi_hatim.js
+data/tafsirs/ibn_abi_hatim/
+data/index/ibn_abi_hatim.json
 
 # Локальное зеркало Cloudflare R2 (бакет tafsir-data): сканы и пр. бинарь.
 # Полная копия того, что лежит на R2; в репозиторий НЕ коммитим.

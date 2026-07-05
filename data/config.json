@@ -129,7 +129,7 @@
       "year": "1963",
       "fill": 1.0,
       "translator": "Игнатий Крачковский",
-      "caution": true
+      "reviewLevel": "caution"
     },
     {
       "id": "kuliev",
@@ -147,7 +147,7 @@
       "about": true,
       "fill": 1.0,
       "translator": "Эльмир Кулиев",
-      "caution": true
+      "reviewLevel": "unverified"
     },
     {
       "id": "osmanov",
@@ -164,11 +164,12 @@
       "year": "1995",
       "fill": 1.0,
       "translator": "Магомед-Нури Османов",
-      "caution": true
+      "reviewLevel": "unverified"
     },
     {
       "id": "abuadel",
       "file": "tafsirs/abuadel.json",
+      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
       "name": "Перевод Абу Аделя",
       "nameAr": "ترجمة أبو عادل",
       "author": "",
@@ -181,7 +182,7 @@
       "year": "",
       "fill": 1.0,
       "translator": "Абу Адель",
-      "caution": true
+      "reviewLevel": "unverified"
     },
     {
       "id": "kalam",
@@ -198,7 +199,7 @@
       "year": "",
       "fill": 1.0,
       "translator": "ДУМ Республики Татарстан",
-      "caution": true
+      "reviewLevel": "unverified"
     },
     {
       "id": "porokhova",
@@ -215,7 +216,7 @@
       "year": "1997",
       "fill": 1.0,
       "translator": "Валерия (Иман) Порохова",
-      "caution": true
+      "reviewLevel": "caution"
     },
     {
       "id": "sablukov",
@@ -232,7 +233,7 @@
       "year": "1878",
       "fill": 1.0,
       "translator": "Гордий Саблуков",
-      "caution": true
+      "reviewLevel": "caution"
     },
     {
       "id": "rysjanov",
@@ -251,7 +252,7 @@
       "year": "",
       "fill": 0.1464,
       "translator": "Серик Рысжанов",
-      "caution": true
+      "reviewLevel": "caution"
     },
     {
       "id": "isaeva",
@@ -267,7 +268,7 @@
       "tags": [],
       "year": "2026",
       "about": true,
-      "caution": true,
+      "reviewLevel": "caution",
       "fill": 1.0,
       "translator": "Маиса Исаева"
     },
@@ -289,7 +290,7 @@
       "about": true,
       "fill": 0.0993,
       "translator": "Тимур Джумагалиев",
-      "caution": true
+      "reviewLevel": "caution"
     },
     {
       "id": "boguslawski",
@@ -307,7 +308,7 @@
       "fill": 1.0,
       "imgdir": "img/boguslawski",
       "translator": "Д. Н. Богуславский",
-      "caution": true
+      "reviewLevel": "caution"
     },
     {
       "id": "baghawi",
@@ -363,7 +364,7 @@
       ],
       "year": "774 х.",
       "translator": "Айрат Вахитов",
-      "caution": true,
+      "reviewLevel": "unverified",
       "fill": 1.0
     },
     {
@@ -387,7 +388,7 @@
       "year": "671 х.",
       "translator": "Исмаил (Валиуллах) Хаертдинов",
       "about": true,
-      "caution": true,
+      "reviewLevel": "unverified",
       "fill": 0.0832,
       "counterpart": "qurtubi_ar"
     },
@@ -410,7 +411,7 @@
         "draft"
       ],
       "about": true,
-      "caution": true,
+      "reviewLevel": "unverified",
       "fill": 0.1145,
       "counterpart": "ibn_abbas_ar"
     },
@@ -454,12 +455,13 @@
       "year": "68 х.",
       "translator": "сост. Кенан Абу Абдуррахман",
       "about": true,
-      "caution": true,
+      "reviewLevel": "unverified",
       "fill": 0.0165
     },
     {
       "id": "saadi_ru",
       "file": "tafsirs/saadi_ru.json",
+      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
       "name": "Тафсир ас-Саади (рус.)",
       "nameAr": "تفسير السعدي بالروسية",
       "author": "Абдуррахман ас-Саади",
@@ -475,7 +477,7 @@
       "year": "",
       "fill": 1.0,
       "translator": "Эльмир Кулиев",
-      "caution": true
+      "reviewLevel": "unverified"
     },
     {
       "id": "ibn_abbas_ar",
@@ -723,6 +725,7 @@
     {
       "id": "muntahab",
       "file": "tafsirs/muntahab.json",
+      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
       "name": "Тафсир аль-Мунтахаб",
       "nameAr": "المنتخب في تفسير القرآن",
       "author": "Мин. вакфов Египта",
@@ -734,11 +737,12 @@
       "tags": [],
       "year": "",
       "fill": 1.0,
-      "caution": true
+      "reviewLevel": "unverified"
     },
     {
       "id": "ibn_abi_hatim",
       "file": "tafsirs/ibn_abi_hatim.json",
+      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
       "name": "تفسير ابن أبي حاتم",
       "nameAr": "",
       "author": "Ибн Аби Хатим ар-Рази",

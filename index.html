@@ -372,6 +372,7 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .about-body{font-size:14px;line-height:1.7;color:var(--text-sec)}
 .about-empty{color:var(--text-muted)}
 .about-warn{background:var(--note-bg);border:1px solid var(--note-border);color:var(--note-color);border-radius:8px;padding:9px 12px;font-size:12.5px;line-height:1.55;margin:0 0 12px}
+.about-warn.soft{background:var(--bg-alt);border-color:var(--border);color:var(--text-sec)}
 /* кнопка контакта на экране «О программе» (ссылка на канал) */
 .about-contact{display:block;margin-top:16px;padding:11px 14px;background:var(--accent);color:#fff;border-radius:9px;text-align:center;font-size:14px;font-weight:600;text-decoration:none;cursor:pointer}
 .about-contact:hover{filter:brightness(1.08)}
@@ -999,16 +1000,15 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
 <script src="data/tafsirs/kuliev.js"></script>
 <script src="data/tafsirs/krachkovsky.js"></script>
 <script src="data/tafsirs/osmanov.js"></script>
-<script src="data/tafsirs/abuadel.js"></script>
 <script src="data/tafsirs/kalam.js"></script>
 <script src="data/tafsirs/porokhova.js"></script>
 <script src="data/tafsirs/sablukov.js"></script>
-<script src="data/tafsirs/muntahab.js"></script>
 <script src="data/tafsirs/rysjanov.js"></script>
 <script src="data/tafsirs/isaeva.js"></script>
 <script src="data/tafsirs/djumagaliev.js"></script>
-<script src="data/tafsirs/saadi_ru.js"></script>
 -->
+<!-- abuadel/muntahab/saadi_ru вынесены на R2 (dataBase) — их .js-зеркал в репо нет -->
+
 
 <script>
 // ============================================================
@@ -3351,12 +3351,18 @@ function aboutRow(label,value){
   if(value==null||value===""||(Array.isArray(value)&&!value.length))return "";
   return `<div class="about-row"><span class="about-k">${esc(label)}</span><span class="about-v">${Array.isArray(value)?value.map(esc).join(", "):value}</span></div>`;
 }
+// Уровень проверки: "caution" (жёсткий — маргинальные/любительские тексты) |
+// "unverified" (мягкий — признанные, но не выверенные лично) | null.
+// Legacy-поле caution:true приравнивается к жёсткому уровню.
+function reviewLevel(t){return t.reviewLevel||(t.caution?"caution":null);}
 function aboutStatus(t){
   const tags=t.tags||[],items=[];
   const composite=Array.isArray(t.segments)&&t.segments.length>=2;
+  const lvl=reviewLevel(t);
   if(composite)items.push(["","составной перевод — статус по сурам ниже"]);
   if(t.approved&&!composite)items.push(["ok","одобрено"]);
-  if(t.caution)items.push(["warn","не проверено"]);
+  if(lvl==="caution")items.push(["warn","не проверено"]);
+  else if(lvl==="unverified")items.push(["","не выверено"]);
   if(tags.includes("draft")&&!composite)items.push(["warn","черновик"]);
   if(t.fill!=null&&t.fill<0.999)items.push(["","заполнено "+aboutFillText(t)]);
   if(!items.length)items.push(["","статус проверки не указан"]);
@@ -3366,7 +3372,8 @@ function aboutStatus(t){
 function aboutSegments(t){
   if(!Array.isArray(t.segments)||t.segments.length<2)return "";
   return t.segments.map(s=>{
-    const pill=s.approved?'<span class="about-pill ok">одобрено</span>':s.draft?'<span class="about-pill warn">черновик</span>':s.caution?'<span class="about-pill warn">не проверено</span>':'';
+    const lvl=reviewLevel(s);
+    const pill=s.approved?'<span class="about-pill ok">одобрено</span>':s.draft?'<span class="about-pill warn">черновик</span>':lvl==="caution"?'<span class="about-pill warn">не проверено</span>':lvl==="unverified"?'<span class="about-pill">не выверено</span>':'';
     return `<div class="about-row"><span class="about-k">Суры ${esc(String(s.suras))}</span><span class="about-v">${esc(s.translator||'')} ${pill}</span></div>`;
   }).join("");
 }
@@ -3456,7 +3463,9 @@ async function openAbout(id){
   const ov=ensureAboutOvl();
   ov.dataset.app="";                                 // это паспорт источника, не экран «О программе»
   const meta=[t.author&&"Автор: "+esc(t.author),t.translator&&"Переводчик: "+esc(t.translator),t.year&&"Год: "+esc(t.year)].filter(Boolean).join(" · ");
-  const warn=t.caution?`<div class="about-warn">⚠️ Приводится <b>только в ознакомительных целях</b>, «как есть». Точность не гарантируется — в тексте возможны ошибки и вероучительные отклонения. Относитесь с осторожностью и сверяйтесь с авторитетными переводами.</div>`:'';
+  const lvl=reviewLevel(t);
+  const warn=lvl==="caution"?`<div class="about-warn">⚠️ Приводится <b>только в ознакомительных целях</b>, «как есть». Точность не гарантируется — в тексте возможны ошибки и вероучительные отклонения. Относитесь с осторожностью и сверяйтесь с авторитетными переводами.</div>`
+    :lvl==="unverified"?`<div class="about-warn soft">⚠️ Текст <b>не выверялся лично составителем</b> библиотеки — возможны опечатки и мелкие неточности. При сомнениях сверяйтесь с официальными печатными изданиями.</div>`:'';
   ov.innerHTML=`<div class="about-box" role="dialog" aria-modal="true">
     <button class="about-close" onclick="closeAbout()" aria-label="Закрыть">×</button>
     <div class="about-title">${esc(t.name)}${t.nameAr?` <span class="about-ar">${esc(t.nameAr)}</span>`:''}</div>
@@ -4672,7 +4681,9 @@ function tafsirMeta(t){
     pills=`<span class="t-pill" title="Разные переводчики по сурам — статус по каждой части">составной</span>`
       +(anyAppr?`<span class="t-pill appr" title="Часть сур выверена и одобрена">✓✓ частично</span>`:'')+pills;
   }else{
-    if(t.caution)pills=`<span class="t-pill warn" title="Не проверено — даётся только для ознакомления">⚠ не проверено</span>`+pills;
+    const lvl=reviewLevel(t);
+    if(lvl==="caution")pills=`<span class="t-pill warn" title="Относитесь с осторожностью — возможны ошибки и вероучительные отклонения">⚠ осторожно</span>`+pills;
+    else if(lvl==="unverified")pills=`<span class="t-pill" title="Не выверено лично составителем библиотеки">не выверено</span>`+pills;
     if(t.approved)pills=`<span class="t-pill appr" title="Полностью выверено и одобрено">✓✓ одобрено</span>`+pills;
   }
   return pills?`<div class="t-meta">${pills}</div>`:"";

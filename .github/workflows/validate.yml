@@ -1,0 +1,21 @@
+# CI: проверка целостности данных перед публикацией.
+# Запускает validate_data.py (stdlib-only) на каждый пуш в main и PR.
+# Источники с dataBase (R2) валидатор пропускает с предупреждением —
+# их данных в репозитории нет, это ожидаемо.
+name: validate-data
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: validate_data.py
+        run: python3 validate_data.py
