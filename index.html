@@ -5343,7 +5343,12 @@ function bindNoTouchScroll(panel){
 }
 function bumpView(key,dir){
   const[lo,hi,step]=VIEW_LIMITS[key];
-  ST[key]=Math.min(hi,Math.max(lo,Math.round((ST[key]+dir*step)*100)/100));
+  // защита от битого состояния (строка/NaN из старого стораджа или импорта
+  // резервной копии): строка "1.2"+0.1 даёт NaN, кнопка «мертвеет» навсегда,
+  // а calc(...*NaN) схлопывает текст — приводим к числу, иначе к дефолту
+  const cur=parseFloat(ST[key]);
+  const base=isFinite(cur)?cur:VIEW_DEFAULTS[key];
+  ST[key]=Math.min(hi,Math.max(lo,Math.round((base+dir*step)*100)/100));
   ss(key,ST[key]);applyView();refitIfPage();renderViewPanel();
 }
 function resetView(){
@@ -6061,15 +6066,18 @@ function deleteTag(path){
 // Init theme + reading font scale
 const savedTheme=gs("theme","green");
 setTheme(savedTheme);
-// migrate the old single font scale → separate AR/RU sizes
+// migrate the old single font scale → separate AR/RU sizes.
+// _vnum: настройки вида ОБЯЗАНЫ быть конечными числами — старый формат стораджа
+// или импорт резервной копии мог оставить строки/мусор (см. bumpView)
+const _vnum=(v,d)=>{v=parseFloat(v);return isFinite(v)?v:d;};
 const _oldScale=gs("fontScale",null);
-ST.fsAr=gs("fsAr",_oldScale!=null?_oldScale:1);
-ST.fsRu=gs("fsRu",_oldScale!=null?_oldScale:1);
+ST.fsAr=_vnum(gs("fsAr",_oldScale!=null?_oldScale:1),1);
+ST.fsRu=_vnum(gs("fsRu",_oldScale!=null?_oldScale:1),1);
 const _oldLh=gs("lh",1);
-ST.lhAr=gs("lhAr",_oldLh);
-ST.lhRu=gs("lhRu",_oldLh);
-ST.mar=gs("mar",0);
-ST.sbScale=gs("sbScale",1);
+ST.lhAr=_vnum(gs("lhAr",_oldLh),1);
+ST.lhRu=_vnum(gs("lhRu",_oldLh),1);
+ST.mar=_vnum(gs("mar",0),0);
+ST.sbScale=_vnum(gs("sbScale",1),1);
 ST.mushafFull=gs("mushafFull",false); // «Мусхаф на всю ширину» (off by default)
 applyView();
 applyMushafFull();
