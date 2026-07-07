@@ -1215,8 +1215,17 @@ function setUserOrder(o){ss("userOrder",o);}
 // ============================================================
 // STORAGE
 // ============================================================
+// Адрес воркера облачной синхронизации (Cloudflare Worker, см. sync-worker/).
+// Пусто → синк выключен (UI покажет «не настроена»). После деплоя воркера
+// вписать сюда его URL, напр. "https://tafsir-sync.<аккаунт>.workers.dev".
+const SYNC_ENDPOINT="";
+// Ключи ЛИЧНЫХ данных, участвующих в облачной синхронизации (совпадают с
+// personalDataObj); настройки вида (шрифты/тема/раскладка) НЕ синхронизируются.
+const SYNCED_KEYS=new Set(["notes","bookmarks","ayahTags","tagTree","progress"]);
+let _syncDirty=false;      // менялись ли синк-ключи с последней отправки
+let _syncStatusMsg="";     // последнее сообщение статуса для строки в ⚙ Вид
 function gs(k,d){try{const v=localStorage.getItem("tl_"+k);return v?JSON.parse(v):d;}catch(e){return d;}}
-function ss(k,v){try{localStorage.setItem("tl_"+k,JSON.stringify(v));}catch(e){}}
+function ss(k,v){try{localStorage.setItem("tl_"+k,JSON.stringify(v));if(SYNCED_KEYS.has(k))_syncDirty=true;}catch(e){}}
 // --- Последняя позиция чтения (одна автоточка возврата; НЕ закладки) ---
 // Тем же механизмом (ss/gs). Запоминает суру, аят, страницу мусхафа и активный режим.
 function curTopAyah(){
@@ -2859,12 +2868,15 @@ function downloadJSON(obj,fname){
   document.body.appendChild(a);a.click();
   setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},150);
 }
-function exportPersonalData(){
-  const data={app:"tafsir-library",kind:"personal-data",version:1,
+// Единый объект личных данных — общий для файлового экспорта и облачного синка.
+function personalDataObj(){
+  return {app:"tafsir-library",kind:"personal-data",version:1,
     exportedAt:new Date().toISOString(),
     notes:getNotes(),bookmarks:getBookmarks(),ayahTags:getAyahTags(),tagTree:getTagTree(),
     progress:Progress.exportState()};   // ХУК #4: прогресс в тот же единый бэкап, не параллельный файл
-  downloadJSON(data,`тафсир-данные-${new Date().toISOString().slice(0,10)}.json`);
+}
+function exportPersonalData(){
+  downloadJSON(personalDataObj(),`тафсир-данные-${new Date().toISOString().slice(0,10)}.json`);
 }
 function importPersonalDataFile(input){
   const f=input.files&&input.files[0];if(!f)return;
@@ -2959,6 +2971,87 @@ function openIOModal(html){
   document.body.appendChild(ov);
 }
 function closeIOModal(){const o=document.getElementById("ioOvl");if(o)o.remove();}
+
+// ============================================================
+// ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ (полуавто, доступ по коду) — Cloudflare Worker + KV.
+// Пул при открытии + кнопка «Синхронизировать» + пуш при уходе со страницы.
+// Слияние — через applyImport('skip'): НЕразрушающее (локальное не затирается);
+// удаления не распространяются (компромисс v1). Код синка — секрет и ключ,
+// хранится локально (tl_syncCode) и в синк-блоб НЕ входит.
+// ============================================================
+function syncGetCode(){return gs("syncCode","");}
+function syncSetCode(c){ss("syncCode",(c||"").trim());}
+function syncGenCode(){
+  const b=new Uint8Array(16);crypto.getRandomValues(b);
+  return [...b].map(x=>x.toString(16).padStart(2,"0")).join("").replace(/(.{8})(?=.)/g,"$1-");
+}
+function syncConfigured(){return !!SYNC_ENDPOINT;}
+function syncEnabled(){return syncConfigured()&&!!syncGetCode();}
+function syncUrl(){return SYNC_ENDPOINT.replace(/\/+$/,"")+"/v1/"+encodeURIComponent(syncGetCode());}
+function fmtSyncTime(iso){try{return new Date(iso).toLocaleString("ru",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});}catch(e){return "";}}
+function syncStatusText(){
+  const code=syncGetCode();
+  if(!syncConfigured())return "Не настроена (нет адреса сервера)";
+  if(!code)return "Код не задан";
+  const short=code.slice(0,4)+"…"+code.slice(-4);
+  return (_syncStatusMsg?_syncStatusMsg+" · ":"")+"код "+short;
+}
+function _syncMsg(m){_syncStatusMsg=m;const el=document.getElementById("syncStatusLine");if(el)el.textContent=syncStatusText();}
+async function syncPull(silent){
+  if(!syncEnabled())return null;
+  try{
+    const r=await fetch(syncUrl(),{cache:"no-store"});
+    if(!r.ok)throw new Error("HTTP "+r.status);
+    const data=await r.json();
+    if(data&&data.empty){_syncMsg("облако пусто");return {empty:true};}
+    applyImport(data,"skip");            // НЕразрушающее слияние в локальное
+    _syncMsg("загружено"+(data._updatedAt?" ("+fmtSyncTime(data._updatedAt)+")":""));
+    if(!silent)render();
+    return data;
+  }catch(e){_syncMsg("ошибка загрузки");return null;}
+}
+async function syncPush(){
+  if(!syncEnabled())return false;
+  try{
+    const r=await fetch(syncUrl(),{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(personalDataObj())});
+    if(!r.ok)throw new Error("HTTP "+r.status);
+    _syncDirty=false;_syncMsg("отправлено "+fmtSyncTime(new Date().toISOString()));
+    return true;
+  }catch(e){_syncMsg("ошибка отправки");return false;}
+}
+let _syncBusy=false;
+async function syncNow(){            // ручная кнопка: забрать → слить → отправить (устройства сходятся)
+  if(_syncBusy)return;
+  if(!syncConfigured()){_syncMsg("нет адреса сервера");return;}
+  if(!syncGetCode()){syncSetup();return;}
+  _syncBusy=true;_syncMsg("синхронизация…");
+  try{await syncPull(true);await syncPush();render();}
+  finally{_syncBusy=false;}
+}
+function syncSetup(){                // модалка: создать/ввести код
+  const cur=syncGetCode();
+  openIOModal(`<div class="io-h">Код синхронизации</div>
+    <div class="io-p">Один код связывает ваши устройства: создайте его на первом, введите на остальных. Кто знает код — видит ваши данные, храните его в тайне.</div>
+    <input id="syncCodeInp" placeholder="код синхронизации" value="${escAttr(cur)}" autocomplete="off" spellcheck="false" style="width:100%;box-sizing:border-box;margin:8px 0;padding:9px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text);font-family:monospace">
+    <div class="io-acts io-wrap">
+      <button class="home-btn" onclick="syncGenInto()">🎲 Создать новый</button>
+      <button class="home-btn prim" onclick="syncSaveCode()">Сохранить</button>
+    </div>
+    <div class="io-acts"><button class="home-btn ghost" onclick="closeIOModal()">Отмена</button></div>`);
+}
+function syncGenInto(){const i=document.getElementById("syncCodeInp");if(i)i.value=syncGenCode();}
+function syncSaveCode(){
+  const i=document.getElementById("syncCodeInp");if(i)syncSetCode(i.value);
+  closeIOModal();
+  if(syncEnabled())syncNow();else render();
+}
+// Пуш при уходе со страницы/сворачивании — только если было что менять.
+window.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden"&&syncEnabled()&&_syncDirty)syncPush();});
+window.addEventListener("pagehide",()=>{
+  if(syncEnabled()&&_syncDirty&&navigator.sendBeacon){
+    try{navigator.sendBeacon(syncUrl(),JSON.stringify(personalDataObj()));_syncDirty=false;}catch(e){}
+  }
+});
 // Аяты, у которых выбранный тег есть в цепочке: точное совпадение ИЛИ предок (префикс пути).
 // Цепочка уже хранится в самом пути ("Акыда/Таухид" содержит "Акыда"), ничего не достраиваем.
 // Возвращает [{key,origins}] где origins — листовые имена фактических тегов аята, по которым он
@@ -3074,6 +3167,7 @@ async function loadConfig(){
   await loadQpcMeta();                               // для группировки списка сур по джузам (и мусхафа)
   Progress.ensureInit();                             // запустить таймер активного времени (слой CREDITED)
   render();
+  if(syncEnabled())syncPull();                        // тихий пул при открытии (полуавто), ре-рендер при слиянии
 }
 function useFB(){
   CONFIG={groups:[
@@ -5407,11 +5501,19 @@ function viewPanelHTML(){
     `<div class="vp-label" style="margin-top:8px">Русский шрифт текста</div><div class="vp-fonts">`+
     RUFONTS.map(([id,name])=>`<button class="vp-font ${ST.ruFont===id?"on":""}" onclick="setRuFont('${id}')">${name}</button>`).join("")+`</div>`+
     `<div class="vp-note">Скин красит ленту чтения под пергамент/манускрипт, заголовки — старорусской вязью; печать ✓✓ у одобренных переводов. Цветовая тема интерфейса — отдельно, выше.</div></div>`;
+  const syncRow=syncConfigured()
+    ?`<div class="vp-note" style="margin-top:8px">Синхронизация между устройствами</div>`+
+     `<div class="data-io-btns" style="margin-top:4px">`+
+       `<button class="data-io-btn" onclick="syncNow()" title="Забрать из облака, слить и отправить">⟲ Синхронизировать</button>`+
+       `<button class="data-io-btn" onclick="syncSetup()" title="${syncGetCode()?"Показать/сменить код":"Создать или ввести код"}">🔑 ${syncGetCode()?"Код":"Подключить"}</button>`+
+     `</div><div class="vp-note" id="syncStatusLine">${esc(syncStatusText())}</div>`
+    :"";
   const backupGroup=`<div class="vp-group"><div class="vp-label">Резервная копия · заметки · закладки · теги</div>`+
     `<div class="data-io-btns">`+
       `<button class="data-io-btn" onclick="exportPersonalData()" title="Скачать .json со всеми личными данными">⬆ Экспорт</button>`+
       `<button class="data-io-btn" onclick="document.getElementById('importDataFile').click()" title="Загрузить .json и объединить">⬇ Импорт</button>`+
-    `</div><input type="file" id="importDataFile" accept="application/json,.json" style="display:none" onchange="importPersonalDataFile(this)"></div>`;
+    `</div><input type="file" id="importDataFile" accept="application/json,.json" style="display:none" onchange="importPersonalDataFile(this)">`+
+    syncRow+`</div>`;
   const aboutRow=`<button class="vp-reset" onclick="openAppAbout()">ℹ О программе</button>`;
   // «Колонки/Список» переехал сюда из панели режимов (это настройка раскладки
   // переводов в «Аятах», а не режим чтения — не должен путаться с режимами)
