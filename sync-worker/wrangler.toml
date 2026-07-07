@@ -7,4 +7,4 @@ compatibility_date = "2024-09-01"
 # и вставить сюда вместо PASTE_KV_NAMESPACE_ID_HERE.
 [[kv_namespaces]]
 binding = "SYNC"
-id = "PASTE_KV_NAMESPACE_ID_HERE"
+id = "abb4815e8ea246d7b4de5b5a0c6cd3db"

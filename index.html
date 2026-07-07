@@ -1218,7 +1218,7 @@ function setUserOrder(o){ss("userOrder",o);}
 // Адрес воркера облачной синхронизации (Cloudflare Worker, см. sync-worker/).
 // Пусто → синк выключен (UI покажет «не настроена»). После деплоя воркера
 // вписать сюда его URL, напр. "https://tafsir-sync.<аккаунт>.workers.dev".
-const SYNC_ENDPOINT="";
+const SYNC_ENDPOINT="https://tafsir-sync.qaadiy-tafsir.workers.dev";
 // Ключи ЛИЧНЫХ данных, участвующих в облачной синхронизации (совпадают с
 // personalDataObj); настройки вида (шрифты/тема/раскладка) НЕ синхронизируются.
 const SYNCED_KEYS=new Set(["notes","bookmarks","ayahTags","tagTree","progress"]);

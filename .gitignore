@@ -118,3 +118,6 @@ data/index/ibn_abi_hatim.json
 # Локальное зеркало Cloudflare R2 (бакет tafsir-data): сканы и пр. бинарь.
 # Полная копия того, что лежит на R2; в репозиторий НЕ коммитим.
 /r2-data/
+
+# Локальный кэш Wrangler (воркер синхронизации)
+sync-worker/.wrangler/
