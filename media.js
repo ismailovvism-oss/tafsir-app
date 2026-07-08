@@ -239,6 +239,7 @@ function navStep(dir){
   P.played=0;setPos(t.sura,t.ayah);playCur();
 }
 function stopAll(){
+  closeMenu();
   P.playing=false;P.active=false;P.range=null;P.rangeArm=null;P.played=0;P.err="";P.token++;
   if(P.audio){P.audio.pause();P.audio.removeAttribute("src");P.audio.load();}
   if(P.pre)P.pre.removeAttribute("src");
@@ -292,11 +293,14 @@ function barEl(){
   return el;
 }
 const REP_STEPS=[0,2,3,Infinity];
-function repLabel(){return P.repeat===Infinity?"🔁∞":P.repeat?"🔁"+P.repeat:"🔁";}
-function abLabel(){return P.rangeArm?"A‥":"A–B";}
-function srcShort(){return SRC?(SRC.type==="audio_user_recording"?"🎙 ":"")+SRC.name:"";}
+// Понятные подписи: повтор аята показывает состояние словами, чтобы не гадать.
+function repLabel(){return P.repeat===Infinity?"🔁 ∞":P.repeat?"🔁 ×"+P.repeat:"🔁 нет";}
+function abLabel(){return P.range?"🔂 A–B ✓":P.rangeArm?"🔂 A‥":"🔂 A–B";}
+function srcName(){return SRC?SRC.name:"—";}
+function srcIcon(){return SRC&&SRC.type==="audio_user_recording"?"🎙":"🎧";}
 function renderBar(){
   if(!P.active)return;
+  closeMenu();
   const el=barEl();
   el.classList.toggle("min",P.min);
   if(P.min){ // свёрнут: полоска ▶/⏸ + аят + развернуть + закрыть
@@ -308,17 +312,55 @@ function renderBar(){
       `<button data-act="close" class="ghost" title="Закрыть плеер">✕</button>`;
     return;
   }
+  // Кнопки сгруппированы: транспорт | источник+повторы+скорость | свернуть/закрыть.
+  // Группы переносятся по строкам целиком (flex-wrap) — на узком экране всё видно.
   el.innerHTML=
-    `<button data-act="prev" title="Предыдущий аят">⏮</button>`+
-    `<button data-act="pp" class="pp" title="${P.playing?"Пауза":"Слушать"}">${P.playing?"⏸":"▶"}</button>`+
-    `<button data-act="next" title="Следующий аят">⏭</button>`+
-    `<span class="lbl" data-act="goto" title="${ctx.escAttr(srcShort())} — тап: показать аят в тексте">${POS.sura}:${POS.ayah}</span>`+
-    `<button data-act="rep" class="${P.repeat?"on":""}" title="Повтор аята: выкл → ×2 → ×3 → ∞">${repLabel()}</button>`+
-    `<button data-act="ab" class="${(P.range||P.rangeArm)?"on":""}" title="Повтор диапазона аятов: 1-й тап — начало, 2-й — конец, 3-й — сброс">${abLabel()}</button>`+
-    `<button data-act="rate" title="Скорость воспроизведения">${P.rate}×</button>`+
-    `<button data-act="min" class="ghost" title="Свернуть плеер в полоску">⌄</button>`+
-    `<button data-act="close" class="ghost" title="Закрыть плеер">✕</button>`+
+    `<span class="mb-grp">`+
+      `<button data-act="prev" title="Предыдущий аят">⏮</button>`+
+      `<button data-act="pp" class="pp" title="${P.playing?"Пауза":"Слушать"}">${P.playing?"⏸":"▶"}</button>`+
+      `<button data-act="next" title="Следующий аят">⏭</button>`+
+      `<span class="lbl" data-act="goto" title="Тап — показать этот аят в тексте">${POS.sura}:${POS.ayah}</span>`+
+    `</span>`+
+    `<span class="mb-grp">`+
+      `<button data-act="src" class="src" title="Выбрать чтеца или набор своих записей">${srcIcon()} ${ctx.esc(srcName())} ▾</button>`+
+      `<button data-act="rep" class="${P.repeat?"on":""}" title="Повтор одного аята: нет → ×2 → ×3 → ∞">${repLabel()}</button>`+
+      `<button data-act="ab" class="${(P.range||P.rangeArm)?"on":""}" title="Повтор диапазона: тап на первом аяте — отметить начало, дойти до последнего и тап — конец; ещё тап — сброс">${abLabel()}</button>`+
+      `<button data-act="rate" title="Скорость чтения">⏩ ${P.rate}×</button>`+
+    `</span>`+
+    `<span class="mb-grp">`+
+      `<button data-act="min" class="ghost" title="Свернуть плеер в полоску">⌄</button>`+
+      `<button data-act="close" class="ghost" title="Закрыть плеер">✕</button>`+
+    `</span>`+
     (P.err?`<span class="err" title="${ctx.escAttr(P.err)}">⚠ ${ctx.esc(P.err)}</span>`:"");
+}
+// Меню выбора источника прямо из плеера: чтецы + наборы записей
+function closeMenu(){
+  const m=document.getElementById("mediaMenu");if(m)m.remove();
+  document.removeEventListener("pointerdown",outsideMenu,true);
+}
+function outsideMenu(e){
+  const m=document.getElementById("mediaMenu");
+  if(m&&!m.contains(e.target)&&!e.target.closest('[data-act="src"]'))closeMenu();
+}
+function openMenu(){
+  closeMenu();
+  const cur=activeSourceId(),rs=reciters(),sets=recSets();
+  let h="";
+  if(rs.length)h+=`<div class="mm-h">Чтецы</div>`+rs.map(r=>
+    `<button data-src="${ctx.escAttr(r.id)}" class="${r.id===cur?"on":""}">🎧 ${ctx.esc(r.name)}</button>`).join("");
+  if(sets.length)h+=`<div class="mm-h">Мои записи</div>`+sets.map(s=>
+    `<button data-src="rec:${ctx.escAttr(s.id)}" class="${("rec:"+s.id)===cur?"on":""}">🎙 ${ctx.esc(s.name)}</button>`).join("");
+  const menu=document.createElement("div");
+  menu.id="mediaMenu";menu.className="media-menu";menu.innerHTML=h;
+  menu.addEventListener("click",e=>{
+    const b=e.target.closest("[data-src]");if(!b)return;
+    ctx.ss("mediaReciter",b.dataset.src);
+    closeMenu();
+    setReciter(b.dataset.src);   // сменить источник (сам вызовет renderBar)
+    ctx.renderRP();              // синхронизировать радиокнопки в панели 📚
+  });
+  barEl().appendChild(menu);
+  setTimeout(()=>document.addEventListener("pointerdown",outsideMenu,true),0);
 }
 const RATE_STEPS=[1,1.25,1.5,0.75];
 function onBarClick(e){
@@ -328,6 +370,7 @@ function onBarClick(e){
     case"next":navStep(1);break;
     case"pp":togglePlay();break;
     case"goto":followText(POS.sura,POS.ayah);break;
+    case"src":openMenu();break;
     case"min":P.min=!P.min;ctx.ss("mediaMin",P.min);renderBar();break;
     case"rep":{
       P.repeat=REP_STEPS[(REP_STEPS.indexOf(P.repeat)+1)%REP_STEPS.length];
@@ -382,42 +425,47 @@ export async function openRecPopup(s,a,btn){
     ctx.ss("mediaSets",sets);ctx.renderRP();
   }
   R.ayah={s,a};
+  // Подкрутить записываемый аят вверх — чтобы его текст был виден НАД нижним
+  // листом записи и его можно было читать во время записи.
+  const blk=document.querySelector(`.ayah-block[data-aid="${a}"],.wbw-ayah[data-aid="${a}"]`);
+  if(blk)blk.scrollIntoView({behavior:"smooth",block:"start"});
   const pop=document.createElement("div");
-  pop.className="rec-pop";R.pop=pop;
+  pop.className="rec-pop";R.pop=pop;                 // позиция — нижний лист (CSS)
   document.body.appendChild(pop);
-  // позиционируем у кнопки, не вылезая за экран
-  const r=btn.getBoundingClientRect();
-  pop.style.left=Math.max(6,Math.min(r.left,innerWidth-262))+"px";
-  pop.style.top=Math.min(r.bottom+6,innerHeight-170)+"px";
   document.addEventListener("pointerdown",outsidePop,true);
-  await renderPop();
+  renderPop();
 }
-async function renderPop(){
+// Рисуем СРАЗУ (без ожидания IndexedDB): «есть ли запись» берём из
+// in-memory кэша RECKEYS; если набор ещё не подгружен — покажем без индикатора
+// и перерисуем, когда idb ответит (устойчиво к медленному/недоступному idb).
+function renderPop(){
   if(!R.pop)return;
   const {s,a}=R.ayah,sets=recSets(),cur=recSetId();
   const recording=R.mr&&R.mr.state==="recording";
-  const ks=cur?await loadRecKeys(cur):new Set();
-  const has=ks.has(sa(s,a));
+  const ks=cur?RECKEYS[cur]:null;
+  if(cur&&!ks)loadRecKeys(cur).then(()=>renderPop()); // подтянуть и перерисовать
+  const has=!!(ks&&ks.has(sa(s,a)));
   const opts=sets.map(x=>`<option value="${ctx.escAttr(x.id)}" ${x.id===cur?"selected":""}>${ctx.esc(x.name)}</option>`).join("");
   const secs=recording?Math.round((Date.now()-R.t0)/1000):0;
   R.pop.innerHTML=
-    `<div class="rp-title">🎙 Запись · аят ${s}:${a}</div>`+
+    `<div class="rp-title"><span>🎙 Запись · аят ${s}:${a}</span><button class="rp-x" data-act="cancel" title="Закрыть">✕</button></div>`+
     `<select data-act="set" title="Набор, куда пишется запись">${opts}</select>`+
     `<div class="rp-row">`+
     (recording
-      ?`<button data-act="stop" class="hot">⏹ Стоп</button><span class="rp-rec">● ${secs} с</span>`
+      ?`<button data-act="stop" class="hot">⏹ Стоп</button><span class="rp-rec">${secs} с</span>`
       :`<button data-act="rec" class="hot">● ${has?"Перезаписать":"Записать"}</button>`+
-       (has?`<button data-act="play">▶ Прослушать</button><button data-act="del">🗑</button>`:""))+
+       (has?`<button data-act="play">▶ Прослушать</button><button data-act="del" class="danger">🗑</button>`:""))+
     `</div>`+
-    `<div class="rp-note">${has&&!recording?"На этом аяте есть запись. ":""}Хранится только на этом устройстве (IndexedDB), работает офлайн.</div>`;
+    `<div class="rp-note">${has&&!recording?"На этом аяте есть запись. ":""}Текст аята виден выше — читайте во время записи. Хранится только на устройстве, офлайн.</div>`;
   R.pop.onclick=onPopClick;
   const sel=R.pop.querySelector("select");
-  if(sel)sel.onchange=async()=>{ctx.ss("mediaRecSet",sel.value);await renderPop();ctx.renderCenter();};
+  if(sel)sel.onchange=()=>{ctx.ss("mediaRecSet",sel.value);renderPop();ctx.renderCenter();};
 }
 async function onPopClick(e){
   const b=e.target.closest("[data-act]");if(!b)return;
   const {s,a}=R.ayah,set=recSetId();
   switch(b.dataset.act){
+    case"cancel":closePop();return;
     case"rec":{
       if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
         alert("Запись недоступна: нужен HTTPS (или localhost) и поддержка микрофона браузером.");return;
