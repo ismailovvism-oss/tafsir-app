@@ -129,21 +129,21 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 
 /* TAG TREE in sidebar */
 .tag-node{padding-left:10px}
-.tag-row{display:flex;align-items:center;gap:3px;padding:4px 5px;border-radius:4px;cursor:pointer;font-size:11px;transition:background .1s}
+.tag-row{display:flex;align-items:center;gap:3px;padding:4px 5px;border-radius:4px;cursor:pointer;font-size:calc(11px*var(--sb,1));transition:background .1s}
 .tag-row:hover{background:rgba(128,128,128,.08)}
 .tag-row.selected{background:var(--tag-bg);color:var(--tag-color);font-weight:600}
-.tag-arrow{font-size:8px;width:12px;text-align:center;color:var(--text-muted);cursor:pointer;flex-shrink:0}
+.tag-arrow{font-size:calc(8px*var(--sb,1));width:12px;text-align:center;color:var(--text-muted);cursor:pointer;flex-shrink:0}
 .tag-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tag-cnt{font-size:9px;color:var(--text-muted)}
+.tag-cnt{font-size:calc(9px*var(--sb,1));color:var(--text-muted)}
 .tag-acts{display:flex;gap:1px;opacity:0;transition:opacity .12s}
 .tag-row:hover .tag-acts{opacity:1}
-.tag-ab{background:none;border:none;cursor:pointer;font-size:10px;padding:1px 3px;border-radius:3px;color:var(--text-muted)}
+.tag-ab{background:none;border:none;cursor:pointer;font-size:calc(10px*var(--sb,1));padding:1px 3px;border-radius:3px;color:var(--text-muted)}
 .tag-ab:hover{background:rgba(128,128,128,.15);color:var(--text)}
 .tag-add-row{padding:6px 8px;border-top:1px solid var(--border)}
 .tag-add-row input{width:100%;padding:5px 7px;border:1px solid var(--border);border-radius:4px;font-size:11px;font-family:inherit;outline:none;color:var(--text);background:var(--bg-card)}
 .tag-add-hint{font-size:9px;color:var(--text-muted);margin-top:3px}
 /* Тематический указатель (📑 Темы) — read-only дерево тем */
-.tp-hint{padding:7px 9px;font-size:9px;color:var(--text-muted);border-bottom:1px solid var(--border);line-height:1.4}
+.tp-hint{padding:7px 9px;font-size:calc(9px*var(--sb,1));color:var(--text-muted);border-bottom:1px solid var(--border);line-height:1.4}
 .tag-row.tp-container{cursor:default}
 .tag-row.tp-container:hover{background:transparent}
 .tag-row.tp-container .tag-name{color:var(--text-sec);font-weight:600}
@@ -307,8 +307,8 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .bm-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--border-light);cursor:pointer}
 .bm-row:hover{background:var(--bg-alt)}
 .bm-info{flex:1;min-width:0}
-.bm-name{font-size:12px;color:var(--text);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bm-ref{font-size:10px;color:var(--text-muted)}
+.bm-name{font-size:calc(12px*var(--sb,1));color:var(--text);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bm-ref{font-size:calc(10px*var(--sb,1));color:var(--text-muted)}
 .bm-del{background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:16px;padding:0 4px;line-height:1}
 .bm-del:hover{color:#c0392b}
 

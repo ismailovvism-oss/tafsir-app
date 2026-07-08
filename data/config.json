@@ -128,8 +128,7 @@
       "tags": [],
       "year": "1963",
       "fill": 1.0,
-      "translator": "Игнатий Крачковский",
-      "reviewLevel": "caution"
+      "translator": "Игнатий Крачковский"
     },
     {
       "id": "kuliev",
@@ -307,7 +306,8 @@
       "year": "2019",
       "about": true,
       "fill": 1.0,
-      "translator": "Шамиль Аляутдинов"
+      "translator": "Шамиль Аляутдинов",
+      "reviewLevel": "caution"
     },
     {
       "id": "boguslawski",
