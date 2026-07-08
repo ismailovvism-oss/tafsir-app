@@ -142,6 +142,25 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .tag-add-row{padding:6px 8px;border-top:1px solid var(--border)}
 .tag-add-row input{width:100%;padding:5px 7px;border:1px solid var(--border);border-radius:4px;font-size:11px;font-family:inherit;outline:none;color:var(--text);background:var(--bg-card)}
 .tag-add-hint{font-size:9px;color:var(--text-muted);margin-top:3px}
+/* Тематический указатель (📑 Темы) — read-only дерево тем */
+.tp-hint{padding:7px 9px;font-size:9px;color:var(--text-muted);border-bottom:1px solid var(--border);line-height:1.4}
+.tag-row.tp-container{cursor:default}
+.tag-row.tp-container:hover{background:transparent}
+.tag-row.tp-container .tag-name{color:var(--text-sec);font-weight:600}
+/* имена тем переносятся на новую строку целиком, не обрезаются многоточием */
+.tag-row.tp-row{align-items:flex-start}
+.tag-row.tp-row .tag-arrow,.tag-row.tp-row .tag-cnt{margin-top:1px;flex-shrink:0}
+.tag-row.tp-row .tag-name{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;line-height:1.35}
+.tr-ar-name{font-family:'Noto Naskh Arabic','Amiri',serif;font-weight:400;color:var(--text-sec)}
+.tr-header .btn-s{margin-left:8px;vertical-align:middle}
+/* крошки (путь по дереву тем) — в шапке экрана темы и под результатами поиска */
+.tp-crumbs-row{font-size:10px;color:var(--text-muted);line-height:1.35}
+.tp-crumbs-head{margin-bottom:6px}
+.tp-crumbs-under{margin:2px 0 6px 20px;font-size:9px}
+.tp-crumb-sep{opacity:.5;margin:0 1px}
+.tp-crumb-link{cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px}
+.tp-crumb-link:hover{color:var(--accent)}
+.tp-search-hit{margin-bottom:2px}
 
 /* CENTER */
 .center{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
@@ -699,6 +718,12 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
 .home-cont .hc-sub{font-size:13px;opacity:.85;margin-top:4px}
 .home-sec{margin-bottom:24px}
 .home-sec-h{font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;display:flex;align-items:center;gap:8px;border-left:3px solid var(--accent);padding-left:8px}
+.home-nav-link{display:flex;align-items:center;gap:12px;border:1px solid rgba(var(--accent-rgb),.25);border-radius:12px;padding:14px 16px;cursor:pointer;background:linear-gradient(180deg,transparent 0%,rgba(var(--accent-rgb),.06) 100%);transition:border-color .12s,box-shadow .12s}
+.home-nav-link:hover{border-color:var(--accent);box-shadow:0 2px 10px rgba(var(--accent-rgb),.18)}
+.home-nav-link .hnl-ic{font-size:22px;line-height:1}
+.home-nav-link .hnl-main{flex:1;font-size:16px;font-weight:600;color:var(--text)}
+.home-nav-link .hnl-sub{font-size:12px;color:var(--text-muted);font-weight:400}
+.home-nav-link .hnl-arrow{color:var(--accent);font-size:18px;font-weight:700}
 .home-edit-btn{margin-left:auto;background:none;border:none;cursor:pointer;font-size:14px;padding:2px 6px;border-radius:6px;color:var(--text-muted)}
 .home-edit-btn:hover{background:var(--border)}
 .home-recent{display:flex;flex-direction:column;gap:2px}
@@ -963,6 +988,7 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
     <div class="sb-tabs">
       <button class="sb-tab active" onclick="setSbTab('surahs')" id="sbTabSurahs">Суры</button>
       <button class="sb-tab" onclick="setSbTab('tags')" id="sbTabTags">🏷 Теги</button>
+      <button class="sb-tab" onclick="setSbTab('topics')" id="sbTabTopics">📑 Темы</button>
       <button class="sb-tab" onclick="setSbTab('bookmarks')" id="sbTabBookmarks">★ Закл.</button>
       <button class="sb-tab" onclick="setSbTab('view')" id="sbTabView">⚙ Вид</button>
     </div>
@@ -1044,6 +1070,8 @@ const SOURCES={
   // — статичные классификации сур (Мекка/Медина, периоды, мукатта'ат, пары…) —
   //   оверлей-фильтры карты хифза; чистая справка, не связана с состоянием —
   surah_meta:      {baseUrl:"data",  pathTemplate:"{baseUrl}/surah-classifications.json"},
+  // Тематический указатель (фихрист): дерево тем + карта тема→аяты (build_topics.py).
+  topics:          {baseUrl:"data",  pathTemplate:"{baseUrl}/topics/{file}"},
   // — печатный мусхаф (глифы QPC, лёгкий JSON) и его шрифты; структуру внутри
   //   задаёт пакет (PACKS), база — отсюда (можно унести на CDN сменой baseUrl) —
   mushaf_glyphs:   {baseUrl:"data",  pathTemplate:"{baseUrl}/{path}"},
@@ -1162,7 +1190,7 @@ function getAnyTranslation(surahId,ayahId){
 let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,immersive:false,
   layout:"h",
   enabled:{_arabic:true,kuliev:true},
-  selectedTag:null,bookIntro:false,
+  selectedTag:null,bookIntro:false,topicSel:null,
   theme:"green",
   skin:"none",       // скин чтения: none|parchment|sepia|dark (⚙ Вид → Оформление)
   ruFont:"std",      // русский шрифт текста ленты: std|old (Old Standard TT)
@@ -3644,6 +3672,7 @@ function render(){renderSB();renderCB();renderCenter();renderRP();renderF();rend
 function renderSB(){
   const el=document.getElementById("sbContent");
   if(ST.sbTab==="surahs")renderSurahList(el);
+  else if(ST.sbTab==="topics")renderTopicsPanel(el);
   else if(ST.sbTab==="bookmarks")renderBookmarkPanel(el);
   else if(ST.sbTab==="view")renderViewTab(el);
   else renderTagPanel(el);
@@ -3766,7 +3795,7 @@ function renderBookmarkPanel(el){
 // Экран закладок в ГЛАВНОМ окне (правило системы: панель — навигатор,
 // главное окно — контент; симметрично тег-результатам).
 function openBookmarksScreen(){
-  ST.bmView=true;ST.selectedTag=null;ST.homeMode=false;ST.scanSource=null;ST.srcMode=false;ST.bookIntro=false;ST.hifzMode=false;
+  ST.bmView=true;ST.selectedTag=null;ST.topicSel=null;ST.homeMode=false;ST.scanSource=null;ST.srcMode=false;ST.bookIntro=false;ST.hifzMode=false;
   if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   render();
 }
@@ -3811,7 +3840,7 @@ function renderCB(){
 
   if(ST.selectedTag){
     setCtx(`🏷 ${esc(ST.selectedTag)}`);
-    bar.innerHTML=`<div class="cb-right"><button class="btn-s" onclick="ST.selectedTag=null;render();">← Суры</button><button class="btn-s" onclick="ST.sbTab='tags';document.getElementById('sbTabSurahs').classList.remove('active');document.getElementById('sbTabTags').classList.add('active');ST.sidebarOpen=true;document.getElementById('sidebar').classList.remove('collapsed');renderSB();">🏷 Теги</button></div>`;
+    bar.innerHTML=`<div class="cb-right"><button class="btn-s" onclick="ST.selectedTag=null;ST.topicSel=null;render();">← Суры</button><button class="btn-s" onclick="ST.sbTab='tags';document.getElementById('sbTabSurahs').classList.remove('active');document.getElementById('sbTabTags').classList.add('active');ST.sidebarOpen=true;document.getElementById('sidebar').classList.remove('collapsed');renderSB();">🏷 Теги</button></div>`;
     return;
   }
   if(!su){setCtx("");if(bar)bar.innerHTML="";return;}
@@ -3869,6 +3898,7 @@ function renderCenter(){
   if(ST.scanSource)return renderScanReader(el);
   if(ST.srcMode)return renderSourceMode(el);
   if(ST.bmView)return renderBookmarksScreen(el);
+  if(ST.topicSel)return renderTopicResults(el);
   if(ST.selectedTag)return renderTagResults(el);
   if(ST.pageMode)return renderMushafPage(el);
   if(ST.wbwMode)return renderWbw(el);
@@ -3939,6 +3969,11 @@ function renderHome(el){
     html+=`</div>`;
   }
   html+=`</div>`;
+  // — Коранические темы (тематический указатель) —
+  html+=`<div class="home-sec"><div class="home-nav-link" onclick="openTopics()" title="Открыть тематический указатель Корана">
+    <span class="hnl-ic">📑</span>
+    <span class="hnl-main">Коранические темы <span class="hnl-sub">— указатель по темам</span></span>
+    <span class="hnl-arrow">›</span></div></div>`;
   // — Таблица Корана (суры/джузы, порядки и фильтры структуры мусхафа) —
   html+=`<div id="qtBox">${quranTableHTML()}</div>`;
   html+=`</div></div>`;
@@ -4203,7 +4238,7 @@ function srcCoversSurah(s){return ST.srcMode&&ST.srcSel&&!!covPairs(ST.srcSel,s)
 // Выбрать источник для чтения (вход в чтение по покрытию).
 function setSrcSel(id){
   if(!COV.sources[id])return;
-  ST.srcMode=true;ST.srcSel=id;ST.pageMode=false;ST.wbwMode=false;ST.selectedTag=null;ST.bookIntro=false;
+  ST.srcMode=true;ST.srcSel=id;ST.pageMode=false;ST.wbwMode=false;ST.selectedTag=null;ST.topicSel=null;ST.bookIntro=false;
   ST.expandedGaps={};
   if(!covPairs(id,ST.surah)){                       // текущая сура не покрыта → к первому покрытому аяту
     const nx=covNextAyah(id,0,0,1);if(nx){ST.surah=nx.surah;ST.scrollToAyah=nx.ayah;pushSurahHash&&pushSurahHash(ST.surah);}
@@ -4678,6 +4713,148 @@ async function renderReading(el){
   lastReadingSurah=ST.surah;
 }
 
+// ============================================================
+// ТЕМАТИЧЕСКИЙ УКАЗАТЕЛЬ (фихрист) — read-only слой поверх механики тегов.
+// Данные: data/topics/{tree,verses}.json (build_topics.py из онтологии
+// Quranic Arabic Corpus). Дерево тем в панели «📑 Темы»; тап по теме → её аяты
+// в главном окне (renderTopicResults). Личные теги пользователя не трогаются;
+// у темы есть кнопка «➕ в мои теги» (копирует тему в tagTree/ayahTags).
+// ============================================================
+const UKAZ_ROOT="Тематический указатель";
+let TOPICS=null,_topicsLoading=null;
+function loadTopics(){
+  if(TOPICS)return Promise.resolve(TOPICS);
+  if(_topicsLoading)return _topicsLoading;
+  _topicsLoading=Promise.all([
+    fetch(resolveUrl("topics",{file:"tree.json"})).then(r=>r.json()),
+    fetch(resolveUrl("topics",{file:"verses.json"})).then(r=>r.json())
+  ]).then(([tree,verses])=>{
+    const byId={},parent={};
+    (function idx(ns,par){for(const n of ns){byId[n.id]=n;parent[n.id]=par;if(n.children)idx(n.children,n.id);}})(tree,0);
+    TOPICS={tree,verses,byId,parent};return TOPICS;
+  }).catch(e=>{_topicsLoading=null;throw e;});
+  return _topicsLoading;
+}
+function topicRowHTML(node,withArrow){
+  const has=node.children&&node.children.length;
+  const isOpen=!collapsedG["tp_"+node.id];
+  const sel=ST.topicSel===node.id;
+  const selectable=node.n>0;                     // у темы есть СОБСТВЕННЫЕ аяты
+  const toggle=`collapsedG['tp_${node.id}']=!collapsedG['tp_${node.id}'];renderSB();`;
+  const rowClick=selectable?`selectTopic(${node.id})`:(has&&withArrow?toggle:"");
+  return `<div class="tag-row tp-row ${sel?'selected':''} ${selectable?'':'tp-container'}" ${rowClick?`onclick="${rowClick}"`:''}>
+      ${withArrow?`<span class="tag-arrow" ${has?`onclick="event.stopPropagation();${toggle}"`:''}>${has?(isOpen?'▼':'▶'):' '}</span>`:'<span class="tag-arrow"> </span>'}
+      <span class="tag-name" ${node.ar?`title="${escAttr(node.ar)}"`:''}>${esc(node.name)}</span>
+      ${node.t?`<span class="tag-cnt" title="аятов в теме (с подтемами)">${node.t}</span>`:''}
+    </div>`;
+}
+function topicNodeHTML(node){
+  const has=node.children&&node.children.length;
+  const isOpen=!collapsedG["tp_"+node.id];
+  let h=`<div class="tag-node">`+topicRowHTML(node,true);
+  if(has&&isOpen)h+=node.children.map(topicNodeHTML).join("");
+  return h+`</div>`;
+}
+// Крошки (путь по дереву тем) для темы id: массив предков root→родитель, без самой темы.
+function topicCrumbs(id){
+  if(!TOPICS)return[];
+  const chain=[];let p=TOPICS.parent[id];
+  while(p){const n=TOPICS.byId[p];if(n)chain.unshift(n);p=TOPICS.parent[p];}
+  return chain;
+}
+// HTML крошек: сегменты-предки через «›»; у кого есть свои аяты (n>0) — кликабельны (→ тема).
+function crumbsHTML(id){
+  const chain=topicCrumbs(id);
+  if(!chain.length)return "";
+  return chain.map(n=>n.n>0
+    ? `<span class="tp-crumb tp-crumb-link" onclick="event.stopPropagation();selectTopic(${n.id})">${esc(n.name)}</span>`
+    : `<span class="tp-crumb">${esc(n.name)}</span>`
+  ).join(' <span class="tp-crumb-sep">›</span> ');
+}
+function renderTopicsPanel(el){
+  if(!TOPICS){
+    loadTopics().then(()=>{if(ST.sbTab==="topics")renderSB();})
+      .catch(()=>{if(ST.sbTab==="topics")el.innerHTML='<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:11px">Не удалось загрузить указатель</div>';});
+    el.innerHTML='<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:11px">Загрузка указателя…</div>';
+    return;
+  }
+  const raw=ST.search.trim(),q=raw.toLowerCase();
+  if(q){                                          // поиск — плоский список совпадений
+    const hits=[];
+    (function collect(ns){for(const n of ns){if(n.name.toLowerCase().includes(q)||(n.ar&&n.ar.includes(raw)))hits.push(n);if(n.children)collect(n.children);}})(TOPICS.tree);
+    el.innerHTML=hits.length
+      ? `<div class="tp-hint">Найдено тем: ${hits.length}</div>`+hits.map(n=>{
+          const c=crumbsHTML(n.id);
+          return `<div class="tp-search-hit">${topicRowHTML(n,false)}${c?`<div class="tp-crumbs-row tp-crumbs-under">${c}</div>`:''}</div>`;
+        }).join("")
+      : '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:11px">Ничего не найдено</div>';
+    return;
+  }
+  el.innerHTML=`<div class="tp-hint">Тематический указатель Корана — 3 раздела, ${TOPICS.byId?Object.keys(TOPICS.byId).length:695} тем. Тап по теме → её аяты.</div>`
+    +TOPICS.tree.map(n=>topicNodeHTML(n)).join("");
+}
+// Открыть боковую панель на вкладке «📑 Темы» (ссылка «Коранические темы» с Главной).
+function openTopics(){
+  ST.sidebarOpen=true;
+  const sb=document.getElementById("sidebar");if(sb)sb.classList.remove("collapsed");
+  setSbTab("topics");
+}
+function selectTopic(id){
+  ST.topicSel=id;
+  ST.selectedTag=null;ST.bookIntro=false;ST.homeMode=false;ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.bmView=false;
+  if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
+  render();
+}
+async function renderTopicResults(el){
+  const T=await loadTopics().catch(()=>null);
+  if(!T){el.innerHTML='<div class="tag-results"><div style="padding:20px;color:var(--text-muted)">Не удалось загрузить указатель</div></div>';return;}
+  const node=T.byId[ST.topicSel];
+  const ayahs=(T.verses[ST.topicSel]||[]).slice()
+    .sort((a,b)=>{const[sa,aa]=a.split(":").map(Number),[sb,ab]=b.split(":").map(Number);return sa-sb||aa-ab;});
+  const surahs=[...new Set(ayahs.map(k=>+k.split(":")[0]))];
+  const firstTrans=CONFIG.tafsirs.find(t=>t.lang!=="ar"&&ST.enabled[t.id])||CONFIG.tafsirs.find(t=>t.lang!=="ar");
+  await Promise.all(surahs.flatMap(s=>{const ps=[loadChunk("_arabic",s).catch(()=>{})];if(firstTrans)ps.push(loadChunk(firstTrans.id,s).catch(()=>{}));return ps;}));
+  const nm=node?node.name:("#"+ST.topicSel);
+  const ar=node&&node.ar?` <span class="tr-ar-name">${esc(node.ar)}</span>`:'';
+  const crumbs=crumbsHTML(ST.topicSel);
+  let html=`<div class="tag-results">`
+    +(crumbs?`<div class="tp-crumbs-row tp-crumbs-head">${crumbs}</div>`:'')
+    +`<div class="tr-header">📑 ${esc(nm)}${ar} — ${ayahs.length} аят.`
+    +(ayahs.length?`<button class="btn-s" onclick="topicToMyTags(${ST.topicSel})" title="Скопировать тему в ваши личные теги">➕ в мои теги</button>`:'')
+    +`</div>`;
+  if(!ayahs.length)html+=`<div style="color:var(--text-muted);padding:20px;text-align:center">У этой рубрики нет собственных аятов — раскройте подтемы в панели «📑 Темы».</div>`;
+  for(const k of ayahs){
+    const[s,a]=k.split(":");
+    const su=SURAHS.find(x=>x.id==+s);
+    const arText=getArabicFromCache(+s,+a);
+    const trText=getAnyTranslation(+s,+a);
+    html+=`<div class="tr-ayah" onclick="goAyah(${s},${a})">
+      <div class="tr-ayah-ref">${su?esc(su.ru):s} : ${a}</div>
+      ${arText?`<div class="tr-ayah-ar">${arText}</div>`:''}
+      ${trText?`<div class="tr-ayah-tr">${trText}</div>`:''}
+    </div>`;
+  }
+  el.innerHTML=html+`</div>`;
+}
+// Скопировать тему указателя в личные теги пользователя (под корнем «Тематический
+// указатель»): создаёт ветку и метит все аяты темы. Не затирает существующее.
+function topicToMyTags(id){
+  loadTopics().then(T=>{
+    const node=T.byId[id],ayahs=(T.verses[id]||[]);
+    if(!node||!ayahs.length){alert("У этой темы нет аятов для добавления.");return;}
+    const leaf=node.name.split("/").join("∕");    // «/» = разделитель путей тегов
+    const tree=getTagTree();
+    let root=tree.find(n=>n.name===UKAZ_ROOT);
+    if(!root){root={name:UKAZ_ROOT,children:[]};tree.push(root);}
+    if(!root.children)root.children=[];
+    if(!root.children.find(n=>n.name===leaf))root.children.push({name:leaf,children:[]});
+    setTagTree(tree);
+    const path=UKAZ_ROOT+"/"+leaf,at=getAyahTags();
+    for(const k of ayahs){if(!at[k])at[k]=[];if(!at[k].includes(path))at[k].push(path);}
+    setAyahTags(at);
+    alert(`Тема «${node.name}» (${ayahs.length} аят.) добавлена в ваши теги → «${UKAZ_ROOT}».`);
+  }).catch(()=>alert("Не удалось загрузить указатель."));
+}
 async function renderTagResults(el){
   const matches=ayahsForTag(ST.selectedTag);
   if(!matches.length){
@@ -4704,7 +4881,7 @@ async function renderTagResults(el){
       const direct=o===sel.split("/").pop();       // помечен самим выбранным тегом напрямую
       return `<span class="t-pill" title="${direct?'Помечен этим тегом напрямую':'По подтегу «'+esc(o)+'»'}">${esc(o)}</span>`;
     }).join("");
-    html+=`<div class="tr-ayah" onclick="ST.selectedTag=null;goSurah(${s})">
+    html+=`<div class="tr-ayah" onclick="ST.selectedTag=null;ST.topicSel=null;goSurah(${s})">
       <div class="tr-ayah-ref">${su?su.ru:s} : ${a}<span class="tr-origins">${pills}</span></div>
       ${arText?`<div class="tr-ayah-ar">${arText}</div>`:''}
       ${trText?`<div class="tr-ayah-tr">${trText}</div>`:''}
@@ -4788,7 +4965,7 @@ function imgDir(t){return resolveUrl("mushaf_scans",{dir:scanDirOf(t),file:""});
 // Открыть/закрыть скан-читалку (взаимоисключающе — один скан за раз).
 function openScan(id){
   ST.scanSource=(ST.scanSource===id)?null:id;
-  if(ST.scanSource){ST.selectedTag=null;ST.bookIntro=false;}
+  if(ST.scanSource){ST.selectedTag=null;ST.topicSel=null;ST.bookIntro=false;}
   renderRP();renderCB();renderCenter();renderBottomNav();
 }
 function scanTab(btn,view){
@@ -4834,7 +5011,7 @@ function booksWithMuqaddima(){
   return getEnabledList().filter(t=>t.id!=="_notes"&&t.kind!=="image"&&t.muqaddima);
 }
 function openBookIntro(){
-  ST.bookIntro=true;ST.selectedTag=null;ST.scanSource=null;ST.hifzMode=false;ST.bmView=false;ST.homeMode=false;
+  ST.bookIntro=true;ST.selectedTag=null;ST.topicSel=null;ST.scanSource=null;ST.hifzMode=false;ST.bmView=false;ST.homeMode=false;
   if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   render();
 }
@@ -5235,7 +5412,7 @@ function highlightMatch(text,query){
 function goSearchResult(surah,ayah){
   if(searchOpen)toggleSearch();
   ST.surah=surah;
-  ST.selectedTag=null;
+  ST.selectedTag=null;ST.topicSel=null;
   pushSurahHash(surah);
   render();
   scrollToAyah(ayah);
@@ -5282,7 +5459,7 @@ function pushHomeHash(){const h="#home";if(location.hash!==h)history.pushState({
 function applyHash(initial){
   const raw=decodeURIComponent((location.hash||"").replace(/^#/,"")).trim();
   if(raw==="home"){                                  // явный «#home» (например, «назад» на Главную)
-    ST.homeMode=true;ST.selectedTag=null;ST.hifzMode=false;ST.bmView=false;if(!initial)render();return true;
+    ST.homeMode=true;ST.selectedTag=null;ST.topicSel=null;ST.hifzMode=false;ST.bmView=false;if(!initial)render();return true;
   }
   const m=raw.match(/^(\d+)(?::(\d+))?$/);
   if(!m)return false;
@@ -5293,7 +5470,7 @@ function applyHash(initial){
   const stateAyah=(st&&st.surah===sid&&st.ayah)?st.ayah:null;     // позиция, запомненная при скролле → «назад»
   pendingAyah=hashAyah;
   const changing=(ST.surah!==sid||ST.selectedTag||ST.homeMode||ST.hifzMode||ST.bmView);
-  if(changing){ST.surah=sid;ST.selectedTag=null;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;}
+  if(changing){ST.surah=sid;ST.selectedTag=null;ST.topicSel=null;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;}
   if(!hashAyah&&stateAyah&&(changing||initial))ST.scrollToAyah=stateAyah;  // встанем на аят при рендере (без анимации)
   if(changing&&!initial)render();
   if(hashAyah)scrollToAyah(hashAyah);                             // deep-link — плавно + подсветка
@@ -5380,13 +5557,13 @@ function closeRPanel(){if(ST.rpanelOpen)toggleRPanel();}
 function onSearch(q){ST.search=q;renderSB();}
 // Вкладки боковой панели: Суры / Теги / Закладки / Вид (настройки).
 // Правило системы: панель — НАВИГАТОР (списки/настройки), контент — в главном окне.
-const SB_TABS=["surahs","tags","bookmarks","view"];
+const SB_TABS=["surahs","tags","topics","bookmarks","view"];
 function setSbTab(t){
   ST.sbTab=t;
   for(const x of SB_TABS){const b=document.getElementById("sbTab"+x[0].toUpperCase()+x.slice(1));if(b)b.classList.toggle("active",t===x);}
   renderSB();renderCB();                                  // renderCB — подсветка ⚙ в шапке
 }
-function goSurah(id){ST.surah=id;ST.selectedTag=null;ST.bookIntro=false;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;{const st=qpcMeta&&qpcMeta.surahStart&&qpcMeta.surahStart[id];if(st)ST.mushafPage=st.page;}if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}pushSurahHash(id);render();}
+function goSurah(id){ST.surah=id;ST.selectedTag=null;ST.topicSel=null;ST.bookIntro=false;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;{const st=qpcMeta&&qpcMeta.surahStart&&qpcMeta.surahStart[id];if(st)ST.mushafPage=st.page;}if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}pushSurahHash(id);render();}
 
 // --- Reading display settings (⚙ Вид): sizes AR/RU, line spacing AR/RU, margins
 const VIEW_DEFAULTS={fsAr:1,fsRu:1,lhAr:1,lhRu:1,mar:0,sbScale:1};
@@ -5563,7 +5740,7 @@ function pageLocation(pg){
   return `${su?esc(su.ru):"Мусхаф"}${juz?` · Джуз ${juz}`:""} · стр. ${pg}/${total}`;
 }
 function goAyah(surah,ayah){
-  ST.surah=surah;ST.selectedTag=null;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;ST.scrollToAyah=ayah||1;
+  ST.surah=surah;ST.selectedTag=null;ST.topicSel=null;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;ST.scrollToAyah=ayah||1;
   if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   pushSurahHash(surah);render();
 }
@@ -6172,7 +6349,7 @@ function deleteTag(path){
   setTagTree(tree);
   const at=getAyahTags();for(const k in at){at[k]=at[k].filter(t=>t!==path&&!t.startsWith(path+"/"));if(!at[k].length)delete at[k];}
   setAyahTags(at);
-  if(ST.selectedTag===path)ST.selectedTag=null;
+  if(ST.selectedTag===path)ST.selectedTag=null;ST.topicSel=null;
   render();
 }
 
