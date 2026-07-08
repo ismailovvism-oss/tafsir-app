@@ -944,6 +944,11 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
   color:var(--text);padding:8px 10px;border-radius:8px;cursor:pointer;white-space:nowrap}
 .media-menu button:hover{background:var(--bg)}
 .media-menu button.on{color:var(--accent);font-weight:700}
+/* поля диапазона повтора «с … по …» */
+.media-menu .mm-range{display:flex;align-items:center;flex-wrap:wrap;gap:6px;justify-content:flex-end;padding:6px 10px;font-size:13px;color:var(--text)}
+.media-menu .mm-in{width:56px;font-family:inherit;font-size:14px;text-align:center;padding:6px 4px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text)}
+.media-menu button.mm-go{display:inline-block;width:auto;text-align:center;border:1px solid var(--accent);background:var(--accent);color:#fff;font-weight:600;padding:7px 12px;margin-left:4px}
+.media-menu button.mm-go:hover{opacity:.9;background:var(--accent)}
 /* визуальный слой (media.js, фаза 3): полоса-картинка над лентой чтения —
    персистентный сосед #centerBody; два слоя для crossfade + Ken Burns */
 .visual-band{position:relative;flex-shrink:0;height:22vh;max-height:200px;min-height:118px;overflow:hidden;background:var(--bg-card);border-bottom:1px solid var(--border)}
@@ -1197,7 +1202,7 @@ function scanDirOf(t){return t.imgdir||("img/"+t.id);}
 // первом обращении (▶ у аята или блок «🎧 Аудио» в панели 📚). Пока аудио не
 // трогали: ни байта кода, ни <audio>-элементов. media.js — ES-модуль, наши
 // let-глобалы (ST/CONFIG/qpcMeta) ему не видны — передаём контекст геттерами.
-const MEDIA_VER="4";   // поднять при правке media.js (сброс кеша браузера/CDN)
+const MEDIA_VER="5";   // поднять при правке media.js (сброс кеша браузера/CDN)
 let MEDIA=null;        // загруженный модуль (null = ещё не загружался)
 function mediaCtx(){
   return {

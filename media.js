@@ -295,7 +295,6 @@ function barEl(){
 // Короткая подпись состояния повтора на кнопке (полный выбор — в меню loop).
 function loopLabel(){
   if(P.range)return"🔁 "+P.range.a.ayah+"–"+P.range.b.ayah;
-  if(P.rangeArm)return"🔁 A‥";
   if(P.repeat===Infinity)return"🔁 ∞";
   if(P.repeat)return"🔁 ×"+P.repeat;
   return"🔁 Повтор";
@@ -369,8 +368,7 @@ function openMenu(){
 // как выбрать цикл). Повтор одного аята и повтор диапазона A–B в одном списке.
 function openRepeatMenu(){
   closeMenu();
-  const at=POS.sura+":"+POS.ayah;
-  const rowNone=!P.repeat&&!P.range&&!P.rangeArm;
+  const rowNone=!P.repeat&&!P.range;
   let h=`<div class="mm-h">Повтор одного аята</div>`+
     `<button data-loop="off" class="${rowNone?"on":""}">Без повтора</button>`+
     `<button data-loop="r2" class="${P.repeat===2?"on":""}">Повторять 2 раза</button>`+
@@ -379,27 +377,33 @@ function openRepeatMenu(){
     `<div class="mm-h">Повтор диапазона аятов</div>`;
   if(P.range)
     h+=`<button data-loop="abclear" class="on">Диапазон ${P.range.a.sura}:${P.range.a.ayah} – ${P.range.b.sura}:${P.range.b.ayah} · сбросить</button>`;
-  else if(P.rangeArm)
-    h+=`<button data-loop="abend">Закончить диапазон на аяте ${at}</button>`+
-       `<button data-loop="abcancel">Отменить (начало: ${P.rangeArm.sura}:${P.rangeArm.ayah})</button>`;
-  else
-    h+=`<button data-loop="abstart">Начать диапазон с аята ${at}…</button>`;
+  // Поля «с … по …» в текущей суре: ввод номеров без беготни указателем.
+  const n=ayahCount(POS.sura)||1;
+  const from=Math.min(POS.ayah,n),to=Math.min(POS.ayah+6,n);
+  h+=`<div class="mm-range">В суре ${POS.sura}: с
+      <input class="mm-in" id="mmFrom" type="number" inputmode="numeric" min="1" max="${n}" value="${from}"> по
+      <input class="mm-in" id="mmTo" type="number" inputmode="numeric" min="1" max="${n}" value="${to}">
+      <button class="mm-go" data-loop="abset">Повторять</button></div>`;
   const menu=document.createElement("div");
   menu.id="mediaMenu";menu.className="media-menu";menu.innerHTML=h;
   menu.addEventListener("click",e=>{
     const b=e.target.closest("[data-loop]");if(!b)return;
+    if(b.dataset.loop==="abset"){
+      const n2=ayahCount(POS.sura)||1;
+      const cl=v=>Math.max(1,Math.min(n2,parseInt(v,10)||1));
+      let f=cl(menu.querySelector("#mmFrom").value),t=cl(menu.querySelector("#mmTo").value);
+      if(f>t){const x=f;f=t;t=x;}
+      P.range={a:{sura:POS.sura,ayah:f},b:{sura:POS.sura,ayah:t}};P.rangeArm=null;P.repeat=0;
+      P.played=0;closeMenu();
+      // сразу встать на начало диапазона и играть, если плеер активен
+      if(P.active){setPos(POS.sura,f);if(P.playing)playCur();else renderBar();}else renderBar();
+      return;
+    }
     switch(b.dataset.loop){
       case"off": P.repeat=0;P.range=null;P.rangeArm=null;break;
       case"r2":  P.repeat=2;P.range=null;P.rangeArm=null;break;
       case"r3":  P.repeat=3;P.range=null;P.rangeArm=null;break;
       case"rinf":P.repeat=Infinity;P.range=null;P.rangeArm=null;break;
-      case"abstart":P.rangeArm={sura:POS.sura,ayah:POS.ayah};P.repeat=0;P.range=null;break;
-      case"abend":{
-        let a=P.rangeArm,b2={sura:POS.sura,ayah:POS.ayah};
-        if(key(a.sura,a.ayah)>key(b2.sura,b2.ayah)){const t=a;a=b2;b2=t;}
-        P.range={a,b:b2};P.rangeArm=null;break;
-      }
-      case"abcancel":P.rangeArm=null;break;
       case"abclear":P.range=null;P.rangeArm=null;break;
     }
     P.played=0;closeMenu();renderBar();
