@@ -293,6 +293,23 @@
       "reviewLevel": "caution"
     },
     {
+      "id": "alyautdinov",
+      "file": "tafsirs/alyautdinov.json",
+      "name": "Богословский перевод (Аляутдинов)",
+      "nameAr": "الترجمة اللاهوتية",
+      "author": "",
+      "authorAr": "",
+      "group": "translations",
+      "kind": "translation",
+      "lang": "ru",
+      "era": "modern",
+      "tags": [],
+      "year": "2019",
+      "about": true,
+      "fill": 1.0,
+      "translator": "Шамиль Аляутдинов"
+    },
+    {
       "id": "boguslawski",
       "name": "Богуславский (скан)",
       "nameAr": "ترجمة بوغوسلافسكي",

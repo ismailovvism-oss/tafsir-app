@@ -3633,7 +3633,7 @@ function toggleClamp(btn){const d=btn.previousElementSibling;const on=d.classLis
 // markers [^N] in the text, and definitions "[^N]: …" (one per note) at the end.
 // Refs render as superscript indices; the notes list below the ayah (no label word).
 function splitNotes(text){
-  const i=text.search(/\n*\[\^\w+\]:/);
+  const i=text.search(/(?:^|\n)[ \t]*\[\^\w+\]:/);
   if(i<0)return{body:text,notes:[]};
   const body=text.slice(0,i).replace(/\s+$/,"");
   const tail=text.slice(i);const notes=[];
