@@ -909,19 +909,37 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
 .spd-pill button{font-family:inherit;font-size:12px;border-radius:999px;border:1px solid var(--border);background:var(--bg);color:var(--text);padding:6px 11px;cursor:pointer}
 .spd-pill button.fin{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
 .spd-pill.paused .t{color:var(--text-muted)}
-/* — медиа-пилюля (аудио-плеер media.js): фиксированная, живёт поверх режимов чтения — */
-.media-pill{position:fixed;left:50%;transform:translateX(-50%);bottom:74px;z-index:60;display:flex;align-items:center;gap:6px;
-  background:var(--bg);border:1px solid var(--accent);border-radius:999px;padding:6px 10px;box-shadow:0 4px 18px rgba(0,0,0,.25);max-width:96vw}
-.media-pill button{font-family:inherit;font-size:13px;border-radius:999px;border:1px solid var(--border);background:var(--bg);color:var(--text);padding:5px 9px;cursor:pointer;white-space:nowrap}
-.media-pill button.pp{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;font-size:15px;padding:5px 13px}
-.media-pill button.on{border-color:var(--accent);color:var(--accent);font-weight:600}
-.media-pill .lbl{font-size:13px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;cursor:pointer;padding:0 2px;white-space:nowrap}
-.media-pill .lbl small{font-weight:400;color:var(--text-muted)}
-.media-pill .err{font-size:11px;color:#c0392b;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* — медиа-панель (аудио-плеер media.js): НЕ плавает — обычный ряд flex-колонки
+   main.center, вставляется над нижней навигацией (bottomNav.before). Состояние
+   «свёрнут» (.min) — узкая полоска: ▶/⏸ + аят + развернуть — текст почти не теряет высоты — */
+.media-bar{display:flex;align-items:center;gap:6px;justify-content:center;flex-shrink:0;overflow-x:auto;
+  padding:6px 8px;border-top:1px solid var(--border);background:var(--bg-card)}
+.media-bar button{font-family:inherit;font-size:13px;border-radius:999px;border:1px solid var(--border);background:var(--bg);color:var(--text);padding:5px 9px;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.media-bar button.pp{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;font-size:15px;padding:5px 13px}
+.media-bar button.on{border-color:var(--accent);color:var(--accent);font-weight:600}
+.media-bar button.ghost{border-color:transparent;background:transparent;color:var(--text-muted)}
+.media-bar .lbl{font-size:13px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;cursor:pointer;padding:0 2px;white-space:nowrap}
+.media-bar .lbl small{font-weight:400;color:var(--text-muted)}
+.media-bar .err{font-size:11px;color:#c0392b;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.media-bar.min{padding:2px 8px;gap:4px;justify-content:center}
+.media-bar.min button{padding:2px 8px;font-size:12px}
+.media-bar.min button.pp{font-size:13px;padding:2px 10px}
+body.immersive .media-bar{display:none!important}
 .ayah-block.media-cur,.wbw-ayah.media-cur{box-shadow:0 0 0 2px var(--accent);border-radius:8px}
-.ab-play-btn{background:var(--bg-card);border:1px solid var(--border);border-radius:4px;padding:1px 7px;cursor:pointer;font-size:11px;color:var(--text-muted)}
-.ab-play-btn:hover{color:var(--accent);border-color:var(--accent)}
-@media(max-width:520px){.media-pill{gap:4px;padding:5px 7px;bottom:66px}.media-pill button{padding:4px 7px;font-size:12px}.media-pill button.pp{padding:4px 11px}}
+.ab-play-btn,.ab-rec-btn{background:var(--bg-card);border:1px solid var(--border);border-radius:4px;padding:1px 7px;cursor:pointer;font-size:11px;color:var(--text-muted)}
+.ab-play-btn:hover,.ab-rec-btn:hover{color:var(--accent);border-color:var(--accent)}
+.ab-rec-btn.has{color:var(--accent);border-color:var(--accent)}
+/* попап записи аята (🎙): якорится к кнопке, строит media.js */
+.rec-pop{position:fixed;z-index:200;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;
+  box-shadow:0 6px 24px rgba(0,0,0,.3);padding:10px;width:250px;font-size:13px;color:var(--text)}
+.rec-pop .rp-title{font-weight:700;margin-bottom:6px}
+.rec-pop select{width:100%;margin:4px 0 8px;font-family:inherit;font-size:12px;padding:4px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text)}
+.rec-pop .rp-row{display:flex;gap:6px;flex-wrap:wrap}
+.rec-pop .rp-row button{font-family:inherit;font-size:12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);padding:6px 10px;cursor:pointer}
+.rec-pop .rp-row button.hot{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.rec-pop .rp-note{font-size:11px;color:var(--text-muted);margin-top:6px}
+.rec-pop .rp-rec{color:#c0392b;font-weight:700;animation:recblink 1.2s infinite}
+@keyframes recblink{50%{opacity:.35}}
 .spd-big{font-size:26px;font-weight:700;color:var(--text)}
 .spd-big small{font-size:13px;font-weight:400;color:var(--text-muted)}
 .spd-rec{color:#c98a1e;font-weight:700}
@@ -1140,13 +1158,13 @@ function scanDirOf(t){return t.imgdir||("img/"+t.id);}
 // первом обращении (▶ у аята или блок «🎧 Аудио» в панели 📚). Пока аудио не
 // трогали: ни байта кода, ни <audio>-элементов. media.js — ES-модуль, наши
 // let-глобалы (ST/CONFIG/qpcMeta) ему не видны — передаём контекст геттерами.
-const MEDIA_VER="1";   // поднять при правке media.js (сброс кеша браузера/CDN)
+const MEDIA_VER="2";   // поднять при правке media.js (сброс кеша браузера/CDN)
 let MEDIA=null;        // загруженный модуль (null = ещё не загружался)
 function mediaCtx(){
   return {
     get ST(){return ST;},get CONFIG(){return CONFIG;},get qpcMeta(){return qpcMeta;},
     SURAHS,resolveUrl,gs,ss,esc,escAttr,
-    jumpTo:t=>jumpTo(t),renderRP:()=>renderRP(),
+    jumpTo:t=>jumpTo(t),renderRP:()=>renderRP(),renderCenter:()=>renderCenter(),
   };
 }
 async function mediaMod(){
@@ -4695,6 +4713,7 @@ async function renderReading(el){
           <button class="ab-bm-btn ${isBookmarked(ST.surah,aid)?'on':''}" onclick="event.stopPropagation();toggleBookmark(${aid},this)" title="Закладка">${isBookmarked(ST.surah,aid)?'★':'☆'}</button>
           <button class="ab-note-btn ${hn?'has':''}" onclick="event.stopPropagation();toggleNote(${aid},this)" title="Заметка к аяту">📝</button>
           <button class="ab-play-btn" onclick="event.stopPropagation();mediaPlayAyah(${aid})" title="Слушать с этого аята">▶</button>
+          <button class="ab-rec-btn ${MEDIA&&MEDIA.hasRec(ST.surah,aid)?'has':''}" onclick="event.stopPropagation();mediaRecPopup(${aid},this)" title="Моя запись этого аята">🎙</button>
           ${peekKind?`<button class="ab-peek-btn" data-peek="${peekKind}" onclick="event.stopPropagation();togglePeek(${aid},this)" title="${peekKind==='ru'?'Показать перевод этого аята':'Показать оригинал этого аята'}">${peekKind}</button>`:''}
         </div>
         <div class="ab-tag-dots">${hn?'<span class="ab-note-dot"></span>':''}</div>
@@ -5148,11 +5167,35 @@ function audioBlockHTML(){
   if(!rs.length)return"";
   const cur=gs("mediaReciter",(CONFIG.audio&&CONFIG.audio.default)||rs[0].id);
   const rows=rs.map(r=>`<label class="vp-check"><input type="radio" name="mediaRec" ${r.id===cur?"checked":""} onchange="mediaSetReciter('${escAttr(r.id)}')"> ${esc(r.name)}</label>`).join("");
+  // Наборы записей пользователя — полноправные источники наравне с чтецами.
+  // Метаданные (id+имя) — в localStorage (tl_mediaSets, вне синка), сами
+  // записи (blob) — только в IndexedDB (media.js).
+  const sets=gs("mediaSets",[]);
+  const setRows=sets.map(s=>`<label class="vp-check" style="display:flex;align-items:center;gap:4px"><input type="radio" name="mediaRec" ${("rec:"+s.id)===cur?"checked":""} onchange="mediaSetReciter('rec:${escAttr(s.id)}')"> <span style="flex:1">🎙 ${esc(s.name)}</span><button class="t-info-btn" onclick="event.preventDefault();mediaDelSet('${escAttr(s.id)}')" title="Удалить набор со всеми записями">🗑</button></label>`).join("");
   return `<div class="rp-quran"><div class="rp-sec-head">🎧 Аудио (чтец)</div>
-    <div class="rp-q-body">${rows}
+    <div class="rp-q-body">${rows}${setRows}
     <button class="cov-map-open" style="margin:6px 0 0" onclick="mediaPlaySurah()">▶ Слушать текущую суру</button>
-    <div class="vp-note">Аудио стримится с everyayah.com (нужен интернет). ▶ у номера аята — слушать с него; в пилюле внизу: повтор аята, повтор диапазона A–B, скорость.</div></div></div>`;
+    <button class="cov-map-open" style="margin:6px 0 0" onclick="mediaNewSet()">➕ Новый набор записей</button>
+    <div class="vp-note">Чтецы стримятся с everyayah.com (нужен интернет). Наборы записей — ваш голос, кнопка 🎙 у аята; хранятся только на этом устройстве и работают офлайн. ▶ у номера аята — слушать с него.</div></div></div>`;
 }
+// Новый набор записей: имя → tl_mediaSets; записи в него кладёт попап 🎙
+function mediaNewSet(){
+  const name=(prompt("Название набора записей (например «Мой голос»):")||"").trim();
+  if(!name)return;
+  const sets=gs("mediaSets",[]);
+  const id="s"+Date.now().toString(36);
+  sets.push({id,name});ss("mediaSets",sets);renderRP();
+}
+// Удалить набор: метаданные из tl_mediaSets + все blob из IndexedDB (media.js)
+function mediaDelSet(id){
+  const sets=gs("mediaSets",[]);const s=sets.find(x=>x.id===id);
+  if(!s||!confirm("Удалить набор «"+s.name+"» со всеми записями? Это необратимо."))return;
+  ss("mediaSets",sets.filter(x=>x.id!==id));
+  if(gs("mediaReciter","")==="rec:"+id)ss("mediaReciter",(CONFIG.audio&&CONFIG.audio.default)||"");
+  mediaMod().then(m=>m&&m.deleteSetData(id)).finally(()=>{renderRP();renderCenter();});
+}
+// Попап записи аята (🎙): запись/прослушать/удалить — строит media.js
+function mediaRecPopup(a,btn){mediaMod().then(m=>m&&m.openRecPopup(ST.surah,a,btn));}
 // Кнопка «Печатный» в ⚙ Вид: не сбрасывать таджвид повторным тапом; при
 // включённой галочке печатный = цветной пак qpc4t
 function setArFontUI(f){
@@ -6275,7 +6318,7 @@ async function renderWbw(el){
     let endG="";
     if(entry.e){ensurePageFont(pack,entry.e[1]);endG=`<span class="wbw-end" style="font-family:'${pack.fontFamily(entry.e[1])}'">${entry.e[0]}</span>`;}
     html+=`<div class="wbw-ayah" data-aid="${aid}">
-      <div class="wbw-head"><span class="wbw-num">${surah}:${aid}</span> <button class="ab-play-btn" onclick="mediaPlayAyah(${aid})" title="Слушать с этого аята">▶</button></div>
+      <div class="wbw-head"><span class="wbw-num">${surah}:${aid}</span> <button class="ab-play-btn" onclick="mediaPlayAyah(${aid})" title="Слушать с этого аята">▶</button> <button class="ab-rec-btn ${MEDIA&&MEDIA.hasRec(surah,aid)?'has':''}" onclick="mediaRecPopup(${aid},this)" title="Моя запись этого аята">🎙</button></div>
       <div class="wbw-grid">${cells}${endG}</div></div>`;
   }
   html+=`<div class="wbw-attr">Русский пословный глосс — наш черновой перевод (сверка по смыслу с переводом Э. Кулиева; сам перевод Кулиева не распространяется). Английский глосс: <a href="https://github.com/hablullah/data-quran" target="_blank" rel="noopener">data-quran</a> (CC BY-NC-ND, без изменений). Грамматический разбор: <a href="http://corpus.quran.com" target="_blank" rel="noopener">Quranic Arabic Corpus</a> (GPL).</div>`;
