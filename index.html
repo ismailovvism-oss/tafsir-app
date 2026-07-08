@@ -944,6 +944,16 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
   color:var(--text);padding:8px 10px;border-radius:8px;cursor:pointer;white-space:nowrap}
 .media-menu button:hover{background:var(--bg)}
 .media-menu button.on{color:var(--accent);font-weight:700}
+/* визуальный слой (media.js, фаза 3): полоса-картинка над лентой чтения —
+   персистентный сосед #centerBody; два слоя для crossfade + Ken Burns */
+.visual-band{position:relative;flex-shrink:0;height:22vh;max-height:200px;min-height:118px;overflow:hidden;background:var(--bg-card);border-bottom:1px solid var(--border)}
+.visual-band .vb-layer{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity .8s ease;will-change:opacity,transform}
+.visual-band .vb-layer.kb{animation:kenburns 20s ease-out forwards}
+@keyframes kenburns{from{transform:scale(1)}to{transform:scale(1.13)}}
+.visual-band.empty{display:none!important}
+.visual-band .vb-x{position:absolute;top:6px;right:6px;z-index:2;width:26px;height:26px;border:none;border-radius:50%;background:rgba(0,0,0,.34);color:#fff;cursor:pointer;font-size:12px;opacity:.5;transition:opacity .15s}
+.visual-band .vb-x:hover{opacity:1}
+@media(max-width:520px){.visual-band{height:19vh;min-height:104px}}
 .ayah-block.media-cur,.wbw-ayah.media-cur{box-shadow:0 0 0 2px var(--accent);border-radius:8px}
 .ab-play-btn,.ab-rec-btn{background:var(--bg-card);border:1px solid var(--border);border-radius:4px;padding:1px 7px;cursor:pointer;font-size:11px;color:var(--text-muted)}
 .ab-play-btn:hover,.ab-rec-btn:hover{color:var(--accent);border-color:var(--accent)}
@@ -1147,6 +1157,11 @@ const SOURCES={
   // — поаятное CDN-аудио чтецов (media.js): {subdir} — каталог чтеца из
   //   config.json (audio.reciters), {file}=NNNSSS.mp3 (паддинг у вызывающего) —
   audio_cdn:       {baseUrl:"https://everyayah.com/data", pathTemplate:"{baseUrl}/{subdir}/{file}"},
+  // — визуальный слой (media.js, фаза 3): лёгкая карта тема→картинки (локально)
+  //   и сами картинки; относит. пути картинок резолвятся классом visual_media
+  //   (можно унести тяжёлые фото на R2 сменой baseUrl), абсолютные http — как есть —
+  visual_map:      {baseUrl:"data",  pathTemplate:"{baseUrl}/media/visual.json"},
+  visual_media:    {baseUrl:"data",  pathTemplate:"{baseUrl}/media/{file}"},
   // — объёмные арабские тома (на будущее, лежат там же, что и тафсиры) —
   arabic_volumes:  {baseUrl:"data",  pathTemplate:"{baseUrl}/tafsirs/{source}/{sura}.json"},     // задел
 };
@@ -1182,7 +1197,7 @@ function scanDirOf(t){return t.imgdir||("img/"+t.id);}
 // первом обращении (▶ у аята или блок «🎧 Аудио» в панели 📚). Пока аудио не
 // трогали: ни байта кода, ни <audio>-элементов. media.js — ES-модуль, наши
 // let-глобалы (ST/CONFIG/qpcMeta) ему не видны — передаём контекст геттерами.
-const MEDIA_VER="3";   // поднять при правке media.js (сброс кеша браузера/CDN)
+const MEDIA_VER="4";   // поднять при правке media.js (сброс кеша браузера/CDN)
 let MEDIA=null;        // загруженный модуль (null = ещё не загружался)
 function mediaCtx(){
   return {
@@ -3293,6 +3308,7 @@ async function loadConfig(){
   Progress.ensureInit();                             // запустить таймер активного времени (слой CREDITED)
   render();
   if(syncEnabled())syncPull();                        // тихий пул при открытии (полуавто), ре-рендер при слиянии
+  if(gs("mediaVisual",false))mediaMod();              // восстановить визуальный слой (init→toggleVisual(true))
 }
 function useFB(){
   CONFIG={groups:[
@@ -3988,6 +4004,14 @@ function renderCB(){
 
 // -- CENTER BODY --
 function renderCenter(){
+  const r=renderCenterBody();
+  // визуальный слой (media.js): обновить полосу картинок после построения DOM
+  // (для async-рендеров — по завершении промиса, DOM уже готов)
+  if(MEDIA&&MEDIA.visualEnabled&&MEDIA.visualEnabled())
+    Promise.resolve(r).then(()=>{try{MEDIA.afterRender();}catch(e){}});
+  return r;
+}
+function renderCenterBody(){
   const el=document.getElementById("centerBody");
   if(ST.homeMode)return renderHome(el);
   if(ST.hifzMode)return renderHifzScreen(el);
@@ -5196,12 +5220,17 @@ function audioBlockHTML(){
   // записи (blob) — только в IndexedDB (media.js).
   const sets=gs("mediaSets",[]);
   const setRows=sets.map(s=>`<label class="vp-check" style="display:flex;align-items:center;gap:4px"><input type="radio" name="mediaRec" ${("rec:"+s.id)===cur?"checked":""} onchange="mediaSetReciter('rec:${escAttr(s.id)}')"> <span style="flex:1">🎙 ${esc(s.name)}</span><button class="t-info-btn" onclick="event.preventDefault();mediaDelSet('${escAttr(s.id)}')" title="Удалить набор со всеми записями">🗑</button></label>`).join("");
+  const visOn=gs("mediaVisual",false);
   return `<div class="rp-quran"><div class="rp-sec-head">🎧 Аудио (чтец)</div>
     <div class="rp-q-body">${rows}${setRows}
     <button class="cov-map-open" style="margin:6px 0 0" onclick="mediaPlaySurah()">▶ Слушать текущую суру</button>
     <button class="cov-map-open" style="margin:6px 0 0" onclick="mediaNewSet()">➕ Новый набор записей</button>
-    <div class="vp-note">Чтецы стримятся с everyayah.com (нужен интернет). Наборы записей — ваш голос, кнопка 🎙 у аята; хранятся только на этом устройстве и работают офлайн. ▶ у номера аята — слушать с него.</div></div></div>`;
+    <label class="vp-check" style="margin-top:8px"><input type="checkbox" ${visOn?"checked":""} onchange="mediaToggleVisual(this.checked)"> 🖼 Визуальный ряд (картинки по темам)</label>
+    <div class="vp-note">Чтецы стримятся с everyayah.com (нужен интернет). Наборы записей — ваш голос, кнопка 🎙 у аята; хранятся только на этом устройстве и работают офлайн. Визуальный ряд — атмосферная картинка над текстом по теме аята (фихрист); включается отдельно от аудио.</div></div></div>`;
 }
+// Визуальный слой (картинки по темам) — включается отдельно от аудио; media.js
+// грузится лениво при первом включении.
+function mediaToggleVisual(on){mediaMod().then(m=>m&&m.toggleVisual(on));}
 // Новый набор записей: имя → tl_mediaSets; записи в него кладёт попап 🎙
 function mediaNewSet(){
   const name=(prompt("Название набора записей (например «Мой голос»):")||"").trim();

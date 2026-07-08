@@ -125,9 +125,18 @@ fonts/              ← самохостимые шрифты (.woff2)
   сворачивание ⌄/⌃ → `tl_mediaMin`. Попап записи (`.rec-pop`) — нижний лист,
   аят подкручен выше (виден при записи), рисуется синхронно (индикатор из
   `RECKEYS`, idb догоняет). Настройки `tl_mediaReciter`/`tl_mediaRate`/
-  `tl_mediaSets`/`tl_mediaRecSet` — НЕ в SYNCED_KEYS (записи локальны). Дальше:
-  фаза 3 — визуальный слой на темах фихриста (byAyah.json); Cache API-докачка
-  офлайна, тайминги QUL, караоке, видео — отложены.
+  `tl_mediaSets`/`tl_mediaRecSet` — НЕ в SYNCED_KEYS (записи локальны). Повтор
+  выбирается из меню (`openRepeatMenu`, кнопка `data-act="loop"`): аят ×2/×3/∞
+  или диапазон A–B (начать→закончить). **Фаза 3 — визуальный слой**: полоса
+  `#visualBand` (сосед `#centerBody`, `visual-band`, 2 слоя crossfade+Ken Burns)
+  над лентой чтения; пул = картинки тем аята из `data/topics/byAyah.json` +
+  `data/media/visual.json` (`topics`/`pins`/`default`); выбор при входе в аят,
+  держится в пределах аята, не повторяет предыдущую; классы `visual_map`/
+  `visual_media` в SOURCES; `render_type:image` (SVG-заглушки `data/media/img/`);
+  включается галочкой «🖼» (`tl_mediaVisual`), независимо от аудио, без аудио
+  ведётся скроллом (верхний видимый аят), хук `afterRender` из `renderCenter`.
+  Отложены: Cache API-докачка офлайна, тайминги QUL, караоке, видео, свои
+  картинки пользователя.
 - **Богословский перевод Аляутдинова** (2026-07-08): источник `alyautdinov`
   (группа «Переводы», 114 сур, `build_alyautdinov.py`) с флагом `reviewLevel:
   "caution"` («не проверено»). Имя ведёт словом «Аляутдинов», чтобы не путать с

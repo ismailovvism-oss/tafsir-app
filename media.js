@@ -292,10 +292,14 @@ function barEl(){
   }
   return el;
 }
-const REP_STEPS=[0,2,3,Infinity];
-// Понятные подписи: повтор аята показывает состояние словами, чтобы не гадать.
-function repLabel(){return P.repeat===Infinity?"🔁 ∞":P.repeat?"🔁 ×"+P.repeat:"🔁 нет";}
-function abLabel(){return P.range?"🔂 A–B ✓":P.rangeArm?"🔂 A‥":"🔂 A–B";}
+// Короткая подпись состояния повтора на кнопке (полный выбор — в меню loop).
+function loopLabel(){
+  if(P.range)return"🔁 "+P.range.a.ayah+"–"+P.range.b.ayah;
+  if(P.rangeArm)return"🔁 A‥";
+  if(P.repeat===Infinity)return"🔁 ∞";
+  if(P.repeat)return"🔁 ×"+P.repeat;
+  return"🔁 Повтор";
+}
 function srcName(){return SRC?SRC.name:"—";}
 function srcIcon(){return SRC&&SRC.type==="audio_user_recording"?"🎙":"🎧";}
 function renderBar(){
@@ -323,8 +327,7 @@ function renderBar(){
     `</span>`+
     `<span class="mb-grp">`+
       `<button data-act="src" class="src" title="Выбрать чтеца или набор своих записей">${srcIcon()} ${ctx.esc(srcName())} ▾</button>`+
-      `<button data-act="rep" class="${P.repeat?"on":""}" title="Повтор одного аята: нет → ×2 → ×3 → ∞">${repLabel()}</button>`+
-      `<button data-act="ab" class="${(P.range||P.rangeArm)?"on":""}" title="Повтор диапазона: тап на первом аяте — отметить начало, дойти до последнего и тап — конец; ещё тап — сброс">${abLabel()}</button>`+
+      `<button data-act="loop" class="${(P.repeat||P.range||P.rangeArm)?"on":""}" title="Повтор аята или диапазона — выбрать из списка">${loopLabel()} ▾</button>`+
       `<button data-act="rate" title="Скорость чтения">⏩ ${P.rate}×</button>`+
     `</span>`+
     `<span class="mb-grp">`+
@@ -340,7 +343,7 @@ function closeMenu(){
 }
 function outsideMenu(e){
   const m=document.getElementById("mediaMenu");
-  if(m&&!m.contains(e.target)&&!e.target.closest('[data-act="src"]'))closeMenu();
+  if(m&&!m.contains(e.target)&&!e.target.closest('[data-act="src"],[data-act="loop"]'))closeMenu();
 }
 function openMenu(){
   closeMenu();
@@ -362,6 +365,48 @@ function openMenu(){
   barEl().appendChild(menu);
   setTimeout(()=>document.addEventListener("pointerdown",outsideMenu,true),0);
 }
+// Меню ВЫБОРА повтора — явный список вместо тапа-по-кругу (чтобы было понятно,
+// как выбрать цикл). Повтор одного аята и повтор диапазона A–B в одном списке.
+function openRepeatMenu(){
+  closeMenu();
+  const at=POS.sura+":"+POS.ayah;
+  const rowNone=!P.repeat&&!P.range&&!P.rangeArm;
+  let h=`<div class="mm-h">Повтор одного аята</div>`+
+    `<button data-loop="off" class="${rowNone?"on":""}">Без повтора</button>`+
+    `<button data-loop="r2" class="${P.repeat===2?"on":""}">Повторять 2 раза</button>`+
+    `<button data-loop="r3" class="${P.repeat===3?"on":""}">Повторять 3 раза</button>`+
+    `<button data-loop="rinf" class="${P.repeat===Infinity?"on":""}">Повторять бесконечно</button>`+
+    `<div class="mm-h">Повтор диапазона аятов</div>`;
+  if(P.range)
+    h+=`<button data-loop="abclear" class="on">Диапазон ${P.range.a.sura}:${P.range.a.ayah} – ${P.range.b.sura}:${P.range.b.ayah} · сбросить</button>`;
+  else if(P.rangeArm)
+    h+=`<button data-loop="abend">Закончить диапазон на аяте ${at}</button>`+
+       `<button data-loop="abcancel">Отменить (начало: ${P.rangeArm.sura}:${P.rangeArm.ayah})</button>`;
+  else
+    h+=`<button data-loop="abstart">Начать диапазон с аята ${at}…</button>`;
+  const menu=document.createElement("div");
+  menu.id="mediaMenu";menu.className="media-menu";menu.innerHTML=h;
+  menu.addEventListener("click",e=>{
+    const b=e.target.closest("[data-loop]");if(!b)return;
+    switch(b.dataset.loop){
+      case"off": P.repeat=0;P.range=null;P.rangeArm=null;break;
+      case"r2":  P.repeat=2;P.range=null;P.rangeArm=null;break;
+      case"r3":  P.repeat=3;P.range=null;P.rangeArm=null;break;
+      case"rinf":P.repeat=Infinity;P.range=null;P.rangeArm=null;break;
+      case"abstart":P.rangeArm={sura:POS.sura,ayah:POS.ayah};P.repeat=0;P.range=null;break;
+      case"abend":{
+        let a=P.rangeArm,b2={sura:POS.sura,ayah:POS.ayah};
+        if(key(a.sura,a.ayah)>key(b2.sura,b2.ayah)){const t=a;a=b2;b2=t;}
+        P.range={a,b:b2};P.rangeArm=null;break;
+      }
+      case"abcancel":P.rangeArm=null;break;
+      case"abclear":P.range=null;P.rangeArm=null;break;
+    }
+    P.played=0;closeMenu();renderBar();
+  });
+  barEl().appendChild(menu);
+  setTimeout(()=>document.addEventListener("pointerdown",outsideMenu,true),0);
+}
 const RATE_STEPS=[1,1.25,1.5,0.75];
 function onBarClick(e){
   const b=e.target.closest("[data-act]");if(!b)return;
@@ -371,20 +416,8 @@ function onBarClick(e){
     case"pp":togglePlay();break;
     case"goto":followText(POS.sura,POS.ayah);break;
     case"src":openMenu();break;
+    case"loop":openRepeatMenu();break;
     case"min":P.min=!P.min;ctx.ss("mediaMin",P.min);renderBar();break;
-    case"rep":{
-      P.repeat=REP_STEPS[(REP_STEPS.indexOf(P.repeat)+1)%REP_STEPS.length];
-      P.played=0;renderBar();break;
-    }
-    case"ab":{
-      if(P.range){P.range=null;P.rangeArm=null;}                 // 3-й тап — сброс
-      else if(P.rangeArm){                                       // 2-й тап — конец
-        let a=P.rangeArm,b2={sura:POS.sura,ayah:POS.ayah};
-        if(key(a.sura,a.ayah)>key(b2.sura,b2.ayah)){const t=a;a=b2;b2=t;}
-        P.range={a,b:b2};P.rangeArm=null;
-      }else P.rangeArm={sura:POS.sura,ayah:POS.ayah};            // 1-й тап — начало
-      renderBar();break;
-    }
     case"rate":{
       P.rate=RATE_STEPS[(RATE_STEPS.indexOf(P.rate)+1)%RATE_STEPS.length];
       ctx.ss("mediaRate",P.rate);
@@ -522,16 +555,130 @@ export async function deleteSetData(id){
   if(SRC&&SRC.id==="rec:"+id){SRC=null;stopAll();}
 }
 
+// ---------- визуальный слой (фаза 3): картинки по темам фихриста ----------
+// Ведётся ТЕМ ЖЕ указателем аята, что и аудио (onAyahChange). Пул картинок
+// аята = объединение картинок всех его тем (data/topics/byAyah.json →
+// data/media/visual.json). При ВХОДЕ в аят — случайный выбор из пула, держим
+// пока аят не сменился (повтор/цикл не перевыбирает); не повторяем предыдущую.
+// render_type пока "image" (<img> как background); "video_file" — та же карта.
+// Слой НЕЗАВИСИМ от аудио: без аудио ведётся верхним видимым аятом (скролл).
+const V={on:false,map:null,byAyah:null,loading:null,cur:"",img:"",last:"",band:null,imgA:null,imgB:null,front:0,scrollBound:false};
+function loadVisual(){
+  if(V.map)return Promise.resolve(true);
+  if(V.loading)return V.loading;
+  V.loading=Promise.all([
+    fetch(ctx.resolveUrl("visual_map")).then(r=>r.ok?r.json():null).catch(()=>null),
+    fetch(ctx.resolveUrl("topics",{file:"byAyah.json"})).then(r=>r.ok?r.json():null).catch(()=>null),
+  ]).then(([m,b])=>{V.map=m||{topics:{},default:[],pins:{}};V.byAyah=b||{};return true;})
+    .catch(()=>{V.map={topics:{},default:[],pins:{}};V.byAyah={};return true;});
+  return V.loading;
+}
+function imgUrl(src){return /^https?:/i.test(src)?src:ctx.resolveUrl("visual_media",{file:src});}
+// Пул аята: пин > объединение картинок его тем > общий default
+function poolFor(s,a){
+  const map=V.map;if(!map)return[];
+  const k=sa(s,a);
+  if(map.pins&&map.pins[k])return[map.pins[k]];
+  const topics=(V.byAyah&&V.byAyah[k])||[];
+  const out=[];
+  for(const t of topics){const imgs=map.topics&&map.topics[String(t)];if(imgs)for(const im of imgs)if(!out.includes(im))out.push(im);}
+  return out.length?out:(map.default||[]).slice();
+}
+function ensureBand(){
+  let band=document.getElementById("visualBand");
+  if(band){V.band=band;V.imgA=band.querySelector('[data-l="0"]');V.imgB=band.querySelector('[data-l="1"]');return band;}
+  const cb=document.getElementById("centerBody"),main=cb&&cb.parentNode;
+  if(!main)return null;
+  band=document.createElement("div");band.id="visualBand";band.className="visual-band";
+  band.innerHTML=`<div class="vb-layer" data-l="0"></div><div class="vb-layer" data-l="1"></div><button class="vb-x" title="Скрыть картинки">✕</button>`;
+  main.insertBefore(band,cb);           // персистентный сосед centerBody (переживает ре-рендер)
+  V.band=band;V.imgA=band.querySelector('[data-l="0"]');V.imgB=band.querySelector('[data-l="1"]');V.front=0;
+  band.querySelector(".vb-x").addEventListener("click",()=>toggleVisual(false));
+  return band;
+}
+function showImg(src){
+  const band=ensureBand();if(!band)return;
+  if(!src){band.classList.add("empty");return;}
+  band.classList.remove("empty");
+  const show=V.front===0?V.imgB:V.imgA, hide=V.front===0?V.imgA:V.imgB;
+  show.style.backgroundImage=`url("${imgUrl(src).replace(/"/g,'%22')}")`;
+  show.classList.remove("kb");void show.offsetWidth;show.classList.add("kb"); // перезапуск Ken Burns
+  show.style.opacity="1";hide.style.opacity="0";                              // crossfade
+  V.front=V.front===0?1:0;
+}
+// Выбор при входе в аят: держим в пределах аята, не повторяем предыдущую картинку
+function visualSetAyah(s,a){
+  if(!V.on)return;
+  const k=sa(s,a);
+  if(k===V.cur)return;
+  V.cur=k;
+  const pool=poolFor(s,a);
+  if(!pool.length){showImg(null);V.img="";return;}
+  let pick;
+  if(pool.length===1)pick=pool[0];
+  else{const alt=pool.filter(p=>p!==V.last);const arr=alt.length?alt:pool;pick=arr[Math.floor(Math.random()*arr.length)];}
+  V.last=pick;V.img=pick;showImg(pick);
+}
+// Текущий аят без аудио — верхний видимый в ленте чтения
+function topVisibleAyah(){
+  const area=document.getElementById("readingArea");if(!area)return null;
+  const refTop=area.getBoundingClientRect().top+8;
+  const blocks=area.querySelectorAll('.ayah-block[data-aid],.wbw-ayah[data-aid]');
+  for(const b of blocks){if(b.getBoundingClientRect().bottom>refTop){const a=+b.dataset.aid;if(a)return{s:ctx.ST.surah,a};}}
+  return null;
+}
+let _vsTimer=null;
+function onVisualScroll(){
+  if(!V.on||(P.active&&P.playing))return; // аудио ведёт — скролл не вмешивается
+  if(_vsTimer)return;
+  _vsTimer=setTimeout(()=>{_vsTimer=null;const c=topVisibleAyah();if(c)visualSetAyah(c.s,c.a);},140);
+}
+function isReadingMode(){const ST=ctx.ST;return!ST.homeMode&&!ST.hifzMode&&!ST.bmView;}
+// Вызывается из renderCenter (index.html): держит полосу видимой только в
+// режимах чтения и обновляет картинку под текущий аят после ре-рендера.
+export function afterRender(){
+  if(!V.on)return;
+  const band=ensureBand();if(!band)return;
+  const reading=isReadingMode();
+  band.style.display=reading?"":"none";
+  if(!reading)return;
+  const c=(P.active&&P.playing)?{s:POS.sura,a:POS.ayah}:topVisibleAyah();
+  if(c)visualSetAyah(c.s,c.a);
+}
+export async function toggleVisual(on){
+  const want=on===undefined?!V.on:!!on;
+  ctx.ss("mediaVisual",want);
+  if(want){
+    V.on=true;
+    await loadVisual();
+    ensureBand();
+    if(!V.scrollBound){V.scrollBound=true;document.addEventListener("scroll",onVisualScroll,true);}
+    V.cur="";
+    const c=(P.active&&P.playing)?{s:POS.sura,a:POS.ayah}:(topVisibleAyah()||{s:ctx.ST.surah,a:1});
+    afterRender();visualSetAyah(c.s,c.a);
+  }else{
+    V.on=false;
+    if(V.scrollBound){V.scrollBound=false;document.removeEventListener("scroll",onVisualScroll,true);}
+    if(V.band){V.band.remove();V.band=null;}
+    V.cur="";V.img="";
+  }
+  ctx.renderRP&&ctx.renderRP();
+}
+export function visualEnabled(){return V.on;}
+
 // ---------- публичный интерфейс (вызывается из index.html) ----------
 export function init(c){
   ctx=c;
   P.rate=+ctx.gs("mediaRate",1)||1;
   if(!RATE_STEPS.includes(P.rate))P.rate=1;
   P.min=!!ctx.gs("mediaMin",false);
-  onAyahChange(followText); // текстовый слой — первый подписчик оси аята
+  onAyahChange(followText);     // текстовый слой — первый подписчик оси аята
+  onAyahChange(visualSetAyah);  // визуальный слой — второй (следует за тем же указателем)
   // индикаторы 🎙: подтянуть ключи активного набора и перекрасить аяты
   const rid=recSetId();
   if(rid)loadRecKeys(rid).then(ks=>{if(ks.size)ctx.renderCenter();});
+  // восстановить визуальный слой, если был включён
+  if(ctx.gs("mediaVisual",false))toggleVisual(true);
 }
 // Старт (или перескок) воспроизведения с аята s:a активным источником
 export function playFrom(s,a){
