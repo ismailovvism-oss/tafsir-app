@@ -68,6 +68,19 @@
       "nameAr": "القصص"
     }
   ],
+  "audio": {
+    "default": "shatri",
+    "reciters": [
+      {
+        "id": "shatri",
+        "name": "Абу Бакр аш-Шатри",
+        "nameAr": "أبو بكر الشاطري",
+        "type": "audio_cdn",
+        "cdn": "everyayah",
+        "subdir": "Abu_Bakr_Ash-Shaatree_128kbps"
+      }
+    ]
+  },
   "tafsirs": [
     {
       "id": "_arabic",

@@ -909,6 +909,19 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
 .spd-pill button{font-family:inherit;font-size:12px;border-radius:999px;border:1px solid var(--border);background:var(--bg);color:var(--text);padding:6px 11px;cursor:pointer}
 .spd-pill button.fin{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
 .spd-pill.paused .t{color:var(--text-muted)}
+/* — медиа-пилюля (аудио-плеер media.js): фиксированная, живёт поверх режимов чтения — */
+.media-pill{position:fixed;left:50%;transform:translateX(-50%);bottom:74px;z-index:60;display:flex;align-items:center;gap:6px;
+  background:var(--bg);border:1px solid var(--accent);border-radius:999px;padding:6px 10px;box-shadow:0 4px 18px rgba(0,0,0,.25);max-width:96vw}
+.media-pill button{font-family:inherit;font-size:13px;border-radius:999px;border:1px solid var(--border);background:var(--bg);color:var(--text);padding:5px 9px;cursor:pointer;white-space:nowrap}
+.media-pill button.pp{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;font-size:15px;padding:5px 13px}
+.media-pill button.on{border-color:var(--accent);color:var(--accent);font-weight:600}
+.media-pill .lbl{font-size:13px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;cursor:pointer;padding:0 2px;white-space:nowrap}
+.media-pill .lbl small{font-weight:400;color:var(--text-muted)}
+.media-pill .err{font-size:11px;color:#c0392b;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ayah-block.media-cur,.wbw-ayah.media-cur{box-shadow:0 0 0 2px var(--accent);border-radius:8px}
+.ab-play-btn{background:var(--bg-card);border:1px solid var(--border);border-radius:4px;padding:1px 7px;cursor:pointer;font-size:11px;color:var(--text-muted)}
+.ab-play-btn:hover{color:var(--accent);border-color:var(--accent)}
+@media(max-width:520px){.media-pill{gap:4px;padding:5px 7px;bottom:66px}.media-pill button{padding:4px 7px;font-size:12px}.media-pill button.pp{padding:4px 11px}}
 .spd-big{font-size:26px;font-weight:700;color:var(--text)}
 .spd-big small{font-size:13px;font-weight:400;color:var(--text-muted)}
 .spd-rec{color:#c98a1e;font-weight:700}
@@ -1089,6 +1102,9 @@ const SOURCES={
   //   локально (в них — реальные имена webp с пропусками, источник истины навигации) —
   scan_maps:       {baseUrl:"data",  pathTemplate:"{baseUrl}/{dir}/{file}"},
   audio:           {baseUrl:"data",  pathTemplate:"{baseUrl}/audio/{source}/{sura}/{ayah}.mp3"}, // задел: вызовов пока нет
+  // — поаятное CDN-аудио чтецов (media.js): {subdir} — каталог чтеца из
+  //   config.json (audio.reciters), {file}=NNNSSS.mp3 (паддинг у вызывающего) —
+  audio_cdn:       {baseUrl:"https://everyayah.com/data", pathTemplate:"{baseUrl}/{subdir}/{file}"},
   // — объёмные арабские тома (на будущее, лежат там же, что и тафсиры) —
   arabic_volumes:  {baseUrl:"data",  pathTemplate:"{baseUrl}/tafsirs/{source}/{sura}.json"},     // задел
 };
@@ -1116,6 +1132,45 @@ function chunkClass(id){
 }
 // Подкаталог сканов источника (imgdir или img/<id>) — конечный URL через resolveUrl(mushaf_scans).
 function scanDirOf(t){return t.imgdir||("img/"+t.id);}
+
+// ============================================================
+// МЕДИА-МОДУЛЬ (аудио): ленивая загрузка media.js
+// ============================================================
+// Код плеера НЕ входит в index.html — тянется нативным dynamic import() при
+// первом обращении (▶ у аята или блок «🎧 Аудио» в панели 📚). Пока аудио не
+// трогали: ни байта кода, ни <audio>-элементов. media.js — ES-модуль, наши
+// let-глобалы (ST/CONFIG/qpcMeta) ему не видны — передаём контекст геттерами.
+const MEDIA_VER="1";   // поднять при правке media.js (сброс кеша браузера/CDN)
+let MEDIA=null;        // загруженный модуль (null = ещё не загружался)
+function mediaCtx(){
+  return {
+    get ST(){return ST;},get CONFIG(){return CONFIG;},get qpcMeta(){return qpcMeta;},
+    SURAHS,resolveUrl,gs,ss,esc,escAttr,
+    jumpTo:t=>jumpTo(t),renderRP:()=>renderRP(),
+  };
+}
+async function mediaMod(){
+  if(MEDIA)return MEDIA;
+  try{
+    const m=await import("./media.js?v="+MEDIA_VER);
+    m.init(mediaCtx());MEDIA=m;return m;
+  }catch(e){
+    console.error("media.js не загрузился:",e);
+    alert("Не удалось загрузить аудио-модуль (при первом запуске нужна сеть).");
+    return null;
+  }
+}
+function mediaPlayAyah(a){mediaMod().then(m=>m&&m.playFrom(ST.surah,a));}
+// «Слушать текущую суру» из панели 📚: старт с последней позиции в этой суре
+function mediaPlaySurah(){
+  const lp=gs("lastPos",null);
+  mediaPlayAyah((lp&&lp.surah===ST.surah&&lp.ayah)||1);
+}
+function mediaSetReciter(id){
+  ss("mediaReciter",id);
+  if(MEDIA)MEDIA.setReciter(id); // на лету: указатель аята сохраняется
+  renderRP();
+}
 
 const SURAHS=[
 {id:1,name:"الفاتحة",ru:"Аль-Фатиха",n:7},{id:2,name:"البقرة",ru:"Аль-Бакара",n:286},{id:3,name:"آل عمران",ru:"Алю Имран",n:200},
@@ -4639,6 +4694,7 @@ async function renderReading(el){
           <button class="cov-cnt-btn" onclick="event.stopPropagation();openCovPopup(${aid},this)" title="Переводов и тафсиров у этого аята">${covCountLabel(ST.surah,aid)}</button>
           <button class="ab-bm-btn ${isBookmarked(ST.surah,aid)?'on':''}" onclick="event.stopPropagation();toggleBookmark(${aid},this)" title="Закладка">${isBookmarked(ST.surah,aid)?'★':'☆'}</button>
           <button class="ab-note-btn ${hn?'has':''}" onclick="event.stopPropagation();toggleNote(${aid},this)" title="Заметка к аяту">📝</button>
+          <button class="ab-play-btn" onclick="event.stopPropagation();mediaPlayAyah(${aid})" title="Слушать с этого аята">▶</button>
           ${peekKind?`<button class="ab-peek-btn" data-peek="${peekKind}" onclick="event.stopPropagation();togglePeek(${aid},this)" title="${peekKind==='ru'?'Показать перевод этого аята':'Показать оригинал этого аята'}">${peekKind}</button>`:''}
         </div>
         <div class="ab-tag-dots">${hn?'<span class="ab-note-dot"></span>':''}</div>
@@ -5084,6 +5140,19 @@ function quranBlockHTML(){
     <div class="rp-q-body">${rows}${tj}
     <div class="vp-note">Правила чтения цветом — в любом начертании: в печатном это цветное издание 1441 г.х., в остальных — раскраска текста. Действует для редакции «С огласовками»; касание окрашенной буквы — название правила.</div></div></div>`;
 }
+// Блок «🎧 Аудио» панели 📚: выбор чтеца + запуск прослушивания. Чтецы — из
+// config.json (audio.reciters, массив: новый чтец = строка конфига, не код).
+// Сам плеер (media.js) грузится лениво только при первом ▶.
+function audioBlockHTML(){
+  const rs=(CONFIG.audio&&CONFIG.audio.reciters)||[];
+  if(!rs.length)return"";
+  const cur=gs("mediaReciter",(CONFIG.audio&&CONFIG.audio.default)||rs[0].id);
+  const rows=rs.map(r=>`<label class="vp-check"><input type="radio" name="mediaRec" ${r.id===cur?"checked":""} onchange="mediaSetReciter('${escAttr(r.id)}')"> ${esc(r.name)}</label>`).join("");
+  return `<div class="rp-quran"><div class="rp-sec-head">🎧 Аудио (чтец)</div>
+    <div class="rp-q-body">${rows}
+    <button class="cov-map-open" style="margin:6px 0 0" onclick="mediaPlaySurah()">▶ Слушать текущую суру</button>
+    <div class="vp-note">Аудио стримится с everyayah.com (нужен интернет). ▶ у номера аята — слушать с него; в пилюле внизу: повтор аята, повтор диапазона A–B, скорость.</div></div></div>`;
+}
 // Кнопка «Печатный» в ⚙ Вид: не сбрасывать таджвид повторным тапом; при
 // включённой галочке печатный = цветной пак qpc4t
 function setArFontUI(f){
@@ -5113,6 +5182,8 @@ function renderRP(){
 
   // 0. Оригинал: редакции арабского + начертание + таджвид (см. quranBlockHTML)
   html+=quranBlockHTML();
+  // 0б. Аудио: чтец + запуск прослушивания (media.js, лениво)
+  html+=audioBlockHTML();
 
   // 1. Enabled (pinned, reorderable) — переводы/тафсиры; арабский — в блоке выше.
   const enAll=getEnabledList().filter(t=>t.id!=="_notes");
@@ -6204,7 +6275,7 @@ async function renderWbw(el){
     let endG="";
     if(entry.e){ensurePageFont(pack,entry.e[1]);endG=`<span class="wbw-end" style="font-family:'${pack.fontFamily(entry.e[1])}'">${entry.e[0]}</span>`;}
     html+=`<div class="wbw-ayah" data-aid="${aid}">
-      <div class="wbw-head"><span class="wbw-num">${surah}:${aid}</span></div>
+      <div class="wbw-head"><span class="wbw-num">${surah}:${aid}</span> <button class="ab-play-btn" onclick="mediaPlayAyah(${aid})" title="Слушать с этого аята">▶</button></div>
       <div class="wbw-grid">${cells}${endG}</div></div>`;
   }
   html+=`<div class="wbw-attr">Русский пословный глосс — наш черновой перевод (сверка по смыслу с переводом Э. Кулиева; сам перевод Кулиева не распространяется). Английский глосс: <a href="https://github.com/hablullah/data-quran" target="_blank" rel="noopener">data-quran</a> (CC BY-NC-ND, без изменений). Грамматический разбор: <a href="http://corpus.quran.com" target="_blank" rel="noopener">Quranic Arabic Corpus</a> (GPL).</div>`;
