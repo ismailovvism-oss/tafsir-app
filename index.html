@@ -328,6 +328,36 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .appr-seal{display:inline-block;margin-left:7px;width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;background:radial-gradient(circle at 35% 30%,#b23c2c,#7a1d13);color:#f3e3c3;font-size:9px;font-weight:800;letter-spacing:-1px;box-shadow:0 1px 3px rgba(0,0,0,.35),inset 0 0 4px rgba(0,0,0,.25);vertical-align:middle;cursor:help}
 .t-item.approved{background:rgba(198,163,67,.08);box-shadow:inset 0 0 0 1px rgba(193,154,63,.5)}
 .t-pill.appr{background:rgba(40,160,95,.14);color:#1e874e;border:1px solid rgba(40,160,95,.45);font-weight:700}
+/* предупреждения об ошибках в источнике (редакторские): значок + рамка у аята.
+   3 уровня: critical (красный) · moderate (жёлтый) · minor (спокойный синий) */
+.ab-entry.warn-critical{border-left:3px solid #d23b2c;padding-left:9px;background:rgba(210,59,44,.05)}
+.ab-entry.warn-moderate{border-left:3px solid #d79a2b;padding-left:9px;background:rgba(215,154,43,.05)}
+.ab-entry.warn-minor{border-left:3px solid #6a8cc0;padding-left:9px}
+.warn-badge{display:inline-flex;align-items:center;gap:2px;margin-left:6px;padding:1px 7px;border-radius:999px;border:1px solid;font-size:11px;font-weight:700;cursor:pointer;vertical-align:middle;line-height:1.5}
+.warn-badge.lv-critical{color:#d23b2c;border-color:#d23b2c;background:rgba(210,59,44,.1)}
+.warn-badge.lv-moderate{color:#b9822a;border-color:#d79a2b;background:rgba(215,154,43,.12)}
+.warn-badge.lv-minor{color:#4d6fa3;border-color:#6a8cc0;background:rgba(106,140,192,.12)}
+.warn-badge:hover{filter:brightness(1.05)}
+/* нижний лист с пояснением к предупреждению */
+.warn-pop{position:fixed;z-index:210;left:50%;transform:translateX(-50%);bottom:0;width:min(560px,100%);max-height:80vh;display:flex;flex-direction:column;
+  background:var(--bg-card);border:1px solid var(--border);border-bottom:none;border-radius:14px 14px 0 0;box-shadow:0 -6px 28px rgba(0,0,0,.3)}
+.warn-pop .wp-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:11px 14px;border-bottom:1px solid var(--border);font-weight:700;color:var(--text)}
+.warn-pop .wp-ar{font-weight:400;color:var(--text-muted);font-size:13px}
+.warn-pop .wp-x{border:none;background:transparent;color:var(--text-muted);font-size:18px;cursor:pointer;padding:0 4px}
+.warn-pop .wp-body{overflow-y:auto;padding:12px 14px}
+.warn-pop .wp-item{border-left:3px solid var(--border);padding:2px 0 2px 12px;margin-bottom:14px}
+.warn-pop .wp-item.lv-critical{border-color:#d23b2c}
+.warn-pop .wp-item.lv-moderate{border-color:#d79a2b}
+.warn-pop .wp-item.lv-minor{border-color:#6a8cc0}
+.warn-pop .wp-head{display:flex;gap:8px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
+.warn-pop .wp-tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
+.warn-pop .wp-tag.critical{color:#fff;background:#d23b2c}
+.warn-pop .wp-tag.moderate{color:#7a5510;background:#f0c56a}
+.warn-pop .wp-tag.minor{color:#fff;background:#6a8cc0}
+.warn-pop .wp-scope{font-size:11px;color:var(--text-muted)}
+.warn-pop .wp-title{font-weight:700;color:var(--text);margin-bottom:4px}
+.warn-pop .wp-text{font-size:14px;line-height:1.6;color:var(--text-sec)}
+.warn-pop .wp-foot{font-size:11px;color:var(--text-muted);border-top:1px solid var(--border);padding-top:8px;margin-top:4px}
 .ab-entry-text{font-size:calc(13px*var(--rs-ru,1));line-height:calc(1.85*var(--lh-ru,1));color:var(--text-sec);white-space:pre-wrap}
 .ab-entry-text.selectable{-webkit-user-select:text;user-select:text}
 .ab-entry-text.rtl{direction:rtl;text-align:right;font-family:'Noto Naskh Arabic','Amiri',serif;font-size:calc(17px*var(--rs-ar,1));line-height:calc(2*var(--lh-ar,1));color:var(--text)}
@@ -1171,6 +1201,9 @@ const SOURCES={
   // — лёгкий текст: конфиг и индекс покрытия —
   config:          {baseUrl:"data",  pathTemplate:"{baseUrl}/config.json"},
   coverage:        {baseUrl:"data",  pathTemplate:"{baseUrl}/coverage.json"},
+  // — предупреждения о критических ошибках в переводах/тафсирах (редакторские,
+  //   текст источника не трогают; на аят или на весь источник, ключ "*") —
+  warnings:        {baseUrl:"data",  pathTemplate:"{baseUrl}/warnings.json"},
   // — текст Корана по аятам (огласовки/без/расм) —
   quran_text:      {baseUrl:"data",  pathTemplate:"{baseUrl}/tafsirs/{source}/{sura}.json"},
   // — тафсиры/переводы по аятам: чанк по суре, монолит (поиск), инвертированный индекс —
@@ -3366,6 +3399,31 @@ async function loadCoverage(){
   const r=await fetchJson(resolveUrl("coverage"));
   if(r.data)COV=r.data;else covLoadFailed=true;
 }
+// ПРЕДУПРЕЖДЕНИЯ (data/warnings.json): ошибки в переводах/тафсирах, с градацией.
+// Редакторские, текст источника НЕ трогают. Форма:
+//   { "<id>": { "<сура>:<аят>": [ {level,title,text} ], "*": [ … ] } }
+//   level: "critical" (красный) | "moderate" (жёлтый) | "minor" (спокойный);
+//   text — markdown (может быть длинным). По умолчанию уровень — "moderate".
+let WARN={};
+const WARN_LEVELS=["critical","moderate","minor"]; // от важного к допустимому
+const WARN_LABEL={critical:"критическая ошибка",moderate:"средняя ошибка",minor:"допустимая ошибка"};
+async function loadWarnings(){
+  if(window.TL_WARNINGS){WARN=window.TL_WARNINGS;return;}
+  const r=await fetchJson(resolveUrl("warnings"));
+  if(r.data&&typeof r.data==="object")WARN=r.data;
+}
+// Список предупреждений для источника у аята: сначала на весь источник ("*"),
+// затем на конкретный аят. Уровень нормализуем (дефолт — "moderate").
+function warnFor(id,aid){
+  const w=WARN[id];if(!w)return[];
+  const out=[];
+  const add=(arr,scope)=>{if(Array.isArray(arr))for(const x of arr)if(x&&x.text)out.push({level:WARN_LEVELS.includes(x.level)?x.level:"moderate",title:x.title||"",text:x.text,scope});};
+  add(w["*"],"source");
+  add(w[ST.surah+":"+aid],"ayah");
+  return out;
+}
+// Старший (самый важный) уровень в списке — для рамки и цвета значка.
+function warnTop(list){for(const lv of WARN_LEVELS)if(list.some(x=>x.level===lv))return lv;return null;}
 // Пары диапазонов источника в суре (или null, если в суре нет покрытия).
 function covPairs(id,s){const src=COV.sources[id];return src&&src.s[String(s)]||null;}
 // Есть ли у источника аят (s,a)? — двоичный поиск по парам границ.
@@ -3433,6 +3491,7 @@ async function loadConfig(){
   else{try{const r=await fetch(resolveUrl("config"));if(r.ok)CONFIG=await r.json();}catch(e){}}
   if(!CONFIG.tafsirs||!CONFIG.tafsirs.length)useFB();
   await loadCoverage();
+  await loadWarnings();                               // предупреждения об ошибках (лёгкий файл)
   ST.enabled=getEnabled();
   if(ST.enabled._arabic===undefined)ST.enabled._arabic=true;
   if(!applyHash(true)){                              // нет deep-link/«#home» → Главная (ST.surah из lastPos для «Продолжить»)
@@ -4383,10 +4442,15 @@ function isApprovedHere(t){
 function sourceEntryHTML(t,text,aid,adhoc,blockOf){
   const isAr=t.lang==="ar";
   const badge=adhoc?`<button class="cov-adhoc-x" onclick="removeAdHoc(${aid},'${escAttr(t.id)}')" title="Убрать разовый показ">только здесь ✕</button>`:"";
+  // Предупреждения об ошибках (редакторские): значок + красная/жёлтая рамка у аята.
+  const warns=warnFor(t.id,aid);
+  const wtop=warnTop(warns);
+  const wCls=wtop?` warn-${wtop}`:"";
+  const wBadge=wtop?`<button class="warn-badge lv-${wtop}" onclick="event.stopPropagation();openWarnPopup('${escAttr(t.id)}',${aid})" title="Есть предупреждение об ошибке — нажмите для пояснения">⚠${warns.length>1?" "+warns.length:""}</button>`:"";
   const blk=(!blockOf&&text)?parseBlockRef(text):null;
   if(blk){
-    return `<div class="ab-entry${isApprovedHere(t)?' approved':''}"${adhoc?' style="border-left:2px solid var(--accent)"':''}>
-      <div class="ab-entry-label">${esc(t.name)} <span class="lbl-ar">${t.nameAr||''}</span>${segCredit(t)}${badge}${counterpartChip(t)}</div>
+    return `<div class="ab-entry${isApprovedHere(t)?' approved':''}${wCls}"${adhoc?' style="border-left:2px solid var(--accent)"':''}>
+      <div class="ab-entry-label">${esc(t.name)} <span class="lbl-ar">${t.nameAr||''}</span>${wBadge}${segCredit(t)}${badge}${counterpartChip(t)}</div>
       <div class="cov-blockref">📎 Разобрано в блоке <b>${blk.from}–${blk.to}</b> <button class="cov-goto" onclick="goAyah(${ST.surah},${blk.target})">перейти к аяту ${blk.target} →</button></div>
     </div>`;
   }
@@ -4394,14 +4458,39 @@ function sourceEntryHTML(t,text,aid,adhoc,blockOf){
   const inner=body?renderRefs(body):'<span style="color:var(--text-muted)">—</span>';
   const long=!ST.noTouch&&body&&body.length>600; // в режиме без касания — сразу развёрнуто, без кнопки
   const blockNote=blockOf?`<div class="cov-blocknote">показан блок ${blockOf[0]}–${blockOf[1]} (этот аят входит в него)</div>`:"";
-  return `<div class="ab-entry${isApprovedHere(t)?' approved':''}"${adhoc?' style="border-left:2px solid var(--accent)"':''}>
-    <div class="ab-entry-label">${esc(t.name)} <span class="lbl-ar">${t.nameAr||''}</span>${segCredit(t)}${badge}${counterpartChip(t)}</div>
+  return `<div class="ab-entry${isApprovedHere(t)?' approved':''}${wCls}"${adhoc?' style="border-left:2px solid var(--accent)"':''}>
+    <div class="ab-entry-label">${esc(t.name)} <span class="lbl-ar">${t.nameAr||''}</span>${wBadge}${segCredit(t)}${badge}${counterpartChip(t)}</div>
     ${blockNote}
     <div class="ab-entry-text md selectable ${isAr?'rtl':''} ${long?'clamped':''}">${inner}</div>
     ${long?'<button class="more-btn" onclick="toggleClamp(this)">Развернуть ▾</button>':''}
     ${notes.length?renderFootnotes(notes):''}
   </div>`;
 }
+// Нижний лист с пояснением(ями) к предупреждению об ошибке в источнике у аята.
+function openWarnPopup(id,aid){
+  closeWarnPopup();
+  const t=CONFIG.tafsirs.find(x=>x.id===id);
+  const warns=warnFor(id,aid);
+  if(!warns.length)return;
+  const items=warns.map(w=>{
+    const tag=`<span class="wp-tag ${w.level}">${WARN_LABEL[w.level]}</span>`;
+    const scope=w.scope==="source"?'<span class="wp-scope">весь источник</span>':`<span class="wp-scope">аят ${ST.surah}:${aid}</span>`;
+    return `<div class="wp-item lv-${w.level}">
+      <div class="wp-head">${tag}${scope}</div>
+      ${w.title?`<div class="wp-title">${esc(w.title)}</div>`:""}
+      <div class="wp-text md">${mdRender(w.text)}</div>
+    </div>`;
+  }).join("");
+  const pop=document.createElement("div");
+  pop.className="warn-pop";pop.id="warnPop";
+  pop.innerHTML=`<div class="wp-bar"><span>⚠ ${esc(t?t.name:id)} <span class="wp-ar">${t&&t.nameAr||""}</span></span><button class="wp-x" onclick="closeWarnPopup()" title="Закрыть">✕</button></div>
+    <div class="wp-body">${items}
+    <div class="wp-foot">Предупреждение носит редакторский характер и не меняет текст источника.</div></div>`;
+  document.body.appendChild(pop);
+  setTimeout(()=>document.addEventListener("pointerdown",closeWarnOnOutside,true),10);
+}
+function closeWarnPopup(){const p=document.getElementById("warnPop");if(p)p.remove();document.removeEventListener("pointerdown",closeWarnOnOutside,true);}
+function closeWarnOnOutside(e){const p=document.getElementById("warnPop");if(p&&!p.contains(e.target)&&!e.target.closest(".warn-badge"))closeWarnPopup();}
 // ad-hoc «показать только здесь»
 function adHocIds(s,a){return ST.adHoc[s+":"+a]||[];}
 function addAdHoc(a,id){

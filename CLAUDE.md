@@ -43,7 +43,8 @@ fonts/              ← самохостимые шрифты (.woff2)
 
 ## Расположение данных (абстракция источников)
 - **Реестр `SOURCES`** в начале `<script>` в `index.html` — для каждого КЛАССА
-  ресурса `{baseUrl, pathTemplate}`. Классы: `config`, `coverage`, `quran_text`,
+  ресурса `{baseUrl, pathTemplate}`. Классы: `config`, `coverage`, `warnings`
+  (предупреждения об ошибках в источниках), `quran_text`,
   `tafsir_text`, `tafsir_monolith`, `search_index`, `glosses`, `morphology`,
   `about`, `surah_meta` (классификации сур для оверлеев карты хифза),
   `mushaf_glyphs`, `mushaf_fonts`, `mushaf_fonts_r2` (шрифты таджвид-пака на R2),
@@ -106,6 +107,15 @@ fonts/              ← самохостимые шрифты (.woff2)
 
 ## Текущее состояние и подсистемы (что уже есть в коде)
 Подробная история — в `CHANGELOG.md` («новое сверху»). Кратко, последнее сверху:
+- **Предупреждения об ошибках в источниках** (2026-07-09): редакторский слой,
+  текст источника НЕ трогает. Данные — `data/warnings.json` (класс `warnings`,
+  грузится в `loadWarnings` как coverage; глобал `WARN`):
+  `{ "<id>": { "<с>:<а>": [{level,title,text}], "*": [...] } }`. Три уровня
+  (`WARN_LEVELS`): `critical`/`moderate`/`minor` (дефолт moderate). Рендер — в
+  `sourceEntryHTML` (`warnFor`/`warnTop`): значок `.warn-badge` + рамка
+  `.ab-entry.warn-<lvl>`; тап → `openWarnPopup` (нижний лист `.warn-pop`,
+  `mdRender`). Привязка к аяту и ко всему источнику (`"*"`). Демо-записи — на
+  `krachkovsky` (выкл. по умолчанию).
 - **Медиа-модуль, фазы 1–2: аудио-плеер + записи** (2026-07-08): `media.js` —
   ES-модуль, ленивый `import()` из index.html (`mediaMod()`, `MEDIA_VER` —
   кеш-бастер, поднимать при правке media.js). Ось аята: указатель `{sura,ayah}`
