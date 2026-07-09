@@ -121,3 +121,4 @@ data/index/ibn_abi_hatim.json
 
 # Локальный кэш Wrangler (воркер синхронизации)
 sync-worker/.wrangler/
+data/media/*.png
