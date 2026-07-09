@@ -982,8 +982,22 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
 .df-prev{left:0;border-radius:0 12px 12px 0}
 .df-next{right:0;border-radius:12px 0 0 12px}
 .diafilm.df-audio .df-nav{display:none}          /* аудио ведёт — стрелки не нужны */
+/* Фит «вписать» (contain): вся альбомная картинка целиком, поля-леттербокс.
+   Нейтральный градиент не трогаем (у него нет своего размера). */
+.diafilm.df-contain .df-layer:not(.df-neutral){background-size:contain;background-repeat:no-repeat}
 body.df-open{overflow:hidden}
-@media(min-width:820px){.df-ar{font-size:calc(33px * var(--df-scale,1))}.df-tr{font-size:calc(19px * var(--df-scale,1))}}
+/* Крупный шрифт — только на БОЛЬШИХ экранах (десктоп/планшет): требуем и ширину,
+   и высоту, иначе повёрнутый телефон (широкий, но низкий) раздувал бы текст. */
+@media(min-width:820px) and (min-height:600px){.df-ar{font-size:calc(33px * var(--df-scale,1))}.df-tr{font-size:calc(19px * var(--df-scale,1))}}
+/* Короткий альбом (телефон повёрнут): компактный текст/поля, чтобы не теснить. */
+@media (orientation:landscape) and (max-height:520px){
+  .df-text{padding:8px 20px calc(10px + env(safe-area-inset-bottom))}
+  .df-key{margin-bottom:3px}
+  .df-ar{font-size:calc(20px * var(--df-scale,1));line-height:1.65;margin-bottom:5px}
+  .df-tr{font-size:calc(13px * var(--df-scale,1));line-height:1.4}
+  .df-scrim{height:78%}
+  .df-nav{height:56px}
+}
 .ayah-block.media-cur,.wbw-ayah.media-cur{box-shadow:0 0 0 2px var(--accent);border-radius:8px}
 .ab-play-btn,.ab-rec-btn{background:var(--bg-card);border:1px solid var(--border);border-radius:4px;padding:1px 7px;cursor:pointer;font-size:11px;color:var(--text-muted)}
 .ab-play-btn:hover,.ab-rec-btn:hover{color:var(--accent);border-color:var(--accent)}
@@ -1233,7 +1247,7 @@ function scanDirOf(t){return t.imgdir||("img/"+t.id);}
 // первом обращении (▶ у аята или блок «🎧 Аудио» в панели 📚). Пока аудио не
 // трогали: ни байта кода, ни <audio>-элементов. media.js — ES-модуль, наши
 // let-глобалы (ST/CONFIG/qpcMeta) ему не видны — передаём контекст геттерами.
-const MEDIA_VER="11";   // поднять при правке media.js (сброс кеша браузера/CDN)
+const MEDIA_VER="12";   // поднять при правке media.js (сброс кеша браузера/CDN)
 let MEDIA=null;        // загруженный модуль (null = ещё не загружался)
 function mediaCtx(){
   return {

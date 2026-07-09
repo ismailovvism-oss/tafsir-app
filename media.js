@@ -623,7 +623,7 @@ function pickInto(state,s,a){
 // ОДИН кадр. Указатель ведёт аудио-плеер (onAyahChange) при прослушивании, либо
 // ручной свайп/тап при выключенном звуке (НЕ «верхний видимый»). Пустой пул →
 // нейтральный фон (не подставляем чужую картинку). Видео — только задел.
-const D={on:false,sura:0,ayah:0,textMode:"artr",textHidden:false,imgOn:true,audio:true,scale:1,wake:null,el:null,la:null,lb:null,front:0,token:0,swiped:false};
+const D={on:false,sura:0,ayah:0,textMode:"artr",textHidden:false,imgOn:true,audio:true,fit:"cover",scale:1,wake:null,el:null,la:null,lb:null,front:0,token:0,swiped:false};
 const Dsel={cur:"",last:"",img:""};                  // СВОЁ состояние выбора картинки (отдельно от полосы)
 const DF_MODES=["artr","ar","tr","none"];
 const DF_LABEL={artr:"Аа+ع",ar:"ع",tr:"Аа",none:"—"};
@@ -639,6 +639,7 @@ function dfEnsure(){
     `<div class="df-ctrls"><button class="df-btn" data-act="pp" title="Аудио: включить/пауза">${P.playing?"⏸":"▶"}</button>`+
     `<button class="df-btn" data-act="mode" title="Текст: арабский/перевод/оба/нет">${DF_LABEL[D.textMode]}</button>`+
     `<button class="df-btn" data-act="img" title="Картинки вкл/выкл (без картинок — чистое пофреймовое слушание)">${D.imgOn?"🖼":"🚫"}</button>`+
+    `<button class="df-btn" data-act="fit" title="Кадр: заполнить (обрезать) / вписать (целиком)">${D.fit==="contain"?"▭":"⤢"}</button>`+
     `<button class="df-btn" data-act="size" title="Размер шрифта">A</button>`+
     `<button class="df-btn" data-act="close" title="Выйти">✕</button></div>`+
     `<button class="df-nav df-prev" data-act="prev" title="Предыдущий аят">‹</button>`+
@@ -654,6 +655,7 @@ function dfEnsure(){
     else if(act==="pp")dfTogglePlay();
     else if(act==="mode")dfCycleMode();
     else if(act==="img")dfToggleImg();
+    else if(act==="fit")dfCycleFit();
     else if(act==="size")dfCycleSize();
     else if(act==="prev")dfManual(-1);
     else if(act==="next")dfManual(1);
@@ -728,6 +730,12 @@ function dfToggleImg(){
   dfGoto(D.sura,D.ayah);                              // перерисовать: картинка ↔ нейтральный фон
 }
 function dfApplyScale(){if(D.el)D.el.style.setProperty("--df-scale",D.scale);}
+function dfApplyFit(){if(D.el)D.el.classList.toggle("df-contain",D.fit==="contain");}   // вписать (contain) ↔ заполнить (cover)
+function dfCycleFit(){
+  D.fit=D.fit==="contain"?"cover":"contain";ctx.ss("dfFit",D.fit);
+  const b=D.el&&D.el.querySelector('[data-act="fit"]');if(b)b.textContent=D.fit==="contain"?"▭":"⤢";
+  dfApplyFit();
+}
 function dfCycleSize(){
   let i=DF_SCALES.indexOf(D.scale);D.scale=DF_SCALES[(i+1)%DF_SCALES.length];
   ctx.ss("dfScale",D.scale);dfApplyScale();
@@ -749,12 +757,13 @@ export async function openDiafilm(s,a){
   D.textMode=ctx.gs("dfText","artr");if(!DF_MODES.includes(D.textMode))D.textMode="artr";
   D.imgOn=ctx.gs("dfImg",true)!==false;
   D.audio=ctx.gs("dfAudio",true)!==false;            // по умолчанию аудио стартует само
+  D.fit=ctx.gs("dfFit","cover")==="contain"?"contain":"cover";
   D.scale=ctx.gs("dfScale",1);if(!DF_SCALES.includes(D.scale))D.scale=1;
   D.textHidden=false;
   Dsel.cur="";                                       // свежий случайный выбор при входе
   await loadVisual();
   dfEnsure();
-  dfApplyScale();
+  dfApplyScale();dfApplyFit();
   D.on=true;document.body.classList.add("df-open");
   const st=(P.active&&P.playing)?{s:POS.sura,a:POS.ayah}:{s:s||ctx.ST.surah,a:a||1};
   dfGoto(st.s,st.a);
