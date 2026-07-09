@@ -579,7 +579,7 @@ export async function deleteSetData(id){
 // пока аят не сменился (повтор/цикл не перевыбирает); не повторяем предыдущую.
 // render_type пока "image" (<img> как background); "video_file" — та же карта.
 // Слой НЕЗАВИСИМ от аудио: без аудио ведётся верхним видимым аятом (скролл).
-const V={on:false,map:null,byAyah:null,loading:null,cur:"",img:"",last:"",band:null,imgA:null,imgB:null,front:0,scrollBound:false};
+const V={map:null,byAyah:null,loading:null};        // карта visual.json (общая для диафильма)
 function loadVisual(){
   if(V.map)return Promise.resolve(true);
   if(V.loading)return V.loading;
@@ -602,100 +602,20 @@ function poolCurated(s,a){
   for(const t of topics){const imgs=map.topics&&map.topics[String(t)];if(imgs)for(const im of imgs)if(!out.includes(im))out.push(im);}
   return out;
 }
-// Пул ПОЛОСЫ (фаза 3, поведение не меняем): курируемый, иначе общий default.
-function poolFor(s,a){const c=poolCurated(s,a);return c.length?c:((V.map&&V.map.default)||[]).slice();}
-function ensureBand(){
-  let band=document.getElementById("visualBand");
-  if(band){V.band=band;V.imgA=band.querySelector('[data-l="0"]');V.imgB=band.querySelector('[data-l="1"]');return band;}
-  const cb=document.getElementById("centerBody"),main=cb&&cb.parentNode;
-  if(!main)return null;
-  band=document.createElement("div");band.id="visualBand";band.className="visual-band";
-  band.innerHTML=`<div class="vb-layer" data-l="0"></div><div class="vb-layer" data-l="1"></div><button class="vb-x" title="Скрыть картинки">✕</button>`;
-  main.insertBefore(band,cb);           // персистентный сосед centerBody (переживает ре-рендер)
-  V.band=band;V.imgA=band.querySelector('[data-l="0"]');V.imgB=band.querySelector('[data-l="1"]');V.front=0;
-  band.querySelector(".vb-x").addEventListener("click",()=>toggleVisual(false));
-  return band;
-}
-function showImg(src){
-  const band=ensureBand();if(!band)return;
-  if(!src){band.classList.add("empty");return;}
-  band.classList.remove("empty");
-  const show=V.front===0?V.imgB:V.imgA, hide=V.front===0?V.imgA:V.imgB;
-  show.style.backgroundImage=`url("${imgUrl(src).replace(/"/g,'%22')}")`;
-  show.classList.remove("kb");void show.offsetWidth;show.classList.add("kb"); // перезапуск Ken Burns
-  show.style.opacity="1";hide.style.opacity="0";                              // crossfade
-  V.front=V.front===0?1:0;
-}
-// ОБЩИЙ выбор картинки — зовут И полоса, И диафильм (логика не дублируется).
-// Состояние (cur/last/img) — СВОЁ на каждый режим (передаётся аргументом), чтобы
-// последовательности не сбивали друг друга: держим выбор в пределах аята
-// (state.cur), не повторяем предыдущую (state.last). allowDefault=true у полосы
-// (общий default-фолбэк), false у диафильма (пустой пул → нейтральный фон, а НЕ
-// заглушка/чужой кадр). Возвращает {src, changed}: src="" → пул пуст.
-function pickInto(state,s,a,allowDefault){
+// Выбор картинки для диафильма: держим выбор в пределах аята (state.cur), не
+// повторяем предыдущую (state.last). Пул — только курируемый (пин+темы): пусто →
+// src="" → нейтральный фон (не заглушка/чужой кадр). Возвращает {src, changed}.
+function pickInto(state,s,a){
   const k=sa(s,a);
   if(k===state.cur)return{src:state.img,changed:false};
   state.cur=k;
-  const pool=allowDefault?poolFor(s,a):poolCurated(s,a);
+  const pool=poolCurated(s,a);
   if(!pool.length){state.img="";return{src:"",changed:true};}
   let pick;
   if(pool.length===1)pick=pool[0];
   else{const alt=pool.filter(p=>p!==state.last);const arr=alt.length?alt:pool;pick=arr[Math.floor(Math.random()*arr.length)];}
   state.last=pick;state.img=pick;return{src:pick,changed:true};
 }
-// Полоса: своё состояние — сам объект V (cur/last/img), с default-фолбэком
-function visualSetAyah(s,a){
-  if(!V.on)return;
-  const r=pickInto(V,s,a,true);
-  if(!r.changed)return;
-  showImg(r.src||null);
-}
-// Текущий аят без аудио — верхний видимый в ленте чтения
-function topVisibleAyah(){
-  const area=document.getElementById("readingArea");if(!area)return null;
-  const refTop=area.getBoundingClientRect().top+8;
-  const blocks=area.querySelectorAll('.ayah-block[data-aid],.wbw-ayah[data-aid]');
-  for(const b of blocks){if(b.getBoundingClientRect().bottom>refTop){const a=+b.dataset.aid;if(a)return{s:ctx.ST.surah,a};}}
-  return null;
-}
-let _vsTimer=null;
-function onVisualScroll(){
-  if(!V.on||(P.active&&P.playing))return; // аудио ведёт — скролл не вмешивается
-  if(_vsTimer)return;
-  _vsTimer=setTimeout(()=>{_vsTimer=null;const c=topVisibleAyah();if(c)visualSetAyah(c.s,c.a);},140);
-}
-function isReadingMode(){const ST=ctx.ST;return!ST.homeMode&&!ST.hifzMode&&!ST.bmView;}
-// Вызывается из renderCenter (index.html): держит полосу видимой только в
-// режимах чтения и обновляет картинку под текущий аят после ре-рендера.
-export function afterRender(){
-  if(!V.on)return;
-  const band=ensureBand();if(!band)return;
-  const reading=isReadingMode();
-  band.style.display=reading?"":"none";
-  if(!reading)return;
-  const c=(P.active&&P.playing)?{s:POS.sura,a:POS.ayah}:topVisibleAyah();
-  if(c)visualSetAyah(c.s,c.a);
-}
-export async function toggleVisual(on){
-  const want=on===undefined?!V.on:!!on;
-  ctx.ss("mediaVisual",want);
-  if(want){
-    V.on=true;
-    await loadVisual();
-    ensureBand();
-    if(!V.scrollBound){V.scrollBound=true;document.addEventListener("scroll",onVisualScroll,true);}
-    V.cur="";
-    const c=(P.active&&P.playing)?{s:POS.sura,a:POS.ayah}:(topVisibleAyah()||{s:ctx.ST.surah,a:1});
-    afterRender();visualSetAyah(c.s,c.a);
-  }else{
-    V.on=false;
-    if(V.scrollBound){V.scrollBound=false;document.removeEventListener("scroll",onVisualScroll,true);}
-    if(V.band){V.band.remove();V.band=null;}
-    V.cur="";V.img="";
-  }
-  ctx.renderAudio?ctx.renderAudio():(ctx.renderRP&&ctx.renderRP());
-}
-export function visualEnabled(){return V.on;}
 
 // ---------- ДИАФИЛЬМ (полноэкранный визуальный ряд) ----------
 // Отдельный полноэкранный слой поверх ТОЙ ЖЕ карты (visual.json) и общей функции
@@ -703,7 +623,7 @@ export function visualEnabled(){return V.on;}
 // ОДИН кадр. Указатель ведёт аудио-плеер (onAyahChange) при прослушивании, либо
 // ручной свайп/тап при выключенном звуке (НЕ «верхний видимый»). Пустой пул →
 // нейтральный фон (не подставляем чужую картинку). Видео — только задел.
-const D={on:false,sura:0,ayah:0,textMode:"artr",textHidden:false,imgOn:true,scale:1,wake:null,el:null,la:null,lb:null,front:0,token:0,swiped:false};
+const D={on:false,sura:0,ayah:0,textMode:"artr",textHidden:false,imgOn:true,audio:true,scale:1,wake:null,el:null,la:null,lb:null,front:0,token:0,swiped:false};
 const Dsel={cur:"",last:"",img:""};                  // СВОЁ состояние выбора картинки (отдельно от полосы)
 const DF_MODES=["artr","ar","tr","none"];
 const DF_LABEL={artr:"Аа+ع",ar:"ع",tr:"Аа",none:"—"};
@@ -773,7 +693,7 @@ async function dfRenderText(s,a){
 function dfGoto(s,a){
   D.sura=s;D.ayah=a;
   if(D.el)D.el.classList.toggle("df-audio",!!(P.active&&P.playing));   // аудио ведёт → прячем стрелки
-  if(D.imgOn){const r=pickInto(Dsel,s,a,false);dfShow(r.src);}         // без default: пустой пул → нейтральный фон
+  if(D.imgOn){const r=pickInto(Dsel,s,a);dfShow(r.src);}              // пустой пул → нейтральный фон
   else dfShow("");                                  // режим без картинок — всегда нейтральный фон
   dfRenderText(s,a);
   if(P.playing)dfWake(true);
@@ -789,10 +709,12 @@ function dfManual(dir){
 }
 function dfOnAyah(s,a){if(D.on)dfGoto(s,a);}            // подписчик оси аята (аудио ведёт кадр)
 function dfToggleText(){D.textHidden=!D.textHidden;dfRenderText(D.sura,D.ayah);}
-// Аудио прямо из диафильма: старт с текущего кадра / пауза-возобновление.
+// Аудио прямо из диафильма: старт с кадра / пауза. Запоминает намерение
+// (tl_dfAudio) — при следующем входе аудио стартует само (или нет).
 function dfTogglePlay(){
   if(P.active)togglePlay();          // играет или на паузе — переключить
   else playFrom(D.sura,D.ayah);      // ещё не запускали — старт с кадра
+  D.audio=!!P.playing;ctx.ss("dfAudio",D.audio);
   dfSyncPlay();
 }
 function dfSyncPlay(){
@@ -826,6 +748,7 @@ async function dfWake(on){
 export async function openDiafilm(s,a){
   D.textMode=ctx.gs("dfText","artr");if(!DF_MODES.includes(D.textMode))D.textMode="artr";
   D.imgOn=ctx.gs("dfImg",true)!==false;
+  D.audio=ctx.gs("dfAudio",true)!==false;            // по умолчанию аудио стартует само
   D.scale=ctx.gs("dfScale",1);if(!DF_SCALES.includes(D.scale))D.scale=1;
   D.textHidden=false;
   Dsel.cur="";                                       // свежий случайный выбор при входе
@@ -835,7 +758,10 @@ export async function openDiafilm(s,a){
   D.on=true;document.body.classList.add("df-open");
   const st=(P.active&&P.playing)?{s:POS.sura,a:POS.ayah}:{s:s||ctx.ST.surah,a:a||1};
   dfGoto(st.s,st.a);
+  // Авто-старт чтения (по умолчанию): в жесте входа, если ещё не играет.
+  if(D.audio&&!(P.active&&P.playing))playFrom(st.s,st.a);
   if(P.playing)dfWake(true);
+  dfSyncPlay();
 }
 export function closeDiafilm(){
   if(!D.on)return;
@@ -851,15 +777,12 @@ export function init(c){
   ctx=c;
   P.rate=+ctx.gs("mediaRate",1)||1;
   if(!RATE_STEPS.includes(P.rate))P.rate=1;
-  P.min=!!ctx.gs("mediaMin",false);
+  P.min=ctx.gs("mediaMin",true)!==false;   // плеер свёрнут в тонкую полоску по умолчанию
   onAyahChange(followText);     // текстовый слой — первый подписчик оси аята
-  onAyahChange(visualSetAyah);  // полоса (фаза 3) — следует за тем же указателем
   onAyahChange(dfOnAyah);       // диафильм — тот же указатель ведёт кадр
   // индикаторы 🎙: подтянуть ключи активного набора и перекрасить аяты
   const rid=recSetId();
   if(rid)loadRecKeys(rid).then(ks=>{if(ks.size)ctx.renderCenter();});
-  // восстановить визуальный слой, если был включён
-  if(ctx.gs("mediaVisual",false))toggleVisual(true);
 }
 // Старт (или перескок) воспроизведения с аята s:a активным источником
 export function playFrom(s,a){

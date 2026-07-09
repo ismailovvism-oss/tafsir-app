@@ -1233,7 +1233,7 @@ function scanDirOf(t){return t.imgdir||("img/"+t.id);}
 // первом обращении (▶ у аята или блок «🎧 Аудио» в панели 📚). Пока аудио не
 // трогали: ни байта кода, ни <audio>-элементов. media.js — ES-модуль, наши
 // let-глобалы (ST/CONFIG/qpcMeta) ему не видны — передаём контекст геттерами.
-const MEDIA_VER="10";   // поднять при правке media.js (сброс кеша браузера/CDN)
+const MEDIA_VER="11";   // поднять при правке media.js (сброс кеша браузера/CDN)
 let MEDIA=null;        // загруженный модуль (null = ещё не загружался)
 function mediaCtx(){
   return {
@@ -3430,7 +3430,6 @@ async function loadConfig(){
   Progress.ensureInit();                             // запустить таймер активного времени (слой CREDITED)
   render();
   if(syncEnabled()){_lastPullAt=Date.now();syncPull();} // тихий пул при открытии, ре-рендер при слиянии
-  if(gs("mediaVisual",false))mediaMod();              // восстановить визуальный слой (init→toggleVisual(true))
 }
 function useFB(){
   CONFIG={groups:[
@@ -4126,12 +4125,7 @@ function renderCB(){
 
 // -- CENTER BODY --
 function renderCenter(){
-  const r=renderCenterBody();
-  // визуальный слой (media.js): обновить полосу картинок после построения DOM
-  // (для async-рендеров — по завершении промиса, DOM уже готов)
-  if(MEDIA&&MEDIA.visualEnabled&&MEDIA.visualEnabled())
-    Promise.resolve(r).then(()=>{try{MEDIA.afterRender();}catch(e){}});
-  return r;
+  return renderCenterBody();
 }
 function renderCenterBody(){
   const el=document.getElementById("centerBody");
@@ -5359,20 +5353,15 @@ function audioBlockHTML(){
   // записи (blob) — только в IndexedDB (media.js).
   const sets=gs("mediaSets",[]);
   const setRows=sets.map(s=>`<label class="vp-check" style="display:flex;align-items:center;gap:4px"><input type="radio" name="mediaRec" ${("rec:"+s.id)===cur?"checked":""} onchange="mediaSetReciter('rec:${escAttr(s.id)}')"> <span style="flex:1">🎙 ${esc(s.name)}</span><button class="t-info-btn" onclick="event.preventDefault();mediaDelSet('${escAttr(s.id)}')" title="Удалить набор со всеми записями">🗑</button></label>`).join("");
-  const visOn=gs("mediaVisual",false);
   const hidN=recHiddenSet().size;
   const manage=`<button class="show-more-btn" style="margin:2px 0 0" onclick="openReciterManager()">⚙ Управлять чтецами${hidN?` (скрыто ${hidN})`:""}…</button>`;
   return `<div class="rp-quran"><div class="rp-sec-head">🎧 Аудио (чтец)</div>
     <div class="rp-q-body">${rows}${setRows}${manage}
     <button class="cov-map-open" style="margin:6px 0 0" onclick="mediaPlaySurah()">▶ Слушать текущую суру</button>
     <button class="cov-map-open" style="margin:6px 0 0" onclick="mediaNewSet()">➕ Новый набор записей</button>
-    <label class="vp-check" style="margin-top:8px"><input type="checkbox" ${visOn?"checked":""} onchange="mediaToggleVisual(this.checked)"> 🖼 Визуальный ряд (полоса над текстом)</label>
-    <button class="cov-map-open" style="margin:6px 0 0" onclick="openDiafilm()">🎬 Полноэкранный ряд (диафильм)</button>
-    <div class="vp-note">Чтецы стримятся с everyayah.com (нужен интернет). Наборы записей — ваш голос, кнопка 🎙 у аята; хранятся только на этом устройстве и работают офлайн. Визуальный ряд — атмосферная картинка по теме аята (фихрист): «полоса» над текстом или «диафильм» на весь экран (кадр меняется по чтецу, без звука — свайпом). Тап по кадру прячет текст.</div></div></div>`;
+    <button class="cov-map-open" style="margin:6px 0 0" onclick="openDiafilm()">🎬 Диафильм (полноэкранный визуальный ряд)</button>
+    <div class="vp-note">Чтецы стримятся с everyayah.com (нужен интернет). Наборы записей — ваш голос, кнопка 🎙 в плеере; хранятся только на этом устройстве и работают офлайн. Диафильм — полноэкранное созерцание: аят на весь экран с атмосферной картинкой по теме (фихрист), кадр меняется по чтецу (без звука — свайпом); в кадре можно убрать картинку или аудио.</div></div></div>`;
 }
-// Визуальный слой (картинки по темам) — включается отдельно от аудио; media.js
-// грузится лениво при первом включении.
-function mediaToggleVisual(on){mediaMod().then(m=>m&&m.toggleVisual(on));}
 // Новый набор записей: имя → tl_mediaSets; записи в него кладёт попап 🎙
 function mediaNewSet(){
   const name=(prompt("Название набора записей (например «Мой голос»):")||"").trim();
