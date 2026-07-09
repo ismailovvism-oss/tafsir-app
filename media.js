@@ -584,16 +584,19 @@ function loadVisual(){
   return V.loading;
 }
 function imgUrl(src){return /^https?:/i.test(src)?src:ctx.resolveUrl("visual_media",{file:src});}
-// Пул аята: пин > объединение картинок его тем > общий default
-function poolFor(s,a){
+// КУРИРУЕМЫЙ пул аята: пин > объединение картинок его тем (БЕЗ общего default).
+// Пусто = у аята нет своей картинки (не подготовлена или намеренно не задана).
+function poolCurated(s,a){
   const map=V.map;if(!map)return[];
   const k=sa(s,a);
   if(map.pins&&map.pins[k])return[map.pins[k]];
   const topics=(V.byAyah&&V.byAyah[k])||[];
   const out=[];
   for(const t of topics){const imgs=map.topics&&map.topics[String(t)];if(imgs)for(const im of imgs)if(!out.includes(im))out.push(im);}
-  return out.length?out:(map.default||[]).slice();
+  return out;
 }
+// Пул ПОЛОСЫ (фаза 3, поведение не меняем): курируемый, иначе общий default.
+function poolFor(s,a){const c=poolCurated(s,a);return c.length?c:((V.map&&V.map.default)||[]).slice();}
 function ensureBand(){
   let band=document.getElementById("visualBand");
   if(band){V.band=band;V.imgA=band.querySelector('[data-l="0"]');V.imgB=band.querySelector('[data-l="1"]');return band;}
@@ -616,18 +619,29 @@ function showImg(src){
   show.style.opacity="1";hide.style.opacity="0";                              // crossfade
   V.front=V.front===0?1:0;
 }
-// Выбор при входе в аят: держим в пределах аята, не повторяем предыдущую картинку
-function visualSetAyah(s,a){
-  if(!V.on)return;
+// ОБЩИЙ выбор картинки — зовут И полоса, И диафильм (логика не дублируется).
+// Состояние (cur/last/img) — СВОЁ на каждый режим (передаётся аргументом), чтобы
+// последовательности не сбивали друг друга: держим выбор в пределах аята
+// (state.cur), не повторяем предыдущую (state.last). allowDefault=true у полосы
+// (общий default-фолбэк), false у диафильма (пустой пул → нейтральный фон, а НЕ
+// заглушка/чужой кадр). Возвращает {src, changed}: src="" → пул пуст.
+function pickInto(state,s,a,allowDefault){
   const k=sa(s,a);
-  if(k===V.cur)return;
-  V.cur=k;
-  const pool=poolFor(s,a);
-  if(!pool.length){showImg(null);V.img="";return;}
+  if(k===state.cur)return{src:state.img,changed:false};
+  state.cur=k;
+  const pool=allowDefault?poolFor(s,a):poolCurated(s,a);
+  if(!pool.length){state.img="";return{src:"",changed:true};}
   let pick;
   if(pool.length===1)pick=pool[0];
-  else{const alt=pool.filter(p=>p!==V.last);const arr=alt.length?alt:pool;pick=arr[Math.floor(Math.random()*arr.length)];}
-  V.last=pick;V.img=pick;showImg(pick);
+  else{const alt=pool.filter(p=>p!==state.last);const arr=alt.length?alt:pool;pick=arr[Math.floor(Math.random()*arr.length)];}
+  state.last=pick;state.img=pick;return{src:pick,changed:true};
+}
+// Полоса: своё состояние — сам объект V (cur/last/img), с default-фолбэком
+function visualSetAyah(s,a){
+  if(!V.on)return;
+  const r=pickInto(V,s,a,true);
+  if(!r.changed)return;
+  showImg(r.src||null);
 }
 // Текущий аят без аудио — верхний видимый в ленте чтения
 function topVisibleAyah(){
@@ -676,6 +690,124 @@ export async function toggleVisual(on){
 }
 export function visualEnabled(){return V.on;}
 
+// ---------- ДИАФИЛЬМ (полноэкранный визуальный ряд) ----------
+// Отдельный полноэкранный слой поверх ТОЙ ЖЕ карты (visual.json) и общей функции
+// выбора (chooseImage), что и полоса — но полосу НЕ трогает. Строго ОДИН аят =
+// ОДИН кадр. Указатель ведёт аудио-плеер (onAyahChange) при прослушивании, либо
+// ручной свайп/тап при выключенном звуке (НЕ «верхний видимый»). Пустой пул →
+// нейтральный фон (не подставляем чужую картинку). Видео — только задел.
+const D={on:false,sura:0,ayah:0,textMode:"artr",textHidden:false,wake:null,el:null,la:null,lb:null,front:0,token:0,swiped:false};
+const Dsel={cur:"",last:"",img:""};                  // СВОЁ состояние выбора картинки (отдельно от полосы)
+const DF_MODES=["artr","ar","tr","none"];
+const DF_LABEL={artr:"Аа+ع",ar:"ع",tr:"Аа",none:"—"};
+let dfKaraoke=null;                                   // ХУК караоке (оставлен, не реализован)
+export function onDiafilmWord(cb){dfKaraoke=cb;}      // подписка на слово-по-слову (задел)
+
+function dfEnsure(){
+  if(D.el)return D.el;
+  const el=document.createElement("div");el.id="diafilm";el.className="diafilm";
+  el.innerHTML=`<div class="df-layer" data-l="0"></div><div class="df-layer" data-l="1"></div>`+
+    `<div class="df-scrim"></div><div class="df-text" id="dfText"></div>`+
+    `<div class="df-ctrls"><button class="df-btn" data-act="mode" title="Текст">${DF_LABEL[D.textMode]}</button>`+
+    `<button class="df-btn" data-act="close" title="Выйти">✕</button></div>`+
+    `<button class="df-nav df-prev" data-act="prev" title="Предыдущий аят">‹</button>`+
+    `<button class="df-nav df-next" data-act="next" title="Следующий аят">›</button>`;
+  document.body.appendChild(el);
+  D.el=el;D.la=el.querySelector('[data-l="0"]');D.lb=el.querySelector('[data-l="1"]');D.front=0;
+  el.addEventListener("click",e=>{
+    const b=e.target.closest("[data-act]");
+    if(!b){if(D.swiped){D.swiped=false;return;}dfToggleText();return;}   // тап по экрану → скрыть/показать текст
+    e.stopPropagation();
+    const act=b.dataset.act;
+    if(act==="close")ctx.exitDiafilm();
+    else if(act==="mode")dfCycleMode();
+    else if(act==="prev")dfManual(-1);
+    else if(act==="next")dfManual(1);
+  });
+  // Свайп влево/вправо — листание аятов (актуально при выключенном звуке)
+  let x0=null,y0=null;
+  el.addEventListener("touchstart",e=>{if(e.touches.length===1){x0=e.touches[0].clientX;y0=e.touches[0].clientY;}},{passive:true});
+  el.addEventListener("touchend",e=>{
+    if(x0==null)return;const t=e.changedTouches[0];const dx=t.clientX-x0,dy=t.clientY-y0;x0=null;
+    if(Math.abs(dx)>48&&Math.abs(dx)>Math.abs(dy)*1.4){D.swiped=true;dfManual(dx<0?1:-1);}
+  },{passive:true});
+  return el;
+}
+function dfShow(src){
+  dfEnsure();
+  const show=D.front===0?D.lb:D.la, hide=D.front===0?D.la:D.lb;
+  if(src){show.style.backgroundImage=`url("${imgUrl(src).replace(/"/g,'%22')}")`;show.classList.remove("df-neutral");}
+  else{show.style.backgroundImage="";show.classList.add("df-neutral");}   // пустой пул → нейтральный фон
+  show.classList.remove("kb");void show.offsetWidth;show.classList.add("kb"); // Ken Burns
+  show.style.opacity="1";hide.style.opacity="0";                              // crossfade
+  D.front=D.front===0?1:0;
+}
+async function dfRenderText(s,a){
+  const el=document.getElementById("dfText");if(!el)return;
+  if(D.textMode==="none"||D.textHidden){el.classList.add("hidden");return;}
+  el.classList.remove("hidden");
+  const tok=++D.token, mode=D.textMode;
+  let ar="",tr="",trId=null;
+  if(mode==="ar"||mode==="artr"){await ctx.ensureText("_arabic",s).catch(()=>{});ar=ctx.getArabic(s,a)||"";}
+  if(mode==="tr"||mode==="artr"){trId=ctx.primaryTransId();if(trId){await ctx.ensureText(trId,s).catch(()=>{});tr=ctx.getText(trId,s,a)||"";}}
+  if(tok!==D.token||!D.on)return;                       // устарело (сменился аят/режим/закрылось)
+  let html=`<div class="df-key">${s}:${a}</div>`;
+  if(ar)html+=`<div class="df-ar arabic-main">${ctx.esc(ar)}</div>`;
+  if(tr)html+=`<div class="df-tr">${ctx.esc(tr)}</div>`;
+  el.innerHTML=html;
+}
+function dfGoto(s,a){
+  D.sura=s;D.ayah=a;
+  if(D.el)D.el.classList.toggle("df-audio",!!(P.active&&P.playing));   // аудио ведёт → прячем стрелки
+  const r=pickInto(Dsel,s,a,false);                 // без default: пустой пул → нейтральный фон
+  dfShow(r.src);
+  dfRenderText(s,a);
+  if(P.playing)dfWake(true);
+  if(dfKaraoke)try{dfKaraoke(s,a);}catch(e){}
+}
+// Ручное листание (свайп/стрелки). При активном аудио — двигаем плеер (он сам
+// через onAyahChange вернётся в dfGoto); иначе двигаем только диафильм.
+function dfManual(dir){
+  const t=dir>0?nextAyah(D.sura,D.ayah):prevAyah(D.sura,D.ayah);
+  if(!t)return;
+  if(P.active){P.played=0;setPos(t.sura,t.ayah);if(P.playing)playCur();}
+  else dfGoto(t.sura,t.ayah);
+}
+function dfOnAyah(s,a){if(D.on)dfGoto(s,a);}            // подписчик оси аята (аудио ведёт кадр)
+function dfToggleText(){D.textHidden=!D.textHidden;dfRenderText(D.sura,D.ayah);}
+function dfCycleMode(){
+  const i=DF_MODES.indexOf(D.textMode);D.textMode=DF_MODES[(i+1)%DF_MODES.length];
+  ctx.ss("dfText",D.textMode);
+  const b=D.el&&D.el.querySelector('[data-act="mode"]');if(b)b.textContent=DF_LABEL[D.textMode];
+  D.textHidden=false;dfRenderText(D.sura,D.ayah);
+}
+async function dfWake(on){
+  try{
+    if(on){if(("wakeLock"in navigator)&&!D.wake){D.wake=await navigator.wakeLock.request("screen");
+      if(D.wake&&D.wake.addEventListener)D.wake.addEventListener("release",()=>{D.wake=null;});}}
+    else if(D.wake){await D.wake.release();D.wake=null;}
+  }catch(e){D.wake=null;}                                // нет API / отказ — молча (фолбэк)
+}
+export async function openDiafilm(s,a){
+  D.textMode=ctx.gs("dfText","artr");if(!DF_MODES.includes(D.textMode))D.textMode="artr";
+  D.textHidden=false;
+  Dsel.cur="";                                       // свежий случайный выбор при входе
+  await loadVisual();
+  dfEnsure();
+  D.on=true;document.body.classList.add("df-open");
+  const st=(P.active&&P.playing)?{s:POS.sura,a:POS.ayah}:{s:s||ctx.ST.surah,a:a||1};
+  dfGoto(st.s,st.a);
+  if(P.playing)dfWake(true);
+}
+export function closeDiafilm(){
+  if(!D.on)return;
+  D.on=false;document.body.classList.remove("df-open");
+  dfWake(false);
+  if(D.el){D.el.remove();D.el=null;}
+}
+export function diafilmPos(){return{s:D.sura,a:D.ayah};}
+export function diafilmOpen(){return D.on;}
+
 // ---------- публичный интерфейс (вызывается из index.html) ----------
 export function init(c){
   ctx=c;
@@ -683,7 +815,8 @@ export function init(c){
   if(!RATE_STEPS.includes(P.rate))P.rate=1;
   P.min=!!ctx.gs("mediaMin",false);
   onAyahChange(followText);     // текстовый слой — первый подписчик оси аята
-  onAyahChange(visualSetAyah);  // визуальный слой — второй (следует за тем же указателем)
+  onAyahChange(visualSetAyah);  // полоса (фаза 3) — следует за тем же указателем
+  onAyahChange(dfOnAyah);       // диафильм — тот же указатель ведёт кадр
   // индикаторы 🎙: подтянуть ключи активного набора и перекрасить аяты
   const rid=recSetId();
   if(rid)loadRecKeys(rid).then(ks=>{if(ks.size)ctx.renderCenter();});

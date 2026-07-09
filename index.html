@@ -963,6 +963,27 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
 .visual-band .vb-x{position:absolute;top:6px;right:6px;z-index:2;width:26px;height:26px;border:none;border-radius:50%;background:rgba(0,0,0,.34);color:#fff;cursor:pointer;font-size:12px;opacity:.5;transition:opacity .15s}
 .visual-band .vb-x:hover{opacity:1}
 @media(max-width:520px){.visual-band{height:19vh;min-height:104px}}
+/* Диафильм — полноэкранный визуальный ряд (один аят = один кадр) */
+.diafilm{position:fixed;inset:0;z-index:70;background:#000;overflow:hidden;touch-action:pan-y}
+.diafilm .df-layer{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity .8s ease;will-change:opacity,transform}
+.diafilm .df-layer.kb{animation:kenburns 22s ease-out forwards}
+.diafilm .df-layer.df-neutral{background:radial-gradient(125% 120% at 50% 18%,#1b2431 0%,#10151d 62%,#05070b 100%)}
+.df-scrim{position:absolute;left:0;right:0;bottom:0;height:58%;z-index:2;pointer-events:none;background:linear-gradient(to top,rgba(0,0,0,.85) 0%,rgba(0,0,0,.5) 42%,rgba(0,0,0,0) 100%)}
+.df-text{position:absolute;left:0;right:0;bottom:0;z-index:3;padding:22px 24px calc(30px + env(safe-area-inset-bottom));color:#fff;text-align:center;transition:opacity .3s}
+.df-text.hidden{opacity:0;pointer-events:none}
+.df-key{font-size:12px;opacity:.55;letter-spacing:.06em;margin-bottom:9px}
+.df-ar{font-size:27px;line-height:1.95;direction:rtl;margin-bottom:13px;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.65)}
+.df-tr{font-size:16px;line-height:1.55;opacity:.95;text-shadow:0 1px 7px rgba(0,0,0,.7);max-width:760px;margin:0 auto}
+.df-ctrls{position:absolute;top:calc(10px + env(safe-area-inset-top));right:10px;z-index:5;display:flex;gap:8px}
+.df-btn{min-width:40px;height:40px;padding:0 8px;border:none;border-radius:22px;background:rgba(0,0,0,.42);color:#fff;font-size:14px;cursor:pointer;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.df-btn:active{background:rgba(0,0,0,.62)}
+.df-nav{position:absolute;top:50%;transform:translateY(-50%);z-index:4;width:46px;height:70px;border:none;background:rgba(0,0,0,.2);color:#fff;font-size:32px;line-height:1;cursor:pointer;opacity:.45;transition:opacity .15s}
+.df-nav:active{opacity:.85}
+.df-prev{left:0;border-radius:0 12px 12px 0}
+.df-next{right:0;border-radius:12px 0 0 12px}
+.diafilm.df-audio .df-nav{display:none}          /* аудио ведёт — стрелки не нужны */
+body.df-open{overflow:hidden}
+@media(min-width:820px){.df-ar{font-size:33px}.df-tr{font-size:19px}}
 .ayah-block.media-cur,.wbw-ayah.media-cur{box-shadow:0 0 0 2px var(--accent);border-radius:8px}
 .ab-play-btn,.ab-rec-btn{background:var(--bg-card);border:1px solid var(--border);border-radius:4px;padding:1px 7px;cursor:pointer;font-size:11px;color:var(--text-muted)}
 .ab-play-btn:hover,.ab-rec-btn:hover{color:var(--accent);border-color:var(--accent)}
@@ -1212,7 +1233,7 @@ function scanDirOf(t){return t.imgdir||("img/"+t.id);}
 // первом обращении (▶ у аята или блок «🎧 Аудио» в панели 📚). Пока аудио не
 // трогали: ни байта кода, ни <audio>-элементов. media.js — ES-модуль, наши
 // let-глобалы (ST/CONFIG/qpcMeta) ему не видны — передаём контекст геттерами.
-const MEDIA_VER="7";   // поднять при правке media.js (сброс кеша браузера/CDN)
+const MEDIA_VER="8";   // поднять при правке media.js (сброс кеша браузера/CDN)
 let MEDIA=null;        // загруженный модуль (null = ещё не загружался)
 function mediaCtx(){
   return {
@@ -1221,6 +1242,10 @@ function mediaCtx(){
     recVisible:()=>recVisible(),                                   // чтецы набора (не скрытые)
     renderAudio:()=>renderAudioPanel(),                            // обновить отдельную панель 🎧
     openReciterManager:()=>openReciterManager(),
+    getArabic:(s,a)=>getArabicFromCache(s,a),                      // диафильм: текст аята
+    ensureText:(id,s)=>loadChunk(id,s),getText:(id,s,a)=>{const c=getChunk(id,s);return c?(c[a]||""):"";},
+    primaryTransId:()=>diafilmTransId(),                           // первый включённый перевод
+    pushOverlay:()=>pushOverlay(),consumeOverlay:()=>consumeOverlay(),exitDiafilm:()=>exitDiafilm(),
     jumpTo:t=>jumpTo(t),renderRP:()=>renderRP(),renderCenter:()=>renderCenter(),
   };
 }
@@ -1245,6 +1270,29 @@ function mediaSetReciter(id){
   ss("mediaReciter",id);
   if(MEDIA)MEDIA.setReciter(id); // на лету: указатель аята сохраняется
   renderAudioPanel();
+}
+// Диафильм: первый ВКЛЮЧЁННЫЙ перевод (предпочтительно из группы «Переводы»),
+// иначе любой включённый нетафсир-текст, иначе null (тогда только арабский).
+function diafilmTransId(){
+  const en=getEnabledList().filter(t=>t.id!=="_notes"&&!isQuranText(t.id));
+  const tr=en.find(t=>{const c=CONFIG.tafsirs.find(x=>x.id===t.id);return c&&c.group==="translations";});
+  return (tr||en[0]||{}).id||null;
+}
+// Вход в диафильм (полноэкранный визуальный ряд). Аппаратный «Назад»/Esc и ✕
+// выходят через оверлей-запись (как иммерсив). Возврат — на тот же аят.
+function openDiafilm(a){
+  if(ST.diafilm)return;
+  ST.diafilm=true;pushOverlay();
+  const ay=a||curTopAyah();
+  mediaMod().then(m=>{if(m)m.openDiafilm(ST.surah,ay);else{ST.diafilm=false;consumeOverlay();}});
+}
+function exitDiafilm(viaBack){
+  if(!ST.diafilm)return;
+  ST.diafilm=false;
+  const pos=MEDIA?MEDIA.diafilmPos():null;
+  if(MEDIA)MEDIA.closeDiafilm();
+  if(!viaBack)consumeOverlay();
+  if(pos&&pos.s)jumpTo({surah:pos.s,ayah:pos.a});   // вернуться в прежний режим на том же аяте
 }
 
 const SURAHS=[
@@ -1317,7 +1365,7 @@ function getAnyTranslation(surahId,ayahId){
 // ============================================================
 // STATE
 // ============================================================
-let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,apanelOpen:false,immersive:false,
+let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,apanelOpen:false,diafilm:false,immersive:false,
   layout:"h",
   enabled:{_arabic:true,kuliev:true},
   selectedTag:null,bookIntro:false,topicSel:null,
@@ -4823,6 +4871,7 @@ async function renderReading(el){
           <button class="ab-note-btn ${hn?'has':''}" onclick="event.stopPropagation();toggleNote(${aid},this)" title="Заметка к аяту">📝</button>
           <button class="ab-play-btn" onclick="event.stopPropagation();mediaPlayAyah(${aid})" title="Слушать с этого аята">▶</button>
           <button class="ab-rec-btn ${MEDIA&&MEDIA.hasRec(ST.surah,aid)?'has':''}" onclick="event.stopPropagation();mediaRecPopup(${aid},this)" title="Моя запись этого аята">🎙</button>
+          <button class="ab-play-btn" onclick="event.stopPropagation();openDiafilm(${aid})" title="Полноэкранный визуальный ряд с этого аята">🎬</button>
           ${peekKind?`<button class="ab-peek-btn" data-peek="${peekKind}" onclick="event.stopPropagation();togglePeek(${aid},this)" title="${peekKind==='ru'?'Показать перевод этого аята':'Показать оригинал этого аята'}">${peekKind}</button>`:''}
         </div>
         <div class="ab-tag-dots">${hn?'<span class="ab-note-dot"></span>':''}</div>
@@ -5305,8 +5354,9 @@ function audioBlockHTML(){
     <div class="rp-q-body">${rows}${setRows}${manage}
     <button class="cov-map-open" style="margin:6px 0 0" onclick="mediaPlaySurah()">▶ Слушать текущую суру</button>
     <button class="cov-map-open" style="margin:6px 0 0" onclick="mediaNewSet()">➕ Новый набор записей</button>
-    <label class="vp-check" style="margin-top:8px"><input type="checkbox" ${visOn?"checked":""} onchange="mediaToggleVisual(this.checked)"> 🖼 Визуальный ряд (картинки по темам)</label>
-    <div class="vp-note">Чтецы стримятся с everyayah.com (нужен интернет). Наборы записей — ваш голос, кнопка 🎙 у аята; хранятся только на этом устройстве и работают офлайн. Визуальный ряд — атмосферная картинка над текстом по теме аята (фихрист); включается отдельно от аудио.</div></div></div>`;
+    <label class="vp-check" style="margin-top:8px"><input type="checkbox" ${visOn?"checked":""} onchange="mediaToggleVisual(this.checked)"> 🖼 Визуальный ряд (полоса над текстом)</label>
+    <button class="cov-map-open" style="margin:6px 0 0" onclick="openDiafilm()">🎬 Полноэкранный ряд (диафильм)</button>
+    <div class="vp-note">Чтецы стримятся с everyayah.com (нужен интернет). Наборы записей — ваш голос, кнопка 🎙 у аята; хранятся только на этом устройстве и работают офлайн. Визуальный ряд — атмосферная картинка по теме аята (фихрист): «полоса» над текстом или «диафильм» на весь экран (кадр меняется по чтецу, без звука — свайпом). Тап по кадру прячет текст.</div></div></div>`;
 }
 // Визуальный слой (картинки по темам) — включается отдельно от аудио; media.js
 // грузится лениво при первом включении.
@@ -5718,6 +5768,7 @@ document.addEventListener("keydown",function(e){
   else if(e.key==="Escape"&&searchOpen)toggleSearch();
   else if(e.key==="Escape"&&ST.rpanelOpen)closeRPanel();
   else if(e.key==="Escape"&&ST.apanelOpen)closeAudioPanel();
+  else if(e.key==="Escape"&&ST.diafilm)exitDiafilm();
   else if(e.key==="Escape"&&ST.viewOpen)toggleViewPanel();
   else if(e.key==="Escape"&&ST.immersive)exitImmersive();
   if((e.ctrlKey||e.metaKey)&&e.key==="f"){e.preventDefault();if(!searchOpen)toggleSearch();}
@@ -5728,7 +5779,7 @@ document.addEventListener("keydown",function(e){
 // ============================================================
 let pendingAyah=null;
 // Which open panels should the Back button / backdrop close (overlays only; the desktop sidebar is docked)
-function anyOverlayOpen(){return searchOpen||ST.rpanelOpen||ST.apanelOpen||ST.immersive||appAboutOpen()||progressOpen||spdOpen||(isM()&&ST.sidebarOpen);}
+function anyOverlayOpen(){return searchOpen||ST.rpanelOpen||ST.apanelOpen||ST.diafilm||ST.immersive||appAboutOpen()||progressOpen||spdOpen||(isM()&&ST.sidebarOpen);}
 let navBack=false; // true while we programmatically history.back() to consume our own overlay entry
 function pushOverlay(){if(!(history.state&&history.state.ov))history.pushState({ov:1},"");}
 function consumeOverlay(){if(history.state&&history.state.ov){navBack=true;history.back();}}
@@ -5740,6 +5791,7 @@ function closeAllPanelsUI(){
   if(searchOpen){searchOpen=false;document.getElementById("searchPanel").classList.add("hidden");}
   if(ST.rpanelOpen){ST.rpanelOpen=false;document.getElementById("rpanel").classList.add("collapsed");}
   if(ST.apanelOpen){ST.apanelOpen=false;document.getElementById("apanel").classList.add("collapsed");}
+  if(ST.diafilm)exitDiafilm(true);       // «Назад» выходит из диафильма (запись уже снята)
   if(ST.immersive)exitImmersive(true);   // Back button leaves immersive (entry already popped)
   if(isM()&&ST.sidebarOpen){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   updateBackdrop();
@@ -6523,7 +6575,7 @@ async function renderWbw(el){
     let endG="";
     if(entry.e){ensurePageFont(pack,entry.e[1]);endG=`<span class="wbw-end" style="font-family:'${pack.fontFamily(entry.e[1])}'">${entry.e[0]}</span>`;}
     html+=`<div class="wbw-ayah" data-aid="${aid}">
-      <div class="wbw-head"><span class="wbw-num">${surah}:${aid}</span> <button class="ab-play-btn" onclick="mediaPlayAyah(${aid})" title="Слушать с этого аята">▶</button> <button class="ab-rec-btn ${MEDIA&&MEDIA.hasRec(surah,aid)?'has':''}" onclick="mediaRecPopup(${aid},this)" title="Моя запись этого аята">🎙</button></div>
+      <div class="wbw-head"><span class="wbw-num">${surah}:${aid}</span> <button class="ab-play-btn" onclick="mediaPlayAyah(${aid})" title="Слушать с этого аята">▶</button> <button class="ab-rec-btn ${MEDIA&&MEDIA.hasRec(surah,aid)?'has':''}" onclick="mediaRecPopup(${aid},this)" title="Моя запись этого аята">🎙</button> <button class="ab-play-btn" onclick="openDiafilm(${aid})" title="Полноэкранный визуальный ряд с этого аята">🎬</button></div>
       <div class="wbw-grid">${cells}${endG}</div></div>`;
   }
   html+=`<div class="wbw-attr">Русский пословный глосс — наш черновой перевод (сверка по смыслу с переводом Э. Кулиева; сам перевод Кулиева не распространяется). Английский глосс: <a href="https://github.com/hablullah/data-quran" target="_blank" rel="noopener">data-quran</a> (CC BY-NC-ND, без изменений). Грамматический разбор: <a href="http://corpus.quran.com" target="_blank" rel="noopener">Quranic Arabic Corpus</a> (GPL).</div>`;
