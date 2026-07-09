@@ -1233,7 +1233,7 @@ function scanDirOf(t){return t.imgdir||("img/"+t.id);}
 // первом обращении (▶ у аята или блок «🎧 Аудио» в панели 📚). Пока аудио не
 // трогали: ни байта кода, ни <audio>-элементов. media.js — ES-модуль, наши
 // let-глобалы (ST/CONFIG/qpcMeta) ему не видны — передаём контекст геттерами.
-const MEDIA_VER="9";   // поднять при правке media.js (сброс кеша браузера/CDN)
+const MEDIA_VER="10";   // поднять при правке media.js (сброс кеша браузера/CDN)
 let MEDIA=null;        // загруженный модуль (null = ещё не загружался)
 function mediaCtx(){
   return {
@@ -1245,7 +1245,7 @@ function mediaCtx(){
     getArabic:(s,a)=>getArabicFromCache(s,a),                      // диафильм: текст аята
     ensureText:(id,s)=>loadChunk(id,s),getText:(id,s,a)=>{const c=getChunk(id,s);return c?(c[a]||""):"";},
     primaryTransId:()=>diafilmTransId(),                           // первый включённый перевод
-    pushOverlay:()=>pushOverlay(),consumeOverlay:()=>consumeOverlay(),exitDiafilm:()=>exitDiafilm(),
+    pushOverlay:()=>pushOverlay(),consumeOverlay:()=>consumeOverlay(),exitDiafilm:()=>exitDiafilm(),openDiafilm:a=>openDiafilm(a),
     jumpTo:t=>jumpTo(t),renderRP:()=>renderRP(),renderCenter:()=>renderCenter(),
   };
 }
@@ -1280,17 +1280,30 @@ function diafilmTransId(){
 }
 // Вход в диафильм (полноэкранный визуальный ряд). Аппаратный «Назад»/Esc и ✕
 // выходят через оверлей-запись (как иммерсив). Возврат — на тот же аят.
+let _dfFs=false;                                       // диафильм сам запросил полноэкранный режим?
+function dfRequestFs(){
+  if(isIOS)return;                                     // iOS Safari — Fullscreen API хрупкий (см. immersive)
+  const el=document.documentElement,req=el.requestFullscreen||el.webkitRequestFullscreen;
+  if(req&&!(document.fullscreenElement||document.webkitFullscreenElement)){try{const p=req.call(el);if(p&&p.catch)p.catch(()=>{});_dfFs=true;}catch(e){}}
+}
+function dfExitFs(){
+  if(!_dfFs)return;_dfFs=false;
+  const d=document,ex=d.exitFullscreen||d.webkitExitFullscreen;
+  if((d.fullscreenElement||d.webkitFullscreenElement)&&ex)try{ex.call(d);}catch(e){}
+}
 function openDiafilm(a){
   if(ST.diafilm)return;
+  dfRequestFs();                                       // СИНХРОННО в жесте: весь экран (браузер+приложение)
   ST.diafilm=true;pushOverlay();
   const ay=a||curTopAyah();
-  mediaMod().then(m=>{if(m)m.openDiafilm(ST.surah,ay);else{ST.diafilm=false;consumeOverlay();}});
+  mediaMod().then(m=>{if(m)m.openDiafilm(ST.surah,ay);else{ST.diafilm=false;consumeOverlay();dfExitFs();}});
 }
 function exitDiafilm(viaBack){
   if(!ST.diafilm)return;
   ST.diafilm=false;
   const pos=MEDIA?MEDIA.diafilmPos():null;
   if(MEDIA)MEDIA.closeDiafilm();
+  dfExitFs();
   if(!viaBack)consumeOverlay();
   if(pos&&pos.s)jumpTo({surah:pos.s,ayah:pos.a});   // вернуться в прежний режим на том же аяте
 }
@@ -4869,8 +4882,7 @@ async function renderReading(el){
           <button class="cov-cnt-btn" onclick="event.stopPropagation();openCovPopup(${aid},this)" title="Переводов и тафсиров у этого аята">${covCountLabel(ST.surah,aid)}</button>
           <button class="ab-bm-btn ${isBookmarked(ST.surah,aid)?'on':''}" onclick="event.stopPropagation();toggleBookmark(${aid},this)" title="Закладка">${isBookmarked(ST.surah,aid)?'★':'☆'}</button>
           <button class="ab-note-btn ${hn?'has':''}" onclick="event.stopPropagation();toggleNote(${aid},this)" title="Заметка к аяту">📝</button>
-          <button class="ab-play-btn" onclick="event.stopPropagation();mediaPlayAyah(${aid})" title="Слушать с этого аята">▶</button>
-          <button class="ab-rec-btn ${MEDIA&&MEDIA.hasRec(ST.surah,aid)?'has':''}" onclick="event.stopPropagation();mediaRecPopup(${aid},this)" title="Моя запись этого аята">🎙</button>
+          <button class="ab-play-btn" onclick="event.stopPropagation();mediaPlayAyah(${aid})" title="Слушать с этого аята (запись голоса — 🎙 в плеере)">▶</button>
           <button class="ab-play-btn" onclick="event.stopPropagation();openDiafilm(${aid})" title="Полноэкранный визуальный ряд с этого аята">🎬</button>
           ${peekKind?`<button class="ab-peek-btn" data-peek="${peekKind}" onclick="event.stopPropagation();togglePeek(${aid},this)" title="${peekKind==='ru'?'Показать перевод этого аята':'Показать оригинал этого аята'}">${peekKind}</button>`:''}
         </div>
@@ -6575,7 +6587,7 @@ async function renderWbw(el){
     let endG="";
     if(entry.e){ensurePageFont(pack,entry.e[1]);endG=`<span class="wbw-end" style="font-family:'${pack.fontFamily(entry.e[1])}'">${entry.e[0]}</span>`;}
     html+=`<div class="wbw-ayah" data-aid="${aid}">
-      <div class="wbw-head"><span class="wbw-num">${surah}:${aid}</span> <button class="ab-play-btn" onclick="mediaPlayAyah(${aid})" title="Слушать с этого аята">▶</button> <button class="ab-rec-btn ${MEDIA&&MEDIA.hasRec(surah,aid)?'has':''}" onclick="mediaRecPopup(${aid},this)" title="Моя запись этого аята">🎙</button> <button class="ab-play-btn" onclick="openDiafilm(${aid})" title="Полноэкранный визуальный ряд с этого аята">🎬</button></div>
+      <div class="wbw-head"><span class="wbw-num">${surah}:${aid}</span> <button class="ab-play-btn" onclick="mediaPlayAyah(${aid})" title="Слушать с этого аята">▶</button> <button class="ab-play-btn" onclick="openDiafilm(${aid})" title="Полноэкранный визуальный ряд с этого аята">🎬</button></div>
       <div class="wbw-grid">${cells}${endG}</div></div>`;
   }
   html+=`<div class="wbw-attr">Русский пословный глосс — наш черновой перевод (сверка по смыслу с переводом Э. Кулиева; сам перевод Кулиева не распространяется). Английский глосс: <a href="https://github.com/hablullah/data-quran" target="_blank" rel="noopener">data-quran</a> (CC BY-NC-ND, без изменений). Грамматический разбор: <a href="http://corpus.quran.com" target="_blank" rel="noopener">Quranic Arabic Corpus</a> (GPL).</div>`;

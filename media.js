@@ -302,6 +302,7 @@ function loopLabel(){
 function srcName(){return SRC?SRC.name:"—";}
 function srcIcon(){return SRC&&SRC.type==="audio_user_recording"?"🎙":"🎧";}
 function renderBar(){
+  if(D.on)dfSyncPlay();               // диафильм открыт — синхронизировать его ▶/⏸ со состоянием плеера
   if(!P.active)return;
   closeMenu();
   const el=barEl();
@@ -328,6 +329,10 @@ function renderBar(){
       `<button data-act="src" class="src" title="Выбрать чтеца или набор своих записей">${srcIcon()} ${ctx.esc(srcName())} ▾</button>`+
       `<button data-act="loop" class="${(P.repeat||P.range||P.rangeArm)?"on":""}" title="Повтор аята или диапазона — выбрать из списка">${loopLabel()} ▾</button>`+
       `<button data-act="rate" title="Скорость чтения">⏩ ${P.rate}×</button>`+
+    `</span>`+
+    `<span class="mb-grp">`+
+      `<button data-act="film" title="Полноэкранный визуальный ряд (диафильм)">🎬</button>`+
+      `<button data-act="rec" title="Записать текущий аят своим голосом">🎙</button>`+
     `</span>`+
     `<span class="mb-grp">`+
       `<button data-act="min" class="ghost" title="Свернуть плеер в полоску">⌄</button>`+
@@ -425,6 +430,8 @@ function onBarClick(e){
     case"next":navStep(1);break;
     case"pp":togglePlay();break;
     case"goto":followText(POS.sura,POS.ayah);break;
+    case"film":ctx.openDiafilm(POS.ayah);break;         // диафильм из плеера
+    case"rec":openRecPopup(POS.sura,POS.ayah);break;    // запись текущего аята (перенесено с аята)
     case"src":openMenu();break;
     case"loop":openRepeatMenu();break;
     case"min":P.min=!P.min;ctx.ss("mediaMin",P.min);renderBar();break;
@@ -709,7 +716,8 @@ function dfEnsure(){
   const el=document.createElement("div");el.id="diafilm";el.className="diafilm";
   el.innerHTML=`<div class="df-layer" data-l="0"></div><div class="df-layer" data-l="1"></div>`+
     `<div class="df-scrim"></div><div class="df-text" id="dfText"></div>`+
-    `<div class="df-ctrls"><button class="df-btn" data-act="mode" title="Текст: арабский/перевод/оба/нет">${DF_LABEL[D.textMode]}</button>`+
+    `<div class="df-ctrls"><button class="df-btn" data-act="pp" title="Аудио: включить/пауза">${P.playing?"⏸":"▶"}</button>`+
+    `<button class="df-btn" data-act="mode" title="Текст: арабский/перевод/оба/нет">${DF_LABEL[D.textMode]}</button>`+
     `<button class="df-btn" data-act="img" title="Картинки вкл/выкл (без картинок — чистое пофреймовое слушание)">${D.imgOn?"🖼":"🚫"}</button>`+
     `<button class="df-btn" data-act="size" title="Размер шрифта">A</button>`+
     `<button class="df-btn" data-act="close" title="Выйти">✕</button></div>`+
@@ -723,6 +731,7 @@ function dfEnsure(){
     e.stopPropagation();
     const act=b.dataset.act;
     if(act==="close")ctx.exitDiafilm();
+    else if(act==="pp")dfTogglePlay();
     else if(act==="mode")dfCycleMode();
     else if(act==="img")dfToggleImg();
     else if(act==="size")dfCycleSize();
@@ -780,6 +789,17 @@ function dfManual(dir){
 }
 function dfOnAyah(s,a){if(D.on)dfGoto(s,a);}            // подписчик оси аята (аудио ведёт кадр)
 function dfToggleText(){D.textHidden=!D.textHidden;dfRenderText(D.sura,D.ayah);}
+// Аудио прямо из диафильма: старт с текущего кадра / пауза-возобновление.
+function dfTogglePlay(){
+  if(P.active)togglePlay();          // играет или на паузе — переключить
+  else playFrom(D.sura,D.ayah);      // ещё не запускали — старт с кадра
+  dfSyncPlay();
+}
+function dfSyncPlay(){
+  if(!D.el)return;
+  const b=D.el.querySelector('[data-act="pp"]');if(b)b.textContent=P.playing?"⏸":"▶";
+  D.el.classList.toggle("df-audio",!!(P.active&&P.playing));   // аудио ведёт → прячем стрелки
+}
 function dfToggleImg(){
   D.imgOn=!D.imgOn;ctx.ss("dfImg",D.imgOn);
   const b=D.el&&D.el.querySelector('[data-act="img"]');if(b)b.textContent=D.imgOn?"🖼":"🚫";
