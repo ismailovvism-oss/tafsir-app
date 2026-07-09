@@ -111,6 +111,10 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .sb-tab{flex:1;padding:6px 4px;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:11px;font-weight:500;color:var(--text-sec);border-bottom:2px solid transparent;text-align:center}
 .sb-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
 .sb-content{flex:1;overflow-y:auto;padding:4px 5px 10px}
+/* Под-табы панели ⚙ Вид */
+.vp-tabs{display:flex;gap:4px;position:sticky;top:0;z-index:2;background:var(--panel);padding:2px 0 6px;margin-bottom:4px;border-bottom:1px solid var(--border)}
+.vp-tabs button{flex:1;padding:6px 3px;border:1px solid var(--border);background:var(--bg);color:var(--text-sec);border-radius:7px;font-family:inherit;font-size:11px;font-weight:500;cursor:pointer}
+.vp-tabs button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 
 /* Группировка списка сур по джузам */
 .juz-head{display:flex;align-items:center;gap:6px;padding:7px 8px 5px;background:var(--bg-alt);border-top:1px solid var(--border-light);border-bottom:1px solid var(--border-light);position:sticky;top:0;z-index:1}
@@ -1033,6 +1037,7 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
     <button class="btn-i" onclick="toggleSearch()" title="Поиск по текстам">🔍</button>
     <button class="btn-i" onclick="openProgress()" title="Прогресс чтения">📊</button>
     <button class="btn-i" onclick="toggleRPanel()" title="Переводы и тафсиры">📚</button>
+    <button class="btn-i" id="hAudioBtn" onclick="toggleAudioPanel()" title="Аудио: чтец, наборы, визуальный ряд">🎧</button>
     <button class="btn-i" id="hViewBtn" onclick="toggleViewPanel()" title="Вид: шрифт, размеры, тема, режимы">⚙</button>
     <button class="btn-i" id="fsBtn" onclick="toggleFullscreen()" title="Во весь экран">⛶</button>
   </div>
@@ -1075,6 +1080,11 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
     <div class="rp-head"><span>📚 Тексты и тафсиры</span><button class="btn-i" onclick="closeRPanel()" style="font-size:11px" title="Закрыть">✕</button></div>
     <div class="rp-search"><input placeholder="Поиск по названию / автору…" oninput="ST.rpFilter=this.value.toLowerCase();renderRP();" id="rpSearchInput"></div>
     <div class="rp-list" id="rpList"></div>
+  </aside>
+
+  <aside class="rpanel collapsed" id="apanel">
+    <div class="rp-head"><span>🎧 Аудио</span><button class="btn-i" onclick="closeAudioPanel()" style="font-size:11px" title="Закрыть">✕</button></div>
+    <div class="rp-list" id="apList"></div>
   </aside>
 </div>
 <div class="panel-backdrop" id="panelBackdrop" onclick="panelBackdrop()"></div>
@@ -1202,12 +1212,15 @@ function scanDirOf(t){return t.imgdir||("img/"+t.id);}
 // первом обращении (▶ у аята или блок «🎧 Аудио» в панели 📚). Пока аудио не
 // трогали: ни байта кода, ни <audio>-элементов. media.js — ES-модуль, наши
 // let-глобалы (ST/CONFIG/qpcMeta) ему не видны — передаём контекст геттерами.
-const MEDIA_VER="5";   // поднять при правке media.js (сброс кеша браузера/CDN)
+const MEDIA_VER="7";   // поднять при правке media.js (сброс кеша браузера/CDN)
 let MEDIA=null;        // загруженный модуль (null = ещё не загружался)
 function mediaCtx(){
   return {
     get ST(){return ST;},get CONFIG(){return CONFIG;},get qpcMeta(){return qpcMeta;},
     SURAHS,resolveUrl,gs,ss,esc,escAttr,
+    recVisible:()=>recVisible(),                                   // чтецы набора (не скрытые)
+    renderAudio:()=>renderAudioPanel(),                            // обновить отдельную панель 🎧
+    openReciterManager:()=>openReciterManager(),
     jumpTo:t=>jumpTo(t),renderRP:()=>renderRP(),renderCenter:()=>renderCenter(),
   };
 }
@@ -1231,7 +1244,7 @@ function mediaPlaySurah(){
 function mediaSetReciter(id){
   ss("mediaReciter",id);
   if(MEDIA)MEDIA.setReciter(id); // на лету: указатель аята сохраняется
-  renderRP();
+  renderAudioPanel();
 }
 
 const SURAHS=[
@@ -1304,7 +1317,7 @@ function getAnyTranslation(surahId,ayahId){
 // ============================================================
 // STATE
 // ============================================================
-let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,immersive:false,
+let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,apanelOpen:false,immersive:false,
   layout:"h",
   enabled:{_arabic:true,kuliev:true},
   selectedTag:null,bookIntro:false,topicSel:null,
@@ -1370,7 +1383,7 @@ const SYNCED_KEYS=new Set(["notes","bookmarks","ayahTags","tagTree","progress"])
 let _syncDirty=false;      // менялись ли синк-ключи с последней отправки
 let _syncStatusMsg="";     // последнее сообщение статуса для строки в ⚙ Вид
 function gs(k,d){try{const v=localStorage.getItem("tl_"+k);return v?JSON.parse(v):d;}catch(e){return d;}}
-function ss(k,v){try{localStorage.setItem("tl_"+k,JSON.stringify(v));if(SYNCED_KEYS.has(k))_syncDirty=true;}catch(e){}}
+function ss(k,v){try{localStorage.setItem("tl_"+k,JSON.stringify(v));if(SYNCED_KEYS.has(k)){_syncDirty=true;if(typeof scheduleSyncPush==="function")scheduleSyncPush();}}catch(e){}}
 // --- Последняя позиция чтения (одна автоточка возврата; НЕ закладки) ---
 // Тем же механизмом (ss/gs). Запоминает суру, аят, страницу мусхафа и активный режим.
 function curTopAyah(){
@@ -2982,7 +2995,13 @@ function quickLabel(q){
 
 function getNotes(){return gs("notes",{});}
 function getNote(s,a){return getNotes()[s+":"+a]||"";}
-function setNote(s,a,t){const n=getNotes();if(t.trim())n[s+":"+a]=t;else delete n[s+":"+a];ss("notes",n);}
+// LWW: метки времени правок синхронизируемых элементов (мс от эпохи). Дают
+// сведение ПРАВОК между устройствами — при слиянии побеждает более свежая
+// версия. Не входит в SYNCED_KEYS: путешествует в блобе синка как _meta
+// (personalDataObj), локально «грязным» синк не помечает.
+function getSyncMeta(){return gs("syncMeta",{});}
+function stampSync(key){const m=getSyncMeta();m[key]=Date.now();ss("syncMeta",m);}
+function setNote(s,a,t){const n=getNotes();const k=s+":"+a;if(t.trim()){n[k]=t;stampSync("notes:"+k);}else delete n[k];ss("notes",n);}
 function hasNote(s,a){return!!getNotes()[s+":"+a];}
 
 function getTagTree(){return gs("tagTree",[{name:"Акыда",children:[{name:"Таухид",children:[]},{name:"Имена и Атрибуты",children:[]}]},{name:"Фикх",children:[{name:"Намаз",children:[]},{name:"Закят",children:[]}]},{name:"Ахлак",children:[]}]);}
@@ -3018,7 +3037,8 @@ function personalDataObj(){
   return {app:"tafsir-library",kind:"personal-data",version:1,
     exportedAt:new Date().toISOString(),
     notes:getNotes(),bookmarks:getBookmarks(),ayahTags:getAyahTags(),tagTree:getTagTree(),
-    progress:Progress.exportState()};   // ХУК #4: прогресс в тот же единый бэкап, не параллельный файл
+    progress:Progress.exportState(),    // ХУК #4: прогресс в тот же единый бэкап, не параллельный файл
+    _meta:getSyncMeta()};               // LWW-метки правок (для сведения правок между устройствами)
 }
 function exportPersonalData(){
   downloadJSON(personalDataObj(),`тафсир-данные-${new Date().toISOString().slice(0,10)}.json`);
@@ -3046,18 +3066,29 @@ function mergeTagTree(a,b){
 // strategy для конфликтов заметок (один и тот же аят, другой текст): 'skip'|'append'|'replace'.
 function applyImport(data,strategy){
   let added=0,changed=0;
+  // strategy==="sync": облачное слияние по меткам времени (LWW) — свежая правка
+  // побеждает; иначе (файловый импорт) — skip/append/replace как выбрал юзер.
+  const lww=strategy==="sync";
+  const lmeta=lww?getSyncMeta():null;
+  const rmeta=(data&&data._meta)||{};
   // — заметки —
   const cur=getNotes(),imp=data.notes||{};
   for(const k in imp){
     if(!AYKEY.test(k)||typeof imp[k]!=="string")continue;
-    if(!(k in cur)){cur[k]=imp[k];added++;}
+    if(!(k in cur)){cur[k]=imp[k];added++;if(lww)lmeta["notes:"+k]=rmeta["notes:"+k]||1;}
     else if(cur[k]!==imp[k]){
-      if(strategy==="replace"){cur[k]=imp[k];changed++;}
+      if(lww){
+        const rt=rmeta["notes:"+k]||0,lt=lmeta["notes:"+k]||0;
+        if(rt>lt){cur[k]=imp[k];changed++;lmeta["notes:"+k]=rt;}   // облако новее — берём облачную версию
+        // иначе локальная новее/равна — оставляем свою
+      }
+      else if(strategy==="replace"){cur[k]=imp[k];changed++;}
       else if(strategy==="append"){cur[k]=cur[k]+"\n\n---\n\n"+imp[k];changed++;}
       // 'skip' — оставляем свою
     }
   }
   ss("notes",cur);
+  if(lww)ss("syncMeta",lmeta);
   // — закладки: добавляем недостающие, существующие не трогаем —
   const bm=getBookmarks(),ibm=data.bookmarks||{};let bmAdd=0;
   for(const k in ibm){if(AYKEY.test(k)&&!(k in bm)&&typeof ibm[k]==="string"){bm[k]=ibm[k];bmAdd++;}}
@@ -3120,9 +3151,12 @@ function closeIOModal(){const o=document.getElementById("ioOvl");if(o)o.remove()
 // ============================================================
 // ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ (полуавто, доступ по коду) — Cloudflare Worker + KV.
 // Пул при открытии + кнопка «Синхронизировать» + пуш при уходе со страницы.
-// Слияние — через applyImport('skip'): НЕразрушающее (локальное не затирается);
-// удаления не распространяются (компромисс v1). Код синка — секрет и ключ,
-// хранится локально (tl_syncCode) и в синк-блоб НЕ входит.
+// Слияние — applyImport('sync'): заметки сводятся по меткам времени (LWW —
+// свежая правка побеждает, метки в блобе как _meta); закладки/теги/прогресс —
+// объединяются (аддитивно). Удаления НЕ распространяются (компромисс: стёртая
+// заметка может вернуться с другого устройства). Воркер тоже сливает на PUT
+// (см. sync-worker/worker.js), поэтому фоновый пуш не затирает свежее чужое.
+// Код синка — секрет и ключ, хранится локально (tl_syncCode), в блоб НЕ входит.
 // ============================================================
 function syncGetCode(){return gs("syncCode","");}
 function syncSetCode(c){ss("syncCode",(c||"").trim());}
@@ -3149,7 +3183,7 @@ async function syncPull(silent){
     if(!r.ok)throw new Error("HTTP "+r.status);
     const data=await r.json();
     if(data&&data.empty){_syncMsg("облако пусто");return {empty:true};}
-    applyImport(data,"skip");            // НЕразрушающее слияние в локальное
+    applyImport(data,"sync");            // слияние по меткам времени (LWW): правки сходятся
     _syncMsg("загружено"+(data._updatedAt?" ("+fmtSyncTime(data._updatedAt)+")":""));
     if(!silent)render();
     return data;
@@ -3173,6 +3207,23 @@ async function syncNow(){            // ручная кнопка: забрат�
   try{await syncPull(true);await syncPush();render();}
   finally{_syncBusy=false;}
 }
+// АВТОСИНХРОНИЗАЦИЯ (кнопку ⟲ трогать не нужно):
+// • автопуш через ~4 с после последней правки (страховка помимо пуша на закрытии);
+// • автопул при ВОЗВРАТЕ к вкладке (не только при первом открытии), с троттлом.
+let _syncPushT=null;
+function scheduleSyncPush(){
+  if(!syncEnabled())return;
+  clearTimeout(_syncPushT);
+  _syncPushT=setTimeout(()=>{if(_syncDirty&&!_syncBusy)syncPush();},4000);
+}
+let _lastPullAt=0;
+function autoSyncPull(){
+  if(!syncEnabled())return;
+  const now=Date.now();
+  if(now-_lastPullAt<15000)return;   // не дёргать чаще раза в 15 с
+  _lastPullAt=now;
+  syncPull(true).then(d=>{if(d&&!d.empty)render();});
+}
 function syncSetup(){                // модалка: создать/ввести код
   const cur=syncGetCode();
   openIOModal(`<div class="io-h">Код синхронизации</div>
@@ -3191,7 +3242,12 @@ function syncSaveCode(){
   if(syncEnabled())syncNow();else render();
 }
 // Пуш при уходе со страницы/сворачивании — только если было что менять.
-window.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden"&&syncEnabled()&&_syncDirty)syncPush();});
+// Возврат к вкладке (visible) — автопул, чтобы подхватить правки с другого устройства.
+window.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState==="hidden"){if(syncEnabled()&&_syncDirty)syncPush();}
+  else if(document.visibilityState==="visible"){autoSyncPull();}
+});
+window.addEventListener("focus",()=>autoSyncPull());
 window.addEventListener("pagehide",()=>{
   if(syncEnabled()&&_syncDirty&&navigator.sendBeacon){
     try{navigator.sendBeacon(syncUrl(),JSON.stringify(personalDataObj()));_syncDirty=false;}catch(e){}
@@ -3312,7 +3368,7 @@ async function loadConfig(){
   await loadQpcMeta();                               // для группировки списка сур по джузам (и мусхафа)
   Progress.ensureInit();                             // запустить таймер активного времени (слой CREDITED)
   render();
-  if(syncEnabled())syncPull();                        // тихий пул при открытии (полуавто), ре-рендер при слиянии
+  if(syncEnabled()){_lastPullAt=Date.now();syncPull();} // тихий пул при открытии, ре-рендер при слиянии
   if(gs("mediaVisual",false))mediaMod();              // восстановить визуальный слой (init→toggleVisual(true))
 }
 function useFB(){
@@ -5212,13 +5268,30 @@ function quranBlockHTML(){
     <div class="rp-q-body">${rows}${tj}
     <div class="vp-note">Правила чтения цветом — в любом начертании: в печатном это цветное издание 1441 г.х., в остальных — раскраска текста. Действует для редакции «С огласовками»; касание окрашенной буквы — название правила.</div></div></div>`;
 }
-// Блок «🎧 Аудио» панели 📚: выбор чтеца + запуск прослушивания. Чтецы — из
-// config.json (audio.reciters, массив: новый чтец = строка конфига, не код).
-// Сам плеер (media.js) грузится лениво только при первом ▶.
+// Тело ОТДЕЛЬНОЙ панели 🎧 (renderAudioPanel): чтец + наборы + запуск + визряд.
+// Чтецы — из config.json (audio.reciters). Плеер (media.js) — лениво при первом ▶.
+// Вынесено из панели 📚, чтобы аудио не мешало чтению текстом.
+// ─── Наборы источников (чтецы/переводы): храним СПИСОК СКРЫТЫХ id (опт-аут),
+// чтобы новодобавленные источники были видны сами. «Убрать из набора» = внести
+// в скрытые; «вернуть» = убрать оттуда. Не входит в SYNCED_KEYS (набор локален). ─
+function recAll(){return (CONFIG.audio&&CONFIG.audio.reciters)||[];}
+function recHiddenSet(){
+  let h=gs("recHidden",null);
+  if(h===null){h=recAll().filter(r=>!r.recommended).map(r=>r.id);ss("recHidden",h);}  // первый запуск: прячем не-рекомендованных
+  return new Set(h);
+}
+function recVisible(){const h=recHiddenSet();return recAll().filter(r=>!h.has(r.id));}
+function recSetHidden(id,hide){const h=recHiddenSet();hide?h.add(id):h.delete(id);ss("recHidden",[...h]);}
+// Переводы/тафсиры: по умолчанию НИЧЕГО не скрыто (список короче, чем у чтецов).
+function srcHiddenSet(){return new Set(gs("srcHidden",[]));}
+function srcSetHidden(id,hide){const h=srcHiddenSet();hide?h.add(id):h.delete(id);ss("srcHidden",[...h]);}
+
 function audioBlockHTML(){
-  const rs=(CONFIG.audio&&CONFIG.audio.reciters)||[];
-  if(!rs.length)return"";
-  const cur=gs("mediaReciter",(CONFIG.audio&&CONFIG.audio.default)||rs[0].id);
+  if(!recAll().length)return"";
+  const cur=gs("mediaReciter",(CONFIG.audio&&CONFIG.audio.default)||recAll()[0].id);
+  let rs=recVisible();
+  // Активный чтец всегда виден, даже если попал в скрытые (иначе «пропал» выбор).
+  if(!/^rec:/.test(cur)&&!rs.some(r=>r.id===cur)){const c=recAll().find(r=>r.id===cur);if(c)rs=[c,...rs];}
   const rows=rs.map(r=>`<label class="vp-check"><input type="radio" name="mediaRec" ${r.id===cur?"checked":""} onchange="mediaSetReciter('${escAttr(r.id)}')"> ${esc(r.name)}</label>`).join("");
   // Наборы записей пользователя — полноправные источники наравне с чтецами.
   // Метаданные (id+имя) — в localStorage (tl_mediaSets, вне синка), сами
@@ -5226,8 +5299,10 @@ function audioBlockHTML(){
   const sets=gs("mediaSets",[]);
   const setRows=sets.map(s=>`<label class="vp-check" style="display:flex;align-items:center;gap:4px"><input type="radio" name="mediaRec" ${("rec:"+s.id)===cur?"checked":""} onchange="mediaSetReciter('rec:${escAttr(s.id)}')"> <span style="flex:1">🎙 ${esc(s.name)}</span><button class="t-info-btn" onclick="event.preventDefault();mediaDelSet('${escAttr(s.id)}')" title="Удалить набор со всеми записями">🗑</button></label>`).join("");
   const visOn=gs("mediaVisual",false);
+  const hidN=recHiddenSet().size;
+  const manage=`<button class="show-more-btn" style="margin:2px 0 0" onclick="openReciterManager()">⚙ Управлять чтецами${hidN?` (скрыто ${hidN})`:""}…</button>`;
   return `<div class="rp-quran"><div class="rp-sec-head">🎧 Аудио (чтец)</div>
-    <div class="rp-q-body">${rows}${setRows}
+    <div class="rp-q-body">${rows}${setRows}${manage}
     <button class="cov-map-open" style="margin:6px 0 0" onclick="mediaPlaySurah()">▶ Слушать текущую суру</button>
     <button class="cov-map-open" style="margin:6px 0 0" onclick="mediaNewSet()">➕ Новый набор записей</button>
     <label class="vp-check" style="margin-top:8px"><input type="checkbox" ${visOn?"checked":""} onchange="mediaToggleVisual(this.checked)"> 🖼 Визуальный ряд (картинки по темам)</label>
@@ -5242,7 +5317,7 @@ function mediaNewSet(){
   if(!name)return;
   const sets=gs("mediaSets",[]);
   const id="s"+Date.now().toString(36);
-  sets.push({id,name});ss("mediaSets",sets);renderRP();
+  sets.push({id,name});ss("mediaSets",sets);renderAudioPanel();
 }
 // Удалить набор: метаданные из tl_mediaSets + все blob из IndexedDB (media.js)
 function mediaDelSet(id){
@@ -5250,7 +5325,7 @@ function mediaDelSet(id){
   if(!s||!confirm("Удалить набор «"+s.name+"» со всеми записями? Это необратимо."))return;
   ss("mediaSets",sets.filter(x=>x.id!==id));
   if(gs("mediaReciter","")==="rec:"+id)ss("mediaReciter",(CONFIG.audio&&CONFIG.audio.default)||"");
-  mediaMod().then(m=>m&&m.deleteSetData(id)).finally(()=>{renderRP();renderCenter();});
+  mediaMod().then(m=>m&&m.deleteSetData(id)).finally(()=>{renderAudioPanel();renderCenter();});
 }
 // Попап записи аята (🎙): запись/прослушать/удалить — строит media.js
 function mediaRecPopup(a,btn){mediaMod().then(m=>m&&m.openRecPopup(ST.surah,a,btn));}
@@ -5272,10 +5347,52 @@ function toggleTajweed(){
   renderRP();renderViewPanel();
 }
 
+// ── Модалки управления наборами: чтецы (recHidden) и переводы/тафсиры (srcHidden) ──
+function _mgrRow(id,name,sub,checked,fn){
+  return `<label class="vp-check" style="display:flex;gap:6px;align-items:center;padding:3px 0;margin:0">`+
+    `<input type="checkbox" ${checked?"checked":""} onchange="${fn}('${escAttr(id)}',this.checked)">`+
+    `<span style="flex:1">${esc(name)}${sub?` <span style="color:var(--text-muted);font-size:10px">· ${esc(sub)}</span>`:""}</span></label>`;
+}
+function openReciterManager(){renderReciterManager();}
+function renderReciterManager(){
+  const hid=recHiddenSet();
+  const rec=recAll().filter(r=>r.recommended),oth=recAll().filter(r=>!r.recommended);
+  const rowsOf=list=>list.map(r=>_mgrRow(r.id,r.name,r.bitrate,!hid.has(r.id),"recToggleVis")).join("");
+  openIOModal(`<div class="io-h">Чтецы в наборе</div>
+    <div class="io-p">Отметьте, кого показывать в выборе чтеца и в плеере. Новые чтецы попадают в набор сами.</div>
+    <div class="io-acts io-wrap" style="margin-bottom:6px">
+      <button class="home-btn" onclick="recSetAll(true)">Показать всех</button>
+      <button class="home-btn" onclick="recResetDefault()">Только рекомендованные</button></div>
+    <div style="max-height:50vh;overflow:auto;text-align:left">
+      <div class="rp-sec-head">★ Рекомендованные</div>${rowsOf(rec)}
+      <div class="rp-sec-head" style="margin-top:6px">Прочие (арабский · английский)</div>${rowsOf(oth)}</div>
+    <div class="io-acts"><button class="home-btn prim" onclick="closeIOModal()">Готово</button></div>`);
+}
+function recToggleVis(id,vis){recSetHidden(id,!vis);renderAudioPanel();}
+function recSetAll(vis){ss("recHidden",vis?[]:recAll().map(r=>r.id));renderReciterManager();renderAudioPanel();}
+function recResetDefault(){ss("recHidden",recAll().filter(r=>!r.recommended).map(r=>r.id));renderReciterManager();renderAudioPanel();}
+function openSourceManager(){renderSourceManager();}
+function renderSourceManager(){
+  const hid=srcHiddenSet();let secs="";
+  CONFIG.groups.forEach(g=>{
+    const items=CONFIG.tafsirs.filter(t=>t.group===g.id&&t.kind!=="quran"&&t.kind!=="image");
+    if(!items.length)return;
+    secs+=`<div class="rp-sec-head" style="margin-top:6px">${g.icon||"📁"} ${esc(g.name)}</div>`+
+      items.map(t=>_mgrRow(t.id,t.name,t.author||"",!hid.has(t.id),"srcToggleVis")).join("");
+  });
+  openIOModal(`<div class="io-h">Переводы и тафсиры в списке 📚</div>
+    <div class="io-p">Снимите галочку — источник не будет мозолить глаза в каталоге панели 📚 (уже включённые в чтение остаются). Новые источники появляются сами.</div>
+    <div style="max-height:56vh;overflow:auto;text-align:left">${secs}</div>
+    <div class="io-acts"><button class="home-btn" onclick="srcSetAll(true)">Показать все</button><button class="home-btn prim" onclick="closeIOModal()">Готово</button></div>`);
+}
+function srcToggleVis(id,vis){srcSetHidden(id,!vis);renderRP();}
+function srcSetAll(vis){ss("srcHidden",[]);renderSourceManager();renderRP();}
+
 function renderRP(){
   const el=document.getElementById("rpList");
   if(!el)return;
   const q=ST.rpFilter||"";
+  const sh=srcHiddenSet();
   let html=renderFacetBar();
 
   // Карта покрытия (Уровень 3) — где какой источник есть, где дыры
@@ -5283,8 +5400,8 @@ function renderRP(){
 
   // 0. Оригинал: редакции арабского + начертание + таджвид (см. quranBlockHTML)
   html+=quranBlockHTML();
-  // 0б. Аудио: чтец + запуск прослушивания (media.js, лениво)
-  html+=audioBlockHTML();
+  // (Аудио переехало в ОТДЕЛЬНУЮ панель 🎧 — кнопка в шапке; renderAudioPanel.
+  //  Панель 📚 — чисто тексты/переводы/тафсиры, чтобы не мешать чтению текстом.)
 
   // 1. Enabled (pinned, reorderable) — переводы/тафсиры; арабский — в блоке выше.
   const enAll=getEnabledList().filter(t=>t.id!=="_notes");
@@ -5305,7 +5422,7 @@ function renderRP(){
   html+=`<div class="rp-sec-head" style="border-top:1px solid var(--border);margin-top:4px;padding-top:8px">Каталог</div>`;
   let anyShown=false;
   CONFIG.groups.forEach(g=>{
-    let items=CONFIG.tafsirs.filter(t=>t.group===g.id&&t.kind!=="quran"&&(t.kind==="image"||!ST.enabled[t.id])).filter(passFacets);
+    let items=CONFIG.tafsirs.filter(t=>t.group===g.id&&t.kind!=="quran"&&(t.kind==="image"||!ST.enabled[t.id])&&!sh.has(t.id)).filter(passFacets);
     if(q)items=items.filter(t=>(t.name||"").toLowerCase().includes(q)||(t.nameAr||"").includes(q)||(t.author||"").toLowerCase().includes(q)||(t.translator||"").toLowerCase().includes(q));
     if(!items.length)return;
     anyShown=true;
@@ -5600,6 +5717,7 @@ document.addEventListener("keydown",function(e){
   if(e.key==="Escape"&&aboutOpen())closeAboutSmart();
   else if(e.key==="Escape"&&searchOpen)toggleSearch();
   else if(e.key==="Escape"&&ST.rpanelOpen)closeRPanel();
+  else if(e.key==="Escape"&&ST.apanelOpen)closeAudioPanel();
   else if(e.key==="Escape"&&ST.viewOpen)toggleViewPanel();
   else if(e.key==="Escape"&&ST.immersive)exitImmersive();
   if((e.ctrlKey||e.metaKey)&&e.key==="f"){e.preventDefault();if(!searchOpen)toggleSearch();}
@@ -5610,17 +5728,18 @@ document.addEventListener("keydown",function(e){
 // ============================================================
 let pendingAyah=null;
 // Which open panels should the Back button / backdrop close (overlays only; the desktop sidebar is docked)
-function anyOverlayOpen(){return searchOpen||ST.rpanelOpen||ST.immersive||appAboutOpen()||progressOpen||spdOpen||(isM()&&ST.sidebarOpen);}
+function anyOverlayOpen(){return searchOpen||ST.rpanelOpen||ST.apanelOpen||ST.immersive||appAboutOpen()||progressOpen||spdOpen||(isM()&&ST.sidebarOpen);}
 let navBack=false; // true while we programmatically history.back() to consume our own overlay entry
 function pushOverlay(){if(!(history.state&&history.state.ov))history.pushState({ov:1},"");}
 function consumeOverlay(){if(history.state&&history.state.ov){navBack=true;history.back();}}
-function updateBackdrop(){const b=document.getElementById("panelBackdrop");if(b)b.classList.toggle("show",ST.rpanelOpen||searchOpen);}
+function updateBackdrop(){const b=document.getElementById("panelBackdrop");if(b)b.classList.toggle("show",ST.rpanelOpen||ST.apanelOpen||searchOpen);}
 function closeAllPanelsUI(){
   if(appAboutOpen()){closeAbout();const ov=document.getElementById("aboutOvl");if(ov)ov.dataset.app="";}  // «Назад» (запись уже снята)
   if(progressOpen){const ov=document.getElementById("progressOvl");if(ov)ov.style.display="none";progressOpen=false;}  // «Назад» закрывает экран прогресса (запись истории уже снята)
   if(spdOpen){const ov=document.getElementById("speedOvl");if(ov)ov.style.display="none";spdOpen=false;}  // «Назад» закрывает экран скорости (активный замер-пилюля живёт дальше)
   if(searchOpen){searchOpen=false;document.getElementById("searchPanel").classList.add("hidden");}
   if(ST.rpanelOpen){ST.rpanelOpen=false;document.getElementById("rpanel").classList.add("collapsed");}
+  if(ST.apanelOpen){ST.apanelOpen=false;document.getElementById("apanel").classList.add("collapsed");}
   if(ST.immersive)exitImmersive(true);   // Back button leaves immersive (entry already popped)
   if(isM()&&ST.sidebarOpen){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   updateBackdrop();
@@ -5683,7 +5802,20 @@ window.addEventListener("popstate",()=>{
 // ACTIONS
 // ============================================================
 function toggleSidebar(){ST.sidebarOpen=!ST.sidebarOpen;document.getElementById("sidebar").classList.toggle("collapsed",!ST.sidebarOpen);updateBackdrop();if(isM()){if(ST.sidebarOpen)pushOverlay();else consumeOverlay();}}
-function toggleRPanel(){ST.rpanelOpen=!ST.rpanelOpen;document.getElementById("rpanel").classList.toggle("collapsed",!ST.rpanelOpen);if(ST.rpanelOpen){renderRP();pushOverlay();}else consumeOverlay();updateBackdrop();}
+function toggleRPanel(){
+  if(!ST.rpanelOpen&&ST.apanelOpen)closeAudioPanelUI();          // две правые панели взаимоисключают
+  ST.rpanelOpen=!ST.rpanelOpen;document.getElementById("rpanel").classList.toggle("collapsed",!ST.rpanelOpen);
+  if(ST.rpanelOpen){renderRP();pushOverlay();}else consumeOverlay();updateBackdrop();
+}
+// ОТДЕЛЬНАЯ панель 🎧 (аудио вынесено из 📚): зеркалит механику rpanel.
+function toggleAudioPanel(){
+  if(!ST.apanelOpen&&ST.rpanelOpen){ST.rpanelOpen=false;document.getElementById("rpanel").classList.add("collapsed");}
+  ST.apanelOpen=!ST.apanelOpen;document.getElementById("apanel").classList.toggle("collapsed",!ST.apanelOpen);
+  if(ST.apanelOpen){renderAudioPanel();pushOverlay();}else consumeOverlay();updateBackdrop();
+}
+function closeAudioPanel(){if(ST.apanelOpen)toggleAudioPanel();}
+function closeAudioPanelUI(){ST.apanelOpen=false;const el=document.getElementById("apanel");if(el)el.classList.add("collapsed");}  // без истории (для взаимоисключения)
+function renderAudioPanel(){const el=document.getElementById("apList");if(el)el.innerHTML=audioBlockHTML();}
 // iOS/iPadOS (всегда WebKit, даже под видом «Chrome»): element-fullscreen хрупкий —
 // вертикальный свайп с резиновым overscroll в момент отпускания пальца заставляет WebKit
 // сам выйти из fullscreen, что через fullscreenchange выкидывало из режима чтения. iPadOS
@@ -5887,13 +6019,28 @@ function viewPanelHTML(){
     AR_UI_FONTS.map(f=>{const on=f==="qpc1"?isPrintedFont():ST.arFont===f;
       return `<button class="vp-font ${on?"on":""}" title="${AR_FONT_TITLES[f]}" onclick="setArFontUI('${f}')">${AR_FONT_NAMES[f]}</button>`;}).join("")+
     `</div>${ST.tajweed?`<div class="vp-note">Включены цвета таджвида (галочка — в 📚 Источниках).</div>`:""}</div>`;
-  return quranHint+fontGroup+
-    `<div class="vp-group"><div class="vp-label">Размер шрифта</div>${step("Арабский","fsAr",pct("fsAr"))}${step("Русский","fsRu",pct("fsRu"))}</div>`+
+  const sizeGroup=`<div class="vp-group"><div class="vp-label">Размер шрифта</div>${step("Арабский","fsAr",pct("fsAr"))}${step("Русский","fsRu",pct("fsRu"))}</div>`+
     `<div class="vp-group"><div class="vp-label">Межстрочный интервал</div>${step("Арабский","lhAr",pct("lhAr"))}${step("Русский","lhRu",pct("lhRu"))}</div>`+
     `<div class="vp-group"><div class="vp-label">Поля</div>${step("Отступы по краям","mar",ST.mar+"px")}</div>`+
-    `<div class="vp-group"><div class="vp-label">Боковая панель (суры, теги)</div>${step("Размер","sbScale",pct("sbScale"))}</div>`+
-    layoutGroup+skinGroup+themeGroup+navGroup+ntGroup+backupGroup+aboutRow+resetBtn;
+    `<div class="vp-group"><div class="vp-label">Боковая панель (суры, теги)</div>${step("Размер","sbScale",pct("sbScale"))}</div>`;
+  const sourcesGroup=`<div class="vp-group"><div class="vp-label">Наборы источников</div>`+
+    `<div class="vp-note">Что показывать в выборе, чтобы не громоздить интерфейс. Новые источники добавляются в набор автоматически, лишние можно убрать.</div>`+
+    `<div class="data-io-btns" style="margin-top:6px">`+
+      `<button class="data-io-btn" onclick="openReciterManager()">🎧 Чтецы</button>`+
+      `<button class="data-io-btn" onclick="openSourceManager()">📖 Переводы и тафсиры</button>`+
+    `</div></div>`;
+  // Под-табы: разгружаем длинную простыню настроек
+  const TABS=[["text","Текст"],["look","Вид"],["src","Источники"],["data","Данные"]];
+  const tab=ST.vpTab||"text";
+  const bar=`<div class="vp-tabs">`+TABS.map(([id,n])=>`<button class="${tab===id?"on":""}" onclick="setVpTab('${id}')">${esc(n)}</button>`).join("")+`</div>`;
+  let body;
+  if(tab==="look")body=themeGroup+skinGroup+navGroup+ntGroup;
+  else if(tab==="src")body=sourcesGroup;
+  else if(tab==="data")body=backupGroup+aboutRow+resetBtn;
+  else body=quranHint+fontGroup+sizeGroup+layoutGroup;   // «Текст» (по умолчанию)
+  return bar+body;
 }
+function setVpTab(t){ST.vpTab=t;ss("vpTab",t);renderViewPanel();}
 function setLayout(v){ST.layout=v;render();}
 
 // --- 📑 Переход: jump by surah / juz / rub al-hizb / page (both modes) -------
@@ -6557,6 +6704,7 @@ if(ST.skin==null)ST.skin=(ST.theme==="dark")?"dark":"parchment";
 ST.ruFont=gs("ruFont","std");
 applySkin();
 ST.navUnit=gs("navUnit","surah");
+ST.vpTab=gs("vpTab","text");               // активный под-таб панели ⚙ Вид
 ST.srcBarOpen=gs("srcBarOpen",false);     // шапка режима источника: развёрнута? (по умолчанию свёрнута)
 ST.collapsedKinds=gs("collapsedKinds",{translation:true}); // под аятом: какие группы свёрнуты (переводы — по умолч.)
 ST.wbwMode=gs("wbwMode",false); // word-by-word reading layer (пословный перевод)

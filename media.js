@@ -346,20 +346,26 @@ function outsideMenu(e){
 }
 function openMenu(){
   closeMenu();
-  const cur=activeSourceId(),rs=reciters(),sets=recSets();
+  const cur=activeSourceId(),sets=recSets();
+  let rs=(ctx.recVisible?ctx.recVisible():reciters());   // только чтецы набора
+  // активный чтец всегда в списке, даже если скрыт
+  if(!/^rec:/.test(cur)&&!rs.some(r=>r.id===cur)){const c=reciters().find(r=>r.id===cur);if(c)rs=[c,...rs];}
   let h="";
   if(rs.length)h+=`<div class="mm-h">Чтецы</div>`+rs.map(r=>
     `<button data-src="${ctx.escAttr(r.id)}" class="${r.id===cur?"on":""}">🎧 ${ctx.esc(r.name)}</button>`).join("");
   if(sets.length)h+=`<div class="mm-h">Мои записи</div>`+sets.map(s=>
     `<button data-src="rec:${ctx.escAttr(s.id)}" class="${("rec:"+s.id)===cur?"on":""}">🎙 ${ctx.esc(s.name)}</button>`).join("");
+  h+=`<div class="mm-h"></div><button data-act="manage">⚙ Управлять чтецами…</button>`;
   const menu=document.createElement("div");
   menu.id="mediaMenu";menu.className="media-menu";menu.innerHTML=h;
   menu.addEventListener("click",e=>{
+    const mg=e.target.closest('[data-act="manage"]');
+    if(mg){closeMenu();if(ctx.openReciterManager)ctx.openReciterManager();return;}
     const b=e.target.closest("[data-src]");if(!b)return;
     ctx.ss("mediaReciter",b.dataset.src);
     closeMenu();
     setReciter(b.dataset.src);   // сменить источник (сам вызовет renderBar)
-    ctx.renderRP();              // синхронизировать радиокнопки в панели 📚
+    (ctx.renderAudio?ctx.renderAudio():ctx.renderRP());   // синхронизировать радиокнопки в панели 🎧
   });
   barEl().appendChild(menu);
   setTimeout(()=>document.addEventListener("pointerdown",outsideMenu,true),0);
@@ -459,7 +465,7 @@ export async function openRecPopup(s,a,btn){
   let sets=recSets();
   if(!sets.length){ // первый заход: автосоздаём набор по умолчанию
     sets=[{id:"s"+Date.now().toString(36),name:"Мои записи"}];
-    ctx.ss("mediaSets",sets);ctx.renderRP();
+    ctx.ss("mediaSets",sets);ctx.renderAudio&&ctx.renderAudio();
   }
   R.ayah={s,a};
   // Подкрутить записываемый аят вверх — чтобы его текст был виден НАД нижним
@@ -666,7 +672,7 @@ export async function toggleVisual(on){
     if(V.band){V.band.remove();V.band=null;}
     V.cur="";V.img="";
   }
-  ctx.renderRP&&ctx.renderRP();
+  ctx.renderAudio?ctx.renderAudio():(ctx.renderRP&&ctx.renderRP());
 }
 export function visualEnabled(){return V.on;}
 

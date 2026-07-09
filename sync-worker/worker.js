@@ -31,6 +31,52 @@ function json(obj, status) {
   });
 }
 
+// ── Серверное слияние блоба на PUT ─────────────────────────────────────────
+// Чтобы фоновый/beacon-пуш (без предварительного pull) НЕ затирал свежее чужое:
+// заметки сводятся по меткам времени (LWW, obj._meta["notes:<s:a>"]=мс), а
+// закладки/теги — объединяются. Клиент на pull досводит теми же правилами.
+function mergeTagTree(a, b) {
+  const out = (a || []).map(n => ({ name: n.name, children: mergeTagTree(n.children || [], []) }));
+  for (const bn of (b || [])) {
+    const ex = out.find(n => n.name === bn.name);
+    if (ex) ex.children = mergeTagTree(ex.children, bn.children || []);
+    else out.push({ name: bn.name, children: mergeTagTree(bn.children || [], []) });
+  }
+  return out;
+}
+function mergeBlob(prev, inc) {
+  if (!prev || typeof prev !== "object") return inc;   // первое сохранение под кодом
+  const out = { ...inc };
+  const pm = prev._meta || {}, im = inc._meta || {}, meta = { ...pm, ...im };
+  // заметки: LWW по меткам (нет метки → считаем старым)
+  const notes = { ...(prev.notes || {}) };
+  for (const k in (inc.notes || {})) {
+    const rt = im["notes:" + k] || 0, lt = pm["notes:" + k] || 0;
+    if (!(k in notes) || rt >= lt) notes[k] = inc.notes[k];   // входящее новее/равно или новое — берём
+    meta["notes:" + k] = Math.max(rt, lt);
+  }
+  out.notes = notes;
+  // закладки: объединение, существующие имена не трогаем
+  out.bookmarks = { ...(inc.bookmarks || {}), ...(prev.bookmarks || {}) };
+  // теги аятов: объединение списков путей
+  const at = { ...(prev.ayahTags || {}) };
+  for (const k in (inc.ayahTags || {})) {
+    const s = new Set(at[k] || []);
+    (inc.ayahTags[k] || []).forEach(p => s.add(p));
+    at[k] = [...s];
+  }
+  out.ayahTags = at;
+  // дерево тегов: глубокое слияние по именам
+  out.tagTree = mergeTagTree(prev.tagTree || [], inc.tagTree || []);
+  // прогресс: монотонно накапливается; оставляем тот, где больше дней активности
+  // (клиент на pull сольёт по датам корректно — здесь лишь бы не «усохло»).
+  const pd = ((prev.progress && prev.progress.activityDays) || []).length;
+  const id = ((inc.progress && inc.progress.activityDays) || []).length;
+  if (pd > id) out.progress = prev.progress;
+  out._meta = meta;
+  return out;
+}
+
 export default {
   async fetch(req, env) {
     if (req.method === "OPTIONS") return new Response(null, { headers: cors() });
@@ -56,11 +102,12 @@ export default {
       try { obj = JSON.parse(body); } catch { return json({ error: "bad-json" }, 400); }
       if (!obj || typeof obj !== "object") return json({ error: "bad-json" }, 400);
 
-      // серверный ревизионный счётчик + метка времени (для строки статуса и
-      // будущего разрешения конфликтов; данные сливаются на клиенте объединением)
-      let prevRev = 0;
+      // серверное слияние с хранимым (LWW заметок + объединение) — чтобы фоновый
+      // пуш без предварительного pull не затирал свежее с другого устройства.
+      let prevRev = 0, prevObj = null;
       const prev = await env.SYNC.get(key);
-      if (prev) { try { prevRev = (JSON.parse(prev)._rev | 0); } catch {} }
+      if (prev) { try { prevObj = JSON.parse(prev); prevRev = (prevObj._rev | 0); } catch {} }
+      obj = mergeBlob(prevObj, obj);
       obj._rev = prevRev + 1;
       obj._updatedAt = new Date().toISOString();
 

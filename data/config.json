@@ -72,12 +72,471 @@
     "default": "shatri",
     "reciters": [
       {
+        "id": "alafasy",
+        "name": "Мишари аль-Афаси",
+        "cdn": "everyayah",
+        "subdir": "Alafasy_128kbps",
+        "type": "audio_cdn",
+        "bitrate": "128kbps",
+        "nameAr": "مشاري راشد العفاسي",
+        "recommended": true
+      },
+      {
         "id": "shatri",
         "name": "Абу Бакр аш-Шатри",
-        "nameAr": "أبو بكر الشاطري",
-        "type": "audio_cdn",
         "cdn": "everyayah",
-        "subdir": "Abu_Bakr_Ash-Shaatree_128kbps"
+        "subdir": "Abu_Bakr_Ash-Shaatree_128kbps",
+        "type": "audio_cdn",
+        "bitrate": "128kbps",
+        "nameAr": "أبو بكر الشاطري",
+        "recommended": true
+      },
+      {
+        "id": "sudais",
+        "name": "Абдуррахман ас-Судайс",
+        "cdn": "everyayah",
+        "subdir": "Abdurrahmaan_As-Sudais_192kbps",
+        "type": "audio_cdn",
+        "bitrate": "192kbps",
+        "nameAr": "عبد الرحمن السديس",
+        "recommended": true
+      },
+      {
+        "id": "shuraim",
+        "name": "Сауд аш-Шурайм",
+        "cdn": "everyayah",
+        "subdir": "Saood_ash-Shuraym_128kbps",
+        "type": "audio_cdn",
+        "bitrate": "128kbps",
+        "nameAr": "سعود الشريم",
+        "recommended": true
+      },
+      {
+        "id": "muaiqly",
+        "name": "Махир аль-Муайкли",
+        "cdn": "everyayah",
+        "subdir": "MaherAlMuaiqly128kbps",
+        "type": "audio_cdn",
+        "bitrate": "128kbps",
+        "nameAr": "ماهر المعيقلي",
+        "recommended": true
+      },
+      {
+        "id": "husary",
+        "name": "Махмуд аль-Хусари",
+        "cdn": "everyayah",
+        "subdir": "Husary_128kbps",
+        "type": "audio_cdn",
+        "bitrate": "128kbps",
+        "nameAr": "محمود خليل الحصري",
+        "recommended": true
+      },
+      {
+        "id": "minshawi",
+        "name": "Мухаммад аль-Миншави",
+        "cdn": "everyayah",
+        "subdir": "Minshawy_Murattal_128kbps",
+        "type": "audio_cdn",
+        "bitrate": "128kbps",
+        "nameAr": "محمد صديق المنشاوي",
+        "recommended": true
+      },
+      {
+        "id": "basit",
+        "name": "Абдуль-Басит (мурат­таль)",
+        "cdn": "everyayah",
+        "subdir": "Abdul_Basit_Murattal_192kbps",
+        "type": "audio_cdn",
+        "bitrate": "192kbps",
+        "nameAr": "عبد الباسط عبد الصمد",
+        "recommended": true
+      },
+      {
+        "id": "ayyoub",
+        "name": "Мухаммад Айюб",
+        "cdn": "everyayah",
+        "subdir": "Muhammad_Ayyoub_128kbps",
+        "type": "audio_cdn",
+        "bitrate": "128kbps",
+        "nameAr": "محمد أيوب",
+        "recommended": true
+      },
+      {
+        "id": "hudhaify",
+        "name": "Али аль-Хузайфи",
+        "cdn": "everyayah",
+        "subdir": "Hudhaify_128kbps",
+        "type": "audio_cdn",
+        "bitrate": "128kbps",
+        "nameAr": "علي الحذيفي",
+        "recommended": true
+      },
+      {
+        "id": "alijaber",
+        "name": "Али Джабир",
+        "cdn": "everyayah",
+        "subdir": "Ali_Jaber_64kbps",
+        "type": "audio_cdn",
+        "bitrate": "64kbps",
+        "nameAr": "علي جابر",
+        "recommended": true
+      },
+      {
+        "id": "qatami",
+        "name": "Насер аль-Катами",
+        "cdn": "everyayah",
+        "subdir": "Nasser_Alqatami_128kbps",
+        "type": "audio_cdn",
+        "bitrate": "128kbps",
+        "nameAr": "ناصر القطامي",
+        "recommended": true
+      },
+      {
+        "id": "dussary",
+        "name": "Ясир ад-Дусари",
+        "cdn": "everyayah",
+        "subdir": "Yasser_Ad-Dussary_128kbps",
+        "type": "audio_cdn",
+        "bitrate": "128kbps",
+        "nameAr": "ياسر الدوسري",
+        "recommended": true
+      },
+      {
+        "id": "juhani",
+        "name": "Абдулла аль-Джухани",
+        "cdn": "everyayah",
+        "subdir": "Abdullaah_3awwaad_Al-Juhaynee_128kbps",
+        "type": "audio_cdn",
+        "bitrate": "128kbps",
+        "nameAr": "عبد الله الجهني",
+        "recommended": true
+      },
+      {
+        "id": "fares",
+        "name": "Фарис Аббад",
+        "cdn": "everyayah",
+        "subdir": "Fares_Abbad_64kbps",
+        "type": "audio_cdn",
+        "bitrate": "64kbps",
+        "nameAr": "فارس عباد",
+        "recommended": true
+      },
+      {
+        "id": "ajamy",
+        "name": "Ахмад аль-Аджами",
+        "cdn": "everyayah",
+        "subdir": "ahmed_ibn_ali_al_ajamy_128kbps",
+        "type": "audio_cdn",
+        "bitrate": "128kbps",
+        "nameAr": "أحمد العجمي",
+        "recommended": true
+      },
+      {
+        "id": "basit_muj",
+        "name": "Абдуль-Басит (муджаввад)",
+        "cdn": "everyayah",
+        "subdir": "Abdul_Basit_Mujawwad_128kbps",
+        "type": "audio_cdn",
+        "bitrate": "128kbps",
+        "nameAr": "عبد الباسط عبد الصمد"
+      },
+      {
+        "id": "minshawi_muj",
+        "name": "Мухаммад аль-Миншави (муджаввад)",
+        "cdn": "everyayah",
+        "subdir": "Minshawy_Mujawwad_192kbps",
+        "type": "audio_cdn",
+        "bitrate": "192kbps",
+        "nameAr": "محمد صديق المنشاوي"
+      },
+      {
+        "id": "husary_muj",
+        "name": "Махмуд аль-Хусари (муджаввад)",
+        "cdn": "everyayah",
+        "subdir": "Husary_128kbps_Mujawwad",
+        "type": "audio_cdn",
+        "bitrate": "128kbps",
+        "nameAr": "محمود خليل الحصري"
+      },
+      {
+        "id": "husary_mua",
+        "name": "Махмуд аль-Хусари (муаллим)",
+        "cdn": "everyayah",
+        "subdir": "Husary_Muallim_128kbps",
+        "type": "audio_cdn",
+        "bitrate": "128kbps",
+        "nameAr": "محمود خليل الحصري"
+      },
+      {
+        "id": "basfar",
+        "name": "Абдулла Басфар",
+        "cdn": "everyayah",
+        "subdir": "Abdullah_Basfar_192kbps",
+        "type": "audio_cdn",
+        "bitrate": "192kbps",
+        "nameAr": "عبد الله بصفر"
+      },
+      {
+        "id": "matroud",
+        "name": "Абдулла Матруд",
+        "cdn": "everyayah",
+        "subdir": "Abdullah_Matroud_128kbps",
+        "type": "audio_cdn",
+        "bitrate": "128kbps",
+        "nameAr": "عبد الله المطرود"
+      },
+      {
+        "id": "rifai",
+        "name": "Хани ар-Рифаи",
+        "cdn": "everyayah",
+        "subdir": "Hani_Rifai_192kbps",
+        "type": "audio_cdn",
+        "bitrate": "192kbps",
+        "nameAr": "هاني الرفاعي"
+      },
+      {
+        "id": "tablaway",
+        "name": "Мухаммад ат-Таблави",
+        "cdn": "everyayah",
+        "subdir": "Mohammad_al_Tablaway_128kbps",
+        "type": "audio_cdn",
+        "bitrate": "128kbps",
+        "nameAr": "محمد الطبلاوي"
+      },
+      {
+        "id": "jibreel",
+        "name": "Мухаммад Джибриль",
+        "cdn": "everyayah",
+        "subdir": "Muhammad_Jibreel_128kbps",
+        "type": "audio_cdn",
+        "bitrate": "128kbps",
+        "nameAr": "محمد جبريل"
+      },
+      {
+        "id": "akhdar",
+        "name": "Ибрахим аль-Ахдар",
+        "cdn": "everyayah",
+        "subdir": "Ibrahim_Akhdar_64kbps",
+        "type": "audio_cdn",
+        "bitrate": "64kbps",
+        "nameAr": "إبراهيم الأخضر"
+      },
+      {
+        "id": "ghamadi",
+        "name": "Саад аль-Гамиди",
+        "cdn": "everyayah",
+        "subdir": "Ghamadi_40kbps",
+        "type": "audio_cdn",
+        "bitrate": "40kbps",
+        "nameAr": "سعد الغامدي"
+      },
+      {
+        "id": "budair",
+        "name": "Салах аль-Будайр",
+        "cdn": "everyayah",
+        "subdir": "Salah_Al_Budair_128kbps",
+        "type": "audio_cdn",
+        "bitrate": "128kbps",
+        "nameAr": "صلاح البدير"
+      },
+      {
+        "id": "bukhatir",
+        "name": "Салах Бухатир",
+        "cdn": "everyayah",
+        "subdir": "Salaah_AbdulRahman_Bukhatir_128kbps",
+        "type": "audio_cdn",
+        "bitrate": "128kbps",
+        "nameAr": "صلاح بو خاطر"
+      },
+      {
+        "id": "tunaiji",
+        "name": "Халифа ат-Тунайджи",
+        "cdn": "everyayah",
+        "subdir": "khalefa_al_tunaiji_64kbps",
+        "type": "audio_cdn",
+        "bitrate": "64kbps"
+      },
+      {
+        "id": "qahtani",
+        "name": "Халид аль-Кахтани",
+        "cdn": "everyayah",
+        "subdir": "Khaalid_Abdullaah_al-Qahtaanee_192kbps",
+        "type": "audio_cdn",
+        "bitrate": "192kbps",
+        "nameAr": "خالد القحطاني"
+      },
+      {
+        "id": "neana",
+        "name": "Ахмад Неана",
+        "cdn": "everyayah",
+        "subdir": "Ahmed_Neana_128kbps",
+        "type": "audio_cdn",
+        "bitrate": "128kbps"
+      },
+      {
+        "id": "alaqimy",
+        "name": "Акрам аль-Алякими",
+        "cdn": "everyayah",
+        "subdir": "Akram_AlAlaqimy_128kbps",
+        "type": "audio_cdn",
+        "bitrate": "128kbps"
+      },
+      {
+        "id": "sowaid",
+        "name": "Айман Сувайд",
+        "cdn": "everyayah",
+        "subdir": "Ayman_Sowaid_64kbps",
+        "type": "audio_cdn",
+        "bitrate": "64kbps",
+        "nameAr": "أيمن سويد"
+      },
+      {
+        "id": "alili",
+        "name": "Азиз Алили",
+        "cdn": "everyayah",
+        "subdir": "aziz_alili_128kbps",
+        "type": "audio_cdn",
+        "bitrate": "128kbps"
+      },
+      {
+        "id": "banna",
+        "name": "Махмуд аль-Банна",
+        "cdn": "everyayah",
+        "subdir": "mahmoud_ali_al_banna_32kbps",
+        "type": "audio_cdn",
+        "bitrate": "32kbps",
+        "nameAr": "محمود علي البنا"
+      },
+      {
+        "id": "mustafa_ismail",
+        "name": "Мустафа Исмаил",
+        "cdn": "everyayah",
+        "subdir": "Mustafa_Ismail_48kbps",
+        "type": "audio_cdn",
+        "bitrate": "48kbps",
+        "nameAr": "مصطفى إسماعيل"
+      },
+      {
+        "id": "qasim",
+        "name": "Мухсин аль-Касим",
+        "cdn": "everyayah",
+        "subdir": "Muhsin_Al_Qasim_192kbps",
+        "type": "audio_cdn",
+        "bitrate": "192kbps",
+        "nameAr": "محسن القاسم"
+      },
+      {
+        "id": "abdulkareem",
+        "name": "Мухаммад Абдулькарим",
+        "cdn": "everyayah",
+        "subdir": "Muhammad_AbdulKareem_128kbps",
+        "type": "audio_cdn",
+        "bitrate": "128kbps"
+      },
+      {
+        "id": "salamah",
+        "name": "Ясир Салама",
+        "cdn": "everyayah",
+        "subdir": "Yaser_Salamah_128kbps",
+        "type": "audio_cdn",
+        "bitrate": "128kbps"
+      },
+      {
+        "id": "menshawi_lo",
+        "name": "Аль-Миншави (низкий битрейт)",
+        "cdn": "everyayah",
+        "subdir": "Menshawi_32kbps",
+        "type": "audio_cdn",
+        "bitrate": "32kbps"
+      },
+      {
+        "id": "abdulsamad",
+        "name": "Абдус-Самад",
+        "cdn": "everyayah",
+        "subdir": "AbdulSamad_64kbps_QuranExplorer.Com",
+        "type": "audio_cdn",
+        "bitrate": "64kbps"
+      },
+      {
+        "id": "ajamy_ka",
+        "name": "Ахмад аль-Аджами (KetabAllah)",
+        "cdn": "everyayah",
+        "subdir": "Ahmed_ibn_Ali_al-Ajamy_128kbps_ketaballah.net",
+        "type": "audio_cdn",
+        "bitrate": "128kbps"
+      },
+      {
+        "id": "ajamy_qe",
+        "name": "Ахмад аль-Аджами (QuranExplorer)",
+        "cdn": "everyayah",
+        "subdir": "Ahmed_ibn_Ali_al-Ajamy_64kbps_QuranExplorer.Com",
+        "type": "audio_cdn",
+        "bitrate": "64kbps"
+      },
+      {
+        "id": "suesy",
+        "name": "Али аль-Хаджадж ас-Суэси",
+        "cdn": "everyayah",
+        "subdir": "Ali_Hajjaj_AlSuesy_128kbps",
+        "type": "audio_cdn",
+        "bitrate": "128kbps"
+      },
+      {
+        "id": "sahl",
+        "name": "Сахль Ясин",
+        "cdn": "everyayah",
+        "subdir": "Sahl_Yassin_128kbps",
+        "type": "audio_cdn",
+        "bitrate": "128kbps"
+      },
+      {
+        "id": "balayev",
+        "name": "Балаев",
+        "cdn": "everyayah",
+        "subdir": "translations/azerbaijani/balayev",
+        "type": "audio_cdn",
+        "bitrate": "64kbps"
+      },
+      {
+        "id": "warsh_basit",
+        "name": "Абдуль-Басит (Варш)",
+        "cdn": "everyayah",
+        "subdir": "warsh/warsh_Abdul_Basit_128kbps",
+        "type": "audio_cdn",
+        "bitrate": "128kbps",
+        "nameAr": "عبد الباسط — ورش"
+      },
+      {
+        "id": "warsh_dosary",
+        "name": "Ибрахим ад-Дусари (Варш)",
+        "cdn": "everyayah",
+        "subdir": "warsh/warsh_ibrahim_aldosary_128kbps",
+        "type": "audio_cdn",
+        "bitrate": "128kbps"
+      },
+      {
+        "id": "warsh_jazaery",
+        "name": "Ясин аль-Джазаири (Варш)",
+        "cdn": "everyayah",
+        "subdir": "warsh/warsh_yassin_al_jazaery_64kbps",
+        "type": "audio_cdn",
+        "bitrate": "64kbps"
+      },
+      {
+        "id": "en_sahih",
+        "name": "English — Sahih International (Ibrahim Walk)",
+        "cdn": "everyayah",
+        "subdir": "English/Sahih_Intnl_Ibrahim_Walk_192kbps",
+        "type": "audio_cdn",
+        "bitrate": "192kbps"
+      },
+      {
+        "id": "basfar_walk",
+        "name": "Basfar + English (Walk)",
+        "cdn": "everyayah",
+        "subdir": "MultiLanguage/Basfar_Walk_192kbps",
+        "type": "audio_cdn",
+        "bitrate": "192kbps"
       }
     ]
   },
