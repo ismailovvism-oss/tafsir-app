@@ -696,10 +696,11 @@ export function visualEnabled(){return V.on;}
 // ОДИН кадр. Указатель ведёт аудио-плеер (onAyahChange) при прослушивании, либо
 // ручной свайп/тап при выключенном звуке (НЕ «верхний видимый»). Пустой пул →
 // нейтральный фон (не подставляем чужую картинку). Видео — только задел.
-const D={on:false,sura:0,ayah:0,textMode:"artr",textHidden:false,wake:null,el:null,la:null,lb:null,front:0,token:0,swiped:false};
+const D={on:false,sura:0,ayah:0,textMode:"artr",textHidden:false,imgOn:true,scale:1,wake:null,el:null,la:null,lb:null,front:0,token:0,swiped:false};
 const Dsel={cur:"",last:"",img:""};                  // СВОЁ состояние выбора картинки (отдельно от полосы)
 const DF_MODES=["artr","ar","tr","none"];
 const DF_LABEL={artr:"Аа+ع",ar:"ع",tr:"Аа",none:"—"};
+const DF_SCALES=[0.85,1,1.2,1.45];                   // свой размер шрифта диафильма (независим от чтения)
 let dfKaraoke=null;                                   // ХУК караоке (оставлен, не реализован)
 export function onDiafilmWord(cb){dfKaraoke=cb;}      // подписка на слово-по-слову (задел)
 
@@ -708,7 +709,9 @@ function dfEnsure(){
   const el=document.createElement("div");el.id="diafilm";el.className="diafilm";
   el.innerHTML=`<div class="df-layer" data-l="0"></div><div class="df-layer" data-l="1"></div>`+
     `<div class="df-scrim"></div><div class="df-text" id="dfText"></div>`+
-    `<div class="df-ctrls"><button class="df-btn" data-act="mode" title="Текст">${DF_LABEL[D.textMode]}</button>`+
+    `<div class="df-ctrls"><button class="df-btn" data-act="mode" title="Текст: арабский/перевод/оба/нет">${DF_LABEL[D.textMode]}</button>`+
+    `<button class="df-btn" data-act="img" title="Картинки вкл/выкл (без картинок — чистое пофреймовое слушание)">${D.imgOn?"🖼":"🚫"}</button>`+
+    `<button class="df-btn" data-act="size" title="Размер шрифта">A</button>`+
     `<button class="df-btn" data-act="close" title="Выйти">✕</button></div>`+
     `<button class="df-nav df-prev" data-act="prev" title="Предыдущий аят">‹</button>`+
     `<button class="df-nav df-next" data-act="next" title="Следующий аят">›</button>`;
@@ -721,6 +724,8 @@ function dfEnsure(){
     const act=b.dataset.act;
     if(act==="close")ctx.exitDiafilm();
     else if(act==="mode")dfCycleMode();
+    else if(act==="img")dfToggleImg();
+    else if(act==="size")dfCycleSize();
     else if(act==="prev")dfManual(-1);
     else if(act==="next")dfManual(1);
   });
@@ -759,8 +764,8 @@ async function dfRenderText(s,a){
 function dfGoto(s,a){
   D.sura=s;D.ayah=a;
   if(D.el)D.el.classList.toggle("df-audio",!!(P.active&&P.playing));   // аудио ведёт → прячем стрелки
-  const r=pickInto(Dsel,s,a,false);                 // без default: пустой пул → нейтральный фон
-  dfShow(r.src);
+  if(D.imgOn){const r=pickInto(Dsel,s,a,false);dfShow(r.src);}         // без default: пустой пул → нейтральный фон
+  else dfShow("");                                  // режим без картинок — всегда нейтральный фон
   dfRenderText(s,a);
   if(P.playing)dfWake(true);
   if(dfKaraoke)try{dfKaraoke(s,a);}catch(e){}
@@ -775,6 +780,16 @@ function dfManual(dir){
 }
 function dfOnAyah(s,a){if(D.on)dfGoto(s,a);}            // подписчик оси аята (аудио ведёт кадр)
 function dfToggleText(){D.textHidden=!D.textHidden;dfRenderText(D.sura,D.ayah);}
+function dfToggleImg(){
+  D.imgOn=!D.imgOn;ctx.ss("dfImg",D.imgOn);
+  const b=D.el&&D.el.querySelector('[data-act="img"]');if(b)b.textContent=D.imgOn?"🖼":"🚫";
+  dfGoto(D.sura,D.ayah);                              // перерисовать: картинка ↔ нейтральный фон
+}
+function dfApplyScale(){if(D.el)D.el.style.setProperty("--df-scale",D.scale);}
+function dfCycleSize(){
+  let i=DF_SCALES.indexOf(D.scale);D.scale=DF_SCALES[(i+1)%DF_SCALES.length];
+  ctx.ss("dfScale",D.scale);dfApplyScale();
+}
 function dfCycleMode(){
   const i=DF_MODES.indexOf(D.textMode);D.textMode=DF_MODES[(i+1)%DF_MODES.length];
   ctx.ss("dfText",D.textMode);
@@ -790,10 +805,13 @@ async function dfWake(on){
 }
 export async function openDiafilm(s,a){
   D.textMode=ctx.gs("dfText","artr");if(!DF_MODES.includes(D.textMode))D.textMode="artr";
+  D.imgOn=ctx.gs("dfImg",true)!==false;
+  D.scale=ctx.gs("dfScale",1);if(!DF_SCALES.includes(D.scale))D.scale=1;
   D.textHidden=false;
   Dsel.cur="";                                       // свежий случайный выбор при входе
   await loadVisual();
   dfEnsure();
+  dfApplyScale();
   D.on=true;document.body.classList.add("df-open");
   const st=(P.active&&P.playing)?{s:POS.sura,a:POS.ayah}:{s:s||ctx.ST.surah,a:a||1};
   dfGoto(st.s,st.a);
