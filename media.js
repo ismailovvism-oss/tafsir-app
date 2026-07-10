@@ -97,7 +97,40 @@ function activeSourceId(){
   const rs=reciters();
   return ctx.gs("mediaReciter",(ctx.CONFIG.audio&&ctx.CONFIG.audio.default)||(rs[0]&&rs[0].id)||"");
 }
+// ---------- аятные тайминги посурных чтецов (audio_surah) ----------
+// Один mp3 = вся сура; тайминги [start,end] на аят собирает build_timings.py
+// (CTC-выравнивание, не по паузам). Есть тайминги → указатель следует за аятом
+// внутри суры (timeupdate) и можно перематывать на аят кликом; нет → поведение
+// «одна сура = один трек» (как было). Кэш: "recId/sura" → {ayah:[s,e]} | null.
+const TIM={};
+function loadTimings(recId,sura){
+  const k=recId+"/"+sura;
+  if(k in TIM)return Promise.resolve(TIM[k]);
+  return fetch(ctx.resolveUrl("audio_timings",{reciter:recId,sura}))
+    .then(r=>r.ok?r.json():null).catch(()=>null)
+    .then(t=>(TIM[k]=t));
+}
+function timingsFor(recId,sura){return TIM[recId+"/"+sura];} // синхронно из кэша (или undefined)
+// Аят, которому принадлежит момент ct: наибольший start ≤ ct. 0 = ещё до первого.
+function ayahAtTime(t,ct){
+  let ba=0,bs=-1;
+  for(const a in t){const s=t[a][0];if(s<=ct+0.05&&s>bs){bs=s;ba=+a;}}
+  return ba;
+}
 function makeCdnSource(rec){
+  if(rec.type==="audio_surah"){
+    return{
+      id:rec.id,name:rec.name,type:rec.type,
+      async getMediaFor(s,a){
+        const file=String(s).padStart(3,"0")+".mp3";
+        const url=`https://download.quranicaudio.com/quran/${rec.subdir}/${file}`;
+        const t=await loadTimings(rec.id,s);        // подтягиваем тайминги суры
+        const seg=t&&t[a];
+        return seg?{url,start:seg[0],end:seg[1]}:{url};
+      },
+      async has(){return true;}
+    };
+  }
   return{
     id:rec.id,name:rec.name,type:rec.type||"audio_cdn",
     // «файл-на-аят»: сегмент = весь файл, таймингов нет
@@ -148,6 +181,7 @@ function ensureAudio(){
   const au=new Audio();
   au.preload="auto";
   au.addEventListener("ended",onEnded);
+  au.addEventListener("timeupdate",onTimeUpdate);
   au.addEventListener("error",()=>{
     if(!P.active||!au.getAttribute("src"))return; // намеренная остановка — не ошибка
     P.playing=false;P.err="аудио недоступно (сеть/CDN)";renderBar();
@@ -175,8 +209,21 @@ async function playCur(){
   }
   const au=ensureAudio();
   P.err="";
+  if(SRC.type==="audio_surah"&&au.src===m.url){
+    // файл суры уже загружен: есть тайминги → перематываем на начало выбранного
+    // аята (клик по аяту), иначе просто продолжаем/возобновляем без перезапуска.
+    if(m.start!=null&&Math.abs(au.currentTime-m.start)>0.3)au.currentTime=m.start;
+    const pr=au.play();if(pr)pr.catch(()=>{});
+    P.playing=true;renderBar();
+    prefetchNext();
+    return;
+  }
   setSrc(au,m);
   au.defaultPlaybackRate=P.rate;au.playbackRate=P.rate;
+  if(m.start!=null){                        // посурный чтец: свежий файл → перемотка на аят
+    const s0=m.start,seek=()=>{try{au.currentTime=s0;}catch(e){}};
+    if(au.readyState>=1)seek();else au.addEventListener("loadedmetadata",seek,{once:true});
+  }
   const pr=au.play();
   if(pr)pr.catch(err=>{
     if(t!==P.token)return;
@@ -191,6 +238,12 @@ async function playCur(){
 // Следующий аят с учётом диапазона A–B; для наборов записей — скип пустых
 // аятов (иначе набор с пропусками останавливался бы на каждом «дыре»)
 async function nextPlayable(s,a){
+  if(SRC&&SRC.type==="audio_surah"){
+    let nx=s<114?{sura:s+1,ayah:1}:null;
+    if(P.range&&(!nx||key(nx.sura,nx.ayah)>key(P.range.b.sura,P.range.b.ayah)))
+      nx={sura:P.range.a.sura,ayah:P.range.a.ayah};
+    return nx;
+  }
   let nx=nextAyah(s,a);
   if(P.range&&(!nx||key(nx.sura,nx.ayah)>key(P.range.b.sura,P.range.b.ayah)))
     nx={sura:P.range.a.sura,ayah:P.range.a.ayah};    // конец диапазона → к началу
@@ -209,6 +262,16 @@ async function nextPlayable(s,a){
   }
   return null;
 }
+// Посурный чтец с таймингами: двигаем указатель аята по ходу воспроизведения
+// (один mp3 играет непрерывно, onEnded срабатывает лишь в конце суры). Так за
+// аятом следуют подсветка/скролл текста и кадр диафильма — те же подписчики оси.
+function onTimeUpdate(){
+  if(!P.playing||!SRC||SRC.type!=="audio_surah")return;
+  const t=timingsFor(SRC.id,POS.sura);
+  if(!t)return;                                  // таймингов суры нет — не двигаем
+  const a=ayahAtTime(t,P.audio.currentTime);
+  if(a&&a!==POS.ayah)setPos(POS.sura,a);
+}
 async function onEnded(){
   P.played++;
   if(P.repeat&&P.played<P.repeat){P.audio.currentTime=0;P.audio.play();return;}
@@ -219,7 +282,12 @@ async function onEnded(){
   playCur();
 }
 async function prefetchNext(){
-  const nx=nextAyah(POS.sura,POS.ayah);
+  let nx=null;
+  if(SRC&&SRC.type==="audio_surah"){
+    nx=POS.sura<114?{sura:POS.sura+1,ayah:1}:null;
+  }else{
+    nx=nextAyah(POS.sura,POS.ayah);
+  }
   if(!nx||SRC.type==="audio_user_recording")return;  // записи локальны — префетч не нужен
   const m=await SRC.getMediaFor(nx.sura,nx.ayah).catch(()=>null);
   if(!m||!m.url)return;
@@ -234,7 +302,16 @@ function togglePlay(){
   }else playCur();                       // остановились на конце — заново текущий аят
 }
 function navStep(dir){
-  const t=dir>0?nextAyah(POS.sura,POS.ayah):prevAyah(POS.sura,POS.ayah);
+  let t=null;
+  if(SRC&&SRC.type==="audio_surah"){
+    if(dir>0){
+      t=POS.sura<114?{sura:POS.sura+1,ayah:1}:null;
+    }else{
+      t=POS.sura>1?{sura:POS.sura-1,ayah:1}:null;
+    }
+  }else{
+    t=dir>0?nextAyah(POS.sura,POS.ayah):prevAyah(POS.sura,POS.ayah);
+  }
   if(!t)return;
   P.played=0;setPos(t.sura,t.ayah);playCur();
 }
@@ -575,21 +652,52 @@ export async function deleteSetData(id){
 // ---------- визуальный слой (фаза 3): картинки по темам фихриста ----------
 // Ведётся ТЕМ ЖЕ указателем аята, что и аудио (onAyahChange). Пул картинок
 // аята = объединение картинок всех его тем (data/topics/byAyah.json →
-// data/media/visual.json). При ВХОДЕ в аят — случайный выбор из пула, держим
-// пока аят не сменился (повтор/цикл не перевыбирает); не повторяем предыдущую.
-// render_type пока "image" (<img> как background); "video_file" — та же карта.
-// Слой НЕЗАВИСИМ от аудио: без аудио ведётся верхним видимым аятом (скролл).
-const V={map:null,byAyah:null,loading:null};        // карта visual.json (общая для диафильма)
-function loadVisual(){
-  if(V.map)return Promise.resolve(true);
-  if(V.loading)return V.loading;
+// карта набора data/media/visual/<pack>.json). Набор (pack) — tl_visualPack
+// (localStorage); пусто → legacy data/media/visual.json. Агенты НЕ правят
+// общий visual.json: Grok → visual/grok-build.json, Codex → свой pack-файл.
+// При ВХОДЕ в аят — случайный выбор из пула, держим пока аят не сменился;
+// не повторяем предыдущую. render_type пока "image".
+const V={map:null,byAyah:null,loading:null,pack:null};
+// Наборы картинок (в UI ⚙ Вид — обезличенные ярлыки). По умолчанию — набор codex.
+const PACK_IDS=["codex","seedream","nano","grok-build"];
+let _randomPick=null;
+/** Сырое значение настройки: ""/"codex"/"random"/<id>. "" трактуется как дефолт. */
+export function getVisualPackSetting(){
+  try{if(ctx.gs){const v=ctx.gs("visualPack");if(v!=null)return String(v);}}catch(e){}
+  return "";
+}
+function visualPackId(){
+  let p=getVisualPackSetting();
+  if(p==="")p="codex";                    // по умолчанию — набор codex
+  if(p==="random"){                       // случайный набор, стабильный в пределах сессии
+    if(!_randomPick||PACK_IDS.indexOf(_randomPick)<0)_randomPick=PACK_IDS[Math.floor(Math.random()*PACK_IDS.length)];
+    return _randomPick;
+  }
+  return p;
+}
+function loadVisual(force){
+  const pack=visualPackId();
+  if(!force&&V.map&&V.pack===pack)return Promise.resolve(true);
+  if(!force&&V.loading&&V.pack===pack)return V.loading;
+  V.map=null;V.pack=pack;
+  const mapUrl=pack
+    ?ctx.resolveUrl("visual_map",{pack})
+    :ctx.resolveUrl("visual_map_legacy");
   V.loading=Promise.all([
-    fetch(ctx.resolveUrl("visual_map")).then(r=>r.ok?r.json():null).catch(()=>null),
+    fetch(mapUrl).then(r=>r.ok?r.json():null).catch(()=>null),
     fetch(ctx.resolveUrl("topics",{file:"byAyah.json"})).then(r=>r.ok?r.json():null).catch(()=>null),
-  ]).then(([m,b])=>{V.map=m||{topics:{},default:[],pins:{}};V.byAyah=b||{};return true;})
-    .catch(()=>{V.map={topics:{},default:[],pins:{}};V.byAyah={};return true;});
+  ]).then(([m,b])=>{V.map=m||{topics:{},default:[],pins:{}};V.byAyah=b||{};V.loading=null;return true;})
+    .catch(()=>{V.map={topics:{},default:[],pins:{}};V.byAyah={};V.loading=null;return true;});
   return V.loading;
 }
+/** Сменить набор картинок (pack id → data/media/visual/<id>.json). Пустая строка = legacy. */
+export function setVisualPack(pack){
+  _randomPick=null;                        // при выборе «случайно» — новый жребий
+  try{if(ctx.ss)ctx.ss("visualPack",pack||"");}catch(e){}
+  V.map=null;V.loading=null;V.pack=null;
+  return loadVisual(true);
+}
+export function getVisualPack(){return visualPackId();}
 function imgUrl(src){return /^https?:/i.test(src)?src:ctx.resolveUrl("visual_media",{file:src});}
 // КУРИРУЕМЫЙ пул аята: пин > объединение картинок его тем (БЕЗ общего default).
 // Пусто = у аята нет своей картинки (не подготовлена или намеренно не задана).
@@ -618,10 +726,10 @@ function pickInto(state,s,a){
 }
 
 // ---------- ДИАФИЛЬМ (полноэкранный визуальный ряд) ----------
-// Отдельный полноэкранный слой поверх ТОЙ ЖЕ карты (visual.json) и общей функции
-// выбора (chooseImage), что и полоса — но полосу НЕ трогает. Строго ОДИН аят =
-// ОДИН кадр. Указатель ведёт аудио-плеер (onAyahChange) при прослушивании, либо
-// ручной свайп/тап при выключенном звуке (НЕ «верхний видимый»). Пустой пул →
+// Отдельный полноэкранный слой поверх карты набора (visual/<pack>.json) и общей
+// функции выбора (pickInto). Строго ОДИН аят = ОДИН кадр. Указатель ведёт
+// аудио-плеер (onAyahChange) при прослушивании, либо ручной свайп/тап при
+// выключенном звуке (НЕ «верхний видимый»). Пустой пул →
 // нейтральный фон (не подставляем чужую картинку). Видео — только задел.
 const D={on:false,sura:0,ayah:0,textMode:"artr",textHidden:false,imgOn:true,audio:true,fit:"cover",scale:1,wake:null,el:null,la:null,lb:null,front:0,token:0,swiped:false};
 const Dsel={cur:"",last:"",img:""};                  // СВОЁ состояние выбора картинки (отдельно от полосы)

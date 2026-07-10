@@ -22,8 +22,13 @@ data/_sources/
 data/img/**/*.webp
 data/img/**/*.png
 data/img/**/*.jpg
-# Аудио-тилява (задел; на объектном хранилище)
-data/audio/
+# Аудио-тилява (задел; на объектном хранилище) — но аятные тайминги посурных
+# чтецов (build_timings.py) лёгкие и лежат в репо
+data/audio/*
+!data/audio/timings/
+
+# venv для build_timings.py (torch+ctc-forced-aligner; система на py3.14)
+.venv-timings/
 
 # Тяжёлые тафсиры на Cloudflare R2 (поле dataBase в config). В репо НЕ коммитим
 # ни монолит, ни чанки, ни индекс — они лежат на R2 (и локально для пересборки;
@@ -122,3 +127,20 @@ data/index/ibn_abi_hatim.json
 # Локальный кэш Wrangler (воркер синхронизации)
 sync-worker/.wrangler/
 data/media/*.png
+
+# fal.ai диафильм: ключ и сгенерированные картинки (тяжёлые -> R2)
+.fal_key
+data/media/filmstrip-fal/**/*.png
+
+# Grok Build Imagine: generated filmstrip frames (local only)
+data/media/filmstrip-grok-build/**/*.png
+
+# HTML-галереи ревью диафильма (временные)
+review-*.html
+
+task-visual-*.md
+
+data/media/_rai-test/
+
+# набор Codex (Imagen) — тяжёлые png на R2, в репо не идут
+data/media/filmstrip/**/*.png

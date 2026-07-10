@@ -232,6 +232,15 @@
         "recommended": true
       },
       {
+        "id": "saegh",
+        "name": "Тауфик ас-Саиг",
+        "cdn": "quranicaudio",
+        "subdir": "tawfeeq_bin_saeed-as-sawaaigh",
+        "type": "audio_surah",
+        "nameAr": "توفيق الصائغ",
+        "recommended": true
+      },
+      {
         "id": "basit_muj",
         "name": "Абдуль-Басит (муджаввад)",
         "cdn": "everyayah",

@@ -1240,10 +1240,17 @@ const SOURCES={
   // — поаятное CDN-аудио чтецов (media.js): {subdir} — каталог чтеца из
   //   config.json (audio.reciters), {file}=NNNSSS.mp3 (паддинг у вызывающего) —
   audio_cdn:       {baseUrl:"https://everyayah.com/data", pathTemplate:"{baseUrl}/{subdir}/{file}"},
-  // — визуальный слой (media.js, фаза 3): лёгкая карта тема→картинки (локально)
-  //   и сами картинки; относит. пути картинок резолвятся классом visual_media
-  //   (можно унести тяжёлые фото на R2 сменой baseUrl), абсолютные http — как есть —
-  visual_map:      {baseUrl:"data",  pathTemplate:"{baseUrl}/media/visual.json"},
+  // — аятные тайминги ПОСУРНЫХ чтецов (type:"audio_surah"): один mp3 = вся сура,
+  //   тайминги [start,end] на аят собирает build_timings.py (CTC-выравнивание).
+  //   Есть → указатель следует за аятом внутри суры и можно перематывать на аят.
+  audio_timings:   {baseUrl:"data",  pathTemplate:"{baseUrl}/audio/timings/{reciter}/{sura}.json"},
+  // — визуальный слой (media.js): карта набора data/media/visual/<pack>.json
+  //   (один агент/набор = один файл; НЕ общий visual.json — иначе затирают друг друга).
+  //   Сборка: python3 build_visual_pack.py --pack <id> --dir data/media/<dir>.
+  //   Legacy fallback: data/media/visual.json (старый единый файл, пока есть).
+  //   Картинки: visual_media → data/media/{file} (file = filmstrip-…/topic-….png).
+  visual_map:      {baseUrl:"data",  pathTemplate:"{baseUrl}/media/visual/{pack}.json"},
+  visual_map_legacy:{baseUrl:"data", pathTemplate:"{baseUrl}/media/visual.json"},
   visual_media:    {baseUrl:"data",  pathTemplate:"{baseUrl}/media/{file}"},
   // — объёмные арабские тома (на будущее, лежат там же, что и тафсиры) —
   arabic_volumes:  {baseUrl:"data",  pathTemplate:"{baseUrl}/tafsirs/{source}/{sura}.json"},     // задел
@@ -1280,7 +1287,7 @@ function scanDirOf(t){return t.imgdir||("img/"+t.id);}
 // первом обращении (▶ у аята или блок «🎧 Аудио» в панели 📚). Пока аудио не
 // трогали: ни байта кода, ни <audio>-элементов. media.js — ES-модуль, наши
 // let-глобалы (ST/CONFIG/qpcMeta) ему не видны — передаём контекст геттерами.
-const MEDIA_VER="12";   // поднять при правке media.js (сброс кеша браузера/CDN)
+const MEDIA_VER="16";   // поднять при правке media.js (сброс кеша браузера/CDN)
 let MEDIA=null;        // загруженный модуль (null = ещё не загружался)
 function mediaCtx(){
   return {
@@ -6185,12 +6192,19 @@ function viewPanelHTML(){
       `<button class="data-io-btn" onclick="openReciterManager()">🎧 Чтецы</button>`+
       `<button class="data-io-btn" onclick="openSourceManager()">📖 Переводы и тафсиры</button>`+
     `</div></div>`;
+  // Набор фоновых картинок для диафильма/полосы (по темам аята). Ярлыки —
+  // обезличенные (без названий движков); по умолчанию — набор codex.
+  const VPACKS=[["codex","Набор 1"],["seedream","Набор 2"],["nano","Набор 3"],["grok-build","Набор 4"],["random","🎲 Случайный"]];
+  const curPack=(gs("visualPack","")||"")||"codex";
+  const visualPackGroup=`<div class="vp-group"><div class="vp-label">Картинки диафильма</div><div class="vp-fonts">`+
+    VPACKS.map(([id,name])=>`<button class="vp-font ${curPack===id?"on":""}" onclick="setVisualPackUI('${id}')">${esc(name)}</button>`).join("")+
+    `</div><div class="vp-note">Фон для диафильма и полосы над лентой (подбирается по темам аята). «Случайный» — свой набор на каждый вход.</div></div>`;
   // Под-табы: разгружаем длинную простыню настроек
   const TABS=[["text","Текст"],["look","Вид"],["src","Источники"],["data","Данные"]];
   const tab=ST.vpTab||"text";
   const bar=`<div class="vp-tabs">`+TABS.map(([id,n])=>`<button class="${tab===id?"on":""}" onclick="setVpTab('${id}')">${esc(n)}</button>`).join("")+`</div>`;
   let body;
-  if(tab==="look")body=themeGroup+skinGroup+navGroup+ntGroup;
+  if(tab==="look")body=themeGroup+skinGroup+visualPackGroup+navGroup+ntGroup;
   else if(tab==="src")body=sourcesGroup;
   else if(tab==="data")body=backupGroup+aboutRow+resetBtn;
   else body=quranHint+fontGroup+sizeGroup+layoutGroup;   // «Текст» (по умолчанию)
@@ -6198,6 +6212,13 @@ function viewPanelHTML(){
 }
 function setVpTab(t){ST.vpTab=t;ss("vpTab",t);renderViewPanel();}
 function setLayout(v){ST.layout=v;render();}
+// Выбор визуального набора (картинки диафильма). Сохраняем сразу (мгновенная
+// подсветка), затем перезагружаем карту набора в media.js и перерисовываем.
+function setVisualPackUI(id){
+  ss("visualPack",id);
+  renderViewPanel();
+  mediaMod().then(m=>{if(m)m.setVisualPack(id);renderCenter();});
+}
 
 // --- 📑 Переход: jump by surah / juz / rub al-hizb / page (both modes) -------
 function juzForPage(pg){

@@ -16,7 +16,7 @@ build_reciters.py — собрать список чтецов everyayah в conf
     умолчанию (приложение сидит tl_recHidden не-рекомендованными при первом
     запуске; список скрытых — опт-аут, поэтому будущие новые чтецы видны сами);
   • пишет массив в data/config.json (audio.reciters), audio.default оставляет
-    "shatri" (id закреплён, чтобы не сломать сохранённый выбор пользователя).
+    "alafasy" (id закреплён, чтобы не сломать сохранённый выбор пользователя).
 
 После: python3 sync_config.py  (зеркало config.js).
 Идемпотентно.
@@ -155,6 +155,20 @@ def main():
         if rec: r["recommended"] = True
         reciters.append(r)
 
+    # Добавляем кастомных не-everyayah чтецов
+    CUSTOM_RECITERS = [
+        {
+            "id": "saegh",
+            "name": "Тауфик ас-Саиг",
+            "cdn": "quranicaudio",
+            "subdir": "tawfeeq_bin_saeed-as-sawaaigh",
+            "type": "audio_surah",
+            "nameAr": "توفيق الصائغ",
+            "recommended": True
+        }
+    ]
+    reciters.extend(CUSTOM_RECITERS)
+
     # сортировка: рекомендованные первыми (в порядке RU-карты), затем прочие по имени
     order = {name: i for i, name in enumerate(RU)}
     reciters.sort(key=lambda r: (0 if r.get("recommended") else 1,
@@ -163,7 +177,7 @@ def main():
 
     cfg = json.load(open(CFG, encoding="utf-8"))
     cfg.setdefault("audio", {})
-    cfg["audio"]["default"] = "shatri"
+    cfg["audio"]["default"] = "alafasy"
     cfg["audio"]["reciters"] = reciters
     json.dump(cfg, open(CFG, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
 

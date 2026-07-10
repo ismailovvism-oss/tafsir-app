@@ -1,0 +1,902 @@
+{
+  "_doc": "Целевой список тем диафильма: жадное покрытие аятов, 74 РИСУЕМЫЕ темы (~90%). skipNeutral (Аллах и чистая сущность) исключены — у них всегда нейтральный фон. Все наборы тянутся к этому списку. Схема совместима с gen_fal.py --manifest. | 15 (Рай) вынесен в skipNeutral по решению мейнтейнера — сокровенное, без пейзажа. | 15 (Рай) — рисуемая АБСТРАКТНО (тёплое сияние без места), спец-промт rai_fill.py, НЕ стандартный gen_fal-пайплайн.",
+  "coverage_target": "~90%",
+  "skipNeutral": [
+    "1",
+    "2044",
+    "2056",
+    "2382"
+  ],
+  "ayahs_covered": 2705,
+  "ayahs_total": 3084,
+  "ayahs_covered_pct": 87.7,
+  "topics": [
+    {
+      "id": "967",
+      "name": "Муса",
+      "meaning": "",
+      "risk": "high",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction. No named prophets or messengers as figures. Metaphor only.",
+      "metaphors": [
+        "empty monumental halls fading into desert sand at dawn; open lower-center; no people"
+      ],
+      "ayahs": 415
+    },
+    {
+      "id": "66",
+      "name": "Ад (Джаханнам)",
+      "meaning": "",
+      "risk": "high",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction. No named prophets or messengers as figures. Metaphor only.",
+      "metaphors": [
+        "barren cracked earth under distant storm, red-gray sky, no fire inferno, no bodies; open lower-center"
+      ],
+      "ayahs": 221
+    },
+    {
+      "id": "1038",
+      "name": "Намаз (ас-салят)",
+      "risk": "low",
+      "meaning": "Worship, humility, discipline, turning back to guidance.",
+      "avoid": "No mosque-interior cliché, no visible faces, no calligraphy.",
+      "metaphors": [
+        "quiet dawn courtyard with clean open floor",
+        "soft light entering a simple prayer space without symbols",
+        "desert horizon before sunrise with ordered footprints",
+        "rain-washed stone and a calm open sky"
+      ],
+      "ayahs": 159
+    },
+    {
+      "id": "6",
+      "name": "Сатана (Шайтан)",
+      "meaning": "",
+      "risk": "high",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction. No named prophets or messengers as figures. Metaphor only.",
+      "metaphors": [
+        "path split between clear dawn and heavy fog; distorted reflection in muddy water; no figures; open lower-center"
+      ],
+      "ayahs": 148
+    },
+    {
+      "id": "289",
+      "name": "Ибрахим",
+      "risk": "high",
+      "meaning": "Pure monotheism, trust, rejection of false worship, trial and steadfastness.",
+      "avoid": "Do not depict Ibrahim, idols, fire miracle, family, or faces.",
+      "metaphors": [
+        "empty desert under clear stars",
+        "single path away from a dark city toward dawn",
+        "broken shadow of false monuments without recognizable idols",
+        "solitary tent-like shelter in vast open land with no people"
+      ],
+      "ayahs": 146
+    },
+    {
+      "id": "1130",
+      "name": "Воскрешение (аль-Кыяма)",
+      "risk": "medium",
+      "meaning": "Renewal after death, awakening, certainty of return.",
+      "avoid": "No graves opening, no bodies, no apocalypse spectacle.",
+      "metaphors": [
+        "dead earth sprouting after rain",
+        "seedling breaking through cracked ground",
+        "winter field touched by first spring light",
+        "dry riverbed beginning to flow again"
+      ],
+      "ayahs": 130
+    },
+    {
+      "id": "538",
+      "name": "Смерть",
+      "risk": "medium",
+      "meaning": "Mortality, return, the passing nature of worldly life.",
+      "avoid": "No corpses, graves as horror, gore, or despair.",
+      "metaphors": [
+        "fallen leaf on still water at dusk",
+        "empty path disappearing into mist",
+        "dry field with a single new shoot after rain",
+        "fading sunset over quiet ruins"
+      ],
+      "ayahs": 115
+    },
+    {
+      "id": "826",
+      "name": "Юсуф",
+      "risk": "high",
+      "meaning": "Patience, chastity, trial, hidden wisdom, eventual relief.",
+      "avoid": "Do not depict Yusuf, family, prison scenes with people, faces, or seduction.",
+      "metaphors": [
+        "light entering an empty stone chamber",
+        "deep well seen as abstract dark circle with sky reflection",
+        "green field after long drought",
+        "closed door with dawn light beneath it"
+      ],
+      "ayahs": 101
+    },
+    {
+      "id": "61",
+      "name": "Коран",
+      "risk": "low",
+      "meaning": "Guidance, reminder, light, mercy, and clarity.",
+      "avoid": "No books, scrolls, pages, letters, or calligraphy.",
+      "metaphors": [
+        "path of light after rain on dry earth",
+        "lantern glow on a stone path with no writing",
+        "dawn breaking through clouds over a valley",
+        "clear water flowing through dark stones"
+      ],
+      "ayahs": 103
+    },
+    {
+      "id": "1007",
+      "name": "Нух",
+      "risk": "high",
+      "meaning": "Warning, patience, rejection, flood as trial and deliverance.",
+      "avoid": "Do not depict Nuh, ark with people, drowning bodies, or spectacle.",
+      "metaphors": [
+        "storm clouds over a vast plain",
+        "rain beginning over dry timber and hills, no boat focus",
+        "distant high ridge above floodwater",
+        "single beam of light after heavy rain"
+      ],
+      "ayahs": 96
+    },
+    {
+      "id": "2039",
+      "name": "Табук",
+      "meaning": "",
+      "risk": "low",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction.",
+      "metaphors": [
+        "cinematic natural landscape: dawn light, open path or plain, quiet atmosphere; open lower-center for text; no people"
+      ],
+      "ayahs": 86
+    },
+    {
+      "id": "17",
+      "name": "Сыны Исраиля",
+      "risk": "medium",
+      "meaning": "Community history, covenant, tests, gratitude and heedlessness.",
+      "avoid": "No named figures, no faces, no ethnic caricature, no crowds.",
+      "metaphors": [
+        "ancient empty road through desert stones",
+        "weathered city gate at dawn",
+        "scattered footprints near a dry valley",
+        "old caravan route under stars with no people"
+      ],
+      "ayahs": 102
+    },
+    {
+      "id": "352",
+      "name": "Ангелы",
+      "meaning": "",
+      "risk": "high",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction. No named prophets or messengers as figures. Metaphor only.",
+      "metaphors": [
+        "soft rays through high clouds over empty plain; no winged beings, no figures; open lower-center"
+      ],
+      "ayahs": 67
+    },
+    {
+      "id": "900",
+      "name": "Лут",
+      "risk": "high",
+      "meaning": "Moral corruption, warning, protection, consequences.",
+      "avoid": "No sexual content, no people, no violence, no literal punishment spectacle.",
+      "metaphors": [
+        "abandoned city street under heavy storm clouds",
+        "salt-white barren plain after night rain",
+        "closed gates in a dark valley",
+        "dawn over ruins with no bodies"
+      ],
+      "ayahs": 51
+    },
+    {
+      "id": "1837",
+      "name": "Сокровенное (аль-Гайб)",
+      "meaning": "",
+      "risk": "high",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction. No named prophets or messengers as figures. Metaphor only.",
+      "metaphors": [
+        "contemplative natural landscape metaphor only: empty path, open sky, quiet land; no people, no sacred figures; open lower-center"
+      ],
+      "ayahs": 54
+    },
+    {
+      "id": "904",
+      "name": "Брак (никах)",
+      "risk": "low",
+      "meaning": "Mercy, tranquility, covenant, protection, and family responsibility.",
+      "avoid": "No romance pose, no faces, no wedding symbols.",
+      "metaphors": [
+        "two trees growing beside one stream",
+        "paired lamps casting one warm pool of light",
+        "shelter in rain with two empty places",
+        "two paths joining into a garden trail"
+      ],
+      "ayahs": 38
+    },
+    {
+      "id": "40",
+      "name": "Сулейман",
+      "risk": "high",
+      "meaning": "Wisdom, power as trust, gratitude, order in creation.",
+      "avoid": "Do not depict Sulayman, throne, jinn, animals as portraits, or royal spectacle.",
+      "metaphors": [
+        "wind moving over ordered terraces",
+        "sunlit valley seen from a high quiet overlook",
+        "empty polished courtyard after rain without symbols",
+        "balanced garden channels under morning light"
+      ],
+      "ayahs": 44
+    },
+    {
+      "id": "130",
+      "name": "Худ",
+      "risk": "high",
+      "meaning": "Warning to a proud people, arrogance before signs, ruin after denial.",
+      "avoid": "Do not depict Hud or his people; no faces, no disaster spectacle.",
+      "metaphors": [
+        "wind over empty ancient ruins",
+        "desert pillars half-buried in sand",
+        "storm approaching a silent city",
+        "sunlit path away from eroded stone halls"
+      ],
+      "ayahs": 39
+    },
+    {
+      "id": "132",
+      "name": "Салих",
+      "risk": "high",
+      "meaning": "A sign rejected, arrogance, accountability, fragile mercy.",
+      "avoid": "Do not depict Salih, the she-camel, people, or punishment.",
+      "metaphors": [
+        "carved stone dwellings empty at sunrise",
+        "lonely mountain pass after storm",
+        "dry valley with a protected spring",
+        "cracked rock lit by soft dawn"
+      ],
+      "ayahs": 36
+    },
+    {
+      "id": "122",
+      "name": "Джинны",
+      "meaning": "",
+      "risk": "high",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction. No named prophets or messengers as figures. Metaphor only.",
+      "metaphors": [
+        "desert heat haze over empty dunes at dusk; no figures; open lower-center"
+      ],
+      "ayahs": 52
+    },
+    {
+      "id": "97",
+      "name": "Мухаммад",
+      "meaning": "",
+      "risk": "high",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction. No named prophets or messengers as figures. Metaphor only.",
+      "metaphors": [
+        "barren cracked earth under distant storm, red-gray sky, no fire inferno, no bodies; open lower-center"
+      ],
+      "ayahs": 41
+    },
+    {
+      "id": "36",
+      "name": "Иса",
+      "meaning": "",
+      "risk": "high",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction. No named prophets or messengers as figures. Metaphor only.",
+      "metaphors": [
+        "distant hill settlement in soft mist without symbols; olive grove after rain; no people; open lower-center"
+      ],
+      "ayahs": 47
+    },
+    {
+      "id": "2438",
+      "name": "Награда верующих",
+      "risk": "medium",
+      "meaning": "Hope, mercy, promised reward without depicting the unseen.",
+      "avoid": "No literal Paradise, no palaces, no supernatural beings.",
+      "metaphors": [
+        "distant green valley after a hard climb",
+        "shade and water after desert heat",
+        "golden dawn beyond a dark ridge",
+        "garden gate suggested by trees, not architecture"
+      ],
+      "ayahs": 33
+    },
+    {
+      "id": "1556",
+      "name": "Справедливость",
+      "risk": "low",
+      "meaning": "Balance, fairness, uprightness, truth over oppression.",
+      "avoid": "No courtrooms, no political symbols, no text.",
+      "metaphors": [
+        "balanced stones beside calm water",
+        "straight path between shadow and light",
+        "two trees reflected evenly in a still pool",
+        "sunrise over a level horizon after storm"
+      ],
+      "ayahs": 33
+    },
+    {
+      "id": "1013",
+      "name": "Клятвы (аль-айман)",
+      "risk": "low",
+      "meaning": "Responsibility of speech, promises, accountability.",
+      "avoid": "No written contracts, no hands swearing, no symbols.",
+      "metaphors": [
+        "single rope bridge over a quiet ravine",
+        "stone cairn marking a path at dusk",
+        "clear reflection disturbed by one ripple",
+        "sealed gate and open road beyond"
+      ],
+      "ayahs": 42
+    },
+    {
+      "id": "1523",
+      "name": "Скромность (тавадуъ)",
+      "risk": "low",
+      "meaning": "Humility, restraint, quiet dignity before truth.",
+      "avoid": "No portrait, no heroic figure, no poverty cliché.",
+      "metaphors": [
+        "small wildflower beneath vast mountains",
+        "low valley under an immense sky",
+        "simple cup catching rain on stone",
+        "narrow footpath through tall quiet grass"
+      ],
+      "ayahs": 30
+    },
+    {
+      "id": "787",
+      "name": "Иудеи (аль-яхуд)",
+      "risk": "medium",
+      "meaning": "People of Scripture, covenant, dispute, reminder and accountability.",
+      "avoid": "No stereotypes, no religious symbols, no faces, no text.",
+      "metaphors": [
+        "old stone path between two walls",
+        "quiet archive-like architecture without books or writing",
+        "branching roads under a cloudy sky",
+        "ancient olive trees in evening light"
+      ],
+      "ayahs": 46
+    },
+    {
+      "id": "2036",
+      "name": "Битва при Ухуде",
+      "meaning": "",
+      "risk": "high",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction. No named prophets or messengers as figures. Metaphor only.",
+      "metaphors": [
+        "contemplative natural landscape metaphor only: empty path, open sky, quiet land; no people, no sacred figures; open lower-center"
+      ],
+      "ayahs": 30
+    },
+    {
+      "id": "1428",
+      "name": "Равенство",
+      "risk": "low",
+      "meaning": "Human equality before judgment, shared origin and dignity.",
+      "avoid": "No faces, no crowds, no flags, no slogans.",
+      "metaphors": [
+        "many paths meeting at one open plain",
+        "different stones under the same rain",
+        "equal rows of young plants in morning light",
+        "shared shade beneath a wide tree with no people"
+      ],
+      "ayahs": 29
+    },
+    {
+      "id": "1659",
+      "name": "Паломничество (аль-хадж)",
+      "risk": "medium",
+      "meaning": "Journey, obedience, leaving comfort for worship and remembrance.",
+      "avoid": "No Kaaba, no crowds, no identifiable pilgrims, no mosque cliché.",
+      "metaphors": [
+        "long desert road toward dawn",
+        "empty valley path between pale mountains",
+        "simple water flask beside footprints in sand",
+        "wide plain under stars before sunrise"
+      ],
+      "ayahs": 24
+    },
+    {
+      "id": "821",
+      "name": "Юнус",
+      "risk": "high",
+      "meaning": "Distress, repentance, mercy after darkness.",
+      "avoid": "Do not depict Yunus, whale/fish close-up, body, or literal inside creature.",
+      "metaphors": [
+        "small light beneath dark ocean surface",
+        "stormy sea calming at dawn",
+        "lonely shore after night waves",
+        "deep blue water with a distant ray of light"
+      ],
+      "ayahs": 19
+    },
+    {
+      "id": "2305",
+      "name": "со своим народом",
+      "meaning": "",
+      "risk": "low",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction.",
+      "metaphors": [
+        "cinematic natural landscape: dawn light, open path or plain, quiet atmosphere; open lower-center for text; no people"
+      ],
+      "ayahs": 37
+    },
+    {
+      "id": "2046",
+      "name": "Вознесение на небеса",
+      "meaning": "",
+      "risk": "low",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction.",
+      "metaphors": [
+        "cinematic natural landscape: dawn light, open path or plain, quiet atmosphere; open lower-center for text; no people"
+      ],
+      "ayahs": 18
+    },
+    {
+      "id": "566",
+      "name": "Развод (талаq)",
+      "risk": "low",
+      "meaning": "Separation, restraint, fairness, grief handled with responsibility.",
+      "avoid": "No couples, no faces, no domestic drama.",
+      "metaphors": [
+        "two paths parting gently in a field",
+        "broken branch healing with new growth",
+        "empty doorway with morning light outside",
+        "river dividing around a quiet island"
+      ],
+      "ayahs": 22
+    },
+    {
+      "id": "2374",
+      "name": "обитатели пещеры",
+      "meaning": "",
+      "risk": "low",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction.",
+      "metaphors": [
+        "cinematic natural landscape: dawn light, open path or plain, quiet atmosphere; open lower-center for text; no people"
+      ],
+      "ayahs": 18
+    },
+    {
+      "id": "2037",
+      "name": "Битва у Рва",
+      "meaning": "",
+      "risk": "low",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction.",
+      "metaphors": [
+        "cinematic natural landscape: dawn light, open path or plain, quiet atmosphere; open lower-center for text; no people"
+      ],
+      "ayahs": 19
+    },
+    {
+      "id": "2379",
+      "name": "Зуль-Карнайн",
+      "meaning": "",
+      "risk": "low",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction.",
+      "metaphors": [
+        "cinematic natural landscape: dawn light, open path or plain, quiet atmosphere; open lower-center for text; no people"
+      ],
+      "ayahs": 16
+    },
+    {
+      "id": "1678",
+      "name": "Очищение (ат-тазкия)",
+      "risk": "low",
+      "meaning": "Purification of self, cleansing, growth after repentance.",
+      "avoid": "No ritual close-ups, no faces, no written symbols.",
+      "metaphors": [
+        "rain cleansing dusty leaves",
+        "clear stream over pale stones",
+        "white morning mist lifting from a garden",
+        "cracked earth softened by first rain"
+      ],
+      "ayahs": 40
+    },
+    {
+      "id": "2368",
+      "name": "Владельцы сада",
+      "meaning": "",
+      "risk": "high",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction. No named prophets or messengers as figures. Metaphor only.",
+      "metaphors": [
+        "barren cracked earth under distant storm, red-gray sky, no fire inferno, no bodies; open lower-center"
+      ],
+      "ayahs": 16
+    },
+    {
+      "id": "1247",
+      "name": "Закария",
+      "meaning": "",
+      "risk": "high",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction. No named prophets or messengers as figures. Metaphor only.",
+      "metaphors": [
+        "contemplative natural landscape metaphor only: empty path, open sky, quiet land; no people, no sacred figures; open lower-center"
+      ],
+      "ayahs": 17
+    },
+    {
+      "id": "13",
+      "name": "Адам",
+      "meaning": "",
+      "risk": "high",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction. No named prophets or messengers as figures. Metaphor only.",
+      "metaphors": [
+        "barren cracked earth under distant storm, red-gray sky, no fire inferno, no bodies; open lower-center"
+      ],
+      "ayahs": 39
+    },
+    {
+      "id": "2207",
+      "name": "Люди левой стороны",
+      "meaning": "",
+      "risk": "",
+      "avoid": "No text/letters/calligraphy. No people, faces, prophets, angels, animals close-up, books/scrolls. No literal Paradise/Hell/Allah. Metaphor only.",
+      "metaphors": [
+        "distant natural landscape as a sign in creation — sky, light, land or water; calm, cinematic; open clean lower-center; no people, no text."
+      ],
+      "ayahs": 15
+    },
+    {
+      "id": "2193",
+      "name": "Неверующие получают свою запись в левую руку",
+      "meaning": "",
+      "risk": "low",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction.",
+      "metaphors": [
+        "cinematic natural landscape: dawn light, open path or plain, quiet atmosphere; open lower-center for text; no people"
+      ],
+      "ayahs": 13
+    },
+    {
+      "id": "2365",
+      "name": "Верующий из народа Фараона",
+      "meaning": "",
+      "risk": "high",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction. No named prophets or messengers as figures. Metaphor only.",
+      "metaphors": [
+        "empty monumental halls fading into desert sand at dawn; open lower-center; no people"
+      ],
+      "ayahs": 19
+    },
+    {
+      "id": "72",
+      "name": "Дауд",
+      "meaning": "",
+      "risk": "high",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction. No named prophets or messengers as figures. Metaphor only.",
+      "metaphors": [
+        "contemplative natural landscape metaphor only: empty path, open sky, quiet land; no people, no sacred figures; open lower-center"
+      ],
+      "ayahs": 19
+    },
+    {
+      "id": "1730",
+      "name": "Писания [الصحف]",
+      "meaning": "",
+      "risk": "high",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction. No named prophets or messengers as figures. Metaphor only.",
+      "metaphors": [
+        "distant hill settlement in soft mist without symbols; olive grove after rain; no people; open lower-center"
+      ],
+      "ayahs": 12
+    },
+    {
+      "id": "2372",
+      "name": "Владелец двух садов",
+      "meaning": "",
+      "risk": "high",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction. No named prophets or messengers as figures. Metaphor only.",
+      "metaphors": [
+        "barren cracked earth under distant storm, red-gray sky, no fire inferno, no bodies; open lower-center"
+      ],
+      "ayahs": 13
+    },
+    {
+      "id": "2456",
+      "name": "взаимные упрёки",
+      "meaning": "",
+      "risk": "low",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction.",
+      "metaphors": [
+        "cinematic natural landscape: dawn light, open path or plain, quiet atmosphere; open lower-center for text; no people"
+      ],
+      "ayahs": 11
+    },
+    {
+      "id": "2375",
+      "name": "Люди рва",
+      "meaning": "",
+      "risk": "low",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction.",
+      "metaphors": [
+        "cinematic natural landscape: dawn light, open path or plain, quiet atmosphere; open lower-center for text; no people"
+      ],
+      "ayahs": 8
+    },
+    {
+      "id": "2035",
+      "name": "Битва при Бадре",
+      "meaning": "",
+      "risk": "high",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction. No named prophets or messengers as figures. Metaphor only.",
+      "metaphors": [
+        "barren cracked earth under distant storm, red-gray sky, no fire inferno, no bodies; open lower-center"
+      ],
+      "ayahs": 9
+    },
+    {
+      "id": "2371",
+      "name": "Наставление Лукмана сыну",
+      "meaning": "",
+      "risk": "low",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction.",
+      "metaphors": [
+        "cinematic natural landscape: dawn light, open path or plain, quiet atmosphere; open lower-center for text; no people"
+      ],
+      "ayahs": 8
+    },
+    {
+      "id": "1080",
+      "name": "Псалтырь (Забур) [الزبور]",
+      "meaning": "",
+      "risk": "low",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction.",
+      "metaphors": [
+        "cinematic natural landscape: dawn light, open path or plain, quiet atmosphere; open lower-center for text; no people"
+      ],
+      "ayahs": 11
+    },
+    {
+      "id": "2178",
+      "name": "Предсказывает грядущие события",
+      "meaning": "",
+      "risk": "low",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction.",
+      "metaphors": [
+        "cinematic natural landscape: dawn light, open path or plain, quiet atmosphere; open lower-center for text; no people"
+      ],
+      "ayahs": 7
+    },
+    {
+      "id": "2231",
+      "name": "Справедливость к иудею",
+      "meaning": "",
+      "risk": "",
+      "avoid": "No text/letters/calligraphy. No people, faces, prophets, angels, animals close-up, books/scrolls. No literal Paradise/Hell/Allah. Metaphor only.",
+      "metaphors": [
+        "distant natural landscape as a sign in creation — sky, light, land or water; calm, cinematic; open clean lower-center; no people, no text."
+      ],
+      "ayahs": 8
+    },
+    {
+      "id": "2285",
+      "name": "Вместе со своим братом Мусой (ﷺ) как посланники к Фараону и его народу",
+      "meaning": "",
+      "risk": "high",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction. No named prophets or messengers as figures. Metaphor only.",
+      "metaphors": [
+        "empty monumental halls fading into desert sand at dawn; open lower-center; no people"
+      ],
+      "ayahs": 51
+    },
+    {
+      "id": "1217",
+      "name": "Облака",
+      "meaning": "",
+      "risk": "",
+      "avoid": "No text/letters/calligraphy. No people, faces, prophets, angels, animals close-up, books/scrolls. No literal Paradise/Hell/Allah. Metaphor only.",
+      "metaphors": [
+        "distant natural landscape as a sign in creation — sky, light, land or water; calm, cinematic; open clean lower-center; no people, no text."
+      ],
+      "ayahs": 9
+    },
+    {
+      "id": "1043",
+      "name": "Ибрахима",
+      "meaning": "",
+      "risk": "high",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction. No named prophets or messengers as figures. Metaphor only.",
+      "metaphors": [
+        "contemplative natural landscape metaphor only: empty path, open sky, quiet land; no people, no sacred figures; open lower-center"
+      ],
+      "ayahs": 20
+    },
+    {
+      "id": "755",
+      "name": "Наследство [الميراث]",
+      "meaning": "",
+      "risk": "",
+      "avoid": "No text/letters/calligraphy. No people, faces, prophets, angels, animals close-up, books/scrolls. No literal Paradise/Hell/Allah. Metaphor only.",
+      "metaphors": [
+        "distant natural landscape as a sign in creation — sky, light, land or water; calm, cinematic; open clean lower-center; no people, no text."
+      ],
+      "ayahs": 9
+    },
+    {
+      "id": "1902",
+      "name": "Прекрасные имена",
+      "meaning": "",
+      "risk": "low",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction.",
+      "metaphors": [
+        "calm sea or river under soft sky; open lower-center water or shore"
+      ],
+      "ayahs": 6
+    },
+    {
+      "id": "1926",
+      "name": "Повеление размышлять над чудесами Его творения",
+      "meaning": "",
+      "risk": "high",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction. No named prophets or messengers as figures. Metaphor only.",
+      "metaphors": [
+        "barren cracked earth under distant storm, red-gray sky, no fire inferno, no bodies; open lower-center"
+      ],
+      "ayahs": 5
+    },
+    {
+      "id": "2053",
+      "name": "Этикет разговора с ним",
+      "meaning": "",
+      "risk": "low",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction.",
+      "metaphors": [
+        "cinematic natural landscape: dawn light, open path or plain, quiet atmosphere; open lower-center for text; no people"
+      ],
+      "ayahs": 5
+    },
+    {
+      "id": "80",
+      "name": "Тора [التوراة]",
+      "meaning": "",
+      "risk": "low",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction.",
+      "metaphors": [
+        "cinematic natural landscape: dawn light, open path or plain, quiet atmosphere; open lower-center for text; no people"
+      ],
+      "ayahs": 17
+    },
+    {
+      "id": "2042",
+      "name": "Худайбийское перемирие",
+      "meaning": "",
+      "risk": "high",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction. No named prophets or messengers as figures. Metaphor only.",
+      "metaphors": [
+        "contemplative natural landscape metaphor only: empty path, open sky, quiet land; no people, no sacred figures; open lower-center"
+      ],
+      "ayahs": 7
+    },
+    {
+      "id": "2246",
+      "name": "Махр и выжидательный срок",
+      "meaning": "",
+      "risk": "low",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction.",
+      "metaphors": [
+        "cinematic natural landscape: dawn light, open path or plain, quiet atmosphere; open lower-center for text; no people"
+      ],
+      "ayahs": 16
+    },
+    {
+      "id": "2225",
+      "name": "Запрет и предостережение",
+      "meaning": "",
+      "risk": "low",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction.",
+      "metaphors": [
+        "cinematic natural landscape: dawn light, open path or plain, quiet atmosphere; open lower-center for text; no people"
+      ],
+      "ayahs": 7
+    },
+    {
+      "id": "2192",
+      "name": "Верующие получают свою запись в правую руку",
+      "meaning": "",
+      "risk": "low",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction.",
+      "metaphors": [
+        "cinematic natural landscape: dawn light, open path or plain, quiet atmosphere; open lower-center for text; no people"
+      ],
+      "ayahs": 6
+    },
+    {
+      "id": "2448",
+      "name": "подносы с золотыми чашами",
+      "meaning": "",
+      "risk": "low",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction.",
+      "metaphors": [
+        "cinematic natural landscape: dawn light, open path or plain, quiet atmosphere; open lower-center for text; no people"
+      ],
+      "ayahs": 7
+    },
+    {
+      "id": "2346",
+      "name": "Сыны Исраиля отказываются войти в Иерусалим",
+      "meaning": "",
+      "risk": "low",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction.",
+      "metaphors": [
+        "cinematic natural landscape: dawn light, open path or plain, quiet atmosphere; open lower-center for text; no people"
+      ],
+      "ayahs": 7
+    },
+    {
+      "id": "2454",
+      "name": "дерево заккум",
+      "meaning": "",
+      "risk": "low",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction.",
+      "metaphors": [
+        "cinematic natural landscape: dawn light, open path or plain, quiet atmosphere; open lower-center for text; no people"
+      ],
+      "ayahs": 9
+    },
+    {
+      "id": "489",
+      "name": "Христиане (ан-насара)",
+      "risk": "medium",
+      "meaning": "People of Scripture, devotion, disagreement, and invitation to truth.",
+      "avoid": "No crosses, churches as symbols, clergy, faces, or text.",
+      "metaphors": [
+        "distant hill settlement in soft mist",
+        "two rivers meeting under morning light",
+        "old stone steps with sunlight but no symbols",
+        "olive grove after rain"
+      ],
+      "ayahs": 26
+    },
+    {
+      "id": "1903",
+      "name": "Единственный бог, достойный поклонения",
+      "meaning": "",
+      "risk": "low",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction.",
+      "metaphors": [
+        "cinematic natural landscape: dawn light, open path or plain, quiet atmosphere; open lower-center for text; no people"
+      ],
+      "ayahs": 4
+    },
+    {
+      "id": "2362",
+      "name": "Хабиль и Кабиль",
+      "meaning": "",
+      "risk": "low",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction.",
+      "metaphors": [
+        "cinematic natural landscape: dawn light, open path or plain, quiet atmosphere; open lower-center for text; no people"
+      ],
+      "ayahs": 5
+    },
+    {
+      "id": "2364",
+      "name": "Войско слона",
+      "meaning": "",
+      "risk": "low",
+      "avoid": "No text, letters, calligraphy, people, faces, prophets, angels, animals close-up, books, manuscripts. No literal Paradise/Hell/Allah depiction.",
+      "metaphors": [
+        "cinematic natural landscape: dawn light, open path or plain, quiet atmosphere; open lower-center for text; no people"
+      ],
+      "ayahs": 4
+    },
+    {
+      "id": "15",
+      "name": "Рай (аль-Джанна)",
+      "meaning": "",
+      "risk": "high",
+      "render": "abstract",
+      "avoid": "НЕ место: без пейзажа/сада/врат/воды, без фигур, без единого источника света, без текста. Только абстрактное тёплое сияние — намёк на награду/блаженство.",
+      "metaphors": [
+        "abstract warm luminous glow / bliss haze — no landscape, no place, no light source"
+      ],
+      "ayahs": 154
+    }
+  ]
+}

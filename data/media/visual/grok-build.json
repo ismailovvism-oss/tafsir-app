@@ -1,0 +1,424 @@
+{
+  "_doc": "Карта набора «grok-build» (агент grok-build). Собрана скриптом build_visual_pack.py из https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/. Имена: topic-<id>-<nn>.png, default-<nn>.png, pin-<sura>-<ayah>-<nn>.png. НЕ править data/media/visual.json этим набором — только этот файл.",
+  "_pack": "grok-build",
+  "_agent": "grok-build",
+  "_mediaDir": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build",
+  "_builtBy": "build_visual_pack.py",
+  "render_type": "image",
+  "topics": {
+    "6": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-6-01.png"
+    ],
+    "13": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-13-01.png"
+    ],
+    "15": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-15-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-15-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-15-03.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-15-04.png"
+    ],
+    "17": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-17-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-17-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-17-03.png"
+    ],
+    "36": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-36-01.png"
+    ],
+    "40": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-40-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-40-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-40-03.png"
+    ],
+    "61": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-61-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-61-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-61-03.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-61-04.png"
+    ],
+    "66": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-66-01.png"
+    ],
+    "72": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-72-01.png"
+    ],
+    "80": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-80-01.png"
+    ],
+    "97": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-97-01.png"
+    ],
+    "122": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-122-01.png"
+    ],
+    "130": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-130-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-130-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-130-03.png"
+    ],
+    "132": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-132-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-132-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-132-03.png"
+    ],
+    "289": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-289-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-289-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-289-03.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-289-04.png"
+    ],
+    "352": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-352-01.png"
+    ],
+    "388": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-388-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-388-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-388-03.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-388-04.png"
+    ],
+    "489": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-489-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-489-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-489-03.png"
+    ],
+    "538": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-538-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-538-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-538-03.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-538-04.png"
+    ],
+    "566": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-566-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-566-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-566-03.png"
+    ],
+    "618": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-618-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-618-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-618-03.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-618-04.png"
+    ],
+    "755": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-755-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-755-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-755-03.png"
+    ],
+    "787": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-787-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-787-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-787-03.png"
+    ],
+    "821": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-821-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-821-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-821-03.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-821-04.png"
+    ],
+    "826": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-826-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-826-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-826-03.png"
+    ],
+    "900": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-900-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-900-03.png"
+    ],
+    "904": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-904-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-904-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-904-03.png"
+    ],
+    "967": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-967-01.png"
+    ],
+    "1007": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1007-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1007-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1007-03.png"
+    ],
+    "1013": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1013-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1013-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1013-03.png"
+    ],
+    "1038": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1038-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1038-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1038-03.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1038-04.png"
+    ],
+    "1043": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1043-01.png"
+    ],
+    "1080": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1080-01.png"
+    ],
+    "1130": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1130-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1130-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1130-03.png"
+    ],
+    "1217": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1217-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1217-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1217-03.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1217-04.png"
+    ],
+    "1247": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1247-01.png"
+    ],
+    "1428": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1428-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1428-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1428-03.png"
+    ],
+    "1523": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1523-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1523-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1523-03.png"
+    ],
+    "1556": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1556-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1556-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1556-03.png"
+    ],
+    "1659": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1659-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1659-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1659-03.png"
+    ],
+    "1678": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1678-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1678-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1678-03.png"
+    ],
+    "1730": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1730-01.png"
+    ],
+    "1837": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1837-01.png"
+    ],
+    "1902": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1902-01.png"
+    ],
+    "1903": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1903-01.png"
+    ],
+    "1926": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-1926-01.png"
+    ],
+    "2035": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2035-01.png"
+    ],
+    "2036": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2036-01.png"
+    ],
+    "2037": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2037-01.png"
+    ],
+    "2039": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2039-01.png"
+    ],
+    "2042": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2042-01.png"
+    ],
+    "2046": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2046-01.png"
+    ],
+    "2053": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2053-01.png"
+    ],
+    "2105": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2105-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2105-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2105-03.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2105-04.png"
+    ],
+    "2178": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2178-01.png"
+    ],
+    "2191": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2191-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2191-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2191-03.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2191-04.png"
+    ],
+    "2192": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2192-01.png"
+    ],
+    "2193": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2193-01.png"
+    ],
+    "2195": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2195-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2195-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2195-03.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2195-04.png"
+    ],
+    "2201": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2201-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2201-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2201-03.png"
+    ],
+    "2205": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2205-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2205-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2205-03.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2205-04.png"
+    ],
+    "2207": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2207-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2207-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2207-03.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2207-04.png"
+    ],
+    "2210": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2210-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2210-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2210-03.png"
+    ],
+    "2211": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2211-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2211-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2211-03.png"
+    ],
+    "2216": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2216-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2216-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2216-03.png"
+    ],
+    "2225": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2225-01.png"
+    ],
+    "2230": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2230-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2230-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2230-03.png"
+    ],
+    "2231": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2231-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2231-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2231-03.png"
+    ],
+    "2239": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2239-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2239-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2239-03.png"
+    ],
+    "2240": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2240-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2240-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2240-03.png"
+    ],
+    "2244": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2244-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2244-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2244-03.png"
+    ],
+    "2246": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2246-01.png"
+    ],
+    "2272": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2272-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2272-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2272-03.png"
+    ],
+    "2278": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2278-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2278-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2278-03.png"
+    ],
+    "2280": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2280-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2280-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2280-03.png"
+    ],
+    "2281": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2281-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2281-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2281-03.png"
+    ],
+    "2283": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2283-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2283-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2283-03.png"
+    ],
+    "2285": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2285-01.png"
+    ],
+    "2295": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2295-01.png"
+    ],
+    "2305": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2305-01.png"
+    ],
+    "2336": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2336-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2336-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2336-03.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2336-04.png"
+    ],
+    "2346": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2346-01.png"
+    ],
+    "2362": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2362-01.png"
+    ],
+    "2364": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2364-01.png"
+    ],
+    "2365": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2365-01.png"
+    ],
+    "2368": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2368-01.png"
+    ],
+    "2371": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2371-01.png"
+    ],
+    "2372": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2372-01.png"
+    ],
+    "2374": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2374-01.png"
+    ],
+    "2375": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2375-01.png"
+    ],
+    "2379": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2379-01.png"
+    ],
+    "2390": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2390-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2390-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2390-03.png"
+    ],
+    "2397": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2397-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2397-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2397-03.png"
+    ],
+    "2438": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2438-01.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2438-02.png",
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2438-03.png"
+    ],
+    "2448": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2448-01.png"
+    ],
+    "2454": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2454-01.png"
+    ],
+    "2456": [
+      "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/topic-2456-01.png"
+    ]
+  },
+  "default": [
+    "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/default-01.png",
+    "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/default-02.png",
+    "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/default-03.png",
+    "https://pub-d99a56b61d914461b5864f421a013097.r2.dev/media/filmstrip-grok-build/default-04.png"
+  ],
+  "pins": {}
+}
