@@ -341,7 +341,7 @@ function followText(s,a){
   markCur(a);
 }
 function markCur(a){
-  const el=document.querySelector(`.ayah-block[data-aid="${a}"],.wbw-ayah[data-aid="${a}"]`);
+  const el=document.querySelector(`.ayah-block[data-aid="${a}"]`);
   if(el){el.classList.add("media-cur");el.scrollIntoView({behavior:"smooth",block:"center"});}
 }
 // Страница мусхафа, содержащая аят (по qpcMeta.pageStart; линейно по 604 — дёшево)
@@ -554,7 +554,7 @@ export async function openRecPopup(s,a,btn){
   R.ayah={s,a};
   // Подкрутить записываемый аят вверх — чтобы его текст был виден НАД нижним
   // листом записи и его можно было читать во время записи.
-  const blk=document.querySelector(`.ayah-block[data-aid="${a}"],.wbw-ayah[data-aid="${a}"]`);
+  const blk=document.querySelector(`.ayah-block[data-aid="${a}"]`);
   if(blk)blk.scrollIntoView({behavior:"smooth",block:"start"});
   const pop=document.createElement("div");
   pop.className="rec-pop";R.pop=pop;                 // позиция — нижний лист (CSS)

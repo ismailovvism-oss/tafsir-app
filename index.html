@@ -108,6 +108,12 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .sb-head{padding:7px 8px 5px;border-bottom:1px solid var(--border)}
 .sb-head input{width:100%;padding:6px 9px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg-card);outline:none;font-family:inherit;color:var(--text)}
 .sb-head input:focus{border-color:var(--accent)}
+.sb-jump{display:flex;gap:4px;margin-top:5px}
+.sb-jump.hidden{display:none}
+.sb-jump input{flex:1;min-width:0}
+.sb-jump input.bad{border-color:#c0392b}
+.sb-jump-go{flex-shrink:0;width:30px;border:1px solid var(--border);border-radius:5px;background:var(--bg-card);color:var(--accent);cursor:pointer;font-size:12px;font-family:inherit}
+.sb-jump-go:hover{border-color:var(--accent)}
 .sb-tabs{display:flex;border-bottom:1px solid var(--border)}
 .sb-tab{flex:1;padding:6px 4px;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:11px;font-weight:500;color:var(--text-sec);border-bottom:2px solid transparent;text-align:center}
 .sb-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
@@ -543,6 +549,32 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .srcp-bar-fill.low{background:#c0504d}.srcp-bar-fill.mid{background:#c98a2e}.srcp-bar-fill.full{background:#2e9e5b}
 .srcp-extent{font-size:11px;color:var(--text-muted)}
 .tr-header{font-size:14px;font-weight:600;color:var(--tag-color);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+/* Конкорданс: указатель корней (.rt-*) поверх общей раскладки .tag-results */
+.rt-hint{font-size:11.5px;color:var(--text-muted);line-height:1.5;padding:2px 2px 8px}
+.rt-search{width:100%;box-sizing:border-box;margin:2px 0 10px;padding:9px 11px;border:1px solid var(--border);border-radius:7px;
+  background:var(--bg-card);color:var(--text);font-family:inherit;font-size:13px;outline:none}
+.rt-search:focus{border-color:var(--accent)}
+.rt-row{display:flex;align-items:center;gap:10px;padding:9px 11px;margin-bottom:5px;border:1px solid var(--border-light);
+  border-radius:7px;background:var(--bg-card);cursor:pointer;transition:background .12s}
+.rt-row:hover{background:var(--bg-alt)}
+.rt-ar{font-family:'Noto Naskh Arabic','Amiri',serif;font-size:19px;direction:rtl;color:var(--text);min-width:64px}
+.rt-n{font-size:10.5px;font-weight:600;color:var(--accent);background:var(--accent-bg);border-radius:9px;padding:1px 6px;min-width:22px;text-align:center}
+.rt-gl{flex:1;min-width:0;font-size:11.5px;color:var(--text-sec);line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rt-back{display:inline-block;font-size:11.5px;color:var(--text-sec);cursor:pointer;padding:2px 0 8px}
+.rt-back:hover{color:var(--accent)}
+.rt-ar-big{font-family:'Noto Naskh Arabic','Amiri',serif;font-size:21px;direction:rtl;color:var(--text)}
+.rt-gl-head{font-size:12px;color:var(--text-sec);padding:0 2px 8px}
+.rt-chips{display:flex;flex-wrap:wrap;gap:5px;max-height:98px;overflow-y:auto;padding:2px 2px 10px;margin-bottom:4px;border-bottom:1px solid var(--border-light)}
+.rt-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border:1px solid var(--border);border-radius:13px;
+  background:var(--bg-card);cursor:pointer;font-family:'Noto Naskh Arabic','Amiri',serif;font-size:15px;direction:rtl;color:var(--text)}
+.rt-chip:hover{border-color:var(--accent)}
+.rt-chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.rt-chip-n{font-family:inherit;font-size:10px;font-weight:600;opacity:.75;direction:ltr}
+.rt-pill{font-family:'Noto Naskh Arabic','Amiri',serif;font-size:14px;direction:rtl}
+.rt-more{text-align:center;padding:11px;margin-top:4px;border:1px dashed var(--border);border-radius:7px;
+  color:var(--accent);cursor:pointer;font-size:12px}
+.rt-more:hover{background:var(--bg-alt)}
+.mcard-root{cursor:pointer;color:var(--accent);border-bottom:1px dotted var(--accent)}
 .tr-ayah{padding:10px 12px;margin-bottom:8px;border:1px solid var(--border-light);border-radius:7px;background:var(--bg-card);cursor:pointer;transition:background .12s}
 .tr-ayah:hover{background:var(--bg-alt)}
 .tr-ayah-ref{font-size:11px;font-weight:600;color:var(--accent);margin-bottom:4px}
@@ -598,14 +630,17 @@ body.immersive .immersive-exit:hover{opacity:1;background:rgba(0,0,0,.32)}
 
 /* Optional Arabic typefaces for the reading text (toggle in the toolbar) */
 [data-arfont="kufi"] .arabic-main,
+[data-arfont="kufi"] .wbw-ar-text,
 [data-arfont="kufi"] .ab-entry-text.rtl,
 [data-arfont="kufi"] .col-table td.rtl{font-family:'Reem Kufi','Noto Naskh Arabic','Amiri',serif}
 /* Мусхаф Мадани — почерк Усмана Таха (KFGQPC Uthmanic Hafs) */
 [data-arfont="hafs"] .arabic-main,
+[data-arfont="hafs"] .wbw-ar-text,
 [data-arfont="hafs"] .ab-entry-text.rtl,
 [data-arfont="hafs"] .col-table td.rtl{font-family:'KFGQPC Uthmanic','Amiri Quran','Noto Naskh Arabic',serif;line-height:2.1}
 /* Мусхафный насх (Amiri Quran) */
 [data-arfont="amiri"] .arabic-main,
+[data-arfont="amiri"] .wbw-ar-text,
 [data-arfont="amiri"] .ab-entry-text.rtl,
 [data-arfont="amiri"] .col-table td.rtl{font-family:'Amiri Quran','Noto Naskh Arabic',serif;line-height:2.1}
 /* QPC v1 — постраничные глифы печатного мусхафа Мадани (per-page fonts, lazy) */
@@ -657,21 +692,21 @@ body.mushaf-full .mushaf-page{max-width:none;border:none;border-radius:0;box-sha
 .mushaf-nav{display:flex;align-items:center;justify-content:center;gap:14px;padding:14px;flex:none}
 .m-pageno{font-size:12px;color:var(--text-sec)}
 @media(max-width:768px){.mushaf-page{padding:18px 14px}.mushaf-page .m-line{font-size:calc(22px*var(--rs-ar,1))}.m-surah-name,.m-basmala{font-size:21px}}
-/* Word-by-word layer: grid of words, each with its gloss underneath */
-.wbw{flex:1;min-height:0;overflow-y:auto;width:100%;max-width:900px;margin:0 auto;padding:6px calc(12px + var(--mar,0px)) 60px}
-.wbw-ayah{margin:6px 0 16px;padding-bottom:14px;border-bottom:1px solid var(--border)}
-.wbw-head{display:flex;align-items:center;gap:8px;margin:6px 2px 10px}
-.wbw-num{min-width:24px;height:24px;padding:0 7px;border-radius:12px;background:var(--accent);color:#fff;font-size:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center}
+/* Слой «Со словами»: сетка слов, под каждым — глосс. Живёт ВНУТРИ блока аята
+   в ленте (.ab-entry), поэтому своей прокрутки/полей у сетки нет. */
 .wbw-grid{display:flex;flex-wrap:wrap;direction:rtl;gap:6px 4px}
+/* «Режим без касания»: сетка остаётся показом, но на касание не отвечает */
+body.notouch .wbw-cell{pointer-events:none;cursor:default}
 .wbw-cell{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:5px 8px;border-radius:8px;border:1px solid transparent;transition:background .12s,border-color .12s}
 .wbw-cell:hover{background:var(--bg-alt);border-color:var(--border)}
 .wbw-cell:active{background:var(--accent);color:#fff}
 .wbw-ar{font-size:calc(30px*var(--rs-ar,1));line-height:1.7;color:var(--text)}
+.wbw-ar-text{font-family:'Noto Naskh Arabic','Amiri',serif}
 .wbw-gl{direction:ltr;font-size:calc(11.5px*var(--rs-ru,1));color:var(--text-sec);max-width:130px;text-align:center;line-height:1.3}
-.wbw-end{display:inline-flex;align-items:flex-start;font-size:calc(30px*var(--rs-ar,1));line-height:1.7;color:var(--accent);padding:5px 4px}
+.col-table td.arabic-main.wbw-col{text-align:right;line-height:1.4}
 .wbw-attr{max-width:900px;margin:0 auto;padding:10px 6px 40px;font-size:11px;color:var(--text-muted);line-height:1.5}
 .wbw-attr a{color:var(--text-sec)}
-@media(max-width:768px){.wbw-ar,.wbw-end{font-size:calc(25px*var(--rs-ar,1))}}
+@media(max-width:768px){.wbw-ar{font-size:calc(25px*var(--rs-ar,1))}}
 /* Morphology card (built from the corpus by word address) */
 .mcard-seg{display:flex;align-items:baseline;gap:8px;padding:6px 0;border-top:1px solid var(--border)}
 .mcard-seg:first-child{border-top:none}
@@ -737,6 +772,8 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
 .sp-result:hover{background:var(--bg-alt)}
 .sp-result:last-child{border-bottom:none}
 .sp-ref{font-size:11px;font-weight:600;color:var(--accent);margin-bottom:2px}
+.sp-jump{background:var(--bg-alt);border-bottom:1px solid var(--border)}
+.sp-jump .sp-ref{font-size:13px}
 .sp-src{font-size:10px;color:var(--text-muted);margin-bottom:4px}
 .sp-text{font-size:13px;line-height:1.6;color:var(--text-sec)}
 .sp-text.rtl{direction:rtl;text-align:right;font-family:'Noto Naskh Arabic','Amiri',serif;font-size:15px}
@@ -1031,7 +1068,7 @@ body.df-open{overflow:hidden}
   .df-scrim{height:78%}
   .df-nav{height:56px}
 }
-.ayah-block.media-cur,.wbw-ayah.media-cur{box-shadow:0 0 0 2px var(--accent);border-radius:8px}
+.ayah-block.media-cur{box-shadow:0 0 0 2px var(--accent);border-radius:8px}
 .ab-play-btn,.ab-rec-btn{background:var(--bg-card);border:1px solid var(--border);border-radius:4px;padding:1px 7px;cursor:pointer;font-size:11px;color:var(--text-muted)}
 .ab-play-btn:hover,.ab-rec-btn:hover{color:var(--accent);border-color:var(--accent)}
 .ab-rec-btn.has{color:var(--accent);border-color:var(--accent)}
@@ -1113,7 +1150,7 @@ body.df-open{overflow:hidden}
 
 <div class="search-panel hidden" id="searchPanel">
   <div class="sp-head">
-    <input class="sp-input" id="spInput" placeholder="Поиск по текстам тафсиров и переводов..." oninput="onSearchInput()" onkeydown="if(event.key==='Escape')toggleSearch()">
+    <input class="sp-input" id="spInput" placeholder="Слово, фраза или номер аята (2:255)" oninput="onSearchInput()" onkeydown="onSearchKey(event)">
     <button class="sp-close" onclick="toggleSearch()">✕</button>
   </div>
   <div class="sp-opts">
@@ -1127,7 +1164,13 @@ body.df-open{overflow:hidden}
 
 <div class="app-body">
   <aside class="sidebar collapsed" id="sidebar">
-    <div class="sb-head"><input placeholder="Поиск..." oninput="onSearch(this.value)"></div>
+    <div class="sb-head">
+      <input placeholder="Поиск..." oninput="onSearch(this.value)">
+      <div class="sb-jump" id="sbJump">
+        <input id="sbJumpInp" inputmode="numeric" autocomplete="off" placeholder="К аяту: 255 или 2:255" onkeydown="if(event.key==='Enter')sbJumpGo()">
+        <button class="sb-jump-go" onclick="sbJumpGo()" title="Перейти к аяту">➜</button>
+      </div>
+    </div>
     <div class="sb-tabs">
       <button class="sb-tab active" onclick="setSbTab('surahs')" id="sbTabSurahs">Суры</button>
       <button class="sb-tab" onclick="setSbTab('tags')" id="sbTabTags">🏷 Теги</button>
@@ -1216,6 +1259,10 @@ const SOURCES={
   // — пословный перевод (глосс) и морфология (грамматика) по сурам —
   glosses:         {baseUrl:"data",  pathTemplate:"{baseUrl}/wbw/words/{sura}.json"},
   morphology:      {baseUrl:"data",  pathTemplate:"{baseUrl}/wbw/morph/{sura}.json"},
+  // — конкорданс: корень → все его вхождения в Коране (build_concordance.py из
+  //   той же морфологии). ОДИН файл на весь Коран, а не чанки по сурам: карта
+  //   обратная, и вхождения одного корня раскиданы по всем 114 сурам —
+  concordance:     {baseUrl:"data",  pathTemplate:"{baseUrl}/wbw/roots.json"},
   // — «о переводе/тафсире» (паспорт источника) —
   about:           {baseUrl:"data",  pathTemplate:"{baseUrl}/about/{source}.md"},
   // — статичные классификации сур (Мекка/Медина, периоды, мукатта'ат, пары…) —
@@ -1290,7 +1337,7 @@ function scanDirOf(t){return t.imgdir||("img/"+t.id);}
 // первом обращении (▶ у аята или блок «🎧 Аудио» в панели 📚). Пока аудио не
 // трогали: ни байта кода, ни <audio>-элементов. media.js — ES-модуль, наши
 // let-глобалы (ST/CONFIG/qpcMeta) ему не видны — передаём контекст геттерами.
-const MEDIA_VER="16";   // поднять при правке media.js (сброс кеша браузера/CDN)
+const MEDIA_VER="17";   // поднять при правке media.js (сброс кеша браузера/CDN)
 let MEDIA=null;        // загруженный модуль (null = ещё не загружался)
 function mediaCtx(){
   return {
@@ -1439,6 +1486,13 @@ let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,apan
   layout:"h",
   enabled:{_arabic:true,kuliev:true},
   selectedTag:null,bookIntro:false,topicSel:null,
+  // Конкорданс, ОДНО поле на два экрана — чтобы сброс был одним токеном там же,
+  // где гасятся topicSel/selectedTag: null — выключен, "*" — указатель корней,
+  // "<корень>" — вхождения этого корня. Спутники (ниже) живут только при нём.
+  rootView:null,
+  rootQ:"",          // поиск по указателю корней (арабский корень или русский глосс)
+  rootForm:null,     // фильтр вхождений по конкретной словоформе (чип), null — все
+  rootLimit:20,      // сколько вхождений показано («Показать ещё» добавляет по столько же)
   theme:"green",
   skin:"none",       // скин чтения: none|parchment|sepia|dark (⚙ Вид → Оформление)
   ruFont:"std",      // русский шрифт текста ленты: std|old (Old Standard TT)
@@ -1454,7 +1508,10 @@ let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,apan
   scrollToAyah:null, // pending ayah to scroll to after a jump (ayah mode)
   arFont:"qpc1",     // Arabic typeface: "naskh" | "hafs" | "amiri" | "qpc1" | "qpc4t" | "kufi"
   pageMode:false,    // mushaf page view (faithful page-by-page QPC layout)
-  wbwMode:false,     // word-by-word view: grid of words + per-word gloss + grammar card
+  // Слой «Со словами» (📚 Оригинал): огласованная редакция показывается СЕТКОЙ СЛОВ
+  // с пословным глоссом, переводы и тафсиры остаются под ней. Бывший отдельный режим
+  // 🔤 (ST.wbwMode) — слой его заменил: разбор нужен как раз при чтении тафсира.
+  wbwLayer:false,
   noTouch:false,     // «Режим без касания»: чтение/листание без касания текста (кнопочная панель)
   swipeNav:true,     // свайп влево/вправо листает суру (можно выключить в ⚙ Вид)
   ntH:60,            // высота нижней панели режима без касания (px)
@@ -1507,7 +1564,7 @@ function ss(k,v){try{localStorage.setItem("tl_"+k,JSON.stringify(v));if(SYNCED_K
 function curTopAyah(){
   const area=document.getElementById("readingArea");
   if(area){const top=area.getBoundingClientRect().top;
-    for(const b of area.querySelectorAll(".ayah-block,.wbw-ayah")){
+    for(const b of area.querySelectorAll(".ayah-block")){
       if(b.getBoundingClientRect().bottom>top+4)return +b.dataset.aid||1;
     }
   }
@@ -1518,7 +1575,7 @@ function curTopAyah(){
 const surahPos={};
 function saveLastPos(){
   if(ST.homeMode||ST.selectedTag||ST.scanSource||ST.bookIntro||ST.srcMode||ST.hifzMode||ST.bmView)return;  // Главная/теги/скан/введение/источник/хифз/закладки — не позиция чтения
-  const mode=ST.pageMode?"page":(ST.wbwMode?"words":"ayat");
+  const mode=ST.pageMode?"page":"ayat";   // «words» больше не режим, а слой (ST.wbwLayer) — в позицию чтения не входит
   const ayah=curTopAyah();
   ss("lastPos",{surah:ST.surah,ayah,page:ST.mushafPage||1,mode});
   // ─── ХУК #1: питание модуля прогресса из ридера (аддитивно, обратимо) ───
@@ -1548,8 +1605,8 @@ function restoreLastPos(){
   const lp=gs("lastPos",null);
   if(!lp||!lp.surah||!SURAHS.find(s=>s.id===lp.surah))return false;
   ST.surah=lp.surah;
-  if(lp.mode==="page"){ST.pageMode=true;ST.wbwMode=false;ST.mushafPage=lp.page||1;}
-  else{ST.pageMode=false;ST.wbwMode=(lp.mode==="words");if(lp.ayah)ST.scrollToAyah=lp.ayah;}
+  if(lp.mode==="page"){ST.pageMode=true;ST.mushafPage=lp.page||1;}
+  else{ST.pageMode=false;if(lp.ayah)ST.scrollToAyah=lp.ayah;}  // старое lp.mode==="words" → просто лента: слой живёт своей настройкой
   return true;
 }
 // --- Недавнее чтение (для Главной): список последних мест, MRU, по одному на суру ---
@@ -2950,7 +3007,7 @@ async function spdStart(){
   // (togglePageMode асинхронный: ST.pageMode встаёт после await loadQpcMeta) —
   // иначе страж пилюли увидит «не мусхаф» и сбросит только что начатый замер.
   if(!ST.pageMode){
-    ST.homeMode=false;ST.srcMode=false;ST.bookIntro=false;ST.wbwMode=false;ss("wbwMode",false);
+    ST.homeMode=false;ST.srcMode=false;ST.bookIntro=false;
     await togglePageMode();
   }
   if((ST.mushafPage||1)!==p)await gotoPage(p);
@@ -3654,6 +3711,17 @@ function loadWbwMorph(surah){
   return fetch(resolveUrl("morphology",{sura:surah})).then(r=>r.ok?r.json():null)
     .then(d=>wbwMorphCache[surah]=d).catch(()=>wbwMorphCache[surah]=null);
 }
+// Конкорданс (data/wbw/roots.json, build_concordance.py): {корень:{n,g[],f:[[форма,"адреса"]]}}.
+// Один файл на весь Коран (~1 МБ, под gzip втрое меньше — на фоне индексов поиска
+// по 5–16 МБ это мелочь), поэтому грузится ЛЕНИВО и только при первом обращении к
+// корням, а не на старте: большинству читателей он не нужен ни разу.
+let ROOTS=null,rootsPromise=null;
+function loadRoots(){
+  if(ROOTS)return Promise.resolve(ROOTS);
+  if(!rootsPromise)rootsPromise=fetch(resolveUrl("concordance",{})).then(r=>r.ok?r.json():null)
+    .then(d=>ROOTS=d).catch(()=>null);
+  return rootsPromise;
+}
 // Part-of-speech labels (Russian). Финальная терминология (выверена Исмаилом).
 // Неизвестный тег показывается как есть.
 const POS_RU={
@@ -3743,7 +3811,8 @@ function renderMorphCard(segs,gloss){
     if(s.root||s.lemma){
       const parts=[];
       if(s.lemma)parts.push(`лемма <b>${esc(s.lemma)}</b>`);
-      if(s.root)parts.push(`корень <b>${esc(s.root)}</b>`);
+      // корень — вход в конкорданс: тап → все места Корана с этим корнем
+      if(s.root)parts.push(`корень <b class="mcard-root" onclick="selectRoot('${escAttr(s.root)}')" title="Все места, где встречается корень ${escAttr(s.root)}">${esc(s.root)} ›</b>`);
       lex=`<div class="mcard-lex">${parts.join(" · ")}</div>`;
     }
     h+=`<div class="mcard-seg">
@@ -4112,7 +4181,7 @@ function renderBookmarkPanel(el){
 // Экран закладок в ГЛАВНОМ окне (правило системы: панель — навигатор,
 // главное окно — контент; симметрично тег-результатам).
 function openBookmarksScreen(){
-  ST.bmView=true;ST.selectedTag=null;ST.topicSel=null;ST.homeMode=false;ST.scanSource=null;ST.srcMode=false;ST.bookIntro=false;ST.hifzMode=false;
+  ST.bmView=true;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.homeMode=false;ST.scanSource=null;ST.srcMode=false;ST.bookIntro=false;ST.hifzMode=false;
   if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   render();
 }
@@ -4157,7 +4226,7 @@ function renderCB(){
 
   if(ST.selectedTag){
     setCtx(`🏷 ${esc(ST.selectedTag)}`);
-    bar.innerHTML=`<div class="cb-right"><button class="btn-s" onclick="ST.selectedTag=null;ST.topicSel=null;render();">← Суры</button><button class="btn-s" onclick="ST.sbTab='tags';document.getElementById('sbTabSurahs').classList.remove('active');document.getElementById('sbTabTags').classList.add('active');ST.sidebarOpen=true;document.getElementById('sidebar').classList.remove('collapsed');renderSB();">🏷 Теги</button></div>`;
+    bar.innerHTML=`<div class="cb-right"><button class="btn-s" onclick="ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;render();">← Суры</button><button class="btn-s" onclick="ST.sbTab='tags';document.getElementById('sbTabSurahs').classList.remove('active');document.getElementById('sbTabTags').classList.add('active');ST.sidebarOpen=true;document.getElementById('sidebar').classList.remove('collapsed');renderSB();">🏷 Теги</button></div>`;
     return;
   }
   if(!su){setCtx("");if(bar)bar.innerHTML="";return;}
@@ -4167,16 +4236,16 @@ function renderCB(){
     bar.innerHTML=`<div class="cb-right"><span class="t-badge">📖 ${esc(ts?ts.name:'Скан')}</span><button class="btn-s" onclick="openScan('${ST.scanSource}')" title="Вернуться к тексту">✕ К тексту</button></div>`;
     return;
   }
-  // Переключатель 6 режимов: иконка + подпись; на узких экранах подпись
+  // Переключатель 5 режимов: иконка + подпись; на узких экранах подпись
   // прячется CSS-ом (.seg-modes .ml) — остаются одни иконки, всё помещается.
   // «Колонки/Список» переехал в ⚙ Вид → «Раскладка переводов» (чтобы не
-  // путался с режимами).
-  const ayatOn=!ST.homeMode&&!ST.hifzMode&&!ST.pageMode&&!ST.wbwMode&&!ST.srcMode;
+  // путался с режимами). Бывший 🔤 «Слова» — теперь СЛОЙ (📚 → «Со словами»):
+  // разбор слова нужен при чтении тафсира, а не вместо него.
+  const ayatOn=!ST.homeMode&&!ST.hifzMode&&!ST.pageMode&&!ST.srcMode;
   const mBtn=(on,m,icon,lab,title)=>`<button class="${on?'on':''}" onclick="setMode('${m}')" title="${title}">${icon}${lab?`<span class="ml">${lab}</span>`:""}</button>`;
   const modeSeg=`<span class="seg seg-sm seg-modes">`
     +mBtn(ST.homeMode,"home","🏠","","Главная")
     +mBtn(ayatOn,"ayat","📖","Аяты","Аяты + перевод")
-    +(ST.noTouch?"":mBtn(!ST.homeMode&&!ST.hifzMode&&!ST.pageMode&&ST.wbwMode&&!ST.srcMode,"words","🔤","Слова","Пословный перевод + грамматика"))
     +mBtn(!ST.homeMode&&!ST.hifzMode&&ST.pageMode,"page","📕","Мусхаф","Постраничный мусхаф")
     +mBtn(!ST.homeMode&&!ST.hifzMode&&ST.srcMode,"source","🗂","Источник","Чтение по покрытию одного источника")
     +mBtn(ST.hifzMode,"hifz","🧠","Хифз","Проверка заучивания: карта памяти и тренажёр")
@@ -4218,10 +4287,10 @@ function renderCenterBody(){
   if(ST.scanSource)return renderScanReader(el);
   if(ST.srcMode)return renderSourceMode(el);
   if(ST.bmView)return renderBookmarksScreen(el);
+  if(ST.rootView)return rootScreen(el);
   if(ST.topicSel)return renderTopicResults(el);
   if(ST.selectedTag)return renderTagResults(el);
   if(ST.pageMode)return renderMushafPage(el);
-  if(ST.wbwMode)return renderWbw(el);
   return renderReading(el);
 }
 
@@ -4238,7 +4307,8 @@ function renderHome(el){
   // — Продолжить чтение (последняя позиция) —
   if(lpOk){
     const su=SURAHS.find(s=>s.id===lp.surah);
-    const sub=lp.mode==="page"?`мусхаф · стр. ${lp.page||1}`:(lp.mode==="words"?`пословно · аят ${lp.ayah||1}`:`аят ${lp.ayah||1}`);
+    // старые записи с mode:"words" открываются лентой (режима больше нет) — и подпись это отражает
+    const sub=lp.mode==="page"?`мусхаф · стр. ${lp.page||1}`:`аят ${lp.ayah||1}`;
     html+=`<div class="home-cont" onclick="homeResume()" title="Вернуться к чтению">
       <div class="hc-lbl">▶ Продолжить чтение</div>
       <div class="hc-main">${esc(su.ru)} <span class="ar">${esc(su.name)}</span></div>
@@ -4294,6 +4364,11 @@ function renderHome(el){
     <span class="hnl-ic">📑</span>
     <span class="hnl-main">Коранические темы <span class="hnl-sub">— указатель по темам</span></span>
     <span class="hnl-arrow">›</span></div></div>`;
+  // — Корни слов (конкорданс) —
+  html+=`<div class="home-sec"><div class="home-nav-link" onclick="openRoots()" title="Указатель корней: все места, где встречается корень">
+    <span class="hnl-ic">🌿</span>
+    <span class="hnl-main">Корни слов <span class="hnl-sub">— где ещё встречается это слово</span></span>
+    <span class="hnl-arrow">›</span></div></div>`;
   // — Таблица Корана (суры/джузы, порядки и фильтры структуры мусхафа) —
   html+=`<div id="qtBox">${quranTableHTML()}</div>`;
   html+=`</div></div>`;
@@ -4348,6 +4423,12 @@ function buildAyahBody(aid,enabled,loaded){
   const pack=activePack();const qpcData=loaded["__qpc"];
   for(const qt of qts){
     const lbl=multiQ?`<div class="ab-entry-label">${esc(qt.name)} <span class="lbl-ar">${qt.nameAr||''}</span></div>`:"";
+    // Слой «Со словами»: огласованную редакцию показываем сеткой слов с глоссом.
+    // Данных нет (сура вне пословного слоя) → молча падаем в обычный рендер ниже.
+    if(ST.wbwLayer&&qt.id==="_arabic"){
+      const grid=wbwGridHTML(ST.surah,aid,loaded);
+      if(grid){html+=`<div class="ab-entry">${lbl}${grid}</div>`;continue;}
+    }
     // Печатный мусхаф (QPC): главный огласованный текст рисуем глифами страницы
     if(pack&&qt.id==="_arabic"&&qpcData&&qpcData[String(aid)]){
       html+=`<div class="ab-entry">${lbl}${renderPackAyah(pack,qpcData[String(aid)])}</div>`;
@@ -4588,7 +4669,7 @@ function srcCoversSurah(s){return ST.srcMode&&ST.srcSel&&!!covPairs(ST.srcSel,s)
 // Выбрать источник для чтения (вход в чтение по покрытию).
 function setSrcSel(id){
   if(!COV.sources[id])return;
-  ST.srcMode=true;ST.srcSel=id;ST.pageMode=false;ST.wbwMode=false;ST.selectedTag=null;ST.topicSel=null;ST.bookIntro=false;
+  ST.srcMode=true;ST.srcSel=id;ST.pageMode=false;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.bookIntro=false;
   ST.expandedGaps={};
   if(!covPairs(id,ST.surah)){                       // текущая сура не покрыта → к первому покрытому аяту
     const nx=covNextAyah(id,0,0,1);if(nx){ST.surah=nx.surah;ST.scrollToAyah=nx.ayah;pushSurahHash&&pushSurahHash(ST.surah);}
@@ -4651,6 +4732,7 @@ async function renderSourceMode(el){
   await Promise.all([src,...quranTexts].map(async t=>{loaded[t.id]=await loadChunk(t.id,ST.surah);}));
   if(activePack())loaded["__qpc"]=await loadPackSurah(ST.arFont,ST.surah);
   if(tajweedActive())loaded["__tj"]=await loadTajweed(ST.surah); // спаны раскраски таджвида
+  await loadWbwLayer(ST.surah,loaded);          // слой «Со словами»: глоссы + (морфология | глифы)
 
   // компактная сворачиваемая панель режима источника (по умолчанию — одна строка)
   const su=SURAHS.find(s=>s.id===ST.surah);
@@ -4965,6 +5047,7 @@ async function renderReading(el){
   // Mushaf pack glyphs (QPC v1 …) for the main Arabic line, if a pack font is active
   if(activePack())loaded["__qpc"]=await loadPackSurah(ST.arFont,ST.surah);
   if(tajweedActive())loaded["__tj"]=await loadTajweed(ST.surah); // спаны раскраски таджвида
+  await loadWbwLayer(ST.surah,loaded);          // слой «Со словами»: глоссы + (морфология | глифы)
 
   const area=document.getElementById("readingArea");
   if(!area)return;
@@ -4996,6 +5079,7 @@ async function renderReading(el){
         <div class="ab-tag-dots">${hn?'<span class="ab-note-dot"></span>':''}</div>
       </div><div class="ab-body" data-aid="${aid}" style="min-height:48px"></div></div>`;
     }
+    if(ST.wbwLayer)html+=wbwAttrHTML();          // лицензии глосса/разбора — там же, где глосс
     area.innerHTML=html;
     setupHydration(area,enabled,loaded);
     // a pending jump (📑 Переход) wins over scroll-anchor preservation
@@ -5027,7 +5111,10 @@ async function renderReading(el){
       for(const col of cols){
         if(col.isArabic){
           const pk=activePack();const qd=loaded["__qpc"];
-          if(pk&&col.id==="_arabic"&&qd&&qd[String(aid)]){
+          const grid=ST.wbwLayer&&col.id==="_arabic"?wbwGridHTML(ST.surah,aid,loaded):"";
+          if(grid){
+            html+=`<td class="arabic-main wbw-col">${grid}</td>`;
+          }else if(pk&&col.id==="_arabic"&&qd&&qd[String(aid)]){
             html+=`<td class="arabic-main">${renderPackAyah(pk,qd[String(aid)])}</td>`;
           }else{
             const arText=col.data?.[String(aid)]||"";
@@ -5050,6 +5137,7 @@ async function renderReading(el){
       html+=`</tr>`;
     }
     html+=`</tbody></table></div>`;
+    if(ST.wbwLayer)html+=wbwAttrHTML();          // лицензии глосса/разбора — там же, где глосс
     area.innerHTML=html;
     // Вернуть скролл: переход (📑) важнее, иначе — на запомненный верхний аят.
     // Точное позиционирование под липкую шапку (scrollIntoView её не учитывает).
@@ -5153,7 +5241,7 @@ function openTopics(){
 }
 function selectTopic(id){
   ST.topicSel=id;
-  ST.selectedTag=null;ST.bookIntro=false;ST.homeMode=false;ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.bmView=false;
+  ST.selectedTag=null;ST.rootView=null;ST.bookIntro=false;ST.homeMode=false;ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.bmView=false;
   if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   render();
 }
@@ -5207,6 +5295,114 @@ function topicToMyTags(id){
     alert(`Тема «${node.name}» (${ayahs.length} аят.) добавлена в ваши теги → «${UKAZ_ROOT}».`);
   }).catch(()=>alert("Не удалось загрузить указатель."));
 }
+
+// ============================================================
+// КОНКОРДАНС: указатель корней + вхождения корня (data/wbw/roots.json)
+// ============================================================
+// Два экрана на одном поле ST.rootView: "*" — указатель (все 1651 корень с
+// поиском), "<корень>" — все его вхождения. Три входа: ссылка с Главной,
+// тап по корню в грам-карточке слова, и «← Все корни» с экрана вхождений.
+// Слова без корня (частицы, ~35%) в индекс не входят — корня нет и в корпусе.
+function openRoots(){selectRootView("*");}
+function selectRoot(root){selectRootView(root);}
+function selectRootView(v){
+  ST.rootView=v;ST.rootForm=null;ST.rootLimit=20;
+  if(v==="*")ST.rootQ="";                      // указатель открывается чистым, без прошлого фильтра
+  ST.topicSel=null;ST.selectedTag=null;ST.bookIntro=false;ST.homeMode=false;
+  ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.bmView=false;
+  hideWordCard();                              // экран открывается ИЗ карточки — она бы висела поверх
+  if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
+  render();
+}
+// Переход на аят из списка вхождений: экран конкорданса гасим (иначе renderCenter
+// проверит rootView раньше ленты и мы никуда не уйдём — см. порядок в renderCenterBody).
+function goRootAyah(s,a){ST.rootView=null;goAyah(s,a);flashAyah(a);}
+function rootScreen(el){return ST.rootView==="*"?renderRootsIndex(el):renderRootOccurrences(el);}
+
+// — Экран-указатель: 1651 корень, поиск по арабскому корню ИЛИ по русскому глоссу —
+async function renderRootsIndex(el){
+  const R=await loadRoots();
+  if(!R){el.innerHTML='<div class="tag-results"><div style="padding:20px;color:var(--text-muted)">Не удалось загрузить указатель корней.</div></div>';return;}
+  if(ST.rootView!=="*")return;                 // пока грузили — успели уйти на другой экран
+  el.innerHTML=`<div class="tag-results">
+    <div class="tr-header">🌿 Корни слов Корана — ${Object.keys(R).length}</div>
+    <div class="rt-hint">Тап по корню → все места, где он встречается. Искать можно и по-русски
+      («милост»), и арабским корнем («رحم») — подпись у корня даёт черновой пословный глосс.</div>
+    <input class="rt-search" id="rtSearch" placeholder="Поиск корня: милост / رحم" value="${escAttr(ST.rootQ)}" oninput="rootsFilter(this.value)">
+    <div id="rootsList"></div></div>`;
+  rootsFilter(ST.rootQ);
+}
+// Список перерисовывается ОТДЕЛЬНО от экрана: иначе innerHTML родителя на каждый
+// ввод отбирал бы фокус у поля поиска на первом же символе.
+function rootsFilter(q){
+  ST.rootQ=q;
+  const box=document.getElementById("rootsList");if(!box||!ROOTS)return;
+  const s=String(q||"").trim().toLowerCase();
+  const hits=[];
+  for(const r in ROOTS){
+    if(s&&!(r.includes(s)||(ROOTS[r].g||[]).some(g=>g.toLowerCase().includes(s))))continue;
+    hits.push(r);
+  }
+  const LIM=250;                               // 1651 строки разом — лишняя работа телефону
+  const shown=hits.slice(0,LIM);
+  box.innerHTML=(s?`<div class="rt-hint">Найдено корней: ${hits.length}</div>`:"")
+    +shown.map(r=>{
+      const v=ROOTS[r];
+      return `<div class="rt-row" onclick="selectRoot('${escAttr(r)}')">
+        <span class="rt-ar">${esc(r)}</span>
+        <span class="rt-n" title="вхождений в Коране">${v.n}</span>
+        <span class="rt-gl">${esc((v.g||[]).join(" · "))}</span></div>`;
+    }).join("")
+    +(hits.length>LIM?`<div class="rt-hint">Показаны первые ${LIM} из ${hits.length} — уточните поиск.</div>`:"")
+    +(hits.length?"":'<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:12px">Ничего не найдено</div>');
+}
+
+// — Экран вхождений корня: формы-фильтры + аяты порциями —
+async function renderRootOccurrences(el){
+  const R=await loadRoots();
+  const root=ST.rootView;
+  if(!R||!R[root]){el.innerHTML='<div class="tag-results"><div style="padding:20px;color:var(--text-muted)">Нет данных по этому корню.</div></div>';return;}
+  if(!root||root==="*")return;                 // ушли с экрана, пока грузился индекс
+  const v=R[root];
+  // адреса выбранной формы либо всех форм; порядок мусхафа внутри формы уже задан сборкой
+  const picked=ST.rootForm?v.f.filter(f=>f[0]===ST.rootForm):v.f;
+  const locs=[];
+  for(const[form,addr]of picked)for(const l of addr.split(" "))locs.push({form,loc:l});
+  if(!ST.rootForm)locs.sort((a,b)=>{const x=a.loc.split(":").map(Number),y=b.loc.split(":").map(Number);return x[0]-y[0]||x[1]-y[1]||x[2]-y[2];});
+  const page=locs.slice(0,ST.rootLimit);
+  // текст тянем ТОЛЬКО для показанной порции: иначе корень أله (2851 вхождение)
+  // утащил бы чанки всех 114 сур ради двух десятков видимых карточек
+  const surahs=[...new Set(page.map(x=>+x.loc.split(":")[0]))];
+  const firstTrans=CONFIG.tafsirs.find(t=>t.lang!=="ar"&&ST.enabled[t.id])||CONFIG.tafsirs.find(t=>t.lang!=="ar");
+  await Promise.all(surahs.flatMap(s=>{const ps=[loadChunk("_arabic",s).catch(()=>{})];if(firstTrans)ps.push(loadChunk(firstTrans.id,s).catch(()=>{}));return ps;}));
+  if(ST.rootView!==root)return;
+  const chips=v.f.map(([form,addr])=>{
+    const n=addr.split(" ").length,on=ST.rootForm===form;
+    return `<span class="rt-chip ${on?'on':''}" onclick="rootSetForm(${on?'null':`'${escAttr(form)}'`})">${esc(form)}<span class="rt-chip-n">${n}</span></span>`;
+  }).join("");
+  let html=`<div class="tag-results">
+    <div class="rt-back" onclick="openRoots()">‹ Все корни</div>
+    <div class="tr-header">🌿 Корень <span class="rt-ar-big">${esc(root)}</span> — ${v.n} вхожд.${ST.rootForm?` · форма ${esc(ST.rootForm)}: ${locs.length}`:""}</div>
+    ${(v.g||[]).length?`<div class="rt-gl-head">${esc(v.g.join(" · "))}</div>`:""}
+    <div class="rt-chips"><span class="rt-chip ${ST.rootForm?'':'on'}" onclick="rootSetForm(null)">все формы<span class="rt-chip-n">${v.n}</span></span>${chips}</div>`;
+  for(const{form,loc}of page){
+    const[s,a]=loc.split(":");
+    const su=SURAHS.find(x=>x.id==+s);
+    const arText=getArabicFromCache(+s,+a);
+    const trText=getAnyTranslation(+s,+a);
+    html+=`<div class="tr-ayah" onclick="goRootAyah(${+s},${+a})">
+      <div class="tr-ayah-ref">${su?esc(su.ru):s} : ${a}<span class="tr-origins"><span class="t-pill rt-pill">${esc(form)}</span></span></div>
+      ${arText?`<div class="tr-ayah-ar">${arText}</div>`:''}
+      ${trText?`<div class="tr-ayah-tr">${trText}</div>`:''}
+    </div>`;
+  }
+  if(!page.length)html+=`<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:12px">Нет вхождений этой формы — снимите фильтр.</div>`;
+  if(locs.length>page.length)html+=`<div class="rt-more" onclick="rootMore()">Показать ещё (${locs.length-page.length})</div>`;
+  el.innerHTML=html+`</div>`;
+}
+function rootSetForm(f){ST.rootForm=f;ST.rootLimit=20;render();}
+function rootMore(){ST.rootLimit+=20;render();}
+
 async function renderTagResults(el){
   const matches=ayahsForTag(ST.selectedTag);
   if(!matches.length){
@@ -5233,7 +5429,7 @@ async function renderTagResults(el){
       const direct=o===sel.split("/").pop();       // помечен самим выбранным тегом напрямую
       return `<span class="t-pill" title="${direct?'Помечен этим тегом напрямую':'По подтегу «'+esc(o)+'»'}">${esc(o)}</span>`;
     }).join("");
-    html+=`<div class="tr-ayah" onclick="ST.selectedTag=null;ST.topicSel=null;goSurah(${s})">
+    html+=`<div class="tr-ayah" onclick="ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;goSurah(${s})">
       <div class="tr-ayah-ref">${su?su.ru:s} : ${a}<span class="tr-origins">${pills}</span></div>
       ${arText?`<div class="tr-ayah-ar">${arText}</div>`:''}
       ${trText?`<div class="tr-ayah-tr">${trText}</div>`:''}
@@ -5317,7 +5513,7 @@ function imgDir(t){return resolveUrl("mushaf_scans",{dir:scanDirOf(t),file:""});
 // Открыть/закрыть скан-читалку (взаимоисключающе — один скан за раз).
 function openScan(id){
   ST.scanSource=(ST.scanSource===id)?null:id;
-  if(ST.scanSource){ST.selectedTag=null;ST.topicSel=null;ST.bookIntro=false;}
+  if(ST.scanSource){ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.bookIntro=false;}
   renderRP();renderCB();renderCenter();renderBottomNav();
 }
 function scanTab(btn,view){
@@ -5363,7 +5559,7 @@ function booksWithMuqaddima(){
   return getEnabledList().filter(t=>t.id!=="_notes"&&t.kind!=="image"&&t.muqaddima);
 }
 function openBookIntro(){
-  ST.bookIntro=true;ST.selectedTag=null;ST.topicSel=null;ST.scanSource=null;ST.hifzMode=false;ST.bmView=false;ST.homeMode=false;
+  ST.bookIntro=true;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.scanSource=null;ST.hifzMode=false;ST.bmView=false;ST.homeMode=false;
   if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   render();
 }
@@ -5432,9 +5628,16 @@ function quranBlockHTML(){
   const variants=[["_arabic","С огласовками"],["_arabic_clean","Без огласовок"],["_arabic_rasm","Без точек (расм)"]];
   const rows=variants.map(([id,name])=>`<label class="vp-check"><input type="checkbox" ${ST.enabled[id]?"checked":""} onchange="toggleEn('${id}')"> ${name}</label>`).join("");
   const tj=`<label class="vp-check" style="margin-top:4px"><input type="checkbox" ${ST.tajweed?"checked":""} onchange="toggleTajweed()"> Цвета таджвида <a href="#" class="tj-legend-link" onclick="showTjLegend(this);return false">легенда</a></label>`;
+  // «Со словами» — слой над той же поверхностью, как и таджвид (а не редакция:
+  // редакции отвечают на вопрос «какой текст», слой — «как он разложен»).
+  const wl=`<label class="vp-check"><input type="checkbox" ${ST.wbwLayer?"checked":""} onchange="toggleWbwLayer()"> Со словами (пословный разбор)</label>`;
+  const wlNote=ST.wbwLayer&&tajweedActive()
+    ? `<div class="vp-note">Со словами + текстовое начертание: цвета таджвида на словах не показываются — разметка правил привязана к сплошному тексту. Нужны и слова, и цвета — включите печатное начертание (⚙ Вид), там цвет в самом шрифте.</div>`
+    : "";
   return `<div class="rp-quran"><div class="rp-sec-head">🕋 Оригинал (арабский текст)</div>
-    <div class="rp-q-body">${rows}${tj}
-    <div class="vp-note">Правила чтения цветом — в любом начертании: в печатном это цветное издание 1441 г.х., в остальных — раскраска текста. Действует для редакции «С огласовками»; касание окрашенной буквы — название правила.</div></div></div>`;
+    <div class="rp-q-body">${rows}${tj}${wl}
+    <div class="vp-note">Правила чтения цветом — в любом начертании: в печатном это цветное издание 1441 г.х., в остальных — раскраска текста. Действует для редакции «С огласовками»; касание окрашенной буквы — название правила.</div>
+    <div class="vp-note">«Со словами» разбивает редакцию «С огласовками» на слова с пословным переводом; тап по слову — грамматика и корень. Переводы и тафсиры остаются под словами.</div>${wlNote}</div></div>`;
 }
 // Тело ОТДЕЛЬНОЙ панели 🎧 (renderAudioPanel): чтец + наборы + запуск + визряд.
 // Чтецы — из config.json (audio.reciters). Плеер (media.js) — лениво при первом ▶.
@@ -5709,13 +5912,22 @@ async function doSearch(){
   const resultsEl=document.getElementById("spResults");
   const countEl=document.getElementById("spCount");
 
+  // Ввод похож на ссылку на аят («2:255», либо число = аят текущей суры) → первой
+  // строкой предлагаем прямой переход. Поиск по текстам при этом работает как был:
+  // строка перехода просто встаёт НАД результатами.
+  const ref=parseAyahRef(raw);
+  const jumpHTML=ref?`<div class="sp-result sp-jump" onclick="goSearchAyah(${ref.surah},${ref.ayah})">
+      <div class="sp-ref">➜ Перейти к аяту ${ref.surah}:${ref.ayah}</div>
+      <div class="sp-src">${esc(ref.su.ru)} · аят ${ref.ayah} из ${ref.su.n}</div>
+    </div>`:"";
+
   if(query.length<2){
-    resultsEl.innerHTML=`<div class="sp-status">Введите минимум 2 символа</div>`;
+    resultsEl.innerHTML=jumpHTML+`<div class="sp-status">${ref?"Поиск по текстам — от 2 символов":"Введите минимум 2 символа"}</div>`;
     countEl.classList.add("hidden");
     return;
   }
 
-  resultsEl.innerHTML=`<div class="sp-status">Поиск...</div>`;
+  resultsEl.innerHTML=jumpHTML+`<div class="sp-status">Поиск...</div>`;
 
   const searchAll=document.getElementById("spAllTafsirs")?.checked;
 
@@ -5795,12 +6007,12 @@ async function doSearch(){
   countEl.classList.remove("hidden");
 
   if(!results.length){
-    resultsEl.innerHTML=`<div class="sp-status">Ничего не найдено</div>`;
+    resultsEl.innerHTML=jumpHTML+`<div class="sp-status">Ничего не найдено</div>`;
     return;
   }
 
   // Render results with highlighting
-  resultsEl.innerHTML=results.map(r=>{
+  resultsEl.innerHTML=jumpHTML+results.map(r=>{
     const su=SURAHS.find(s=>s.id===r.surah);
     const suName=su?su.ru:`Сура ${r.surah}`;
     const isAr=r.lang==="ar";
@@ -5862,10 +6074,25 @@ function highlightMatch(text,query){
   return parts.join("");
 }
 
+// Переход из строки поиска по НОМЕРУ аята (не по найденному тексту): закрываем
+// панель и отдаём общему goAyahRef — он же знает про мусхаф.
+function goSearchAyah(surah,ayah){
+  if(searchOpen)toggleSearch();
+  goAyahRef({surah,ayah,su:SURAHS.find(x=>x.id===surah)});
+}
+// Enter в строке поиска: если введена ссылка на аят — сразу переходим (не дожидаясь
+// debounce и тапа по строке). Иначе — обычный поиск без задержки.
+function onSearchKey(e){
+  if(e.key==="Escape"){toggleSearch();return;}
+  if(e.key!=="Enter")return;
+  const ref=parseAyahRef(e.target.value);
+  if(ref){goSearchAyah(ref.surah,ref.ayah);return;}
+  clearTimeout(searchTimer);doSearch();
+}
 function goSearchResult(surah,ayah){
   if(searchOpen)toggleSearch();
   ST.surah=surah;
-  ST.selectedTag=null;ST.topicSel=null;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;
+  ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;
   // ST.scrollToAyah обязателен: renderCenter асинхронный и при ТОЙ ЖЕ суре сам
   // возвращает скролл на прежний верхний аят (якорь) — без этого переход из
   // поиска отбрасывало назад, на аят, с которого поиск открывали.
@@ -5929,7 +6156,7 @@ function pushHomeHash(){const h="#home";if(location.hash!==h)history.pushState({
 function applyHash(initial){
   const raw=decodeURIComponent((location.hash||"").replace(/^#/,"")).trim();
   if(raw==="home"){                                  // явный «#home» (например, «назад» на Главную)
-    ST.homeMode=true;ST.selectedTag=null;ST.topicSel=null;ST.hifzMode=false;ST.bmView=false;if(!initial)render();return true;
+    ST.homeMode=true;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.hifzMode=false;ST.bmView=false;if(!initial)render();return true;
   }
   const m=raw.match(/^(\d+)(?::(\d+))?$/);
   if(!m)return false;
@@ -5940,7 +6167,7 @@ function applyHash(initial){
   const stateAyah=(st&&st.surah===sid&&st.ayah)?st.ayah:null;     // позиция, запомненная при скролле → «назад»
   pendingAyah=hashAyah;
   const changing=(ST.surah!==sid||ST.selectedTag||ST.homeMode||ST.hifzMode||ST.bmView);
-  if(changing){ST.surah=sid;ST.selectedTag=null;ST.topicSel=null;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;}
+  if(changing){ST.surah=sid;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;}
   if(!hashAyah&&stateAyah&&(changing||initial))ST.scrollToAyah=stateAyah;  // встанем на аят при рендере (без анимации)
   if(hashAyah&&changing&&!initial)ST.scrollToAyah=hashAyah;       // иначе якорь той же суры вернёт старый аят
   if(changing&&!initial)render();
@@ -6045,9 +6272,21 @@ const SB_TABS=["surahs","tags","topics","bookmarks","view"];
 function setSbTab(t){
   ST.sbTab=t;
   for(const x of SB_TABS){const b=document.getElementById("sbTab"+x[0].toUpperCase()+x.slice(1));if(b)b.classList.toggle("active",t===x);}
+  const jb=document.getElementById("sbJump");if(jb)jb.classList.toggle("hidden",t!=="surahs"); // «к аяту» — только на вкладке Суры
   renderSB();renderCB();                                  // renderCB — подсветка ⚙ в шапке
 }
-function goSurah(id){ST.surah=id;ST.selectedTag=null;ST.topicSel=null;ST.bookIntro=false;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;{const st=qpcMeta&&qpcMeta.surahStart&&qpcMeta.surahStart[id];if(st)ST.mushafPage=st.page;}if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}pushSurahHash(id);render();}
+// Переход по номеру аята из панели «Суры». Голое число = аят текущей суры,
+// «2:255» = сура:аят. Непонятный/выходящий за суру ввод — не переходим, мигаем полем.
+function sbJumpGo(){
+  const inp=document.getElementById("sbJumpInp");if(!inp)return;
+  const ref=parseAyahRef(inp.value);
+  if(!ref){inp.classList.add("bad");inp.select();setTimeout(()=>inp.classList.remove("bad"),700);return;}
+  inp.value="";inp.blur();
+  // gotoPage (мусхаф) сам панель не закрывает, в отличие от goAyah — закроем здесь
+  if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
+  goAyahRef(ref);
+}
+function goSurah(id){ST.surah=id;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.bookIntro=false;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;{const st=qpcMeta&&qpcMeta.surahStart&&qpcMeta.surahStart[id];if(st)ST.mushafPage=st.page;}if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}pushSurahHash(id);render();}
 
 // --- Reading display settings (⚙ Вид): sizes AR/RU, line spacing AR/RU, margins
 const VIEW_DEFAULTS={fsAr:1,fsRu:1,lhAr:1,lhRu:1,mar:0,sbScale:1};
@@ -6079,7 +6318,6 @@ function setMushafFull(){ST.mushafFull=!ST.mushafFull;ss("mushafFull",ST.mushafF
 function applyNoTouch(){document.body.classList.toggle("notouch",!!ST.noTouch);}
 function toggleNoTouch(){
   ST.noTouch=!ST.noTouch;ss("noTouch",ST.noTouch);
-  if(ST.noTouch&&ST.wbwMode){ST.wbwMode=false;ss("wbwMode",false);} // режим «Слова» требует касания слов
   applyNoTouch();
   renderCB();renderViewPanel();renderCenter();renderBottomNav();
 }
@@ -6252,8 +6490,34 @@ function pageLocation(pg){
   const juz=juzForPage(pg);
   return `${su?esc(su.ru):"Мусхаф"}${juz?` · Джуз ${juz}`:""} · стр. ${pg}/${total}`;
 }
+// Ссылка на аят из свободного ввода: «2:255» (сура:аят, разделитель : . , / пробел
+// дефис) либо голое число = аят ТЕКУЩЕЙ суры. Вне диапазона суры/аята → null, чтобы
+// вызывающий не предлагал переход в никуда. Общий разбор для строки поиска и поля
+// «перейти к аяту» в панели «Суры».
+function parseAyahRef(raw){
+  const s=String(raw||"").trim();
+  if(!s)return null;
+  const m=s.match(/^(\d{1,3})\s*[:.,\/\s-]\s*(\d{1,3})$/);
+  let surah,ayah;
+  if(m){surah=+m[1];ayah=+m[2];}
+  else if(/^\d{1,3}$/.test(s)){surah=ST.surah;ayah=+s;}
+  else return null;
+  const su=SURAHS.find(x=>x.id===surah);
+  if(!su||ayah<1||ayah>su.n)return null;
+  return {surah,ayah,su};
+}
+// Единый переход по разобранной ссылке — из строки поиска и из панели «Суры».
+// Страницу мусхафа резолвим по САМОМУ аяту (verseToPage), а не по началу суры:
+// иначе в режиме 📕 прыжок на 2:255 оставлял бы на первой странице Аль-Бакары.
+// jumpTo сам разведёт режимы (мусхаф → gotoPage, остальные → goAyah).
+function goAyahRef(ref){
+  if(!ref)return;
+  const pg=verseToPage(ref.surah+":"+ref.ayah);
+  jumpTo(pg?{page:pg,surah:ref.surah,ayah:ref.ayah}:{surah:ref.surah,ayah:ref.ayah});
+  if(!ST.pageMode)flashAyah(ref.ayah);
+}
 function goAyah(surah,ayah){
-  ST.surah=surah;ST.selectedTag=null;ST.topicSel=null;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;ST.scrollToAyah=ayah||1;
+  ST.surah=surah;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;ST.bookIntro=false;ST.scrollToAyah=ayah||1;
   if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   pushSurahHash(surah);render();
 }
@@ -6279,28 +6543,30 @@ function navJumpPage(v){const total=qpcMeta&&qpcMeta.pages||604;v=Math.max(1,Mat
 function setReadMode(toPage){if(!!ST.pageMode!==!!toPage)togglePageMode();}
 // Three-way reading mode: 'ayat' | 'words' (пословный) | 'page' (мусхаф).
 function setMode(mode){
-  ST.bookIntro=false;ST.bmView=false;
+  // Явный выбор режима гасит экраны-результаты: они проверяются в renderCenterBody
+  // РАНЬШЕ ленты/мусхафа, и без сброса тап по «📖 Аяты» с экрана тем/тегов/корней
+  // не уводил бы никуда (правило «новый экран сбрасывает конкурирующие флаги»).
+  ST.bookIntro=false;ST.bmView=false;ST.topicSel=null;ST.selectedTag=null;ST.rootView=null;
   if(mode==="hifz"){                           // 6-й режим «Хифз» (проверка заучивания)
     if(!ST.hifzMode){
-      ST.hifzMode=true;ST.homeMode=false;ST.srcMode=false;ST.wbwMode=false;ss("wbwMode",false);ST.pageMode=false;
+      ST.hifzMode=true;ST.homeMode=false;ST.srcMode=false;ST.pageMode=false;
       hifzEnterMode();                         // асинхронная инициализация + рендер
     }
     return;
   }
   if(ST.hifzMode){ST.hifzMode=false;consumeOverlay();}   // уходим из хифза: снять его ov-запись «Назад»
   if(mode==="home"){                           // 5-й режим «Главная»
-    ST.homeMode=true;ST.srcMode=false;ST.wbwMode=false;ss("wbwMode",false);ST.pageMode=false;ST.homeEdit=false;
+    ST.homeMode=true;ST.srcMode=false;ST.pageMode=false;ST.homeEdit=false;
     pushHomeHash();renderCB();renderBottomNav();renderSB();renderCenter();return;
   }
   ST.homeMode=false;
   if(mode==="source"){                         // 4-й режим «Источник» (чтение по покрытию)
-    ST.srcMode=true;ST.wbwMode=false;ss("wbwMode",false);ST.pageMode=false;
+    ST.srcMode=true;ST.pageMode=false;
     renderCB();renderBottomNav();renderSB();renderCenter();return;
   }
   ST.srcMode=false;                            // выход из режима источника при выборе другого
-  if(mode==="page"){ if(!ST.pageMode){ST.wbwMode=false;ss("wbwMode",false);togglePageMode();}else{renderSB();} return; }
-  // 'ayat' or 'words': both live outside page mode
-  ST.wbwMode=(mode==="words");ss("wbwMode",ST.wbwMode);
+  if(mode==="page"){ if(!ST.pageMode)togglePageMode(); else renderSB(); return; }
+  // 'ayat': лента; «words» больше не режим — старый вызов просто приводит в ленту
   if(ST.pageMode){togglePageMode();renderSB();return;} // leaving page mode re-renders for us
   renderCB();renderBottomNav();renderSB();renderCenter();
 }
@@ -6686,43 +6952,63 @@ async function renderMushafPage(el){
   // prev/next handled by the shared bottom navigation bar
 }
 
-// --- Word-by-word mode: grid of words + per-word gloss ----------------------
-// Each word is a QPC glyph (reused from the per-surah pack data, aligned 1:1
-// with the corpus by position) carrying data-loc="surah:ayah:word". The gloss
-// shown is the VERBATIM English gloss (display-only); tapping a word opens the
-// corpus grammar card (Russian). data/wbw chunks load lazily per surah.
-async function renderWbw(el){
-  const surah=ST.surah;
-  const ayahIds=getAyahIds(surah);
-  el.innerHTML=`<div class="wbw" id="wbwArea"><div style="text-align:center;color:var(--text-muted);padding:30px">Загрузка…</div></div>`;
-  loadWbwMorph(surah); // warm this surah's grammar data so the first tap is instant
-  const pack=pagePack();
-  const [qpc,words]=await Promise.all([loadPackSurah(pack.id,surah),loadWbwWords(surah)]);
-  const area=document.getElementById("wbwArea");
-  if(!area)return;
-  if(!qpc){area.innerHTML=`<div style="text-align:center;color:var(--text-muted);padding:30px">Нет пословных данных для этой суры</div>`;return;}
-  let html="";
-  for(const aid of ayahIds){
-    const entry=qpc[String(aid)];if(!entry)continue;
-    const wg=words&&words[String(aid)];
-    let cells="";
+// --- Слой «Со словами»: сетка слов вместо арабской строки аята ---------------
+// Бывший отдельный режим 🔤. Каждое слово несёт data-loc="сура:аят:слово" (тап →
+// грам-карточка корпуса) и рисуется ОДНИМ ИЗ ДВУХ способов:
+//   • печатное начертание (пак qpc1/qpc4t) — глиф своей страницы, как в мусхафе;
+//   • текстовое (насх/хафс/амири/куфи) — склейка сегментов морфологии.
+// Глиф — символ приватной области, привязанный к шрифту СВОЕЙ страницы: в Amiri он
+// физически не отрисуется, поэтому слой обязан следовать начертанию ⚙ Вид (отдельному
+// режиму это сходило с рук — он был всегда печатным). Слова паков и морфологии сходятся
+// 1:1 по позиции — сверено на всех 6236 аятах, поэтому адрес слова общий для обоих путей.
+function wbwCellHTML(loc,arHTML,gloss){
+  return `<span class="wbw-cell" data-loc="${loc}">${arHTML}<span class="wbw-gl">${esc(gloss||"")}</span></span>`;
+}
+// Сетка одного аята. Возвращает "" если данных нет — вызывающий тогда покажет
+// обычную арабскую строку (слой ничего не ломает, просто не появляется).
+function wbwGridHTML(surah,aid,loaded){
+  const key=String(aid);
+  const pack=activePack();                      // null → текстовое начертание
+  const wg=(loaded.__wbwW||{})[key];
+  const gloss=pos=>{const w=wg&&wg[String(pos)];return (w&&(w.ru||w.en))||"";};
+  let cells="";
+  if(pack){
+    const entry=(loaded.__qpc||{})[key];
+    if(!entry||!entry.w)return "";
     entry.w.forEach((wp,i)=>{
-      const pos=i+1,loc=`${surah}:${aid}:${pos}`,g=wp[0],p=wp[1];
-      ensurePageFont(pack,p);
-      const wn=wg&&wg[String(pos)];const gl=(wn&&(wn.ru||wn.en))||"";
-      cells+=`<span class="wbw-cell" data-loc="${loc}">
-        <span class="wbw-ar" style="font-family:'${pack.fontFamily(p)}'">${g}</span>
-        <span class="wbw-gl">${esc(gl)}</span></span>`;
+      ensurePageFont(pack,wp[1]);
+      cells+=wbwCellHTML(`${surah}:${aid}:${i+1}`,
+        `<span class="wbw-ar" style="font-family:'${pack.fontFamily(wp[1])}'">${wp[0]}</span>`,gloss(i+1));
     });
-    let endG="";
-    if(entry.e){ensurePageFont(pack,entry.e[1]);endG=`<span class="wbw-end" style="font-family:'${pack.fontFamily(entry.e[1])}'">${entry.e[0]}</span>`;}
-    html+=`<div class="wbw-ayah" data-aid="${aid}">
-      <div class="wbw-head"><span class="wbw-num">${surah}:${aid}</span> <button class="ab-play-btn" onclick="mediaPlayAyah(${aid})" title="Слушать с этого аята">▶</button> <button class="ab-play-btn" onclick="openDiafilm(${aid})" title="Полноэкранный визуальный ряд с этого аята">🎬</button></div>
-      <div class="wbw-grid">${cells}${endG}</div></div>`;
+  }else{
+    const ws=(loaded.__wbwM||{})[key];
+    if(!ws)return "";
+    for(const pos of Object.keys(ws).sort((a,b)=>+a-+b)){
+      const text=ws[pos].map(sg=>sg.ar||"").join("");
+      cells+=wbwCellHTML(`${surah}:${aid}:${pos}`,`<span class="wbw-ar wbw-ar-text">${esc(text)}</span>`,gloss(pos));
+    }
   }
-  html+=`<div class="wbw-attr">Русский пословный глосс — наш черновой перевод (сверка по смыслу с переводом Э. Кулиева; сам перевод Кулиева не распространяется). Английский глосс: <a href="https://github.com/hablullah/data-quran" target="_blank" rel="noopener">data-quran</a> (CC BY-NC-ND, без изменений). Грамматический разбор: <a href="http://corpus.quran.com" target="_blank" rel="noopener">Quranic Arabic Corpus</a> (GPL).</div>`;
-  area.innerHTML=html;
-  if(ST.scrollToAyah!=null){const t=area.querySelector(`.wbw-ayah[data-aid="${ST.scrollToAyah}"]`);if(t)t.scrollIntoView({block:"start"});ST.scrollToAyah=null;}
+  if(!cells)return "";
+  // Концевой знак аята не рисуем: у блока аята в ленте есть свой номер (в кружке),
+  // а в паке этот знак — глиф, которого у текстовых начертаний просто нет.
+  return `<div class="wbw-grid">${cells}</div>`;
+}
+// Атрибуция глосса/разбора — требование лицензий (data-quran CC BY-NC-ND, корпус GPL),
+// поэтому висит там же, где показан глосс: под лентой, пока слой включён.
+function wbwAttrHTML(){
+  return `<div class="wbw-attr">Русский пословный глосс — наш черновой перевод (сверка по смыслу с переводом Э. Кулиева; сам перевод Кулиева не распространяется). Английский глосс: <a href="https://github.com/hablullah/data-quran" target="_blank" rel="noopener">data-quran</a> (CC BY-NC-ND, без изменений). Грамматический разбор: <a href="http://corpus.quran.com" target="_blank" rel="noopener">Quranic Arabic Corpus</a> (GPL).</div>`;
+}
+// Данные слоя для текущей суры: глоссы всегда; глифы — печатному начертанию (их
+// грузит вызывающий как __qpc), морфология — текстовому (она же кормит грам-карточку).
+async function loadWbwLayer(surah,loaded){
+  if(!ST.wbwLayer)return;
+  const ps=[loadWbwWords(surah).then(d=>loaded.__wbwW=d)];
+  if(!activePack())ps.push(loadWbwMorph(surah).then(d=>loaded.__wbwM=d));
+  await Promise.all(ps);
+}
+function toggleWbwLayer(){
+  ST.wbwLayer=!ST.wbwLayer;ss("wbwLayer",ST.wbwLayer);
+  renderCenter();renderRP();
 }
 
 function toggleEn(id){ST.enabled[id]=!ST.enabled[id];setEnabled(ST.enabled);renderRP();renderCenter();}
@@ -6862,7 +7148,7 @@ function deleteTag(path){
   setTagTree(tree);
   const at=getAyahTags();for(const k in at){at[k]=at[k].filter(t=>t!==path&&!t.startsWith(path+"/"));if(!at[k].length)delete at[k];}
   setAyahTags(at);
-  if(ST.selectedTag===path)ST.selectedTag=null;ST.topicSel=null;
+  if(ST.selectedTag===path)ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;
   render();
 }
 
@@ -6901,10 +7187,9 @@ ST.navUnit=gs("navUnit","surah");
 ST.vpTab=gs("vpTab","text");               // активный под-таб панели ⚙ Вид
 ST.srcBarOpen=gs("srcBarOpen",false);     // шапка режима источника: развёрнута? (по умолчанию свёрнута)
 ST.collapsedKinds=gs("collapsedKinds",{translation:true}); // под аятом: какие группы свёрнуты (переводы — по умолч.)
-ST.wbwMode=gs("wbwMode",false); // word-by-word reading layer (пословный перевод)
+ST.wbwLayer=gs("wbwLayer",gs("wbwMode",false)); // слой «Со словами»; миграция: у кого был включён режим 🔤 — получит слой
 ST.noTouch=gs("noTouch",false); ST.ntH=gs("ntH",60); // «Режим без касания»
 ST.swipeNav=gs("swipeNav",true); // свайп смены суры (вкл. по умолчанию)
-if(ST.noTouch&&ST.wbwMode){ST.wbwMode=false;ss("wbwMode",false);} // «Слова» недоступен в режиме без касания
 applyNoTouch();
 loadQpcMeta(); // preload mushaf page index (surah → page) for page-mode jumps
 setupSwipe();  // свайп смены суры (если включён в настройках); слушатель ставится один раз
