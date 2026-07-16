@@ -62,8 +62,9 @@ body[data-skin="parchment"] .reading,body[data-skin="sepia"] .reading{--bg-card:
 body[data-skin="sepia"] .reading{--bg-card:rgba(252,243,218,.5);--bg-alt:rgba(236,220,182,.6);--border:#af9460;--border-light:#c3ab74}
 body[data-skin="dark"] .reading{--bg-card:rgba(255,244,214,.05);--bg-alt:rgba(255,244,214,.08);--border:#4a3d26;--border-light:#3c3220;--text:#e7d8b4;--text-sec:#cbbb92;--text-muted:#8c7c5a}
 body[data-skin] .reading .ayah-block{box-shadow:0 1px 6px rgba(50,34,10,.16)}
-/* Заголовки ленты — старорусская вязь (Ruslan Display) */
-body[data-skin] .reading .ab-entry-label,body[data-skin] .reading .sura-intro-head,body[data-skin] .reading .ab-num{font-family:'Ruslan Display','IBM Plex Sans',sans-serif;font-weight:400}
+/* Заголовки ленты — старорусская вязь (Ruslan Display). Номер аята (.ab-num) сюда
+   НЕ входит: вязь в кружке 24px нечитаема — цифры остаются гротеском. */
+body[data-skin] .reading .ab-entry-label,body[data-skin] .reading .sura-intro-head{font-family:'Ruslan Display','IBM Plex Sans',sans-serif;font-weight:400}
 /* Старинный русский шрифт текста (независим от скина): лента наследует выбранный
    шрифт; арабские элементы не задеты — у них font-family задан явно.
    old = Old Standard TT (книжный XIX в.) · corm = Cormorant Garamond (антиква
@@ -258,7 +259,9 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 /* Horizontal layout */
 .ayah-block{margin-bottom:14px;border:1px solid var(--border-light);border-radius:8px;overflow:hidden;background:var(--bg-card)}
 .ab-head{padding:6px 10px;background:var(--bg-alt);border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between;cursor:pointer}
-.ab-num{width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0}
+/* Номер аята: шрифт задан ЯВНО и жёстко — лента может быть в рукописном/антикве
+   (data-rufont) или в вязи (скин), а цифры в кружке 24px обязаны читаться. */
+.ab-num{width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:0;line-height:1;flex-shrink:0}
 .ab-tag-dots{display:flex;gap:3px}
 .ab-tag-dot{width:6px;height:6px;border-radius:50%;background:var(--tag-color)}
 .ab-note-dot{width:6px;height:6px;border-radius:50%;background:var(--note-color)}
@@ -5862,10 +5865,23 @@ function highlightMatch(text,query){
 function goSearchResult(surah,ayah){
   if(searchOpen)toggleSearch();
   ST.surah=surah;
-  ST.selectedTag=null;ST.topicSel=null;
+  ST.selectedTag=null;ST.topicSel=null;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;
+  // ST.scrollToAyah обязателен: renderCenter асинхронный и при ТОЙ ЖЕ суре сам
+  // возвращает скролл на прежний верхний аят (якорь) — без этого переход из
+  // поиска отбрасывало назад, на аят, с которого поиск открывали.
+  ST.scrollToAyah=ayah;
   pushSurahHash(surah);
   render();
-  scrollToAyah(ayah);
+  flashAyah(ayah);
+}
+// Подсветить аят ПОСЛЕ ре-рендера: renderCenter затирает DOM и сам ставит скролл
+// по ST.scrollToAyah (обнуляя его) — подсвечивать раньше бессмысленно.
+function flashAyah(ayah){
+  let tries=0;
+  (function wait(){
+    if(ST.scrollToAyah!=null&&tries++<40){setTimeout(wait,100);return;}
+    scrollToAyah(ayah);
+  })();
 }
 
 // Close search on Escape, open on Ctrl+F, block Ctrl+S/U
@@ -5926,8 +5942,9 @@ function applyHash(initial){
   const changing=(ST.surah!==sid||ST.selectedTag||ST.homeMode||ST.hifzMode||ST.bmView);
   if(changing){ST.surah=sid;ST.selectedTag=null;ST.topicSel=null;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;}
   if(!hashAyah&&stateAyah&&(changing||initial))ST.scrollToAyah=stateAyah;  // встанем на аят при рендере (без анимации)
+  if(hashAyah&&changing&&!initial)ST.scrollToAyah=hashAyah;       // иначе якорь той же суры вернёт старый аят
   if(changing&&!initial)render();
-  if(hashAyah)scrollToAyah(hashAyah);                             // deep-link — плавно + подсветка
+  if(hashAyah)flashAyah(hashAyah);                                // deep-link — плавно + подсветка
   else if(stateAyah&&!changing&&!initial)scrollToAyah(stateAyah); // та же сура уже отрисована — доскроллим
   return true;
 }
