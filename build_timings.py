@@ -100,6 +100,26 @@ def ayah_list(quran, sura):
     s = quran[str(sura)]
     return [(int(k), s[k]) for k in sorted(s, key=int)]
 
+# Выравнивание ОДНОГО фрагмента (срез эмиссий → тайминги слов, сек). offset_s —
+# сдвиг начала среза во времени (для чанков). Лишний звук по краям среза поглощают
+# <star>-токены (preprocess_text star_frequency='segment'), поэтому крайние слова
+# чанка не «съедают» соседние аяты.
+def _align_words(m, emissions, stride, text, offset_s=0.0):
+    tokens_starred, text_starred = m["preprocess_text"](text, romanize=True, language="ara")
+    segments, scores, blank = m["get_alignments"](emissions, tokens_starred, m["tokenizer"])
+    spans = m["get_spans"](tokens_starred, segments, blank)
+    ws = m["postprocess_results"](text_starred, spans, stride, scores)
+    if offset_s:
+        for w in ws:
+            w["start"] += offset_s; w["end"] += offset_s
+    return ws
+
+# Матрица выравнивания ~ frames × tokens; у длинных сур (сура 2: ~348к кадров)
+# она неподъёмна → bad_alloc. Поэтому длинную суру режем на группы аятов; каждый
+# кусок выравниваем отдельно на своём срезе эмиссий (+запас MARGIN по краям).
+FRAME_LIMIT = int(os.environ.get("TIMINGS_FRAME_LIMIT", "50000"))  # ~1000 с на кусок
+MARGIN      = int(os.environ.get("TIMINGS_MARGIN", "8000"))        # ~160 с запаса по краям
+
 def align_surah(audio_path, ayat, batch=8):
     """Вернуть ({"<аят>":[start,end]}, diag) для одной суры."""
     m = _model()
@@ -109,10 +129,34 @@ def align_surah(audio_path, ayat, batch=8):
     audio = m["load_audio"](audio_path, ret_type="np")
     dur = round(len(audio) / 16000.0, 2)
     emissions, stride = _emissions_stream(m, audio)     # экономный по памяти проход
-    tokens_starred, text_starred = m["preprocess_text"](full_text, romanize=True, language="ara")
-    segments, scores, blank = m["get_alignments"](emissions, tokens_starred, m["tokenizer"])
-    spans = m["get_spans"](tokens_starred, segments, blank)
-    words = m["postprocess_results"](text_starred, spans, stride, scores)
+    total_frames = emissions.shape[0]
+
+    if total_frames <= FRAME_LIMIT:                     # короткая/средняя — одним куском
+        words = _align_words(m, emissions, stride, full_text)
+        chunks = 1
+    else:                                               # длинная — ЦЕПОЧЕЧНЫЙ чанкинг
+        # Каждый кусок стартует от ФАКТИЧЕСКОГО конца прошлого (дрейф не копится).
+        # Размер куска прикидываем по средней «кадров на слово», выравниваем с
+        # заглядыванием на LOOKAHEAD аятов вперёд, а КЕЙПИМ только свои аяты.
+        total_w = sum(counts) or 1
+        fpw = total_frames / total_w                    # средних кадров на слово
+        LOOKAHEAD = 3
+        words, chunks, i, cur_frame = [], 0, 0, 0
+        n = len(ayat)
+        while i < n:
+            est, j = 0, i
+            while j < n and est < FRAME_LIMIT:
+                est += counts[j] * fpw; j += 1          # набрать аятов ~на FRAME_LIMIT кадров
+            j_ext = min(n, j + LOOKAHEAD)               # + контекст для чистой правой границы
+            fs = max(0, cur_frame - 500)                # старт от факт. конца прошлого куска
+            fe = min(total_frames, fs + FRAME_LIMIT + MARGIN)
+            text = " ".join(t for _, t in ayat[i:j_ext])
+            ws = _align_words(m, emissions[fs:fe], stride, text, offset_s=fs * stride / 1000.0)
+            keep = sum(counts[i:j])                     # оставляем только слова своих аятов
+            kept = ws[:keep]
+            words.extend(kept)
+            cur_frame = int(kept[-1]["end"] * 1000 / stride) if kept else fe
+            chunks += 1; i = j
 
     out, i = {}, 0
     for (n, _), c in zip(ayat, counts):
@@ -135,7 +179,7 @@ def align_surah(audio_path, ayat, batch=8):
     if last_end > dur + 0.5:
         warns.append(f"конец {last_end}>длит {dur}")
     diag = {"dur": dur, "ayat": len(ayat), "words_exp": sum(counts),
-            "words_got": len(words), "warns": warns}
+            "words_got": len(words), "chunks": chunks, "warns": warns}
     return out, diag
 
 def fetch_audio(rec, sura):
@@ -197,7 +241,7 @@ def main():
                 rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024  # МБ (пик)
                 print(f"  {sura:>3}: {diag['ayat']} аят, "
                       f"{diag['words_got']}/{diag['words_exp']} слов, "
-                      f"{diag['dur']}s, {time.time()-t0:.1f}s счёт, пик {rss:.0f}МБ{flag}", flush=True)
+                      f"{diag['dur']}s, {diag['chunks']} кус, {time.time()-t0:.1f}s счёт, пик {rss:.0f}МБ{flag}", flush=True)
             except Exception as e:
                 report[str(sura)] = {"error": str(e)}
                 print(f"  {sura:>3}: ОШИБКА {e}", flush=True)

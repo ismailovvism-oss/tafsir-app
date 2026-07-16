@@ -144,3 +144,5 @@ data/media/_rai-test/
 
 # набор Codex (Imagen) — тяжёлые png на R2, в репо не идут
 data/media/filmstrip/**/*.png
+
+post-screens/

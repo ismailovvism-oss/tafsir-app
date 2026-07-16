@@ -11,6 +11,63 @@
   "ayat": 40,
   "words_exp": 180,
   "words_got": 180,
+  "chunks": 3,
+  "warns": []
+ },
+ "9": {
+  "dur": 2833.87,
+  "ayat": 129,
+  "words_exp": 2659,
+  "words_got": 2659,
+  "chunks": 3,
+  "warns": []
+ },
+ "5": {
+  "dur": 3532.96,
+  "ayat": 120,
+  "words_exp": 3010,
+  "words_got": 3010,
+  "chunks": 4,
+  "warns": []
+ },
+ "6": {
+  "dur": 3727.23,
+  "ayat": 165,
+  "words_exp": 3293,
+  "words_got": 3293,
+  "chunks": 4,
+  "warns": []
+ },
+ "7": {
+  "dur": 4201.64,
+  "ayat": 206,
+  "words_exp": 3525,
+  "words_got": 3525,
+  "chunks": 5,
+  "warns": []
+ },
+ "3": {
+  "dur": 4357.77,
+  "ayat": 200,
+  "words_exp": 3691,
+  "words_got": 3691,
+  "chunks": 5,
+  "warns": []
+ },
+ "4": {
+  "dur": 4668.94,
+  "ayat": 176,
+  "words_exp": 4006,
+  "words_got": 4006,
+  "chunks": 5,
+  "warns": []
+ },
+ "2": {
+  "dur": 6961.11,
+  "ayat": 286,
+  "words_exp": 6592,
+  "words_got": 6592,
+  "chunks": 7,
   "warns": []
  }
 }
