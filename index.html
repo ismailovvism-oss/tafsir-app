@@ -103,7 +103,17 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .app-body{display:flex;flex:1;overflow:hidden;position:relative}
 
 /* SIDEBAR — surah list */
-.sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--bg-alt);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:margin-left .25s;z-index:5}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--bg-alt);border-right:1px solid var(--border);display:flex;flex-direction:row;transition:margin-left .25s;z-index:5}
+/* Рельс вкладок: колонка значков с подписью; растёт вниз, а не жмётся вширь */
+.sb-rail{flex-shrink:0;width:46px;display:flex;flex-direction:column;background:var(--bg);border-right:1px solid var(--border);overflow-y:auto}
+.sb-rail-b{flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  padding:8px 2px;border:none;border-left:2px solid transparent;background:transparent;cursor:pointer;
+  font-family:inherit;color:var(--text-sec);transition:background .12s,color .12s}
+.sb-rail-b:hover{background:var(--bg-alt);color:var(--text)}
+.sb-rail-b.active{color:var(--accent);border-left-color:var(--accent);background:var(--bg-alt);font-weight:600}
+.sb-rail-b .rb-i{font-size:15px;line-height:1.1}
+.sb-rail-b .rb-l{font-size:8.5px;line-height:1.1;letter-spacing:-.2px}
+.sb-pane{flex:1;min-width:0;display:flex;flex-direction:column}
 .sidebar.collapsed{margin-left:calc(var(--sidebar-w)*-1)}
 .sb-head{padding:7px 8px 5px;border-bottom:1px solid var(--border)}
 .sb-head input{width:100%;padding:6px 9px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg-card);outline:none;font-family:inherit;color:var(--text)}
@@ -114,9 +124,6 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .sb-jump input.bad{border-color:#c0392b}
 .sb-jump-go{flex-shrink:0;width:30px;border:1px solid var(--border);border-radius:5px;background:var(--bg-card);color:var(--accent);cursor:pointer;font-size:12px;font-family:inherit}
 .sb-jump-go:hover{border-color:var(--accent)}
-.sb-tabs{display:flex;border-bottom:1px solid var(--border)}
-.sb-tab{flex:1;padding:6px 4px;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:11px;font-weight:500;color:var(--text-sec);border-bottom:2px solid transparent;text-align:center}
-.sb-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
 .sb-content{flex:1;overflow-y:auto;padding:4px 5px 10px}
 /* Под-табы панели ⚙ Вид */
 .vp-tabs{display:flex;gap:4px;position:sticky;top:0;z-index:2;background:var(--panel);padding:2px 0 6px;margin-bottom:4px;border-bottom:1px solid var(--border)}
@@ -550,6 +557,10 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .srcp-extent{font-size:11px;color:var(--text-muted)}
 .tr-header{font-size:14px;font-weight:600;color:var(--tag-color);margin-bottom:12px;display:flex;align-items:center;gap:6px}
 /* Конкорданс: указатель корней (.rt-*) поверх общей раскладки .tag-results */
+.nt-row{align-items:flex-start}
+.nt-snip{font-size:11px;color:var(--text-sec);line-height:1.4;margin-top:3px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.nt-body{margin-top:8px;padding:8px 10px;background:var(--note-bg);border-radius:6px;font-size:12.5px;line-height:1.5}
 .rt-hint{font-size:11.5px;color:var(--text-muted);line-height:1.5;padding:2px 2px 8px}
 .rt-search{width:100%;box-sizing:border-box;margin:2px 0 10px;padding:9px 11px;border:1px solid var(--border);border-radius:7px;
   background:var(--bg-card);color:var(--text);font-family:inherit;font-size:13px;outline:none}
@@ -557,6 +568,12 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .rt-row{display:flex;align-items:center;gap:10px;padding:9px 11px;margin-bottom:5px;border:1px solid var(--border-light);
   border-radius:7px;background:var(--bg-card);cursor:pointer;transition:background .12s}
 .rt-row:hover{background:var(--bg-alt)}
+/* та же строка в БОКОВОЙ панели: она узкая (240px на десктопе) — подпись смысла
+   уходит под корень, а не рядом с ним, иначе от неё остаётся пара букв */
+.rt-row-sb{flex-wrap:wrap;gap:0 8px;padding:7px 9px}
+.rt-row-sb.on{border-color:var(--accent);background:var(--accent-bg)}
+.rt-row-sb .rt-ar{font-size:17px;min-width:52px}
+.rt-row-sb .rt-gl{flex-basis:100%;white-space:normal;font-size:10.5px;padding-top:2px}
 .rt-ar{font-family:'Noto Naskh Arabic','Amiri',serif;font-size:19px;direction:rtl;color:var(--text);min-width:64px}
 .rt-n{font-size:10.5px;font-weight:600;color:var(--accent);background:var(--accent-bg);border-radius:9px;padding:1px 6px;min-width:22px;text-align:center}
 .rt-gl{flex:1;min-width:0;font-size:11.5px;color:var(--text-sec);line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -585,7 +602,7 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 /* FOOTER */
 .footer{padding:3px 12px;border-top:1px solid var(--border);background:var(--bg-alt);font-size:9px;color:var(--text-muted);display:flex;justify-content:space-between;flex-shrink:0}
 /* Иммерсивный режим чтения: скрыть весь интерфейс, оставить только поле чтения. Выход — «Назад»/Esc/✕ */
-body.immersive .header,body.immersive .footer,body.immersive .search-panel,
+body.immersive .header,body.immersive .footer,
 body.immersive .sidebar,body.immersive .rpanel,body.immersive .center-bar,
 body.immersive .bottom-nav,body.immersive .panel-backdrop{display:none!important}
 .immersive-exit{display:none}
@@ -617,7 +634,6 @@ body.immersive .immersive-exit:hover{opacity:1;background:rgba(0,0,0,.32)}
   .h-right{gap:3px}
   .h-right .btn-i{padding:5px 7px}  /* компактнее, чтобы 🔍 📚 ⚙ ⛶ влезли на узком экране */
   .ab-entry-text.arabic-main{font-size:calc(19px*var(--rs-ar,1))}
-  .search-panel{width:100%!important;left:0!important;right:0!important;transform:none!important;border-radius:0!important;max-height:80vh!important}
 }
 
 /* Touch devices have no hover — keep action controls always visible & bigger tap targets */
@@ -758,16 +774,14 @@ body.notouch .wbw-cell{pointer-events:none;cursor:default}
 body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
 
 /* SEARCH */
-.search-panel{position:fixed;top:48px;left:50%;transform:translateX(-50%);width:600px;max-width:90vw;max-height:70vh;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 40px rgba(0,0,0,.2);z-index:50;display:flex;flex-direction:column;overflow:hidden}
-.search-panel.hidden{display:none}
 .sp-head{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-shrink:0}
 .sp-input{flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:inherit;outline:none;color:var(--text);background:var(--bg)}
 .sp-input:focus{border-color:var(--accent)}
 .sp-close{background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-muted);padding:4px}
-.sp-opts{padding:6px 14px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center;font-size:11px;color:var(--text-sec);flex-shrink:0;flex-wrap:wrap}
+.sp-opts{padding:4px 2px 6px;display:flex;gap:10px;align-items:center;font-size:11px;color:var(--text-sec);flex-wrap:wrap}
 .sp-opt-label{display:flex;align-items:center;gap:3px;cursor:pointer}
 .sp-opt-label input{margin:0}
-.sp-results{flex:1;overflow-y:auto;padding:8px}
+.sp-results{padding:2px 0}
 .sp-result{padding:10px 12px;border-bottom:1px solid var(--border-light);cursor:pointer;transition:background .1s}
 .sp-result:hover{background:var(--bg-alt)}
 .sp-result:last-child{border-bottom:none}
@@ -779,7 +793,8 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
 .sp-text.rtl{direction:rtl;text-align:right;font-family:'Noto Naskh Arabic','Amiri',serif;font-size:15px}
 .sp-hl{background:#FFE082;color:#333;border-radius:2px;padding:0 1px}
 .sp-status{padding:12px;text-align:center;color:var(--text-muted);font-size:12px}
-.sp-count{font-size:11px;color:var(--text-muted);padding:4px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.sp-count{font-size:11px;color:var(--text-muted);padding:3px 2px 6px;border-bottom:1px solid var(--border);margin-bottom:4px}
+.sp-count.hidden{display:none}   /* правила не было вовсе: класс вешался, а счётчик оставался виден */
 @media print{body{display:none!important}}
 /* — Главная (5-й режим) — */
 .home{flex:1;overflow:auto;-webkit-overflow-scrolling:touch}
@@ -1139,7 +1154,7 @@ body.df-open{overflow:hidden}
     <h2 class="h-ctx" id="hCtx"></h2>
   </div>
   <div class="h-right">
-    <button class="btn-i" onclick="toggleSearch()" title="Поиск по текстам">🔍</button>
+    <button class="btn-i" onclick="openSearchTab()" title="Поиск по текстам и переход по номеру аята">🔍</button>
     <button class="btn-i" onclick="openProgress()" title="Прогресс чтения">📊</button>
     <button class="btn-i" onclick="toggleRPanel()" title="Переводы и тафсиры">📚</button>
     <button class="btn-i" id="hAudioBtn" onclick="toggleAudioPanel()" title="Аудио: чтец, наборы, визуальный ряд">🎧</button>
@@ -1148,37 +1163,31 @@ body.df-open{overflow:hidden}
   </div>
 </header>
 
-<div class="search-panel hidden" id="searchPanel">
-  <div class="sp-head">
-    <input class="sp-input" id="spInput" placeholder="Слово, фраза или номер аята (2:255)" oninput="onSearchInput()" onkeydown="onSearchKey(event)">
-    <button class="sp-close" onclick="toggleSearch()">✕</button>
-  </div>
-  <div class="sp-opts">
-    <label class="sp-opt-label"><input type="checkbox" id="spAllTafsirs"> Искать во всех тафсирах</label>
-    <span style="color:var(--text-muted)">|</span>
-    <span style="color:var(--text-muted)">По умолчанию — поиск в включённых</span>
-  </div>
-  <div class="sp-count hidden" id="spCount"></div>
-  <div class="sp-results" id="spResults"><div class="sp-status">Введите запрос для поиска</div></div>
-</div>
-
 <div class="app-body">
   <aside class="sidebar collapsed" id="sidebar">
-    <div class="sb-head">
-      <input placeholder="Поиск..." oninput="onSearch(this.value)">
-      <div class="sb-jump" id="sbJump">
-        <input id="sbJumpInp" inputmode="numeric" autocomplete="off" placeholder="К аяту: 255 или 2:255" onkeydown="if(event.key==='Enter')sbJumpGo()">
-        <button class="sb-jump-go" onclick="sbJumpGo()" title="Перейти к аяту">➜</button>
+    <!-- Вкладки — ВЕРТИКАЛЬНЫМ РЕЛЬСОМ слева: их число растёт (за неделю прибавились
+         Темы и Корни), а горизонтальный бар с каждым новым пунктом жмётся; у рельса
+         запас по вертикали, и добавление седьмого пункта ничего не ломает. -->
+    <nav class="sb-rail" id="sbRail">
+      <button class="sb-rail-b" onclick="setSbTab('search')" id="sbTabSearch" title="Поиск по текстам и переход по номеру аята"><span class="rb-i">🔍</span><span class="rb-l">Поиск</span></button>
+      <button class="sb-rail-b active" onclick="setSbTab('surahs')" id="sbTabSurahs" title="Суры и джузы"><span class="rb-i">📖</span><span class="rb-l">Суры</span></button>
+      <button class="sb-rail-b" onclick="setSbTab('tags')" id="sbTabTags" title="Мои теги"><span class="rb-i">🏷</span><span class="rb-l">Теги</span></button>
+      <button class="sb-rail-b" onclick="setSbTab('topics')" id="sbTabTopics" title="Тематический указатель"><span class="rb-i">📑</span><span class="rb-l">Темы</span></button>
+      <button class="sb-rail-b" onclick="setSbTab('roots')" id="sbTabRoots" title="Указатель корней (конкорданс)"><span class="rb-i">🌿</span><span class="rb-l">Корни</span></button>
+      <button class="sb-rail-b" onclick="setSbTab('bookmarks')" id="sbTabBookmarks" title="Закладки"><span class="rb-i">★</span><span class="rb-l">Закл.</span></button>
+      <button class="sb-rail-b" onclick="setSbTab('notes')" id="sbTabNotes" title="Мои заметки — список"><span class="rb-i">📝</span><span class="rb-l">Замет.</span></button>
+      <button class="sb-rail-b" onclick="setSbTab('view')" id="sbTabView" title="Вид: шрифты, размеры, темы"><span class="rb-i">⚙</span><span class="rb-l">Вид</span></button>
+    </nav>
+    <div class="sb-pane">
+      <div class="sb-head">
+        <input id="sbSearchInp" placeholder="Поиск..." oninput="onSearch(this.value)" onkeydown="onSearchKey(event)">
+        <div class="sb-jump" id="sbJump">
+          <input id="sbJumpInp" inputmode="numeric" autocomplete="off" placeholder="К аяту: 255 или 2:255" onkeydown="if(event.key==='Enter')sbJumpGo()">
+          <button class="sb-jump-go" onclick="sbJumpGo()" title="Перейти к аяту">➜</button>
+        </div>
       </div>
+      <div class="sb-content" id="sbContent"></div>
     </div>
-    <div class="sb-tabs">
-      <button class="sb-tab active" onclick="setSbTab('surahs')" id="sbTabSurahs">Суры</button>
-      <button class="sb-tab" onclick="setSbTab('tags')" id="sbTabTags">🏷 Теги</button>
-      <button class="sb-tab" onclick="setSbTab('topics')" id="sbTabTopics">📑 Темы</button>
-      <button class="sb-tab" onclick="setSbTab('bookmarks')" id="sbTabBookmarks">★ Закл.</button>
-      <button class="sb-tab" onclick="setSbTab('view')" id="sbTabView">⚙ Вид</button>
-    </div>
-    <div class="sb-content" id="sbContent"></div>
   </aside>
 
   <main class="center">
@@ -1490,6 +1499,8 @@ let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,apan
   // где гасятся topicSel/selectedTag: null — выключен, "*" — указатель корней,
   // "<корень>" — вхождения этого корня. Спутники (ниже) живут только при нём.
   rootView:null,
+  searchAll:false,   // вкладка 🔍: искать во всех тафсирах, а не только во включённых
+  notesView:false,   // полноэкранный список заметок (панель — навигатор, окно — контент)
   rootQ:"",          // поиск по указателю корней (арабский корень или русский глосс)
   rootForm:null,     // фильтр вхождений по конкретной словоформе (чип), null — все
   rootLimit:20,      // сколько вхождений показано («Показать ещё» добавляет по столько же)
@@ -1574,7 +1585,7 @@ function curTopAyah(){
 // стрелками ‹ › и свайпом возвращало туда, где ты был в той суре (а не к началу).
 const surahPos={};
 function saveLastPos(){
-  if(ST.homeMode||ST.selectedTag||ST.scanSource||ST.bookIntro||ST.srcMode||ST.hifzMode||ST.bmView)return;  // Главная/теги/скан/введение/источник/хифз/закладки — не позиция чтения
+  if(ST.homeMode||ST.selectedTag||ST.scanSource||ST.bookIntro||ST.srcMode||ST.hifzMode||ST.bmView||ST.notesView)return;  // Главная/теги/скан/введение/источник/хифз/закладки — не позиция чтения
   const mode=ST.pageMode?"page":"ayat";   // «words» больше не режим, а слой (ST.wbwLayer) — в позицию чтения не входит
   const ayah=curTopAyah();
   ss("lastPos",{surah:ST.surah,ayah,page:ST.mushafPage||1,mode});
@@ -4057,9 +4068,12 @@ function render(){renderSB();renderCB();renderCenter();renderRP();renderF();rend
 // -- SIDEBAR --
 function renderSB(){
   const el=document.getElementById("sbContent");
-  if(ST.sbTab==="surahs")renderSurahList(el);
+  if(ST.sbTab==="search")renderSearchPanel(el);
+  else if(ST.sbTab==="surahs")renderSurahList(el);
   else if(ST.sbTab==="topics")renderTopicsPanel(el);
+  else if(ST.sbTab==="roots")renderRootsPanel(el);
   else if(ST.sbTab==="bookmarks")renderBookmarkPanel(el);
+  else if(ST.sbTab==="notes")renderNotesPanel(el);
   else if(ST.sbTab==="view")renderViewTab(el);
   else renderTagPanel(el);
 }
@@ -4180,6 +4194,83 @@ function renderBookmarkPanel(el){
 
 // Экран закладок в ГЛАВНОМ окне (правило системы: панель — навигатор,
 // главное окно — контент; симметрично тег-результатам).
+// ── Мои заметки: список ──────────────────────────────────────────────────────
+// Заметки были единственным личным слоем БЕЗ списка: их считал подвал и находил
+// поиск по тексту, но перебрать свои заметки было негде — только вспомнив аят.
+// Панель — навигатор (отрывок + ссылка), полный текст — экраном, как у закладок.
+function noteKeysSorted(filter){
+  const n=getNotes(),q=String(filter||"").trim().toLowerCase();
+  return Object.keys(n).filter(k=>{
+    if(!n[k]||!n[k].trim())return false;
+    if(!q)return true;
+    const su=SURAHS.find(x=>x.id==+k.split(":")[0]);
+    return n[k].toLowerCase().includes(q)||(su&&su.ru.toLowerCase().includes(q))||k.includes(q);
+  }).sort((x,y)=>{const[xs,xa]=x.split(":").map(Number),[ys,ya]=y.split(":").map(Number);return xs-ys||xa-ya;});
+}
+// Отрывок для списка: markdown-разметку снимаем, иначе в строке светится «**жирный**»
+// (полный текст рисуется markdown-ом на экране «во весь экран»).
+function noteSnippet(t,len){
+  const s=String(t||"")
+    .replace(/```[\s\S]*?```/g," ")      // блоки кода — целиком
+    .replace(/^\s{0,3}[#>]+\s*/gm,"")    // заголовки и цитаты
+    .replace(/(\*\*|__|[*`])/g,"")       // жирный/курсив/моно (одиночное _ у нас не курсив)
+    .replace(/\[\^?([^\]]*)\]\([^)]*\)/g,"$1")  // ссылки → их текст
+    .replace(/\s+/g," ").trim();
+  return s.length>len?s.slice(0,len)+"…":s;
+}
+function renderNotesPanel(el){
+  const notes=getNotes(),keys=noteKeysSorted(ST.search);
+  if(!Object.keys(notes).length){
+    el.innerHTML='<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:11px">Заметок пока нет.<br>Откройте аят и нажмите 📝 в его панели.</div>';
+    return;
+  }
+  el.innerHTML=`<div class="bm-tools"><button class="hf-go" onclick="openNotesScreen()" title="Список заметок с текстами аятов в главном окне">⛶ На весь экран</button></div>`
+    +(keys.length?keys.map(k=>{
+      const[s,a]=k.split(":");const su=SURAHS.find(x=>x.id==+s);
+      return `<div class="bm-row nt-row" onclick="goNoteAyah(${+s},${+a})">
+        <div class="bm-info"><div class="bm-ref">${su?esc(su.ru):s} · ${s}:${a}</div>
+          <div class="nt-snip">${esc(noteSnippet(notes[k],90))}</div></div>
+      </div>`;
+    }).join("")
+    :'<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:11px">Ничего не найдено</div>');
+}
+function goNoteAyah(s,a){ST.notesView=false;closeSidebarM();goAyah(s,a);flashAyah(a);}
+function openNotesScreen(){
+  ST.notesView=true;ST.bmView=false;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;
+  ST.homeMode=false;ST.scanSource=null;ST.srcMode=false;ST.bookIntro=false;ST.hifzMode=false;
+  closeSidebarM();
+  render();
+}
+// Экран: заметка целиком (markdown, как её видно под аятом) + сам аят.
+async function renderNotesScreen(el){
+  const notes=getNotes(),keys=noteKeysSorted("");
+  if(!keys.length){
+    el.innerHTML=`<div class="tag-results"><div class="tr-header">📝 Мои заметки</div><div style="color:var(--text-muted);padding:20px;text-align:center">Заметок пока нет. Откройте аят и нажмите 📝 в его панели.</div></div>`;
+    return;
+  }
+  const surahs=[...new Set(keys.map(k=>+k.split(":")[0]))];
+  const firstTrans=CONFIG.tafsirs.find(t=>t.lang!=="ar"&&ST.enabled[t.id])||CONFIG.tafsirs.find(t=>t.lang!=="ar");
+  await Promise.all(surahs.flatMap(s=>{
+    const ps=[loadChunk("_arabic",s).catch(()=>{})];
+    if(firstTrans)ps.push(loadChunk(firstTrans.id,s).catch(()=>{}));
+    return ps;
+  }));
+  if(!ST.notesView)return;                            // пока грузили, ушли с экрана
+  let html=`<div class="tag-results"><div class="tr-header">📝 Мои заметки — ${keys.length}</div>`;
+  for(const k of keys){
+    const[s,a]=k.split(":");
+    const su=SURAHS.find(x=>x.id==+s);
+    const arText=getArabicFromCache(+s,+a);
+    const trText=getAnyTranslation(+s,+a);
+    html+=`<div class="tr-ayah" onclick="goNoteAyah(${+s},${+a})">
+      <div class="tr-ayah-ref">${su?esc(su.ru):s} : ${a}</div>
+      ${arText?`<div class="tr-ayah-ar">${arText}</div>`:""}
+      ${trText?`<div class="tr-ayah-tr">${trText}</div>`:""}
+      <div class="nt-body md">${mdRender(notes[k])}</div>
+    </div>`;
+  }
+  el.innerHTML=html+`</div>`;
+}
 function openBookmarksScreen(){
   ST.bmView=true;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.homeMode=false;ST.scanSource=null;ST.srcMode=false;ST.bookIntro=false;ST.hifzMode=false;
   if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
@@ -4207,7 +4298,7 @@ async function renderBookmarksScreen(el){
     const su=SURAHS.find(x=>x.id==+s);
     const arText=getArabicFromCache(+s,+a);
     const trText=getAnyTranslation(+s,+a);
-    html+=`<div class="tr-ayah" onclick="ST.bmView=false;goAyah(${+s},${+a})">
+    html+=`<div class="tr-ayah" onclick="ST.bmView=false;ST.notesView=false;goAyah(${+s},${+a})">
       <div class="tr-ayah-ref">${su?su.ru:s} : ${a}${b[k]?`<span class="tr-origins"><span class="t-pill">${esc(b[k])}</span></span>`:""}</div>
       ${arText?`<div class="tr-ayah-ar">${arText}</div>`:""}
       ${trText?`<div class="tr-ayah-tr">${trText}</div>`:""}
@@ -4260,7 +4351,7 @@ function renderCB(){
   }
   if(ST.bmView){
     setCtx("★ Закладки");
-    bar.innerHTML=`<div class="cb-right"><button class="btn-s" onclick="ST.bmView=false;render();">← Назад</button>${modeSeg}</div>`;return;
+    bar.innerHTML=`<div class="cb-right"><button class="btn-s" onclick="ST.bmView=false;ST.notesView=false;render();">← Назад</button>${modeSeg}</div>`;return;
   }
   if(ST.srcMode){
     // при чтении заголовок = сура (как обычно); имя источника живёт в его компактной шапке (без дубля)
@@ -4287,6 +4378,7 @@ function renderCenterBody(){
   if(ST.scanSource)return renderScanReader(el);
   if(ST.srcMode)return renderSourceMode(el);
   if(ST.bmView)return renderBookmarksScreen(el);
+  if(ST.notesView)return renderNotesScreen(el);
   if(ST.rootView)return rootScreen(el);
   if(ST.topicSel)return renderTopicResults(el);
   if(ST.selectedTag)return renderTagResults(el);
@@ -4365,7 +4457,7 @@ function renderHome(el){
     <span class="hnl-main">Коранические темы <span class="hnl-sub">— указатель по темам</span></span>
     <span class="hnl-arrow">›</span></div></div>`;
   // — Корни слов (конкорданс) —
-  html+=`<div class="home-sec"><div class="home-nav-link" onclick="openRoots()" title="Указатель корней: все места, где встречается корень">
+  html+=`<div class="home-sec"><div class="home-nav-link" onclick="openRootsPanel()" title="Указатель корней: все места, где встречается корень">
     <span class="hnl-ic">🌿</span>
     <span class="hnl-main">Корни слов <span class="hnl-sub">— где ещё встречается это слово</span></span>
     <span class="hnl-arrow">›</span></div></div>`;
@@ -5241,7 +5333,7 @@ function openTopics(){
 }
 function selectTopic(id){
   ST.topicSel=id;
-  ST.selectedTag=null;ST.rootView=null;ST.bookIntro=false;ST.homeMode=false;ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.bmView=false;
+  ST.selectedTag=null;ST.rootView=null;ST.bookIntro=false;ST.homeMode=false;ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;
   if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   render();
 }
@@ -5303,13 +5395,53 @@ function topicToMyTags(id){
 // поиском), "<корень>" — все его вхождения. Три входа: ссылка с Главной,
 // тап по корню в грам-карточке слова, и «← Все корни» с экрана вхождений.
 // Слова без корня (частицы, ~35%) в индекс не входят — корня нет и в корпусе.
+// Панель «🌿 Корни» — НАВИГАТОР (правило: панель — навигатор, окно — контент).
+// Поиск берём из общего поля шапки панели (ST.search), как это делают Суры и Темы.
+// Полноэкранный указатель остаётся вторым видом того же списка — как у Закладок
+// («⛶ На весь экран»): в 240px-панели десктопа 1651 корень с подписями тесноват.
+function renderRootsPanel(el){
+  if(!ROOTS){
+    loadRoots().then(()=>{if(ST.sbTab==="roots")renderSB();});
+    el.innerHTML='<div class="rt-hint" style="padding:20px;text-align:center">Загрузка указателя корней…</div>';
+    return;
+  }
+  const q=ST.search.trim().toLowerCase();
+  const hits=rootsMatching(q);
+  const LIM=250;
+  el.innerHTML=`<div class="rt-hint">${q?`Найдено корней: ${hits.length}`:`Корней: ${hits.length}. Тап — все места с этим корнем.`}
+      <button class="show-more-btn" style="margin:5px 0 0" onclick="openRoots()">⛶ На весь экран</button></div>`
+    +hits.slice(0,LIM).map(r=>{
+      const v=ROOTS[r];
+      return `<div class="rt-row rt-row-sb ${ST.rootView===r?'on':''}" onclick="selectRoot('${escAttr(r)}')">
+        <span class="rt-ar">${esc(r)}</span><span class="rt-n">${v.n}</span>
+        <span class="rt-gl">${esc((v.g||[]).join(" · "))}</span></div>`;
+    }).join("")
+    +(hits.length>LIM?`<div class="rt-hint">Показаны первые ${LIM} — уточните поиск.</div>`:"")
+    +(hits.length?"":'<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:11px">Ничего не найдено</div>');
+}
+// Отбор корней: по арабскому корню ИЛИ по русскому глоссу-подписи (общий для панели
+// и полноэкранного указателя — иначе два поиска разошлись бы по поведению).
+function rootsMatching(q){
+  const s=String(q||"").trim().toLowerCase(),out=[];
+  for(const r in ROOTS){
+    if(s&&!(r.includes(s)||(ROOTS[r].g||[]).some(g=>g.toLowerCase().includes(s))))continue;
+    out.push(r);
+  }
+  return out;
+}
+// Ссылка «🌿 Корни слов» с Главной → открыть панель на вкладке корней (как openTopics).
+function openRootsPanel(){
+  ST.sidebarOpen=true;
+  const sb=document.getElementById("sidebar");if(sb)sb.classList.remove("collapsed");
+  setSbTab("roots");
+}
 function openRoots(){selectRootView("*");}
 function selectRoot(root){selectRootView(root);}
 function selectRootView(v){
   ST.rootView=v;ST.rootForm=null;ST.rootLimit=20;
   if(v==="*")ST.rootQ="";                      // указатель открывается чистым, без прошлого фильтра
   ST.topicSel=null;ST.selectedTag=null;ST.bookIntro=false;ST.homeMode=false;
-  ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.bmView=false;
+  ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;
   hideWordCard();                              // экран открывается ИЗ карточки — она бы висела поверх
   if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   render();
@@ -5338,11 +5470,7 @@ function rootsFilter(q){
   ST.rootQ=q;
   const box=document.getElementById("rootsList");if(!box||!ROOTS)return;
   const s=String(q||"").trim().toLowerCase();
-  const hits=[];
-  for(const r in ROOTS){
-    if(s&&!(r.includes(s)||(ROOTS[r].g||[]).some(g=>g.toLowerCase().includes(s))))continue;
-    hits.push(r);
-  }
+  const hits=rootsMatching(s);                 // общий отбор с панелью — чтобы поиск не разошёлся
   const LIM=250;                               // 1651 строки разом — лишняя работа телефону
   const shown=hits.slice(0,LIM);
   box.innerHTML=(s?`<div class="rt-hint">Найдено корней: ${hits.length}</div>`:"")
@@ -5559,7 +5687,7 @@ function booksWithMuqaddima(){
   return getEnabledList().filter(t=>t.id!=="_notes"&&t.kind!=="image"&&t.muqaddima);
 }
 function openBookIntro(){
-  ST.bookIntro=true;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.scanSource=null;ST.hifzMode=false;ST.bmView=false;ST.homeMode=false;
+  ST.bookIntro=true;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.scanSource=null;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;ST.homeMode=false;
   if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   render();
 }
@@ -5885,29 +6013,36 @@ function moveEnabled(id,dir){
 // SEARCH ENGINE
 // ============================================================
 let searchTimer=null;
-let searchOpen=false;
 
-function toggleSearch(){
-  searchOpen=!searchOpen;
-  const panel=document.getElementById("searchPanel");
-  panel.classList.toggle("hidden",!searchOpen);
-  if(searchOpen){
-    document.getElementById("spInput").value="";
-    document.getElementById("spInput").focus();
-    document.getElementById("spResults").innerHTML=`<div class="sp-status">Введите запрос (минимум 2 символа)</div>`;
-    document.getElementById("spCount").classList.add("hidden");
-    pushOverlay();
-  }else consumeOverlay();
+// Поиск — ВКЛАДКА рельса, а не плавающая панель поверх текста: он навигатор по
+// природе (нашёл → перешёл), а оверлей закрывал собой тот самый аят, от которого
+// пляшешь. Строка ввода — общее поле шапки панели (как у Сур/Тем/Корней), кнопка 🔍
+// в шапке просто открывает вкладку (так же ведёт себя ⚙).
+function openSearchTab(){
+  ST.sidebarOpen=true;
+  const sb=document.getElementById("sidebar");if(sb)sb.classList.remove("collapsed");
+  setSbTab("search");
+  const inp=document.getElementById("sbSearchInp");if(inp)inp.focus();
   updateBackdrop();
 }
-
-function onSearchInput(){
+// Тело вкладки. Результаты обновляет doSearch — он пишет в #spResults/#spCount
+// точечно, поэтому набор текста не перерисовывает панель и не рвёт фокус.
+function renderSearchPanel(el){
+  el.innerHTML=`<div class="sp-opts">
+      <label class="sp-opt-label"><input type="checkbox" ${ST.searchAll?"checked":""} onchange="ST.searchAll=this.checked;scheduleSearch(0)"> Искать во всех тафсирах</label>
+    </div>
+    <div class="sp-count hidden" id="spCount"></div>
+    <div class="sp-results" id="spResults"></div>`;
+  scheduleSearch(0);
+}
+function scheduleSearch(delay){
   clearTimeout(searchTimer);
-  searchTimer=setTimeout(doSearch,400);
+  searchTimer=setTimeout(doSearch,delay==null?400:delay);
 }
 
 async function doSearch(){
-  const raw=document.getElementById("spInput").value;
+  if(ST.sbTab!=="search")return;              // ушли на другую вкладку — результаты некуда класть
+  const raw=ST.search;
   const query=normalizeSearch(raw);
   const resultsEl=document.getElementById("spResults");
   const countEl=document.getElementById("spCount");
@@ -5929,7 +6064,7 @@ async function doSearch(){
 
   resultsEl.innerHTML=jumpHTML+`<div class="sp-status">Поиск...</div>`;
 
-  const searchAll=document.getElementById("spAllTafsirs")?.checked;
+  const searchAll=ST.searchAll;   // состояние, а не DOM: вкладка перерисовывается
 
   // Determine which tafsirs to search
   let toSearch=[];
@@ -6077,22 +6212,27 @@ function highlightMatch(text,query){
 // Переход из строки поиска по НОМЕРУ аята (не по найденному тексту): закрываем
 // панель и отдаём общему goAyahRef — он же знает про мусхаф.
 function goSearchAyah(surah,ayah){
-  if(searchOpen)toggleSearch();
+  closeSidebarM();
   goAyahRef({surah,ayah,su:SURAHS.find(x=>x.id===surah)});
+}
+// На телефоне панель — оверлей во весь экран: после перехода её надо убрать,
+// иначе аят, к которому шли, остаётся за ней. На десктопе панель пришвартована.
+function closeSidebarM(){
+  if(!isM())return;
+  ST.sidebarOpen=false;const sb=document.getElementById("sidebar");if(sb)sb.classList.add("collapsed");
 }
 // Enter в строке поиска: если введена ссылка на аят — сразу переходим (не дожидаясь
 // debounce и тапа по строке). Иначе — обычный поиск без задержки.
 function onSearchKey(e){
-  if(e.key==="Escape"){toggleSearch();return;}
   if(e.key!=="Enter")return;
-  const ref=parseAyahRef(e.target.value);
+  const ref=parseAyahRef(e.target.value);        // «2:255» → сразу переход, не дожидаясь debounce
   if(ref){goSearchAyah(ref.surah,ref.ayah);return;}
-  clearTimeout(searchTimer);doSearch();
+  if(ST.sbTab==="search")scheduleSearch(0);      // на прочих вкладках Enter не нужен: фильтр живёт по вводу
 }
 function goSearchResult(surah,ayah){
-  if(searchOpen)toggleSearch();
+  closeSidebarM();
   ST.surah=surah;
-  ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;
+  ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;
   // ST.scrollToAyah обязателен: renderCenter асинхронный и при ТОЙ ЖЕ суре сам
   // возвращает скролл на прежний верхний аят (якорь) — без этого переход из
   // поиска отбрасывало назад, на аят, с которого поиск открывали.
@@ -6119,13 +6259,12 @@ document.addEventListener("keydown",function(e){
   if(e.key==="Escape"&&document.getElementById("covPopup")){closeCovPopup();return;}
   if(e.key==="Escape"&&ST.srcMode&&ST.srcSel){srcBackToPicker();return;}
   if(e.key==="Escape"&&aboutOpen())closeAboutSmart();
-  else if(e.key==="Escape"&&searchOpen)toggleSearch();
   else if(e.key==="Escape"&&ST.rpanelOpen)closeRPanel();
   else if(e.key==="Escape"&&ST.apanelOpen)closeAudioPanel();
   else if(e.key==="Escape"&&ST.diafilm)exitDiafilm();
   else if(e.key==="Escape"&&ST.viewOpen)toggleViewPanel();
   else if(e.key==="Escape"&&ST.immersive)exitImmersive();
-  if((e.ctrlKey||e.metaKey)&&e.key==="f"){e.preventDefault();if(!searchOpen)toggleSearch();}
+  if((e.ctrlKey||e.metaKey)&&e.key==="f"){e.preventDefault();openSearchTab();}
 });
 
 // ============================================================
@@ -6133,16 +6272,15 @@ document.addEventListener("keydown",function(e){
 // ============================================================
 let pendingAyah=null;
 // Which open panels should the Back button / backdrop close (overlays only; the desktop sidebar is docked)
-function anyOverlayOpen(){return searchOpen||ST.rpanelOpen||ST.apanelOpen||ST.diafilm||ST.immersive||appAboutOpen()||progressOpen||spdOpen||(isM()&&ST.sidebarOpen);}
+function anyOverlayOpen(){return ST.rpanelOpen||ST.apanelOpen||ST.diafilm||ST.immersive||appAboutOpen()||progressOpen||spdOpen||(isM()&&ST.sidebarOpen);}
 let navBack=false; // true while we programmatically history.back() to consume our own overlay entry
 function pushOverlay(){if(!(history.state&&history.state.ov))history.pushState({ov:1},"");}
 function consumeOverlay(){if(history.state&&history.state.ov){navBack=true;history.back();}}
-function updateBackdrop(){const b=document.getElementById("panelBackdrop");if(b)b.classList.toggle("show",ST.rpanelOpen||ST.apanelOpen||searchOpen);}
+function updateBackdrop(){const b=document.getElementById("panelBackdrop");if(b)b.classList.toggle("show",ST.rpanelOpen||ST.apanelOpen);}
 function closeAllPanelsUI(){
   if(appAboutOpen()){closeAbout();const ov=document.getElementById("aboutOvl");if(ov)ov.dataset.app="";}  // «Назад» (запись уже снята)
   if(progressOpen){const ov=document.getElementById("progressOvl");if(ov)ov.style.display="none";progressOpen=false;}  // «Назад» закрывает экран прогресса (запись истории уже снята)
   if(spdOpen){const ov=document.getElementById("speedOvl");if(ov)ov.style.display="none";spdOpen=false;}  // «Назад» закрывает экран скорости (активный замер-пилюля живёт дальше)
-  if(searchOpen){searchOpen=false;document.getElementById("searchPanel").classList.add("hidden");}
   if(ST.rpanelOpen){ST.rpanelOpen=false;document.getElementById("rpanel").classList.add("collapsed");}
   if(ST.apanelOpen){ST.apanelOpen=false;document.getElementById("apanel").classList.add("collapsed");}
   if(ST.diafilm)exitDiafilm(true);       // «Назад» выходит из диафильма (запись уже снята)
@@ -6156,7 +6294,7 @@ function pushHomeHash(){const h="#home";if(location.hash!==h)history.pushState({
 function applyHash(initial){
   const raw=decodeURIComponent((location.hash||"").replace(/^#/,"")).trim();
   if(raw==="home"){                                  // явный «#home» (например, «назад» на Главную)
-    ST.homeMode=true;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.hifzMode=false;ST.bmView=false;if(!initial)render();return true;
+    ST.homeMode=true;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;if(!initial)render();return true;
   }
   const m=raw.match(/^(\d+)(?::(\d+))?$/);
   if(!m)return false;
@@ -6167,7 +6305,7 @@ function applyHash(initial){
   const stateAyah=(st&&st.surah===sid&&st.ayah)?st.ayah:null;     // позиция, запомненная при скролле → «назад»
   pendingAyah=hashAyah;
   const changing=(ST.surah!==sid||ST.selectedTag||ST.homeMode||ST.hifzMode||ST.bmView);
-  if(changing){ST.surah=sid;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;}
+  if(changing){ST.surah=sid;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;}
   if(!hashAyah&&stateAyah&&(changing||initial))ST.scrollToAyah=stateAyah;  // встанем на аят при рендере (без анимации)
   if(hashAyah&&changing&&!initial)ST.scrollToAyah=hashAyah;       // иначе якорь той же суры вернёт старый аят
   if(changing&&!initial)render();
@@ -6265,14 +6403,23 @@ function onFsChange(){
   syncFsBtn();
 }
 function closeRPanel(){if(ST.rpanelOpen)toggleRPanel();}
-function onSearch(q){ST.search=q;renderSB();}
+function onSearch(q){
+  ST.search=q;
+  // На вкладке 🔍 панель НЕ перерисовываем: doSearch точечно обновит #spResults,
+  // иначе каждый символ сносил бы результаты вместе с фокусом в поле.
+  if(ST.sbTab==="search"){scheduleSearch();return;}
+  renderSB();
+}
 // Вкладки боковой панели: Суры / Теги / Закладки / Вид (настройки).
 // Правило системы: панель — НАВИГАТОР (списки/настройки), контент — в главном окне.
-const SB_TABS=["surahs","tags","topics","bookmarks","view"];
+const SB_TABS=["search","surahs","tags","topics","roots","bookmarks","notes","view"];
 function setSbTab(t){
   ST.sbTab=t;
   for(const x of SB_TABS){const b=document.getElementById("sbTab"+x[0].toUpperCase()+x.slice(1));if(b)b.classList.toggle("active",t===x);}
   const jb=document.getElementById("sbJump");if(jb)jb.classList.toggle("hidden",t!=="surahs"); // «к аяту» — только на вкладке Суры
+  // Поле шапки — общее на все вкладки, но на 🔍 оно И ЕСТЬ строка поиска: подпись должна это говорить
+  const si=document.getElementById("sbSearchInp");
+  if(si)si.placeholder=t==="search"?"Слово, фраза или номер аята (2:255)":"Поиск...";
   renderSB();renderCB();                                  // renderCB — подсветка ⚙ в шапке
 }
 // Переход по номеру аята из панели «Суры». Голое число = аят текущей суры,
@@ -6286,7 +6433,7 @@ function sbJumpGo(){
   if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   goAyahRef(ref);
 }
-function goSurah(id){ST.surah=id;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.bookIntro=false;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;{const st=qpcMeta&&qpcMeta.surahStart&&qpcMeta.surahStart[id];if(st)ST.mushafPage=st.page;}if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}pushSurahHash(id);render();}
+function goSurah(id){ST.surah=id;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.bookIntro=false;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;{const st=qpcMeta&&qpcMeta.surahStart&&qpcMeta.surahStart[id];if(st)ST.mushafPage=st.page;}if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}pushSurahHash(id);render();}
 
 // --- Reading display settings (⚙ Вид): sizes AR/RU, line spacing AR/RU, margins
 const VIEW_DEFAULTS={fsAr:1,fsRu:1,lhAr:1,lhRu:1,mar:0,sbScale:1};
@@ -6517,7 +6664,7 @@ function goAyahRef(ref){
   if(!ST.pageMode)flashAyah(ref.ayah);
 }
 function goAyah(surah,ayah){
-  ST.surah=surah;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;ST.bookIntro=false;ST.scrollToAyah=ayah||1;
+  ST.surah=surah;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;ST.bookIntro=false;ST.scrollToAyah=ayah||1;
   if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   pushSurahHash(surah);render();
 }
@@ -6546,7 +6693,7 @@ function setMode(mode){
   // Явный выбор режима гасит экраны-результаты: они проверяются в renderCenterBody
   // РАНЬШЕ ленты/мусхафа, и без сброса тап по «📖 Аяты» с экрана тем/тегов/корней
   // не уводил бы никуда (правило «новый экран сбрасывает конкурирующие флаги»).
-  ST.bookIntro=false;ST.bmView=false;ST.topicSel=null;ST.selectedTag=null;ST.rootView=null;
+  ST.bookIntro=false;ST.bmView=false;ST.notesView=false;ST.topicSel=null;ST.selectedTag=null;ST.rootView=null;
   if(mode==="hifz"){                           // 6-й режим «Хифз» (проверка заучивания)
     if(!ST.hifzMode){
       ST.hifzMode=true;ST.homeMode=false;ST.srcMode=false;ST.pageMode=false;
@@ -7099,7 +7246,7 @@ function addTag(val){
 // экраны, которые renderCenter проверяет РАНЬШЕ selectedTag (Главная, скан,
 // режим источника, введение): иначе тап по тегу оттуда молча ничего не делал.
 function selectTag(path){
-  ST.selectedTag=path;ST.bookIntro=false;ST.homeMode=false;ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.bmView=false;
+  ST.selectedTag=path;ST.bookIntro=false;ST.homeMode=false;ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;
   if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   render();
 }
