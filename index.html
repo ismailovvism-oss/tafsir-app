@@ -934,6 +934,9 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
 .hf-cell.d-know{border-color:#2ea06e}
 .hf-cell.d-shaky{border-color:#e0a030}
 .hf-cell.d-no{border-color:#e05252}
+.hf-suras{flex:1;min-width:120px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;
+  background:var(--bg-card);color:var(--text);font-family:inherit;font-size:12px;outline:none}
+.hf-suras:focus{border-color:var(--accent)}
 .hf-quiz-card{border:1px solid var(--border);border-radius:10px;padding:13px;margin-top:10px}
 .hf-ar{font-size:calc(21px*var(--rs-ar,1));line-height:calc(1.9*var(--lh-ar,1));direction:rtl;text-align:right;color:var(--text)}
 .hf-ru{font-size:14px;line-height:1.55;color:var(--text)}
@@ -2154,7 +2157,8 @@ async function hifzEnterMode(){
   if(cb)cb.innerHTML=`<div class="hifz-screen"><div id="hifzBody"><div class="hf-muted" style="padding:20px">Загружаю карту…</div></div></div>`;
   if(typeof loadQpcMeta==="function")await loadQpcMeta();  // границы джузов и страниц (карта, verseToPage)
   _progPageIdx=null;
-  HF.scope=Progress.hifzSettings().scope||{juz:30,surah:null,from:null,to:null};
+  HF.scope=Progress.hifzSettings().scope||{kind:"juz",juz:30,surah:null,from:null,to:null};
+  if(!HF.scope.kind)HF.scope.kind="juz";                  // охват, сохранённый до появления типов
   HF.tab="map";HF.sess=null;HF.open={};
   HF.zoom={level:2,juz:null,surah:null};                   // вид по умолчанию — уровень сур
   HF.ovl={group:null,value:null,sub:null};                 // оверлей-фильтры выключены при входе
@@ -2181,7 +2185,34 @@ function hifzJuzRange(j){
   if(b)to=b.ayah>1?{s:b.surah,a:b.ayah-1}:{s:b.surah-1,a:(SURAHS.find(x=>x.id===b.surah-1)||{n:1}).n};
   return {from:{s:a.surah,a:a.ayah},to};
 }
+// «78-114, 36, 55» → [36,55,78…114]: диапазоны и отдельные суры, уникальные, в
+// порядке мусхафа. Плохие токены не глотаем молча, а возвращаем — UI их покажет,
+// иначе опечатка «115» тихо сужала бы охват и человек искал бы причину сам.
+function hifzParseSuras(str){
+  const out=new Set(),bad=[];
+  for(const tok of String(str||"").split(/[,;\s]+/)){
+    if(!tok)continue;
+    const m=tok.match(/^(\d{1,3})(?:[-–—](\d{1,3}))?$/);
+    if(!m){bad.push(tok);continue;}
+    let a=+m[1],b=m[2]?+m[2]:a;
+    if(a<1||a>114||b<1||b>114){bad.push(tok);continue;}
+    if(a>b){const t=a;a=b;b=t;}                     // «114-78» — тот же диапазон, а не пустота
+    for(let x=a;x<=b;x++)out.add(x);
+  }
+  return {list:[...out].sort((x,y)=>x-y),bad};
+}
+// Охват → список {surah,from,to}. ЕДИНСТВЕННАЯ точка, где охват превращается в
+// аяты: пул, статистика, цепочки и слабые места ходят только через неё, поэтому
+// новый тип охвата достаточно раскрыть здесь.
 function hifzScopeSuras(){
+  if(HF.scope.kind==="suras"){                      // несколько сур — целиком, вне границ джуза
+    const out=[];
+    for(const sid of hifzParseSuras(HF.scope.list).list){
+      const su=SURAHS.find(x=>x.id===sid);
+      if(su)out.push({surah:sid,from:1,to:su.n,su});
+    }
+    return out;
+  }
   const r=hifzJuzRange(HF.scope.juz);if(!r)return [];
   const out=[];
   for(let s=r.from.s;s<=r.to.s;s++){
@@ -2198,7 +2229,13 @@ function hifzScopeSuras(){
 }
 function hifzScopeVks(){const vks=[];for(const r of hifzScopeSuras())for(let a=r.from;a<=r.to;a++)vks.push(r.surah+":"+a);return vks;}
 function hifzSetScope(part,v){
-  if(part==="juz"){HF.scope={juz:Math.max(1,Math.min(30,+v||1)),surah:null,from:null,to:null};}
+  if(part==="kind"){                                // переключение типа охвата: джуз ⇄ суры
+    HF.scope=v==="suras"
+      ? {kind:"suras",list:HF.scope.list||"78-114"} // по умолчанию — муфассаль, самый частый случай
+      : {kind:"juz",juz:HF.scope.juz||30,surah:null,from:null,to:null};
+  }
+  else if(part==="list"){const el=document.getElementById("hfSuras");HF.scope.list=el?el.value:"";}
+  else if(part==="juz"){HF.scope={kind:"juz",juz:Math.max(1,Math.min(30,+v||1)),surah:null,from:null,to:null};}
   else if(part==="surah"){HF.scope.surah=+v||null;HF.scope.from=null;HF.scope.to=null;}
   else if(part==="range"){
     const f=+document.getElementById("hfFrom").value||null,t=+document.getElementById("hfTo").value||null;
@@ -2766,17 +2803,39 @@ function hifzMapHTML(){
     ${spots?`<div class="hf-muted" style="margin-top:8px">Ближайшие слабые места в охвате: <b>${spots}</b></div>`:""}</div>`;
   // — охват проверок (существующий селектор; вызывается с любого уровня) —
   const sc=HF.scope;
-  const juzOpts=Array.from({length:30},(_,i)=>`<option value="${i+1}" ${i+1===sc.juz?"selected":""}>Джуз ${i+1}</option>`).join("");
-  const inJuz=hifzJuzRange(sc.juz);
-  const suraOpts=[`<option value="0">все суры</option>`];
-  for(let s=inJuz.from.s;s<=inJuz.to.s;s++){const su=SURAHS.find(x=>x.id===s);if(su)suraOpts.push(`<option value="${s}" ${s===sc.surah?"selected":""}>${s}. ${esc(su.ru)}</option>`);}
+  const isL=sc.kind==="suras";
+  // Тип охвата: ДЖУЗ (+ сужение сурой и аятами) либо СУРЫ списком. Список нужен
+  // затем, что заучивают не джузами: муфассаль (78-114), «Аль-Бакара + Алю Имран»
+  // — такие охваты через границы джузов не выражались вовсе.
+  const kindSeg=`<div class="prog-seg" style="margin-bottom:7px">
+    <button class="${isL?"":"on"}" onclick="hifzSetScope('kind','juz')">Джуз</button>
+    <button class="${isL?"on":""}" onclick="hifzSetScope('kind','suras')">Суры</button></div>`;
+  const parsed=isL?hifzParseSuras(sc.list):null;
+  let picker;
+  if(isL){
+    picker=`<input id="hfSuras" class="hf-suras" value="${escAttr(sc.list||"")}" placeholder="78-114, 36, 55"
+      onchange="hifzSetScope('list')" title="Диапазоны и отдельные суры через запятую">`;
+  }else{
+    const juzOpts=Array.from({length:30},(_,i)=>`<option value="${i+1}" ${i+1===sc.juz?"selected":""}>Джуз ${i+1}</option>`).join("");
+    const inJuz=hifzJuzRange(sc.juz);
+    const suraOpts=[`<option value="0">все суры</option>`];
+    for(let s=inJuz.from.s;s<=inJuz.to.s;s++){const su=SURAHS.find(x=>x.id===s);if(su)suraOpts.push(`<option value="${s}" ${s===sc.surah?"selected":""}>${s}. ${esc(su.ru)}</option>`);}
+    const sr=hifzScopeSuras();
+    const one=sc.surah&&sr.length?sr[0]:null;
+    const range=one?`<span>аяты</span><input id="hfFrom" type="number" min="1" placeholder="${one.from}" value="${sc.from||""}" onchange="hifzSetScope('range')"><span>—</span><input id="hfTo" type="number" min="1" placeholder="${one.to}" value="${sc.to||""}" onchange="hifzSetScope('range')">`:"";
+    picker=`<select onchange="hifzSetScope('juz',this.value)">${juzOpts}</select>
+      <select onchange="hifzSetScope('surah',this.value)">${suraOpts.join("")}</select>${range}`;
+  }
   const suras=hifzScopeSuras();
-  const one=sc.surah&&suras.length?suras[0]:null;
-  const range=one?`<span>аяты</span><input id="hfFrom" type="number" min="1" placeholder="${one.from}" value="${sc.from||""}" onchange="hifzSetScope('range')"><span>—</span><input id="hfTo" type="number" min="1" placeholder="${one.to}" value="${sc.to||""}" onchange="hifzSetScope('range')">`:"";
+  // Опечатку не глотаем: «115» или «абв» тихо сузили бы охват, а человек гадал бы.
+  const badNote=parsed&&parsed.bad.length
+    ?`<div class="hf-muted" style="margin-top:7px;color:#c0392b">Не понял: ${parsed.bad.map(b=>"«"+esc(b)+"»").join(", ")} — сура задаётся числом 1–114.</div>`:"";
+  const listNote=isL&&suras.length
+    ?`<div class="hf-muted" style="margin-top:7px">Сур в охвате: <b>${suras.length}</b> · ${esc(suras.slice(0,3).map(r=>r.su.ru).join(", "))}${suras.length>3?" …":""}</div>`:"";
   let scopeBody;
   if(!suras.length){                                       // пассаж сужен до пустоты
-    scopeBody=`<div class="hf-muted" style="margin-top:11px">Пустой охват — проверьте диапазон аятов.</div>
-      <button class="prog-cont" onclick="hifzSetScope('juz',${sc.juz})">Сбросить сужение</button>`;
+    scopeBody=`<div class="hf-muted" style="margin-top:11px">${isL?"Пустой охват — укажите суры, например «78-114» (муфассаль) или «36, 55, 67».":"Пустой охват — проверьте диапазон аятов."}</div>
+      ${isL?"":`<button class="prog-cont" onclick="hifzSetScope('juz',${sc.juz})">Сбросить сужение</button>`}`;
   }else{
     const st=hifzScopeStats();
     const pct=st.total?Math.round(st.mast/st.total*100):0;
@@ -2787,11 +2846,7 @@ function hifzMapHTML(){
     <button class="prog-cont" onclick="hifzTab('quiz')">▶ Начать проверку</button>`;
   }
   const scope=`<div class="prog-card"><h3>Охват проверки</h3>
-    <div class="hf-scope">
-      <select onchange="hifzSetScope('juz',this.value)">${juzOpts}</select>
-      <select onchange="hifzSetScope('surah',this.value)">${suraOpts.join("")}</select>
-      ${range}
-    </div>${scopeBody}</div>`;
+    ${kindSeg}<div class="hf-scope">${picker}</div>${badNote}${listNote}${scopeBody}</div>`;
   // — карта с зумом —
   const z=HF.zoom;
   const level=z.level===1?hifzL1HTML(agg):z.level===2?hifzL2HTML(agg):hifzL3HTML();
@@ -2878,7 +2933,7 @@ function hifzCellDecl(s,from,to){
 }
 // 🎯 из строки суры: сузить охват до этой суры и сразу начать проверку.
 function hifzQuizSura(s){
-  HF.scope.surah=s;HF.scope.from=null;HF.scope.to=null;
+  HF.scope={kind:"suras",list:String(s)};           // сура целиком, даже если она вне текущего джуза
   Progress.hifzSetSettings({scope:HF.scope});
   HF.sess=null;hifzTab('quiz');
 }
