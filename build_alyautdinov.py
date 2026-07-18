@@ -63,6 +63,11 @@ def parse_spec(spec):
 RE_CLOSING = re.compile(r"(?m)^.*Милостью Всевышнего тафсир .*подош[её]л к концу.*$")
 # Начало сноски внутри текста: [ digits <dash> <space>
 RE_FN_START = re.compile(r"\[(\d+)\s*[-–—]\s")
+# Концевая секция примечаний тома (артефакт ebook-экспорта): строка «notes», за ней
+# «Примечания» и нумерованный список сносок В СЫРОМ ВИДЕ. Идёт ПОСЛЕ последней суры
+# тома, поэтому без отреза целиком сваливалась в её последний аят (6:165, 17:111,
+# 35:45, 114:1). Сами сноски уже разобраны из встроенных [N - …], эта секция — дубль.
+RE_ENDNOTES = re.compile(r"(?im)^[ \t]*notes[ \t]*\n(?:[ \t]*\n)*[ \t]*Примечания[ \t]*$")
 
 
 def grab_balanced(s, i):
@@ -118,7 +123,10 @@ def clean_body(text):
     text = re.sub(r"(?m)^[ \t]*\*\*\*[ \t]*$", "\n---\n", text)
     # свернуть 3+ переводов строки в абзацный разрыв
     text = re.sub(r"\n[ \t]*\n([ \t]*\n)+", "\n\n", text)
-    return text.strip()
+    text = text.strip()
+    # висячий разделитель в самом конце (от «***» перед отрезанной концовкой) — убрать
+    text = re.sub(r"(?:\n+---)+\s*$", "", text).strip()
+    return text
 
 
 def render_unit(raw):
@@ -171,6 +179,10 @@ def main():
     for vi, fname in enumerate(VOLS):
         path = os.path.join(SRC_DIR, fname)
         s = open(path, "rb").read().decode("cp1251").replace("\r\n", "\n").replace("\r", "\n")
+        # Отрезать концевую секцию примечаний тома — иначе она падает в последний аят.
+        mn = RE_ENDNOTES.search(s)
+        if mn:
+            s = s[:mn.start()]
         heads = list(RE_SURA.finditer(s))
         if vi == 0 and heads:
             # книжная мукаддима = текст до «Сура 1.»

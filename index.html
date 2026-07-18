@@ -254,6 +254,17 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .tg-items .t-info-btn{padding:2px 6px;font-size:11px}
 .tg-items .t-meta{gap:2px}
 .tg-items .show-more-btn{grid-column:1/-1}
+/* Подтафсиры (parent → дети): узел на всю ширину строки сетки; дети — колонкой с отступом */
+.t-node{grid-column:1/-1;display:flex;flex-direction:column;background:var(--bg-card)}
+.t-node>.t-item{background:transparent}
+.t-subwrap{margin:0 0 2px 10px;border-left:2px solid var(--accent);padding-left:4px}
+.t-sub-toggle{display:block;width:100%;text-align:left;background:none;border:none;color:var(--text-muted);font-size:calc(10px*var(--sb,1));padding:4px 4px;cursor:pointer;font-family:inherit}
+.t-sub-toggle:hover{color:var(--accent)}
+.t-sub{display:flex;flex-direction:column}
+.t-sub .t-item{padding:5px 8px}
+.t-parent-head{font-size:calc(10.5px*var(--sb,1));color:var(--text-muted);padding:5px 8px 2px}
+.t-parent-note{color:var(--accent)}
+.src-child{margin-left:14px;border-left:2px solid var(--border-light);padding-left:6px}
 
 .t-item{display:flex;align-items:center;gap:6px;width:100%;padding:5px 8px 5px 14px;border:none;background:transparent;cursor:pointer;text-align:left;font-family:inherit;transition:background .1s}
 .t-item:hover{background:rgba(128,128,128,.06)}
@@ -395,7 +406,7 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .more-btn{background:none;border:none;color:var(--accent);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;padding:4px 0 2px}
 /* Footnotes: superscript refs in text + numbered list below the ayah */
 .ab-fnref{font-size:.66em;vertical-align:.42em;line-height:0;color:var(--accent);font-weight:700;padding-left:1px}
-.ab-notes{margin-top:7px;padding-top:6px;border-top:1px dashed var(--border);font-size:calc(12px*var(--rs-ru,1));color:var(--text-muted);white-space:normal}
+.ab-notes{margin-top:7px;padding-top:6px;border-top:1px dashed var(--border);font-size:calc(12px*var(--rs-ru,1));color:var(--text-muted);white-space:normal;-webkit-user-select:text;user-select:text}
 .ab-fn{display:flex;gap:6px;line-height:calc(1.6*var(--lh-ru,1));margin:2px 0}
 .ab-fn-num{color:var(--accent);font-weight:700;font-size:.82em;flex-shrink:0;min-width:1.1em;text-align:right;padding-top:.15em}
 .ab-fn-t{flex:1;min-width:0}
@@ -4768,7 +4779,8 @@ function covPopupHTML(aid){
     if(!items.length)return"";
     const col=kindCollapsed(kind);
     const head=`<div class="cov-grp-head clickable ${col?'collapsed':''}" onclick="covToggleKind(${aid},'${kind}')" title="Свернуть/развернуть">${title} · ${items.length} <span class="grp-chev">${col?'▸':'▾'}</span></div>`;
-    return head+(col?"":items.map(t=>covRowHTML(t,aid,has,adh)).join(""));
+    const rows=srcOrderNested(items).map(({t,depth})=>{const r=covRowHTML(t,aid,has,adh);return depth?`<div class="src-child">${r}</div>`:r;}).join("");
+    return head+(col?"":rows);
   };
   const covWarn=covLoadFailed?`<div class="about-warn">⚠ Индекс покрытия не загрузился (нет сети?) — список источников неполный. Обновите страницу.</div>`:"";
   return `<div class="tag-popup-head"><span>📖 Аят ${aid} · 🌐 ${covLoadFailed?'?':c.tr} · 📚 ${covLoadFailed?'?':c.taf}</span><button class="tag-popup-close" onclick="closeCovPopup()">✕</button></div>
@@ -4958,10 +4970,10 @@ function renderSourcePicker(el){
     const col=pickCollapsed(key);
     let h=`<div class="srcp-gname clickable ${col?'collapsed':''}" onclick="pickToggleKind('${key}')" title="Свернуть/развернуть">${icon} ${title} · ${items.length} <span class="grp-chev">${col?'▸ показать':'▾'}</span></div>`;
     if(col)return h;
-    for(const t of items){
+    for(const {t,depth} of srcOrderNested(items)){
       const src=COV.sources[t.id];const pct=Math.round(src.n*100/COV.total);
       const full=pct>=100;const cls=full?'full':(pct>=50?'mid':'low');
-      h+=`<button class="srcp-item" onclick="setSrcSel('${escAttr(t.id)}')">
+      h+=`<button class="srcp-item${depth?' src-child':''}" onclick="setSrcSel('${escAttr(t.id)}')">
         <div class="srcp-row1"><span class="srcp-name">${esc(t.name)}</span><span class="srcp-pct ${cls}">${pct}%</span></div>
         <div class="srcp-bar"><div class="srcp-bar-fill ${cls}" style="width:${pct}%"></div></div>
         <div class="srcp-extent">${full?'полное · 114 сур':covExtentText(t.id)}</div>
@@ -5231,8 +5243,8 @@ async function renderReading(el){
     setupHydration(area,enabled,loaded);
     // a pending jump (📑 Переход) wins over scroll-anchor preservation
     if(ST.scrollToAyah!=null){
-      const t=area.querySelector(`.ayah-block[data-aid="${ST.scrollToAyah}"]`);if(t)t.scrollIntoView({block:"start"});
-      ST.scrollToAyah=null;
+      const aid=ST.scrollToAyah;ST.scrollToAyah=null;
+      jumpToAyahEl(aid,false);   // до-выравнивание: лениво гидратируемые тела сдвигают цель
     }else if(anchorAid){const t=area.querySelector(`.ayah-block[data-aid="${anchorAid}"]`);if(t)t.scrollIntoView({block:"start"});}
   } else {
     if(hydrationObserver){hydrationObserver.disconnect();hydrationObserver=null;}
@@ -5294,8 +5306,12 @@ async function renderReading(el){
       const th=lay.querySelector("thead");const headH=th?th.getBoundingClientRect().height:0;
       lay.scrollTop+=cell.getBoundingClientRect().top-lay.getBoundingClientRect().top-headH;
     };
-    if(ST.scrollToAyah!=null){colScrollTo(ST.scrollToAyah);ST.scrollToAyah=null;}
-    else if(anchorAid)colScrollTo(anchorAid);
+    if(ST.scrollToAyah!=null){
+      const aid=ST.scrollToAyah;ST.scrollToAyah=null;
+      // «Колонки» строятся целиком (без ленивой гидратации), но арабские глифы/
+      // шрифты догружаются и меняют высоту рядов — тоже до-выравниваем.
+      settleScroll(()=>area.querySelector(`.col-num[data-aid="${aid}"]`),()=>colScrollTo(aid));
+    }else if(anchorAid)colScrollTo(anchorAid);
   }
   lastReadingSurah=ST.surah;
 }
@@ -5781,6 +5797,41 @@ function fillBar(t){
   const pct=Math.round(f*100);
   return `<div class="t-fill" title="Заполнено: ${pct}% Корана"><i style="width:${Math.max(3,pct)}%"></i></div>`;
 }
+// ── Подтафсиры: источник с полем `parent` — дочерний узел родителя (напр. асары
+// муджтахидов Ибн Аббас/Судди/… внутри свода «аль-Мавсу'а»). Вложенность даётся во
+// ВСЕХ списках выбора: каталог 📚, попап покрытия, режим источника, менеджер. ──
+function srcChildren(pid){return CONFIG.tafsirs.filter(t=>t.parent===pid);}
+function srcIsParent(id){return CONFIG.tafsirs.some(t=>t.parent===id);}
+// Разложить список так, чтобы дети шли СРАЗУ за родителем (плоские списки без
+// сворачивания — попап/пикер/менеджер). Ребёнок, чьего родителя нет в списке,
+// остаётся верхним уровнем. Возвращает [{t,depth}] в порядке config.
+function srcOrderNested(items){
+  const byId=new Map(items.map(t=>[t.id,t]));
+  const kids=new Map();
+  items.forEach(t=>{if(t.parent&&byId.has(t.parent)){(kids.get(t.parent)||kids.set(t.parent,[]).get(t.parent)).push(t);}});
+  const out=[];
+  items.forEach(t=>{
+    if(t.parent&&byId.has(t.parent))return;
+    out.push({t,depth:0});
+    (kids.get(t.id)||[]).forEach(k=>out.push({t:k,depth:1}));
+  });
+  return out;
+}
+// Узел каталога 📚: обычный источник ИЛИ родитель со сворачиваемым списком детей.
+// `pool` — уже отфильтрованный каталог (не-включённые, по фасетам/поиску). Дети по
+// умолчанию свёрнуты (чтобы длинный свод не мешал скроллить); поиск раскрывает.
+function catNodeHTML(t,pool,q,orphan){
+  const kids=pool.filter(x=>x.parent===t.id);
+  if(!kids.length)return tItem(t,false,false);   // обычный источник — ячейка сетки
+  // Родитель с детьми — на всю ширину строки (.t-node), дети свёрнуты по умолчанию.
+  const head= orphan
+    ? `<div class="t-parent-head">${esc(t.name)} <span class="t-parent-note">· включён (читается)</span></div>`
+    : tItem(t,false,false);
+  const key="sub_"+t.id, open=q?true:!!collapsedG[key];
+  let h=`<div class="t-node">${head}<div class="t-subwrap"><button class="t-sub-toggle" onclick="event.stopPropagation();collapsedG['${key}']=!collapsedG['${key}'];renderRP();">${open?'▾':'▸'} Подтафсиры · ${kids.length}${open?'':' — показать'}</button>`;
+  if(open)h+=`<div class="t-sub">`+kids.map(k=>tItem(k,false,false)).join("")+`</div>`;
+  return h+`</div></div>`;
+}
 function tItem(t,on,reorder){
   if(t.kind==="image"){ // скан-источник: открывает отдельную читалку, не вплетается
     const act=ST.scanSource===t.id;
@@ -5898,8 +5949,8 @@ function toggleTajweed(){
 }
 
 // ── Модалки управления наборами: чтецы (recHidden) и переводы/тафсиры (srcHidden) ──
-function _mgrRow(id,name,sub,checked,fn){
-  return `<label class="vp-check" style="display:flex;gap:6px;align-items:center;padding:3px 0;margin:0">`+
+function _mgrRow(id,name,sub,checked,fn,depth){
+  return `<label class="vp-check" style="display:flex;gap:6px;align-items:center;padding:3px 0;margin:0${depth?';margin-left:16px;border-left:2px solid var(--border);padding-left:8px':''}">`+
     `<input type="checkbox" ${checked?"checked":""} onchange="${fn}('${escAttr(id)}',this.checked)">`+
     `<span style="flex:1">${esc(name)}${sub?` <span style="color:var(--text-muted);font-size:10px">· ${esc(sub)}</span>`:""}</span></label>`;
 }
@@ -5928,7 +5979,7 @@ function renderSourceManager(){
     const items=CONFIG.tafsirs.filter(t=>t.group===g.id&&t.kind!=="quran"&&t.kind!=="image");
     if(!items.length)return;
     secs+=`<div class="rp-sec-head" style="margin-top:6px">${g.icon||"📁"} ${esc(g.name)}</div>`+
-      items.map(t=>_mgrRow(t.id,t.name,t.author||"",!hid.has(t.id),"srcToggleVis")).join("");
+      srcOrderNested(items).map(({t,depth})=>_mgrRow(t.id,t.name,t.author||"",!hid.has(t.id),"srcToggleVis",depth)).join("");
   });
   openIOModal(`<div class="io-h">Переводы и тафсиры в списке 📚</div>
     <div class="io-p">Снимите галочку — источник не будет мозолить глаза в каталоге панели 📚 (уже включённые в чтение остаются). Новые источники появляются сами.</div>
@@ -5977,17 +6028,29 @@ function renderRP(){
     if(!items.length)return;
     anyShown=true;
     const col=collapsedG["rg_"+g.id];
+    // Верхний уровень группы: элементы без родителя + «осиротевшие» родители (сам
+    // свод уже включён/скрыт, но его дети ещё в каталоге — покажем узел-крышу).
+    // Дети под родителем не считаются отдельными узлами (свёрнуты по умолчанию),
+    // поэтому длинный свод не раздувает список и превью «ещё…».
+    const catIds=new Set(items.map(t=>t.id));
+    const orphanPids=new Set(items.filter(t=>t.parent&&!catIds.has(t.parent)).map(t=>t.parent));
+    const nodes=[];
+    CONFIG.tafsirs.forEach(t=>{
+      if(t.group!==g.id)return;
+      if(catIds.has(t.id)&&!t.parent)nodes.push({t,orphan:false});
+      else if(orphanPids.has(t.id))nodes.push({t,orphan:true});
+    });
     // «Переводы» — длинный список: показываем превью (несколько) + «ещё…», чтобы
     // секция была заметна, но не занимала весь экран. Прочие группы — целиком.
     const LIMIT=(g.id==="translations")?4:12;
     const expanded=ST.expandedGroups[g.id];
-    const showItems=(!expanded&&items.length>LIMIT)?items.slice(0,LIMIT):items;
+    const showNodes=(!expanded&&nodes.length>LIMIT)?nodes.slice(0,LIMIT):nodes;
     html+=`<div class="tg ${col?'collapsed':''}"><button class="tg-head" onclick="collapsedG['rg_${g.id}']=!collapsedG['rg_${g.id}'];renderRP();">
-      <span class="tg-icon">${g.icon||'📁'}</span>${g.name} (${items.length})<span class="tg-arrow">▼</span>
+      <span class="tg-icon">${g.icon||'📁'}</span>${g.name} (${nodes.length})<span class="tg-arrow">▼</span>
     </button><div class="tg-items">`;
-    showItems.forEach(t=>{html+=tItem(t,false,false);});
-    if(!expanded&&items.length>LIMIT)html+=`<button class="show-more-btn" onclick="event.stopPropagation();ST.expandedGroups['${g.id}']=true;renderRP();">ещё ${items.length-LIMIT}…</button>`;
-    else if(expanded&&items.length>LIMIT)html+=`<button class="show-more-btn" onclick="event.stopPropagation();ST.expandedGroups['${g.id}']=false;renderRP();">свернуть</button>`;
+    showNodes.forEach(n=>{html+=catNodeHTML(n.t,items,q,n.orphan);});
+    if(!expanded&&nodes.length>LIMIT)html+=`<button class="show-more-btn" onclick="event.stopPropagation();ST.expandedGroups['${g.id}']=true;renderRP();">ещё ${nodes.length-LIMIT}…</button>`;
+    else if(expanded&&nodes.length>LIMIT)html+=`<button class="show-more-btn" onclick="event.stopPropagation();ST.expandedGroups['${g.id}']=false;renderRP();">свернуть</button>`;
     html+=`</div></div>`;
   });
   if(!anyShown)html+=`<div style="padding:16px 12px;text-align:center;color:var(--text-muted);font-size:11px">${anyFacetActive()||q?'Ничего не найдено по фильтрам':'Всё включено'}</div>`;
@@ -6305,6 +6368,32 @@ function flashAyah(ayah){
     scrollToAyah(ayah);
   })();
 }
+// Скролл к аяту с ДО-выравниванием. В раскладке «Список» тела аятов
+// гидратируются ЛЕНИВО (IntersectionObserver, скелет min-height:48px) и растут
+// уже ПОСЛЕ первого скролла — блоки над целью раздуваются и сдвигают её вниз,
+// поэтому одиночный scrollIntoView попадал на более ранний аят (напр. на 127
+// вместо 143 при переходе из поиска). Повторяем скролл, пока верх цели не
+// перестанет двигаться (гидратация соседей завершилась), и только тогда — flash.
+function settleScroll(getEl,doScroll,onDone){
+  let n=0,prev=null;
+  (function step(){
+    const el=getEl();
+    if(!el){if(n++<25)setTimeout(step,120);return;}          // блок ещё не в DOM — ждём
+    doScroll(el);
+    const top=el.getBoundingClientRect().top;
+    if((prev===null||Math.abs(top-prev)>2)&&n++<18){prev=top;setTimeout(step,55);return;}
+    if(onDone)onDone(el);
+  })();
+}
+// Переход к аяту в раскладке «Список»: центрируем блок (никогда не под липкой
+// шапкой) до устаканивания, опц. подсветка. Общая точка для renderCenter и flashAyah.
+function jumpToAyahEl(aid,flash){
+  settleScroll(
+    ()=>{const a=document.getElementById("readingArea");return a&&a.querySelector(`.ayah-block[data-aid="${aid}"]`);},
+    el=>el.scrollIntoView({block:"center"}),
+    flash?el=>{el.style.boxShadow="0 0 0 2px var(--accent)";setTimeout(()=>{el.style.boxShadow="";},2000);}:null
+  );
+}
 
 // Close search on Escape, open on Ctrl+F, block Ctrl+S/U
 document.addEventListener("keydown",function(e){
@@ -6369,17 +6458,8 @@ function applyHash(initial){
   return true;
 }
 function scrollToAyah(ayah){
-  let tries=0;
-  (function tryScroll(){
-    const area=document.getElementById("readingArea");
-    const blk=area&&area.querySelector(`.ayah-block[data-aid="${ayah}"]`);
-    if(blk){
-      blk.scrollIntoView({behavior:"smooth",block:"center"});
-      blk.style.boxShadow="0 0 0 2px var(--accent)";
-      setTimeout(()=>{blk.style.boxShadow="";},2000);
-      pendingAyah=null;
-    }else if(tries++<25){setTimeout(tryScroll,150);}
-  })();
+  pendingAyah=null;
+  jumpToAyahEl(ayah,true);
 }
 window.addEventListener("popstate",()=>{
   if(navBack){navBack=false;return;}          // this back() was our own overlay consume
