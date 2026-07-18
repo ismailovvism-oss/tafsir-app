@@ -365,6 +365,12 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .warn-badge.lv-moderate{color:#b9822a;border-color:#d79a2b;background:rgba(215,154,43,.12)}
 .warn-badge.lv-minor{color:#4d6fa3;border-color:#6a8cc0;background:rgba(106,140,192,.12)}
 .warn-badge:hover{filter:brightness(1.05)}
+/* Встроенная плашка-ссылка под текстом перевода — явный призыв открыть разбор */
+.warn-inline{display:flex;align-items:center;gap:6px;width:100%;margin-top:9px;padding:8px 11px;border-radius:8px;border:1px solid;font-family:inherit;font-size:calc(12px*var(--rs-ru,1));font-weight:600;cursor:pointer;text-align:left;line-height:1.35;transition:filter .1s}
+.warn-inline.lv-critical{color:#d23b2c;border-color:rgba(210,59,44,.5);background:rgba(210,59,44,.08)}
+.warn-inline.lv-moderate{color:#b9822a;border-color:rgba(215,154,43,.5);background:rgba(215,154,43,.1)}
+.warn-inline.lv-minor{color:#4d6fa3;border-color:rgba(106,140,192,.5);background:rgba(106,140,192,.1)}
+.warn-inline:hover{filter:brightness(1.05)}
 /* нижний лист с пояснением к предупреждению */
 .warn-pop{position:fixed;z-index:210;left:50%;transform:translateX(-50%);bottom:0;width:min(560px,100%);max-height:80vh;display:flex;flex-direction:column;
   background:var(--bg-card);border:1px solid var(--border);border-bottom:none;border-radius:14px 14px 0 0;box-shadow:0 -6px 28px rgba(0,0,0,.3)}
@@ -3551,6 +3557,9 @@ async function loadCoverage(){
 let WARN={};
 const WARN_LEVELS=["critical","moderate","minor"]; // от важного к допустимому
 const WARN_LABEL={critical:"критическая ошибка",moderate:"средняя ошибка",minor:"допустимая ошибка"};
+// Подпись кликабельной ссылки-призыва (значок + плашка в тексте). Можно переопределить
+// на уровне записи предупреждения полем "cta". По умолчанию — по уровню.
+const WARN_CTA={critical:"Ответ на заблуждение",moderate:"Примечание редакции",minor:"Уточнение"};
 async function loadWarnings(){
   if(window.TL_WARNINGS){WARN=window.TL_WARNINGS;return;}
   const r=await fetchJson(resolveUrl("warnings"));
@@ -4700,11 +4709,15 @@ function isApprovedHere(t){
 function sourceEntryHTML(t,text,aid,adhoc,blockOf){
   const isAr=t.lang==="ar";
   const badge=adhoc?`<button class="cov-adhoc-x" onclick="removeAdHoc(${aid},'${escAttr(t.id)}')" title="Убрать разовый показ">только здесь ✕</button>`:"";
-  // Предупреждения об ошибках (редакторские): значок + красная/жёлтая рамка у аята.
+  // Предупреждения об ошибках (редакторские): подписанная кнопка + рамка у аята
+  // + заметная плашка-ссылка под текстом (чтобы было очевидно, что есть разбор).
   const warns=warnFor(t.id,aid);
   const wtop=warnTop(warns);
   const wCls=wtop?` warn-${wtop}`:"";
-  const wBadge=wtop?`<button class="warn-badge lv-${wtop}" onclick="event.stopPropagation();openWarnPopup('${escAttr(t.id)}',${aid})" title="Есть предупреждение об ошибке — нажмите для пояснения">⚠${warns.length>1?" "+warns.length:""}</button>`:"";
+  const wLabel=(warns.find(w=>w.cta)||{}).cta||WARN_CTA[wtop]||"Пояснение";
+  const wCnt=warns.length>1?" ("+warns.length+")":"";
+  const wBadge=wtop?`<button class="warn-badge lv-${wtop}" onclick="event.stopPropagation();openWarnPopup('${escAttr(t.id)}',${aid})" title="Нажмите — редакция объясняет, в чём проблема этого места">⚠ ${esc(wLabel)}${wCnt}</button>`:"";
+  const wInline=wtop?`<button class="warn-inline lv-${wtop}" onclick="event.stopPropagation();openWarnPopup('${escAttr(t.id)}',${aid})" title="Открыть разбор">⚠ ${esc(wLabel)}${wCnt} — открыть разбор →</button>`:"";
   const blk=(!blockOf&&text)?parseBlockRef(text):null;
   if(blk){
     return `<div class="ab-entry${isApprovedHere(t)?' approved':''}${wCls}"${adhoc?' style="border-left:2px solid var(--accent)"':''}>
@@ -4721,6 +4734,7 @@ function sourceEntryHTML(t,text,aid,adhoc,blockOf){
     ${blockNote}
     <div class="ab-entry-text md selectable ${isAr?'rtl':''} ${long?'clamped':''}">${inner}</div>
     ${long?'<button class="more-btn" onclick="toggleClamp(this)">Развернуть ▾</button>':''}
+    ${wInline}
     ${notes.length?renderFootnotes(notes):''}
   </div>`;
 }
