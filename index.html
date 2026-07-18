@@ -3634,6 +3634,15 @@ async function loadConfig(){
   if(window.TL_CONFIG){CONFIG=window.TL_CONFIG;}
   else{try{const r=await fetch(resolveUrl("config"));if(r.ok)CONFIG=await r.json();}catch(e){}}
   if(!CONFIG.tafsirs||!CONFIG.tafsirs.length)useFB();
+  // «Скрытые» источники (config: hidden:true) убраны из публичной витрины —
+  // временно сняты, данные остаются на месте. Фильтр в ОДНОЙ точке гасит их
+  // везде (каталог, поиск, покрытие, чтение), т.к. всё читает CONFIG.tafsirs.
+  // Dev-режим возвращает их для локальной доработки: открыть с «?dev=1» (сброс —
+  // «?dev=0»); выбор запоминается на устройстве (ключ tl_showHidden).
+  try{const qs=new URLSearchParams(location.search);
+    if(qs.has("dev"))localStorage.setItem("tl_showHidden",qs.get("dev")==="0"?"":"1");}catch(e){}
+  let _showHidden="";try{_showHidden=localStorage.getItem("tl_showHidden")||"";}catch(e){}
+  if(!_showHidden&&Array.isArray(CONFIG.tafsirs))CONFIG.tafsirs=CONFIG.tafsirs.filter(t=>!t.hidden);
   await loadCoverage();
   await loadWarnings();                               // предупреждения об ошибках (лёгкий файл)
   ST.enabled=getEnabled();

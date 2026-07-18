@@ -788,7 +788,8 @@
       "about": true,
       "fill": 1.0,
       "translator": "Шамиль Аляутдинов",
-      "reviewLevel": "caution"
+      "reviewLevel": "caution",
+      "hidden": true
     },
     {
       "id": "boguslawski",
