@@ -493,6 +493,24 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .wm-src-n{flex-shrink:0;font-size:12px;font-weight:700;color:#fff;background:var(--accent);border-radius:999px;padding:1px 9px}
 .wm-src-ar{font-family:'Amiri',serif;direction:rtl;color:var(--text-muted);font-size:13px;margin:2px 0 6px}
 .wm-src .aw-summary{margin:0}
+/* Карта источника: панель инструментов (порядок/развернуть), группы приёмов, оригинал */
+.wm-tools{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 12px}
+.wm-tools .cov-map-open{margin:0}
+.wm-sort{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.wm-sort-b{padding:5px 11px;border:1px solid var(--border);border-radius:8px;background:var(--bg-card);color:var(--text-muted);font-family:inherit;font-size:12px;cursor:pointer}
+.wm-sort .wm-sort-b{border:none;border-radius:0}
+.wm-sort .wm-sort-b+.wm-sort-b{border-left:1px solid var(--border)}
+.wm-sort-b.active{background:var(--accent);color:#fff}
+.aw-summary .wp-tag{cursor:pointer}
+.aw-summary .wp-tag.active{outline:2px solid var(--accent);outline-offset:1px}
+.wm-cat-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:14px 0 7px;padding-bottom:4px;border-bottom:1px dashed var(--border)}
+.wm-cat-name{font-weight:700;font-size:13px;color:var(--text)}
+.wm-cat-n{font-size:11.5px;font-weight:700;color:#fff;background:var(--text-muted);border-radius:999px;padding:0 8px}
+.wm-cat-sum .wp-tag{cursor:default;font-size:10px;padding:1px 6px}
+.wp-orig{margin:9px 11px 0;padding:8px 10px;border:1px dashed var(--border);border-radius:8px;background:var(--bg-alt)}
+.wp-orig-h{font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
+.wp-orig .ab-entry-text{font-size:12.5px;line-height:1.6;color:var(--text)}
+.wp-orig-body{font-size:12px;color:var(--text-muted)}
 /* кнопка контакта на экране «О программе» (ссылка на канал) */
 .about-contact{display:block;margin-top:16px;padding:11px 14px;background:var(--accent);color:#fff;border-radius:9px;text-align:center;font-size:14px;font-weight:600;text-decoration:none;cursor:pointer}
 .about-contact:hover{filter:brightness(1.08)}
@@ -4096,7 +4114,7 @@ function warnRows(id){
   const w=WARN[id];if(!w)return[];
   const rows=[];
   for(const k in w){if(!Array.isArray(w[k]))continue;
-    for(const it of w[k]){if(it&&it.text)rows.push({key:k,level:WARN_LEVELS.includes(it.level)?it.level:"moderate",title:it.title||"",text:it.text});}}
+    for(const it of w[k]){if(it&&it.text)rows.push({key:k,level:WARN_LEVELS.includes(it.level)?it.level:"moderate",title:it.title||"",text:it.text,cat:it.cat||""});}}
   const num=k=>{if(k==="*")return[-1,-1];const p=k.split(":");return[+p[0],+p[1]];};
   rows.sort((a,b)=>{const x=num(a.key),y=num(b.key);return x[0]-y[0]||x[1]-y[1];});
   return rows;
@@ -4104,12 +4122,30 @@ function warnRows(id){
 function warnCount(id){return warnRows(id).length;}
 function warnLevelCounts(rows){const c={};rows.forEach(r=>c[r.level]=(c[r.level]||0)+1);return c;}
 function warnSummaryHTML(cnt){return WARN_LEVELS.filter(l=>cnt[l]).map(l=>`<span class="wp-tag ${l}">${cnt[l]} ${WARN_SUMLBL[l]}</span>`).join(" ");}
-// Один раскрываемый пункт карты (адрес + заголовок + полный разбор + переход к аяту).
+// Один раскрываемый пункт карты (адрес + заголовок + оригинал источника + разбор + переход).
+// Оригинал аята подгружается лениво при первом раскрытии (ontoggle → warnOrigLoad).
 function warnItemHTML(id,r){
   const isAyah=r.key!=="*";
   const loc=isAyah?`аят ${esc(r.key)}`:"весь источник";
   const goto=isAyah?`<button class="wm-goto" onclick="event.stopPropagation();goWarnAyah('${escAttr(id)}','${escAttr(r.key)}')" title="Перейти к аяту">→ к аяту</button>`:"";
-  return `<details class="aw-item lv-${r.level}"><summary><span class="aw-loc">${loc}</span>${r.title?`<span class="aw-title">${esc(r.title)}</span>`:''}<span class="aw-chev">▾</span></summary><div class="wp-text md">${mdRender(r.text)}</div>${goto}</details>`;
+  const orig=isAyah?` ontoggle="if(this.open)warnOrigLoad(this,'${escAttr(id)}','${escAttr(r.key)}')"`:"";
+  return `<details class="aw-item lv-${r.level}"${orig}><summary><span class="aw-loc">${loc}</span>${r.title?`<span class="aw-title">${esc(r.title)}</span>`:''}<span class="aw-chev">▾</span></summary>${isAyah?`<div class="wp-orig"><div class="wp-orig-h">📖 Текст источника</div><div class="wp-orig-body">Загрузка…</div></div>`:''}<div class="wp-text md">${mdRender(r.text)}</div>${goto}</details>`;
+}
+// Ленивая подгрузка оригинала источника в раскрытый пункт карты. Кэш — chunkCache (loadChunk).
+async function warnOrigLoad(det,id,key){
+  const box=det.querySelector(".wp-orig-body");
+  if(!box||box.dataset.done)return;box.dataset.done="1";
+  const[s,a]=key.split(":");
+  let text=null;
+  try{const chunk=await loadChunk(id,+s);text=chunk&&chunk[a]||null;}catch(e){}
+  if(!text){box.innerHTML='<span style="color:var(--text-muted)">Текста по этому аяту нет.</span>';return;}
+  const t=CONFIG.tafsirs.find(x=>x.id===id);
+  const isAr=t&&t.lang==="ar";
+  const {body,notes}=splitNotes(text);
+  const long=body&&body.length>600;
+  box.outerHTML=`<div class="wp-orig-body"><div class="ab-entry-text md selectable ${isAr?'rtl':''} ${long?'clamped':''}">${renderRefs(body)}</div>
+    ${long?'<button class="more-btn" onclick="toggleClamp(this)">Развернуть ▾</button>':''}
+    ${notes.length?renderFootnotes(notes):''}</div>`;
 }
 
 // Открыть карту: id="*" — индекс, иначе источник. Гасит конкурирующие экраны.
@@ -4146,15 +4182,37 @@ function renderWarnIndex(el){
 }
 
 // Карта одного источника: шапка + заметка редактора + раскрываемый список мест.
+// Порядок — «По аятам» / «По приёмам» (группы по полю cat записи; tl_warnSort).
+// Чипы уровней в сводке — фильтр (ST.warnLvlF, сессионный). «Развернуть всё» — разом.
 function renderWarnSource(el){
   const id=ST.warnMap,t=CONFIG.tafsirs.find(x=>x.id===id);
-  const rows=warnRows(id),cnt=warnLevelCounts(rows);
-  let html=`<div class="tag-results"><div class="wm-back" onclick="openWarnMap('*')">‹ Все источники</div>
+  const all=warnRows(id),cnt=warnLevelCounts(all);
+  const byCat=localStorage.getItem("tl_warnSort")==="cat";
+  const rows=ST.warnLvlF?all.filter(r=>r.level===ST.warnLvlF):all;
+  const chips=WARN_LEVELS.filter(l=>cnt[l]).map(l=>`<span class="wp-tag ${l}${ST.warnLvlF===l?' active':''}" onclick="ST.warnLvlF=ST.warnLvlF==='${l}'?null:'${l}';render()" title="Показать только этот уровень">${cnt[l]} ${WARN_SUMLBL[l]}</span>`).join(" ");
+  let html=`<div class="tag-results"><div class="wm-back" onclick="ST.warnLvlF=null;openWarnMap('*')">‹ Все источники</div>
     <div class="tr-header">⚠ Заблуждения · ${esc(t?t.name:id)}${t&&t.nameAr?` <span class="rt-ar-big">${esc(t.nameAr)}</span>`:''}</div>
-    <div class="aw-summary" style="margin-bottom:10px">${warnSummaryHTML(cnt)}</div>`;
+    <div class="aw-summary" style="margin-bottom:10px">${chips}</div>`;
   if(t&&t.editorNote)html+=`<div class="about-warn crit" style="margin:0 0 12px">${mdRender(t.editorNote)}</div>`;
-  html+=`<button class="cov-map-open" style="margin:0 0 12px" onclick="openAbout('${escAttr(id)}')">ℹ Паспорт источника</button>`;
-  html+=`<div class="about-warnlist">${rows.map(r=>warnItemHTML(id,r)).join("")}</div>`;
+  html+=`<div class="wm-tools">
+    <button class="cov-map-open" onclick="openAbout('${escAttr(id)}')">ℹ Паспорт источника</button>
+    <span class="wm-sort"><button class="wm-sort-b${byCat?'':' active'}" onclick="localStorage.setItem('tl_warnSort','ayah');render()">По аятам</button><button class="wm-sort-b${byCat?' active':''}" onclick="localStorage.setItem('tl_warnSort','cat');render()">По приёмам</button></span>
+    <button class="wm-sort-b" onclick="const l=this.closest('.tag-results').querySelectorAll('details.aw-item');const open=[...l].some(d=>!d.open);l.forEach(d=>d.open=open);this.textContent=open?'Свернуть всё':'Развернуть всё'">Развернуть всё</button></div>`;
+  if(!byCat){
+    html+=`<div class="about-warnlist">${rows.map(r=>warnItemHTML(id,r)).join("")}</div>`;
+  }else{
+    // Группы по категории приёма; порядок — тяжесть (лучший уровень в группе), затем размер.
+    const groups=new Map();
+    for(const r of rows){const c=r.cat||"Прочее";if(!groups.has(c))groups.set(c,[]);groups.get(c).push(r);}
+    const rank=g=>WARN_LEVELS.findIndex(l=>g.some(r=>r.level===l));
+    const cats=[...groups.keys()].sort((a,b)=>rank(groups.get(a))-rank(groups.get(b))||groups.get(b).length-groups.get(a).length);
+    for(const c of cats){
+      const g=groups.get(c),gc=warnLevelCounts(g);
+      html+=`<div class="wm-cat-h"><span class="wm-cat-name">${esc(c)}</span><span class="wm-cat-n">${g.length}</span> <span class="wm-cat-sum">${warnSummaryHTML(gc)}</span></div>
+        <div class="about-warnlist">${g.map(r=>warnItemHTML(id,r)).join("")}</div>`;
+    }
+  }
+  if(ST.warnLvlF&&!rows.length)html+=`<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:12px">Нет записей этого уровня.</div>`;
   el.innerHTML=html+`</div>`;
 }
 async function openAbout(id){
