@@ -480,6 +480,19 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .aw-item[open]>summary{border-bottom:1px dashed var(--border)}
 .aw-item .wp-text{padding:9px 11px 11px;font-size:12.5px;line-height:1.6}
 .aw-item .wp-text.md :first-child{margin-top:0}
+.wm-goto{margin:0 11px 11px;padding:4px 10px;border:1px solid var(--accent);border-radius:6px;background:transparent;color:var(--accent);font-family:inherit;font-size:12px;cursor:pointer}
+.wm-goto:hover{background:var(--accent);color:#fff}
+/* Карта заблуждений: паспортная ссылка + индекс источников */
+.about-warnmap-link{display:block;width:100%;text-align:left;margin:0 0 14px;padding:10px 12px;border:1px solid rgba(210,59,44,.5);border-radius:8px;background:rgba(210,59,44,.07);color:#d23b2c;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.about-warnmap-link:hover{filter:brightness(1.04)}
+.wm-back{color:var(--accent);cursor:pointer;font-size:13px;padding:2px 0 8px}
+.wm-src{border:1px solid var(--border);border-radius:10px;padding:11px 13px;margin-bottom:8px;cursor:pointer;background:var(--bg-card)}
+.wm-src:hover{background:var(--bg-alt)}
+.wm-src-top{display:flex;align-items:center;gap:8px}
+.wm-src-name{flex:1;font-weight:600;font-size:14px;color:var(--text)}
+.wm-src-n{flex-shrink:0;font-size:12px;font-weight:700;color:#fff;background:var(--accent);border-radius:999px;padding:1px 9px}
+.wm-src-ar{font-family:'Amiri',serif;direction:rtl;color:var(--text-muted);font-size:13px;margin:2px 0 6px}
+.wm-src .aw-summary{margin:0}
 /* кнопка контакта на экране «О программе» (ссылка на канал) */
 .about-contact{display:block;margin-top:16px;padding:11px 14px;background:var(--accent);color:#fff;border-radius:9px;text-align:center;font-size:14px;font-weight:600;text-decoration:none;cursor:pointer}
 .about-contact:hover{filter:brightness(1.08)}
@@ -1540,6 +1553,7 @@ let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,apan
   // где гасятся topicSel/selectedTag: null — выключен, "*" — указатель корней,
   // "<корень>" — вхождения этого корня. Спутники (ниже) живут только при нём.
   rootView:null,
+  warnMap:null,      // «Карта заблуждений»: "*" — индекс всех источников, "<id>" — карта одного
   searchAll:false,   // вкладка 🔍: искать во всех тафсирах, а не только во включённых
   notesView:false,   // полноэкранный список заметок (панель — навигатор, окно — контент)
   rootQ:"",          // поиск по указателю корней (арабский корень или русский глосс)
@@ -4071,27 +4085,74 @@ async function openAppAbout(){
   ov.style.display="flex";ov.scrollTop=0;
   pushOverlay();                                     // чтобы аппаратная «Назад» закрывала экран
 }
-// Свод ВСЕХ предупреждений по источнику для паспорта: список «где какая проблема»
-// в одном месте, каждый пункт раскрывается прямо здесь (без ухода в аят). Данные —
-// тот же WARN, что и значки у аятов. Сортировка: «весь источник» (*) → по адресу.
-function aboutWarnings(id){
-  const w=WARN[id];if(!w)return"";
+// ── КАРТА ЗАБЛУЖДЕНИЙ ────────────────────────────────────────────────────────
+// Отдельная сущность: свод редакторских предупреждений (WARN). Индекс «*» — все
+// источники, у которых есть предупреждения; «<id>» — карта одного источника.
+// Вход: ссылка на Главной (индекс) и кнопка в паспорте ℹ (карта источника).
+const WARN_SUMLBL={critical:"критических",moderate:"средних",minor:"допустимых"};
+// Развёрнутые записи одного источника: [{key,level,title,text}], сортировка «*»→адрес.
+function warnRows(id){
+  const w=WARN[id];if(!w)return[];
   const rows=[];
   for(const k in w){if(!Array.isArray(w[k]))continue;
     for(const it of w[k]){if(it&&it.text)rows.push({key:k,level:WARN_LEVELS.includes(it.level)?it.level:"moderate",title:it.title||"",text:it.text});}}
-  if(!rows.length)return"";
   const num=k=>{if(k==="*")return[-1,-1];const p=k.split(":");return[+p[0],+p[1]];};
   rows.sort((a,b)=>{const x=num(a.key),y=num(b.key);return x[0]-y[0]||x[1]-y[1];});
-  const cnt={};rows.forEach(r=>cnt[r.level]=(cnt[r.level]||0)+1);
-  const SUMLBL={critical:"критических",moderate:"средних",minor:"допустимых"};
-  const summary=WARN_LEVELS.filter(l=>cnt[l]).map(l=>`<span class="wp-tag ${l}">${cnt[l]} ${SUMLBL[l]}</span>`).join(" ");
-  const items=rows.map(r=>{
-    const loc=r.key==="*"?"весь источник":`аят ${esc(r.key)}`;
-    return `<details class="aw-item lv-${r.level}"><summary><span class="aw-loc">${loc}</span>${r.title?`<span class="aw-title">${esc(r.title)}</span>`:''}<span class="aw-chev">▾</span></summary><div class="wp-text md">${mdRender(r.text)}</div></details>`;
-  }).join("");
-  return `<div class="about-section-title">⚠ Предупреждения по источнику · ${rows.length}</div>
-    <div class="aw-summary">${summary}</div>
-    <div class="about-warnlist">${items}</div>`;
+  return rows;
+}
+function warnCount(id){return warnRows(id).length;}
+function warnLevelCounts(rows){const c={};rows.forEach(r=>c[r.level]=(c[r.level]||0)+1);return c;}
+function warnSummaryHTML(cnt){return WARN_LEVELS.filter(l=>cnt[l]).map(l=>`<span class="wp-tag ${l}">${cnt[l]} ${WARN_SUMLBL[l]}</span>`).join(" ");}
+// Один раскрываемый пункт карты (адрес + заголовок + полный разбор + переход к аяту).
+function warnItemHTML(id,r){
+  const isAyah=r.key!=="*";
+  const loc=isAyah?`аят ${esc(r.key)}`:"весь источник";
+  const goto=isAyah?`<button class="wm-goto" onclick="event.stopPropagation();goWarnAyah('${escAttr(id)}','${escAttr(r.key)}')" title="Перейти к аяту">→ к аяту</button>`:"";
+  return `<details class="aw-item lv-${r.level}"><summary><span class="aw-loc">${loc}</span>${r.title?`<span class="aw-title">${esc(r.title)}</span>`:''}<span class="aw-chev">▾</span></summary><div class="wp-text md">${mdRender(r.text)}</div>${goto}</details>`;
+}
+
+// Открыть карту: id="*" — индекс, иначе источник. Гасит конкурирующие экраны.
+function openWarnMap(id){
+  closeAbout();
+  ST.topicSel=null;ST.selectedTag=null;ST.rootView=null;ST.bookIntro=false;ST.homeMode=false;
+  ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;
+  ST.warnMap=id;
+  if(isM()){ST.sidebarOpen=false;const sb=document.getElementById("sidebar");if(sb)sb.classList.add("collapsed");}
+  render();
+}
+function goWarnAyah(id,key){const[s,a]=key.split(":");ST.warnMap=null;goAyah(+s,+a);flashAyah(+a);}
+function warnMapScreen(el){return ST.warnMap==="*"?renderWarnIndex(el):renderWarnSource(el);}
+
+// Индекс: все источники с предупреждениями, счётчики по уровням, тап → карта источника.
+function renderWarnIndex(el){
+  const ids=Object.keys(WARN).filter(id=>warnCount(id)>0);
+  ids.sort((a,b)=>warnCount(b)-warnCount(a));
+  let html=`<div class="tag-results"><div class="wm-back" onclick="setMode('home')">‹ На главную</div>
+    <div class="tr-header">⚠ Карта заблуждений — ${ids.length} ${ids.length===1?'источник':'источн.'}</div>
+    <div class="rt-hint">Редакторские предупреждения о вероучительных ошибках и отклонениях в источниках. Текст источников не меняется. Тап по источнику — все отмеченные места с разбором.</div>`;
+  if(!ids.length)html+=`<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:12px">Пока нет отмеченных источников.</div>`;
+  for(const id of ids){
+    const t=CONFIG.tafsirs.find(x=>x.id===id);
+    const rows=warnRows(id),cnt=warnLevelCounts(rows);
+    html+=`<div class="wm-src" onclick="openWarnMap('${escAttr(id)}')">
+      <div class="wm-src-top"><span class="wm-src-name">${esc(t?t.name:id)}</span><span class="wm-src-n">${rows.length}</span></div>
+      ${t&&t.nameAr?`<div class="wm-src-ar">${esc(t.nameAr)}</div>`:''}
+      <div class="aw-summary">${warnSummaryHTML(cnt)}</div></div>`;
+  }
+  el.innerHTML=html+`</div>`;
+}
+
+// Карта одного источника: шапка + заметка редактора + раскрываемый список мест.
+function renderWarnSource(el){
+  const id=ST.warnMap,t=CONFIG.tafsirs.find(x=>x.id===id);
+  const rows=warnRows(id),cnt=warnLevelCounts(rows);
+  let html=`<div class="tag-results"><div class="wm-back" onclick="openWarnMap('*')">‹ Все источники</div>
+    <div class="tr-header">⚠ Заблуждения · ${esc(t?t.name:id)}${t&&t.nameAr?` <span class="rt-ar-big">${esc(t.nameAr)}</span>`:''}</div>
+    <div class="aw-summary" style="margin-bottom:10px">${warnSummaryHTML(cnt)}</div>`;
+  if(t&&t.editorNote)html+=`<div class="about-warn crit" style="margin:0 0 12px">${mdRender(t.editorNote)}</div>`;
+  html+=`<button class="cov-map-open" style="margin:0 0 12px" onclick="openAbout('${escAttr(id)}')">ℹ Паспорт источника</button>`;
+  html+=`<div class="about-warnlist">${rows.map(r=>warnItemHTML(id,r)).join("")}</div>`;
+  el.innerHTML=html+`</div>`;
 }
 async function openAbout(id){
   const t=CONFIG.tafsirs.find(x=>x.id===id);if(!t)return;
@@ -4119,7 +4180,7 @@ async function openAbout(id){
     ${aboutPassport(t)}
     ${warn}
     ${t.editorNote?`<div class="about-warn crit">${mdRender(t.editorNote)}</div>`:''}
-    ${aboutWarnings(id)}
+    ${warnCount(id)?`<button class="about-warnmap-link" onclick="openWarnMap('${escAttr(id)}')">⚠ Карта заблуждений источника · <b>${warnCount(id)}</b> — открыть →</button>`:''}
     <div class="about-section-title">Введение</div>
     <div class="about-body md">${bodyHtml}</div>
   </div>`;
@@ -4365,7 +4426,7 @@ function renderNotesPanel(el){
 }
 function goNoteAyah(s,a){ST.notesView=false;closeSidebarM();goAyah(s,a);flashAyah(a);}
 function openNotesScreen(){
-  ST.notesView=true;ST.bmView=false;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;
+  ST.notesView=true;ST.bmView=false;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;
   ST.homeMode=false;ST.scanSource=null;ST.srcMode=false;ST.bookIntro=false;ST.hifzMode=false;
   closeSidebarM();
   render();
@@ -4401,7 +4462,7 @@ async function renderNotesScreen(el){
   el.innerHTML=html+`</div>`;
 }
 function openBookmarksScreen(){
-  ST.bmView=true;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.homeMode=false;ST.scanSource=null;ST.srcMode=false;ST.bookIntro=false;ST.hifzMode=false;
+  ST.bmView=true;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.homeMode=false;ST.scanSource=null;ST.srcMode=false;ST.bookIntro=false;ST.hifzMode=false;
   if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   render();
 }
@@ -4446,7 +4507,7 @@ function renderCB(){
 
   if(ST.selectedTag){
     setCtx(`🏷 ${esc(ST.selectedTag)}`);
-    bar.innerHTML=`<div class="cb-right"><button class="btn-s" onclick="ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;render();">← Суры</button><button class="btn-s" onclick="ST.sbTab='tags';document.getElementById('sbTabSurahs').classList.remove('active');document.getElementById('sbTabTags').classList.add('active');ST.sidebarOpen=true;document.getElementById('sidebar').classList.remove('collapsed');renderSB();">🏷 Теги</button></div>`;
+    bar.innerHTML=`<div class="cb-right"><button class="btn-s" onclick="ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;render();">← Суры</button><button class="btn-s" onclick="ST.sbTab='tags';document.getElementById('sbTabSurahs').classList.remove('active');document.getElementById('sbTabTags').classList.add('active');ST.sidebarOpen=true;document.getElementById('sidebar').classList.remove('collapsed');renderSB();">🏷 Теги</button></div>`;
     return;
   }
   if(!su){setCtx("");if(bar)bar.innerHTML="";return;}
@@ -4509,6 +4570,7 @@ function renderCenterBody(){
   if(ST.bmView)return renderBookmarksScreen(el);
   if(ST.notesView)return renderNotesScreen(el);
   if(ST.rootView)return rootScreen(el);
+  if(ST.warnMap)return warnMapScreen(el);
   if(ST.topicSel)return renderTopicResults(el);
   if(ST.selectedTag)return renderTagResults(el);
   if(ST.pageMode)return renderMushafPage(el);
@@ -4589,6 +4651,12 @@ function renderHome(el){
   html+=`<div class="home-sec"><div class="home-nav-link" onclick="openRootsPanel()" title="Указатель корней: все места, где встречается корень">
     <span class="hnl-ic">🌿</span>
     <span class="hnl-main">Корни слов <span class="hnl-sub">— где ещё встречается это слово</span></span>
+    <span class="hnl-arrow">›</span></div></div>`;
+  // — Карта заблуждений (редакторские предупреждения по источникам) —
+  const warnSrcN=Object.keys(WARN).filter(id=>warnCount(id)>0).length;
+  if(warnSrcN)html+=`<div class="home-sec"><div class="home-nav-link" onclick="openWarnMap('*')" title="Редакторские предупреждения об ошибках и отклонениях в источниках">
+    <span class="hnl-ic">⚠</span>
+    <span class="hnl-main">Карта заблуждений <span class="hnl-sub">— отклонения в источниках (${warnSrcN})</span></span>
     <span class="hnl-arrow">›</span></div></div>`;
   // — Таблица Корана (суры/джузы, порядки и фильтры структуры мусхафа) —
   html+=`<div id="qtBox">${quranTableHTML()}</div>`;
@@ -4896,7 +4964,7 @@ function srcCoversSurah(s){return ST.srcMode&&ST.srcSel&&!!covPairs(ST.srcSel,s)
 // Выбрать источник для чтения (вход в чтение по покрытию).
 function setSrcSel(id){
   if(!COV.sources[id])return;
-  ST.srcMode=true;ST.srcSel=id;ST.pageMode=false;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.bookIntro=false;
+  ST.srcMode=true;ST.srcSel=id;ST.pageMode=false;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.bookIntro=false;
   ST.expandedGaps={};
   if(!covPairs(id,ST.surah)){                       // текущая сура не покрыта → к первому покрытому аяту
     const nx=covNextAyah(id,0,0,1);if(nx){ST.surah=nx.surah;ST.scrollToAyah=nx.ayah;pushSurahHash&&pushSurahHash(ST.surah);}
@@ -5472,7 +5540,7 @@ function openTopics(){
 }
 function selectTopic(id){
   ST.topicSel=id;
-  ST.selectedTag=null;ST.rootView=null;ST.bookIntro=false;ST.homeMode=false;ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;
+  ST.selectedTag=null;ST.rootView=null;ST.warnMap=null;ST.bookIntro=false;ST.homeMode=false;ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;
   if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   render();
 }
@@ -5577,7 +5645,7 @@ function openRootsPanel(){
 function openRoots(){selectRootView("*");}
 function selectRoot(root){selectRootView(root);}
 function selectRootView(v){
-  ST.rootView=v;ST.rootForm=null;ST.rootLimit=20;
+  ST.rootView=v;ST.rootForm=null;ST.rootLimit=20;ST.warnMap=null;
   if(v==="*")ST.rootQ="";                      // указатель открывается чистым, без прошлого фильтра
   ST.topicSel=null;ST.selectedTag=null;ST.bookIntro=false;ST.homeMode=false;
   ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;
@@ -5587,7 +5655,7 @@ function selectRootView(v){
 }
 // Переход на аят из списка вхождений: экран конкорданса гасим (иначе renderCenter
 // проверит rootView раньше ленты и мы никуда не уйдём — см. порядок в renderCenterBody).
-function goRootAyah(s,a){ST.rootView=null;goAyah(s,a);flashAyah(a);}
+function goRootAyah(s,a){ST.rootView=null;ST.warnMap=null;goAyah(s,a);flashAyah(a);}
 function rootScreen(el){return ST.rootView==="*"?renderRootsIndex(el):renderRootOccurrences(el);}
 
 // — Экран-указатель: 1651 корень, поиск по арабскому корню ИЛИ по русскому глоссу —
@@ -5696,7 +5764,7 @@ async function renderTagResults(el){
       const direct=o===sel.split("/").pop();       // помечен самим выбранным тегом напрямую
       return `<span class="t-pill" title="${direct?'Помечен этим тегом напрямую':'По подтегу «'+esc(o)+'»'}">${esc(o)}</span>`;
     }).join("");
-    html+=`<div class="tr-ayah" onclick="ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;goSurah(${s})">
+    html+=`<div class="tr-ayah" onclick="ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;goSurah(${s})">
       <div class="tr-ayah-ref">${su?su.ru:s} : ${a}<span class="tr-origins">${pills}</span></div>
       ${arText?`<div class="tr-ayah-ar">${arText}</div>`:''}
       ${trText?`<div class="tr-ayah-tr">${trText}</div>`:''}
@@ -5780,7 +5848,7 @@ function imgDir(t){return resolveUrl("mushaf_scans",{dir:scanDirOf(t),file:""});
 // Открыть/закрыть скан-читалку (взаимоисключающе — один скан за раз).
 function openScan(id){
   ST.scanSource=(ST.scanSource===id)?null:id;
-  if(ST.scanSource){ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.bookIntro=false;}
+  if(ST.scanSource){ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.bookIntro=false;}
   renderRP();renderCB();renderCenter();renderBottomNav();
 }
 function scanTab(btn,view){
@@ -5826,7 +5894,7 @@ function booksWithMuqaddima(){
   return getEnabledList().filter(t=>t.id!=="_notes"&&t.kind!=="image"&&t.muqaddima);
 }
 function openBookIntro(){
-  ST.bookIntro=true;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.scanSource=null;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;ST.homeMode=false;
+  ST.bookIntro=true;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.scanSource=null;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;ST.homeMode=false;
   if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   render();
 }
@@ -6418,7 +6486,7 @@ function onSearchKey(e){
 function goSearchResult(surah,ayah){
   closeSidebarM();
   ST.surah=surah;
-  ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;
+  ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;
   // ST.scrollToAyah обязателен: renderCenter асинхронный и при ТОЙ ЖЕ суре сам
   // возвращает скролл на прежний верхний аят (якорь) — без этого переход из
   // поиска отбрасывало назад, на аят, с которого поиск открывали.
@@ -6506,7 +6574,7 @@ function pushHomeHash(){const h="#home";if(location.hash!==h)history.pushState({
 function applyHash(initial){
   const raw=decodeURIComponent((location.hash||"").replace(/^#/,"")).trim();
   if(raw==="home"){                                  // явный «#home» (например, «назад» на Главную)
-    ST.homeMode=true;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;if(!initial)render();return true;
+    ST.homeMode=true;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;if(!initial)render();return true;
   }
   const m=raw.match(/^(\d+)(?::(\d+))?$/);
   if(!m)return false;
@@ -6517,7 +6585,7 @@ function applyHash(initial){
   const stateAyah=(st&&st.surah===sid&&st.ayah)?st.ayah:null;     // позиция, запомненная при скролле → «назад»
   pendingAyah=hashAyah;
   const changing=(ST.surah!==sid||ST.selectedTag||ST.homeMode||ST.hifzMode||ST.bmView);
-  if(changing){ST.surah=sid;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;}
+  if(changing){ST.surah=sid;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;}
   if(!hashAyah&&stateAyah&&(changing||initial))ST.scrollToAyah=stateAyah;  // встанем на аят при рендере (без анимации)
   if(hashAyah&&changing&&!initial)ST.scrollToAyah=hashAyah;       // иначе якорь той же суры вернёт старый аят
   if(changing&&!initial)render();
@@ -6636,7 +6704,7 @@ function sbJumpGo(){
   if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   goAyahRef(ref);
 }
-function goSurah(id){ST.surah=id;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.bookIntro=false;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;{const st=qpcMeta&&qpcMeta.surahStart&&qpcMeta.surahStart[id];if(st)ST.mushafPage=st.page;}if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}pushSurahHash(id);render();}
+function goSurah(id){ST.surah=id;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.bookIntro=false;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;{const st=qpcMeta&&qpcMeta.surahStart&&qpcMeta.surahStart[id];if(st)ST.mushafPage=st.page;}if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}pushSurahHash(id);render();}
 
 // --- Reading display settings (⚙ Вид): sizes AR/RU, line spacing AR/RU, margins
 const VIEW_DEFAULTS={fsAr:1,fsRu:1,lhAr:1,lhRu:1,mar:0,sbScale:1};
@@ -6867,7 +6935,7 @@ function goAyahRef(ref){
   if(!ST.pageMode)flashAyah(ref.ayah);
 }
 function goAyah(surah,ayah){
-  ST.surah=surah;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;ST.bookIntro=false;ST.scrollToAyah=ayah||1;
+  ST.surah=surah;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;ST.bookIntro=false;ST.scrollToAyah=ayah||1;
   if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   pushSurahHash(surah);render();
 }
@@ -6896,7 +6964,7 @@ function setMode(mode){
   // Явный выбор режима гасит экраны-результаты: они проверяются в renderCenterBody
   // РАНЬШЕ ленты/мусхафа, и без сброса тап по «📖 Аяты» с экрана тем/тегов/корней
   // не уводил бы никуда (правило «новый экран сбрасывает конкурирующие флаги»).
-  ST.bookIntro=false;ST.bmView=false;ST.notesView=false;ST.topicSel=null;ST.selectedTag=null;ST.rootView=null;
+  ST.bookIntro=false;ST.bmView=false;ST.notesView=false;ST.topicSel=null;ST.selectedTag=null;ST.rootView=null;ST.warnMap=null;
   if(mode==="hifz"){                           // 6-й режим «Хифз» (проверка заучивания)
     if(!ST.hifzMode){
       ST.hifzMode=true;ST.homeMode=false;ST.srcMode=false;ST.pageMode=false;
@@ -7498,7 +7566,7 @@ function deleteTag(path){
   setTagTree(tree);
   const at=getAyahTags();for(const k in at){at[k]=at[k].filter(t=>t!==path&&!t.startsWith(path+"/"));if(!at[k].length)delete at[k];}
   setAyahTags(at);
-  if(ST.selectedTag===path)ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;
+  if(ST.selectedTag===path)ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;
   render();
 }
 
