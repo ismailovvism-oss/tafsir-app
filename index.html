@@ -3694,7 +3694,8 @@ async function loadConfig(){
   if(!applyHash(true)){                              // нет deep-link/«#home» → Главная (ST.surah из lastPos для «Продолжить»)
     restoreLastPos();ST.homeMode=true;
   }
-  if(ST.homeMode)history.replaceState({home:true},"","#home");
+  if(ST.warnMap)history.replaceState({warnMap:ST.warnMap},"",ST.warnMap==="*"?"#warnmap":"#warnmap="+ST.warnMap);
+  else if(ST.homeMode)history.replaceState({home:true},"","#home");
   else history.replaceState({surah:ST.surah},"","#"+ST.surah);
   await loadQpcMeta();                               // для группировки списка сур по джузам (и мусхафа)
   Progress.ensureInit();                             // запустить таймер активного времени (слой CREDITED)
@@ -4117,6 +4118,8 @@ function openWarnMap(id){
   ST.topicSel=null;ST.selectedTag=null;ST.rootView=null;ST.bookIntro=false;ST.homeMode=false;
   ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;
   ST.warnMap=id;
+  const h=id==="*"?"#warnmap":"#warnmap="+id;                    // шэрабельный deep-link; «Назад» уходит по истории
+  if(location.hash!==h)history.pushState({warnMap:id},"",h);
   if(isM()){ST.sidebarOpen=false;const sb=document.getElementById("sidebar");if(sb)sb.classList.add("collapsed");}
   render();
 }
@@ -6576,6 +6579,14 @@ function applyHash(initial){
   if(raw==="home"){                                  // явный «#home» (например, «назад» на Главную)
     ST.homeMode=true;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;if(!initial)render();return true;
   }
+  if(raw==="warnmap"||raw.startsWith("warnmap=")){    // deep-link «Карта заблуждений»: #warnmap / #warnmap=<id>
+    const wid=raw==="warnmap"?"*":raw.slice(8);
+    // неизвестный/скрытый источник → общий индекс (для скрытых карта доступна только в dev-режиме)
+    ST.warnMap=(wid!=="*"&&CONFIG.tafsirs&&CONFIG.tafsirs.find(t=>t.id===wid))?wid:"*";
+    ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.bookIntro=false;ST.homeMode=false;
+    ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;
+    if(!initial)render();return true;
+  }
   const m=raw.match(/^(\d+)(?::(\d+))?$/);
   if(!m)return false;
   const sid=+m[1];
@@ -6584,7 +6595,7 @@ function applyHash(initial){
   const hashAyah=m[2]?+m[2]:null;                                 // явный deep-link «#сура:аят»
   const stateAyah=(st&&st.surah===sid&&st.ayah)?st.ayah:null;     // позиция, запомненная при скролле → «назад»
   pendingAyah=hashAyah;
-  const changing=(ST.surah!==sid||ST.selectedTag||ST.homeMode||ST.hifzMode||ST.bmView);
+  const changing=(ST.surah!==sid||ST.selectedTag||ST.homeMode||ST.hifzMode||ST.bmView||ST.warnMap);
   if(changing){ST.surah=sid;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;}
   if(!hashAyah&&stateAyah&&(changing||initial))ST.scrollToAyah=stateAyah;  // встанем на аят при рендере (без анимации)
   if(hashAyah&&changing&&!initial)ST.scrollToAyah=hashAyah;       // иначе якорь той же суры вернёт старый аят
