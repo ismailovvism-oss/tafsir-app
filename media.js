@@ -786,6 +786,15 @@ function dfShow(src){
   show.style.opacity="1";hide.style.opacity="0";                              // crossfade
   D.front=D.front===0?1:0;
 }
+// Диафильм: атмосферный крупный текст аята. Убираем коранические знаки-аннотации
+// (пауза-вакф ۖۗۘۙۚۛ, конец аята ۝, руб-эль-хизб ۞, «малый круглый ноль» ۟ над
+// немой алифой, «прямоугольный ноль» ۠, саджда ۩ и знаки-остановки) — они
+// рендерятся как лишние кружочки поверх картинки. Огласовки, шадда, сукун,
+// танвин, надстрочные буквы и кинжальная алифа — НЕ трогаем. Исходный текст
+// источника не меняется, чистка только для показа в кадре.
+function dfCleanArabic(s){
+  return s.replace(/[ۖ-۠۩-ۭ]/g,"").replace(/\s{2,}/g," ").trim();
+}
 async function dfRenderText(s,a){
   const el=document.getElementById("dfText");if(!el)return;
   if(D.textMode==="none"||D.textHidden){el.classList.add("hidden");return;}
@@ -796,7 +805,7 @@ async function dfRenderText(s,a){
   if(mode==="tr"||mode==="artr"){trId=ctx.primaryTransId();if(trId){await ctx.ensureText(trId,s).catch(()=>{});tr=ctx.getText(trId,s,a)||"";}}
   if(tok!==D.token||!D.on)return;                       // устарело (сменился аят/режим/закрылось)
   let html=`<div class="df-key">${s}:${a}</div>`;
-  if(ar)html+=`<div class="df-ar arabic-main">${ctx.esc(ar)}</div>`;
+  if(ar)html+=`<div class="df-ar arabic-main">${ctx.esc(dfCleanArabic(ar))}</div>`;
   if(tr)html+=`<div class="df-tr">${ctx.esc(tr)}</div>`;
   el.innerHTML=html;
 }

@@ -1418,7 +1418,7 @@ function scanDirOf(t){return t.imgdir||("img/"+t.id);}
 // первом обращении (▶ у аята или блок «🎧 Аудио» в панели 📚). Пока аудио не
 // трогали: ни байта кода, ни <audio>-элементов. media.js — ES-модуль, наши
 // let-глобалы (ST/CONFIG/qpcMeta) ему не видны — передаём контекст геттерами.
-const MEDIA_VER="17";   // поднять при правке media.js (сброс кеша браузера/CDN)
+const MEDIA_VER="18";   // поднять при правке media.js (сброс кеша браузера/CDN)
 let MEDIA=null;        // загруженный модуль (null = ещё не загружался)
 function mediaCtx(){
   return {
