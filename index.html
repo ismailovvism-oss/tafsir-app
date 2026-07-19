@@ -459,6 +459,27 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .about-empty{color:var(--text-muted)}
 .about-warn{background:var(--note-bg);border:1px solid var(--note-border);color:var(--note-color);border-radius:8px;padding:9px 12px;font-size:12.5px;line-height:1.55;margin:0 0 12px}
 .about-warn.soft{background:var(--bg-alt);border-color:var(--border);color:var(--text-sec)}
+.about-warn.crit{background:rgba(210,59,44,.07);border-color:rgba(210,59,44,.55);color:var(--text)}
+/* Свод предупреждений по источнику в паспорте */
+.aw-summary{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
+.aw-summary .wp-tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
+.aw-summary .wp-tag.critical{color:#fff;background:#d23b2c}
+.aw-summary .wp-tag.moderate{color:#7a5510;background:#f0c56a}
+.aw-summary .wp-tag.minor{color:#fff;background:#6a8cc0}
+.about-warnlist{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.aw-item{border:1px solid var(--border);border-left-width:3px;border-radius:8px;background:var(--bg-card);overflow:hidden}
+.aw-item.lv-critical{border-left-color:#d23b2c}
+.aw-item.lv-moderate{border-left-color:#d79a2b}
+.aw-item.lv-minor{border-left-color:#6a8cc0}
+.aw-item>summary{list-style:none;cursor:pointer;padding:8px 11px;display:flex;align-items:center;gap:8px;font-size:12.5px;line-height:1.35}
+.aw-item>summary::-webkit-details-marker{display:none}
+.aw-loc{flex-shrink:0;font-weight:700;color:var(--accent);font-size:11.5px}
+.aw-title{flex:1;color:var(--text);font-weight:600}
+.aw-chev{flex-shrink:0;color:var(--text-muted);transition:transform .15s}
+.aw-item[open]>summary .aw-chev{transform:rotate(180deg)}
+.aw-item[open]>summary{border-bottom:1px dashed var(--border)}
+.aw-item .wp-text{padding:9px 11px 11px;font-size:12.5px;line-height:1.6}
+.aw-item .wp-text.md :first-child{margin-top:0}
 /* кнопка контакта на экране «О программе» (ссылка на канал) */
 .about-contact{display:block;margin-top:16px;padding:11px 14px;background:var(--accent);color:#fff;border-radius:9px;text-align:center;font-size:14px;font-weight:600;text-decoration:none;cursor:pointer}
 .about-contact:hover{filter:brightness(1.08)}
@@ -4050,6 +4071,28 @@ async function openAppAbout(){
   ov.style.display="flex";ov.scrollTop=0;
   pushOverlay();                                     // чтобы аппаратная «Назад» закрывала экран
 }
+// Свод ВСЕХ предупреждений по источнику для паспорта: список «где какая проблема»
+// в одном месте, каждый пункт раскрывается прямо здесь (без ухода в аят). Данные —
+// тот же WARN, что и значки у аятов. Сортировка: «весь источник» (*) → по адресу.
+function aboutWarnings(id){
+  const w=WARN[id];if(!w)return"";
+  const rows=[];
+  for(const k in w){if(!Array.isArray(w[k]))continue;
+    for(const it of w[k]){if(it&&it.text)rows.push({key:k,level:WARN_LEVELS.includes(it.level)?it.level:"moderate",title:it.title||"",text:it.text});}}
+  if(!rows.length)return"";
+  const num=k=>{if(k==="*")return[-1,-1];const p=k.split(":");return[+p[0],+p[1]];};
+  rows.sort((a,b)=>{const x=num(a.key),y=num(b.key);return x[0]-y[0]||x[1]-y[1];});
+  const cnt={};rows.forEach(r=>cnt[r.level]=(cnt[r.level]||0)+1);
+  const SUMLBL={critical:"критических",moderate:"средних",minor:"допустимых"};
+  const summary=WARN_LEVELS.filter(l=>cnt[l]).map(l=>`<span class="wp-tag ${l}">${cnt[l]} ${SUMLBL[l]}</span>`).join(" ");
+  const items=rows.map(r=>{
+    const loc=r.key==="*"?"весь источник":`аят ${esc(r.key)}`;
+    return `<details class="aw-item lv-${r.level}"><summary><span class="aw-loc">${loc}</span>${r.title?`<span class="aw-title">${esc(r.title)}</span>`:''}<span class="aw-chev">▾</span></summary><div class="wp-text md">${mdRender(r.text)}</div></details>`;
+  }).join("");
+  return `<div class="about-section-title">⚠ Предупреждения по источнику · ${rows.length}</div>
+    <div class="aw-summary">${summary}</div>
+    <div class="about-warnlist">${items}</div>`;
+}
 async function openAbout(id){
   const t=CONFIG.tafsirs.find(x=>x.id===id);if(!t)return;
   let bodyHtml;
@@ -4075,6 +4118,8 @@ async function openAbout(id){
     ${meta?`<div class="about-meta">${meta}</div>`:''}
     ${aboutPassport(t)}
     ${warn}
+    ${t.editorNote?`<div class="about-warn crit">${mdRender(t.editorNote)}</div>`:''}
+    ${aboutWarnings(id)}
     <div class="about-section-title">Введение</div>
     <div class="about-body md">${bodyHtml}</div>
   </div>`;
