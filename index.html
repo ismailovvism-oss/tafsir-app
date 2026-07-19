@@ -3591,7 +3591,7 @@ async function loadCoverage(){
 //   text — markdown (может быть длинным). По умолчанию уровень — "moderate".
 let WARN={};
 const WARN_LEVELS=["critical","moderate","minor"]; // от важного к допустимому
-const WARN_LABEL={critical:"критическая ошибка",moderate:"средняя ошибка",minor:"допустимая ошибка"};
+const WARN_LABEL={critical:"критическая ошибка",moderate:"средняя ошибка",minor:"лёгкая ошибка"};
 // Подпись кликабельной ссылки-призыва (значок + плашка в тексте). Можно переопределить
 // на уровне записи предупреждения полем "cta". По умолчанию — по уровню.
 const WARN_CTA={critical:"Ответ на заблуждение",moderate:"Примечание редакции",minor:"Уточнение"};
@@ -4089,7 +4089,7 @@ async function openAppAbout(){
 // Отдельная сущность: свод редакторских предупреждений (WARN). Индекс «*» — все
 // источники, у которых есть предупреждения; «<id>» — карта одного источника.
 // Вход: ссылка на Главной (индекс) и кнопка в паспорте ℹ (карта источника).
-const WARN_SUMLBL={critical:"критических",moderate:"средних",minor:"допустимых"};
+const WARN_SUMLBL={critical:"критических",moderate:"средних",minor:"лёгких"};
 // Развёрнутые записи одного источника: [{key,level,title,text}], сортировка «*»→адрес.
 function warnRows(id){
   const w=WARN[id];if(!w)return[];
