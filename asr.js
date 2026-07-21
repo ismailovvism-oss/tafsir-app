@@ -10,35 +10,48 @@
 let ctx=null;               // мост в index.html (resolveUrl, esc, goAyah…)
 export function init(c){ctx=c;}
 
-// ---------- модель ----------
+// ---------- модели ----------
+// Две модели Тартиля: base (точнее, ~102 МБ) — голосовой поиск; tiny (~40 МБ,
+// в 3–4 раза быстрее) — живое чтение: там важна скорость отклика, а сверка
+// идёт с ИЗВЕСТНЫМ текстом и терпит худший WER. Оверрайды в localStorage:
+// tl_asrModel (поиск), tl_asrLiveModel (живое чтение) = "base" | "tiny".
+const MODELS={base:"whisper-base-ar-quran",tiny:"whisper-tiny-ar-quran"};
 const A={
-  pipe:null,loading:null,   // пайплайн ASR и promise его загрузки
-  pop:null,state:"idle",    // попап и его состояние: rec|busy|done|error
+  T:null,pipes:{},loading:{}, // рантайм transformers.js и пайплайны по размеру
+  pop:null,state:"idle",      // попап и его состояние: rec|busy|done|error
   stream:null,mr:null,chunks:[],t0:0,timer:null,vad:null,
-  prog:{},progPct:0,        // прогресс загрузки модели по файлам (байты)
-  transcript:"",results:[],err:"",
+  prog:{},progPct:0,          // прогресс загрузки модели по файлам (байты)
+  transcript:"",results:[],err:"",partial:"",
 };
+function searchModel(){const m=ctx.gs("asrModel","");return MODELS[m]?m:"base";}
+function liveModel(){const m=ctx.gs("asrLiveModel","");return MODELS[m]?m:"tiny";}
 
 // Абсолютный URL: относительная база ломает dynamic import() (bare specifier)
 function asrUrl(path){return new URL(ctx.resolveUrl("asr",{path}),location.href).href;}
 
-async function ensurePipe(){
-  if(A.pipe)return A.pipe;
-  if(!A.loading)A.loading=(async()=>{
-    const T=await import(asrUrl("transformers.min.js"));
-    // База модели абсолютная (R2), поэтому канал «remote» с нашим хостом:
-    // localModelPath с абсолютным URL v4 молча считает запрещённым remote
-    // и отдаёт null-токенайзер/процессор.
-    T.env.allowLocalModels=false;T.env.allowRemoteModels=true;
-    T.env.remoteHost=asrUrl("models")+"/";
-    T.env.remotePathTemplate="{model}/";
-    T.env.backends.onnx.wasm.wasmPaths=asrUrl("");
+async function ensureRuntime(){
+  if(A.T)return A.T;
+  const T=await import(asrUrl("transformers.min.js"));
+  // База модели абсолютная (R2), поэтому канал «remote» с нашим хостом:
+  // localModelPath с абсолютным URL v4 молча считает запрещённым remote
+  // и отдаёт null-токенайзер/процессор.
+  T.env.allowLocalModels=false;T.env.allowRemoteModels=true;
+  T.env.remoteHost=asrUrl("models")+"/";
+  T.env.remotePathTemplate="{model}/";
+  T.env.backends.onnx.wasm.wasmPaths=asrUrl("");
+  return A.T=T;
+}
+async function ensurePipe(size){
+  size=MODELS[size]?size:"base";
+  if(A.pipes[size])return A.pipes[size];
+  if(!A.loading[size])A.loading[size]=(async()=>{
+    const T=await ensureRuntime();
     const progress=p=>{ // суммарный % по байтам всех скачиваемых файлов
       if(p&&p.file&&p.total){A.prog[p.file]=[p.loaded||0,p.total];
         let l=0,t=0;for(const f in A.prog){l+=A.prog[f][0];t+=A.prog[f][1];}
-        A.progPct=t?Math.round(l*100/t):0;renderPop();}
+        A.progPct=t?Math.round(l*100/t):0;renderPop();updatePill();}
     };
-    const make=dev=>T.pipeline("automatic-speech-recognition","whisper-base-ar-quran",
+    const make=dev=>T.pipeline("automatic-speech-recognition",MODELS[size],
       {dtype:"q8",device:dev,progress_callback:progress});
     // WebGPU берём, только если адаптер реально выдаётся (navigator.gpu бывает
     // и без работающего GPU — headless, старые драйверы); иначе честный WASM.
@@ -51,10 +64,13 @@ async function ensurePipe(){
     let pipe;
     try{pipe=await make(dev);}
     catch(e){if(dev==="wasm")throw e;pipe=await make("wasm");} // webgpu не завёлся — откат
+    // Прогрев: первый прогон компилирует шейдеры/JIT; гоняем 1/4 секунды тишины,
+    // чтобы первая НАСТОЯЩАЯ фраза пользователя не платила этот налог.
+    try{await pipe(new Float32Array(4000));}catch(e){}
     ctx.ss("asrReady",1);                     // модель в кеше — конфирм больше не нужен
-    A.pipe=pipe;return pipe;
-  })().catch(e=>{A.loading=null;throw e;});
-  return A.loading;
+    A.pipes[size]=pipe;return pipe;
+  })().catch(e=>{A.loading[size]=null;throw e;});
+  return A.loading[size];
 }
 
 // ---------- индекс Корана для сопоставления ----------
@@ -106,9 +122,18 @@ async function blobToF32(blob){
   const src=oc.createBufferSource();src.buffer=ab;src.connect(oc.destination);src.start();
   return (await oc.startRendering()).getChannelData(0);
 }
-export async function transcribeF32(f32){
-  const pipe=await ensurePipe();
-  const r=await pipe(f32);
+export async function transcribeF32(f32,size,onPartial){
+  const pipe=await ensurePipe(size);
+  const opts={};
+  // Стриминг токенов: показываем распознавание ПО МЕРЕ декодирования (ощущение
+  // мгновенности); если класса нет в сборке — молча без стрима.
+  if(onPartial&&A.T&&A.T.TextStreamer){
+    let acc="";
+    try{opts.streamer=new A.T.TextStreamer(pipe.tokenizer,{
+      skip_prompt:true,decode_kwargs:{skip_special_tokens:true},
+      callback_function:t=>{acc+=t;onPartial(acc);}});}catch(e){}
+  }
+  const r=await pipe(f32,opts);
   return (r&&r.text||"").trim();
 }
 
@@ -120,12 +145,12 @@ export async function openVoiceSearch(){
   document.body.appendChild(pop);
   document.addEventListener("pointerdown",outsidePop,true);
   A.transcript="";A.results=[];A.err="";
-  if(!A.pipe&&!ctx.gs("asrReady",0)){A.state="confirm";renderPop();return;} // первый раз — спросить про ~130 МБ
+  if(!A.pipes[searchModel()]&&!ctx.gs("asrReady",0)){A.state="confirm";renderPop();return;} // первый раз — спросить про ~130 МБ
   beginListen();
 }
 function beginListen(){
   // модель и индекс Корана греются параллельно с записью
-  ensurePipe().catch(e=>{A.err=loadErrMsg(e);A.state="error";stopRec(true);renderPop();});
+  ensurePipe(searchModel()).catch(e=>{A.err=loadErrMsg(e);A.state="error";stopRec(true);renderPop();});
   ensureQIndex().catch(()=>{});
   startRec();
 }
@@ -144,7 +169,7 @@ async function startRec(){
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
     A.state="error";A.err="Микрофон недоступен: нужен HTTPS (или localhost).";renderPop();return;
   }
-  try{A.stream=await navigator.mediaDevices.getUserMedia({audio:true});}
+  try{A.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});}
   catch(err){
     A.state="error";
     A.err=err&&err.name==="NotAllowedError"
@@ -197,7 +222,7 @@ async function onRecStop(){
   A.state="busy";renderPop();
   try{
     const f32=await blobToF32(blob);
-    A.transcript=await transcribeF32(f32);
+    A.transcript=await transcribeF32(f32,searchModel(),t=>{A.partial=t;const el=A.pop&&A.pop.querySelector(".ap-partial");if(el)el.textContent=t;});
     A.results=A.transcript?await matchAyahs(A.transcript):[];
     A.state="done";
   }catch(e){A.state="error";A.err=loadErrMsg(e);}
@@ -208,7 +233,7 @@ function surahRu(s){const su=ctx.SURAHS[s-1];return su?su.ru:s;}
 function renderPop(){
   if(!A.pop)return;
   const st=A.state,secs=st==="rec"?Math.round((Date.now()-A.t0)/1000):0;
-  const modelReady=!!A.pipe;
+  const modelReady=!!A.pipes[searchModel()];
   let body="";
   if(st==="confirm"){
     body=`<div class="ap-note">Распознавание работает прямо на устройстве: один раз скачается
@@ -219,7 +244,7 @@ function renderPop(){
       <div class="ap-row"><button data-act="stop" class="hot">⏹ Готово</button></div>
       <div class="ap-note">${modelReady?"Модель готова. ":"Модель загружается: "+A.progPct+"%. "}Пауза в 1,5 с завершит запись сама. Звук никуда не отправляется — распознавание на устройстве.</div>`;
   }else if(st==="busy"){
-    body=`<div class="ap-listen">🕐 Распознаю…${A.pipe?"":" (жду модель: "+A.progPct+"%)"}</div>
+    body=`<div class="ap-listen">🕐 Распознаю…${modelReady?"":" (жду модель: "+A.progPct+"%)"}</div>\n      <div class="ap-partial" dir="rtl"></div>
       <div class="ap-note">Первый запуск дольше: модель (~130 МБ) кешируется, дальше — быстро.</div>`;
   }else if(st==="done"){
     const Q=QTEXT||{};
@@ -271,7 +296,7 @@ export async function startLive(opts){
   closePop();
   const ST=ctx.ST;
   if(ST.pageMode||ST.hifzMode||ST.homeMode){alert("Живое чтение работает в режиме 📖 Аяты: откройте суру.");return;}
-  if(!ctx.gs("asrReady",0)&&!A.pipe){
+  if(!ctx.gs("asrReady",0)&&!A.pipes[liveModel()]){
     if(!confirm("Распознавание речи работает на устройстве: один раз скачается модель (~130 МБ, лучше по Wi-Fi), дальше — офлайн. Загрузить?"))return;
   }
   L.hidden=!!(opts&&opts.hidden);L.hifz=L.hidden;   // «по памяти» = проверка → SRS
@@ -293,15 +318,15 @@ export async function startLive(opts){
   L.start0=L.cur;                               // всё до этого аята не прячем
   L.ptr=L.aStart[L.cur];
   // модель — параллельно с первым чтением
-  ensurePipe().then(()=>{L.stat="";updatePill();}).catch(e=>{alert(loadErrMsg(e));stopLive();});
-  if(!A.pipe)L.stat="модель…";
+  ensurePipe(liveModel()).then(()=>{L.stat="";updatePill();}).catch(e=>{alert(loadErrMsg(e));stopLive();});
+  if(!A.pipes[liveModel()])L.stat="модель…";
   // микрофон: непрерывный захват сразу в 16 кГц (AudioContext ресемплирует сам)
-  try{L.stream=await navigator.mediaDevices.getUserMedia({audio:true});}
+  try{L.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});}
   catch(err){alert("Не удалось открыть микрофон: "+(err&&err.name||err));return;}
   const AC=window.AudioContext||window.webkitAudioContext;
   L.ac=new AC();                 // нативная частота: 16-кГц контекст с микрофоном
   const src=L.ac.createMediaStreamSource(L.stream);   // капризен; ресемплим сами (to16k)
-  L.buf=[];L.speechMs=0;L.silMs=0;L.segQ=[];L.busy=false;
+  L.buf=[];L.speechMs=0;L.silMs=0;L.segQ=[];L.busy=false;L.noise=null;
   // Захват — AudioWorklet (аудиопоток): главный поток занят WASM-инференсом
   // секундами, ScriptProcessor в это время ТЕРЯЕТ звук (колбэки не successors);
   // worklet копит и шлёт пачками, сообщения доезжают, когда главный поток освободится.
@@ -361,22 +386,29 @@ function onAudioChunk(d){
   const sr=L.ac?L.ac.sampleRate:16000;
   L.buf.push(d);
   let n=L.buf.reduce((s,c)=>s+c.length,0);
-  while(n>sr*12&&L.buf.length>1){n-=L.buf[0].length;L.buf.shift();}
+  while(n>sr*8&&L.buf.length>1){n-=L.buf[0].length;L.buf.shift();}
   let sum=0;for(let i=0;i<d.length;i+=4)sum+=d[i]*d[i];
   const rms=Math.sqrt(sum/(d.length/4));
   const ms=d.length/sr*1000;
-  if(rms>0.015){L.speechMs+=ms;L.silMs=0;}else L.silMs+=ms;
-  if((L.speechMs>=600&&L.silMs>=800)||L.speechMs>=8000)takeSegment();
+  // Адаптивный порог: шумовой пол микрофона оцениваем EMA по тихим кускам —
+  // фиксированный порог глох на шумных микрофонах и резал речь на тихих.
+  if(L.noise==null)L.noise=0.008;
+  if(rms<Math.max(0.006,L.noise*2))L.noise=L.noise*0.95+rms*0.05;
+  const th=Math.max(0.007,L.noise*3);
+  if(rms>th){L.speechMs+=ms;L.silMs=0;}else L.silMs+=ms;
+  // Резать быстро: пауза 0.6 с ИЛИ каждые 3.5 с непрерывной речи — подсветка
+  // обновляется часто, а недорезанную фразу дочитает следующее окно (контекст).
+  if((L.speechMs>=500&&L.silMs>=600)||L.speechMs>=3500)takeSegment();
 }
 function takeSegment(){
   const sr=L.ac?L.ac.sampleRate:16000;
   const total=L.buf.reduce((n,c)=>n+c.length,0);
   let f32=new Float32Array(total);
   let o=0;for(const c of L.buf){f32.set(c,o);o+=c.length;}
-  if(total>sr*10)f32=f32.subarray(total-sr*10);  // потолок окна: WASM-инференс на слабом CPU
-  // хвост-контекст ~2.5 с остаётся в буфере
+  if(total>sr*6)f32=f32.subarray(total-sr*6);   // потолок окна: WASM-инференс на слабом CPU
+  // хвост-контекст ~1.2 с остаётся в буфере
   let keep=0,i=L.buf.length-1;
-  for(;i>=0&&keep<sr*2.5;i--)keep+=L.buf[i].length;
+  for(;i>=0&&keep<sr*1.2;i--)keep+=L.buf[i].length;
   L.buf=L.buf.slice(i+1);
   L.speechMs=0;L.silMs=0;
   if(window._asrDbg)window._asrDbg("seg "+(f32.length/sr).toFixed(1)+"s");
@@ -393,7 +425,7 @@ async function to16k(f32){
 }
 async function pumpQ(){
   if(L.busy||!L.segQ.length)return;
-  L.busy=true;L.stat=A.pipe?"распознаю…":"модель…";updatePill();
+  L.busy=true;L.stat=A.pipes[liveModel()]?"…":"модель…";updatePill();
   try{
     // накопившиеся сегменты склеиваем: распознаём один раз, без отставания
     let segs=L.segQ;L.segQ=[];
@@ -402,8 +434,8 @@ async function pumpQ(){
     if(segs.length===1)f32=segs[0];
     else{f32=new Float32Array(total);let o=0;for(const c of segs){f32.set(c,o);o+=c.length;}}
     const sr=L.ac?L.ac.sampleRate:16000;
-    if(f32.length>sr*10)f32=f32.subarray(f32.length-sr*10);   // потолок и после склейки
-    const text=await transcribeF32(await to16k(f32));
+    if(f32.length>sr*6)f32=f32.subarray(f32.length-sr*6);     // потолок и после склейки
+    const text=await transcribeF32(await to16k(f32),liveModel(),t=>{L.lastTr=t;updatePill();});
     if(L.on&&text){L.lastTr=text;advance(text);}
   }catch(e){console.error("ASR live:",e);}
   L.busy=false;L.stat="";

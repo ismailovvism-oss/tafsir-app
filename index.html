@@ -1175,6 +1175,7 @@ body.df-open{overflow:hidden}
 .asr-pop .ap-listen{display:flex;align-items:center;gap:8px;font-size:14px}
 .asr-pop .ap-dot{width:10px;height:10px;border-radius:50%;background:#c0392b;animation:recblink 1.2s infinite;flex:0 0 auto}
 .asr-pop .ap-tr{font-size:16px;line-height:1.9;padding:6px 2px 8px;border-bottom:1px dashed var(--border);margin-bottom:6px}
+.asr-pop .ap-partial{font-size:15px;line-height:1.8;opacity:.7;min-height:1.4em;padding:4px 2px}
 .asr-pop .ap-res{padding:8px 6px;border-radius:10px;cursor:pointer}
 .asr-pop .ap-res:hover{background:var(--bg)}
 .asr-pop .ap-ar{font-size:15px;line-height:1.8}
@@ -1483,7 +1484,7 @@ async function mediaMod(){
   }
 }
 // --- ASR-модуль (голосовой поиск аята): ленивый ES-модуль, как media.js ---
-const ASR_VER="2";     // поднять при правке asr.js (сброс кеша браузера/CDN)
+const ASR_VER="3";     // поднять при правке asr.js (сброс кеша браузера/CDN)
 let ASR=null;
 function asrCtx(){
   return {resolveUrl,esc,escAttr,normalizeArabic,SURAHS,gs,ss,
