@@ -1193,6 +1193,14 @@ body.asr-hidemode .ayah-block:not(.asr-open) .ab-entry{filter:blur(9px);pointer-
 #asrPill .asp-tr{font-size:13px;opacity:.75;max-width:34vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #asrPill .asp-st{font-size:11px;color:var(--text-muted)}
 #asrPill button{border:none;background:transparent;font-size:16px;cursor:pointer;padding:2px 4px;color:var(--text)}
+/* Ручное чтение наизусть: крупные кнопки, чтобы попадать не глядя */
+#asrPill.asr-manual{width:min(480px,96vw);gap:6px;padding:8px 10px;border-radius:16px}
+#asrPill.asr-manual button{border:1px solid var(--border);border-radius:12px;background:var(--bg);font-size:20px;padding:14px 0;line-height:1}
+#asrPill.asr-manual .mv-prev{flex:1;min-width:56px}
+#asrPill.asr-manual .mv-next{flex:2.4;background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;font-size:17px}
+#asrPill.asr-manual .mv-aux{flex:0 0 auto;min-width:48px;font-size:16px}
+#asrPill.asr-manual .mv-cur{font-weight:700;font-size:14px;white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:1px}
+#asrPill.asr-manual .mv-cur small{font-weight:400;font-size:10px;color:var(--text-muted);max-width:72px;overflow:hidden;text-overflow:ellipsis}
 
 .rec-pop{position:fixed;z-index:200;left:50%;transform:translateX(-50%);bottom:10px;
   background:var(--bg-card);border:1px solid var(--accent);border-radius:14px;
@@ -1484,7 +1492,7 @@ async function mediaMod(){
   }
 }
 // --- ASR-модуль (голосовой поиск аята): ленивый ES-модуль, как media.js ---
-const ASR_VER="3";     // поднять при правке asr.js (сброс кеша браузера/CDN)
+const ASR_VER="4";     // поднять при правке asr.js (сброс кеша браузера/CDN)
 let ASR=null;
 function asrCtx(){
   return {resolveUrl,esc,escAttr,normalizeArabic,SURAHS,gs,ss,
@@ -1509,6 +1517,9 @@ function openVoiceSearch(){asrMod().then(m=>m&&m.openVoiceSearch());}
 // Живое чтение (слой режима 📖 Аяты): 0 — follow-along, 1 — «по памяти» (скрытый
 // текст, итоги аятов уходят в SRS хифза). Повторный вызов — перезапуск с текущего аята.
 function asrLiveStart(hidden){asrMod().then(m=>m&&m.startLive({hidden:!!hidden}));}
+// Ручное чтение наизусть: экран следует за чтецом по большим кнопкам ‹/›,
+// без микрофона (🎤 в пилюле — опциональный голосовой поиск при запинке).
+function asrManualStart(){asrMod().then(m=>m&&m.startManual());}
 
 function mediaPlayAyah(a){mediaMod().then(m=>m&&m.playFrom(ST.surah,a));}
 // «Слушать текущую суру» из панели 📚: старт с последней позиции в этой суре
@@ -6172,6 +6183,7 @@ function audioBlockHTML(){
     <button class="cov-map-open" style="margin:6px 0 0" onclick="mediaPlaySurah()">▶ Слушать текущую суру</button>
     <button class="cov-map-open" style="margin:6px 0 0" onclick="mediaNewSet()">➕ Новый набор записей</button>
     <button class="cov-map-open" style="margin:6px 0 0" onclick="openDiafilm()">🎬 Диафильм (полноэкранный визуальный ряд)</button>
+    <button class="cov-map-open" style="margin:6px 0 0" onclick="asrManualStart()">🤲 Чтение наизусть — листать аяты кнопками</button>
     <button class="cov-map-open" style="margin:6px 0 0" onclick="asrLiveStart(0)">🎤 Читать вслух — подсветка следит за чтением</button>
     <button class="cov-map-open" style="margin:6px 0 0" onclick="asrLiveStart(1)">🕶 Читать по памяти — текст скрыт, итог в хифз</button>
     <div class="vp-note">Чтецы стримятся с everyayah.com (нужен интернет). Наборы записей — ваш голос, кнопка 🎙 в плеере; хранятся только на этом устройстве и работают офлайн. Диафильм — полноэкранное созерцание: аят на весь экран с атмосферной картинкой по теме (фихрист), кадр меняется по чтецу (без звука — свайпом); в кадре можно убрать картинку или аудио.</div></div></div>`;

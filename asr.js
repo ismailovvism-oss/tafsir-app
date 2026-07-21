@@ -268,7 +268,9 @@ function renderPop(){
 }
 function onPopClick(e){
   const g=e.target.closest("[data-go]");
-  if(g){const[s,a]=g.dataset.go.split(":").map(Number);closePop();ctx.goAyah(s,a);return;}
+  if(g){const[s,a]=g.dataset.go.split(":").map(Number);closePop();ctx.goAyah(s,a);
+    if(M.on)mAnchor(s,a);                      // ручной режим следует за находкой
+    return;}
   const b=e.target.closest("[data-act]");if(!b)return;
   switch(b.dataset.act){
     case"close":closePop();break;
@@ -291,8 +293,23 @@ const L={on:false,hidden:false,hifz:false,s:0,cur:1,lastA:1,ptr:0,W:[],aStart:{}
   peeked:{},grades:{},stream:null,ac:null,proc:null,buf:[],speechMs:0,silMs:0,segQ:[],busy:false,
   pill:null,mo:null,lastTr:"",stat:""};
 
+// ---------- экран не гаснет во время сессий (иначе теряется место/микрофон) ----------
+const WK={lock:null,want:false};
+async function reqWake(){
+  WK.want=true;
+  try{if(navigator.wakeLock&&!WK.lock)WK.lock=await navigator.wakeLock.request("screen");}catch(e){}
+}
+function relWake(){
+  WK.want=false;
+  if(WK.lock){try{WK.lock.release();}catch(e){}WK.lock=null;}
+}
+document.addEventListener("visibilitychange",()=>{ // вернулись на вкладку — вернуть замок
+  if(WK.want&&document.visibilityState==="visible"){WK.lock=null;reqWake();}
+});
+
 export async function startLive(opts){
   if(L.on)stopLive();
+  if(M.on)stopManual();
   closePop();
   const ST=ctx.ST;
   if(ST.pageMode||ST.hifzMode||ST.homeMode){alert("Живое чтение работает в режиме 📖 Аяты: откройте суру.");return;}
@@ -356,7 +373,7 @@ export async function startLive(opts){
   L.mo=new MutationObserver(()=>applyClasses());
   const cb=document.getElementById("centerBody");
   if(cb)L.mo.observe(cb,{childList:true,subtree:true});
-  makePill();applyClasses();scrollCur();
+  makePill();applyClasses();scrollCur();reqWake();
 }
 export function stopLive(summary){
   if(!L.on)return;
@@ -365,6 +382,7 @@ export function stopLive(summary){
   try{if(L.ac)L.ac.close();}catch(e){}
   if(L.stream){L.stream.getTracks().forEach(t=>t.stop());L.stream=null;}
   L.proc=null;L.ac=null;L.mo&&L.mo.disconnect();L.mo=null;
+  relWake();
   document.body.classList.remove("asr-hidemode","asr-live");
   document.querySelectorAll(".asr-cur").forEach(e=>e.classList.remove("asr-cur"));
   document.querySelectorAll(".asr-open").forEach(e=>e.classList.remove("asr-open"));
@@ -551,3 +569,81 @@ function updatePill(){
                <button data-act="skip" title="Не вспомнил — открыть и дальше">⏭</button>`:"")+
     `<button data-act="stop" title="Остановить">⏹</button>`;
 }
+
+// ============================================================
+// РУЧНОЕ ЧТЕНИЕ НАИЗУСТЬ (без микрофона): экран следует за чтецом по ТАПУ.
+// Сценарий: человек читает наизусть не глядя; большие кнопки ‹ / › двигают
+// подсветку (можно нажимать не целясь), запнулся → взглянул — экран уже на
+// нужном аяте. Экран не гаснет (wake lock). Кнопка 🎤 — опциональная
+// подстраховка: перечитать запнувшуюся фразу вслух → голосовой поиск (base,
+// точный) найдёт аят и переанкерит режим. Микрофон ВНЕ 🎤 не включается.
+// ============================================================
+const M={on:false,s:0,a:1,lastA:1,pill:null,mo:null};
+
+export async function startManual(){
+  if(L.on)stopLive();
+  if(M.on)stopManual();
+  closePop();
+  const ST=ctx.ST;
+  if(ST.pageMode||ST.hifzMode||ST.homeMode){alert("Режим работает в 📖 Аяты: откройте суру.");return;}
+  M.s=ST.surah;M.a=ctx.curTopAyah()||1;
+  M.lastA=(ctx.SURAHS[M.s-1]||{}).n||1;
+  M.on=true;
+  document.body.classList.add("asr-live");
+  M.mo=new MutationObserver(()=>mApply());   // ре-рендер ленты стирает классы
+  const cb=document.getElementById("centerBody");
+  if(cb)M.mo.observe(cb,{childList:true,subtree:true});
+  mPill();mApply();mScroll();reqWake();
+}
+export function stopManual(){
+  if(!M.on)return;
+  M.on=false;relWake();
+  M.mo&&M.mo.disconnect();M.mo=null;
+  document.body.classList.remove("asr-live");
+  document.querySelectorAll(".asr-cur").forEach(e=>e.classList.remove("asr-cur"));
+  if(M.pill){M.pill.remove();M.pill=null;}
+}
+function mAnchor(s,a){M.s=s;M.a=a;M.lastA=(ctx.SURAHS[s-1]||{}).n||1;mPill();mApply();mScroll();}
+function mStep(d){
+  let s=M.s,a=M.a+d;
+  if(a<1){ if(s>1){s--;a=(ctx.SURAHS[s-1]||{}).n||1;} else a=1; }
+  else if(a>M.lastA){ if(s<114){s++;a=1;} else a=M.lastA; }
+  const cross=s!==M.s;
+  M.s=s;M.a=a;M.lastA=(ctx.SURAHS[s-1]||{}).n||1;
+  if(cross)ctx.goAyah(s,a);                  // смена суры — обычная навигация
+  mApply();mScroll();mPill();
+}
+function mApply(){
+  if(!M.on)return;
+  document.querySelectorAll(".asr-cur").forEach(e=>e.classList.remove("asr-cur"));
+  if(ctx.ST.surah!==M.s)return;              // лента на другой суре — дождёмся goAyah
+  const el=blockOf(M.a);if(el)el.classList.add("asr-cur");
+}
+function mScroll(){
+  const el=blockOf(M.a);
+  if(el)el.scrollIntoView({behavior:"smooth",block:"center"});
+}
+function mPill(){
+  if(!M.pill){
+    const p=document.createElement("div");
+    p.id="asrPill";p.className="asr-manual";
+    document.body.appendChild(p);M.pill=p;
+    p.onclick=e=>{
+      const b=e.target.closest("[data-act]");if(!b)return;
+      switch(b.dataset.act){
+        case"prev":mStep(-1);break;
+        case"next":mStep(1);break;
+        case"mic":openVoiceSearch();break;   // перечитать фразу → найтись
+        case"stop":stopManual();break;
+      }
+    };
+  }
+  const su=ctx.SURAHS[M.s-1];
+  M.pill.innerHTML=
+    `<button class="mv-prev" data-act="prev" title="Предыдущий аят">‹</button>`+
+    `<span class="mv-cur">${M.s}:${M.a}<small>${ctx.esc(su?su.ru:"")}</small></span>`+
+    `<button class="mv-next" data-act="next" title="Следующий аят">аят ›</button>`+
+    `<button class="mv-aux" data-act="mic" title="Запнулись? Перечитайте фразу вслух — найду аят">🎤</button>`+
+    `<button class="mv-aux" data-act="stop" title="Закрыть">✕</button>`;
+}
+export function manualOn(){return M.on;}
