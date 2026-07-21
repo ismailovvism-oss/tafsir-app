@@ -1181,6 +1181,17 @@ body.df-open{overflow:hidden}
 .asr-pop .ap-ref{font-size:11px;color:var(--text-sec);margin-top:2px}
 .sp-voice{font-family:inherit;font-size:11px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);padding:5px 9px;cursor:pointer;margin-left:auto}
 .sp-voice:hover{border-color:var(--accent);color:var(--accent)}
+/* Живое чтение (asr.js): бегущая подсветка, скрытие «по памяти», пилюля */
+.ayah-block.asr-cur{box-shadow:0 0 0 2px var(--accent);border-radius:8px}
+body.asr-hidemode .ayah-block:not(.asr-open) .ab-entry{filter:blur(9px);pointer-events:none;user-select:none}
+#asrPill{position:fixed;left:50%;transform:translateX(-50%);bottom:66px;z-index:190;
+  display:flex;align-items:center;gap:8px;max-width:94vw;
+  background:var(--bg-card);border:1px solid var(--accent);border-radius:999px;
+  box-shadow:0 4px 18px rgba(0,0,0,.25);padding:8px 14px;font-size:13px;color:var(--text)}
+#asrPill .asp-dot{width:9px;height:9px;border-radius:50%;background:#c0392b;animation:recblink 1.2s infinite;flex:0 0 auto}
+#asrPill .asp-tr{font-size:13px;opacity:.75;max-width:34vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#asrPill .asp-st{font-size:11px;color:var(--text-muted)}
+#asrPill button{border:none;background:transparent;font-size:16px;cursor:pointer;padding:2px 4px;color:var(--text)}
 
 .rec-pop{position:fixed;z-index:200;left:50%;transform:translateX(-50%);bottom:10px;
   background:var(--bg-card);border:1px solid var(--accent);border-radius:14px;
@@ -1472,11 +1483,14 @@ async function mediaMod(){
   }
 }
 // --- ASR-модуль (голосовой поиск аята): ленивый ES-модуль, как media.js ---
-const ASR_VER="1";     // поднять при правке asr.js (сброс кеша браузера/CDN)
+const ASR_VER="2";     // поднять при правке asr.js (сброс кеша браузера/CDN)
 let ASR=null;
 function asrCtx(){
   return {resolveUrl,esc,escAttr,normalizeArabic,SURAHS,gs,ss,
+    get ST(){return ST;},
     loadWhole:id=>loadWhole(id),   // текст Корана для сопоставления (монолит)
+    curTopAyah:()=>curTopAyah(),
+    hifzReview:(vk,g)=>Progress.hifzRecordReview(vk,g),   // «по памяти» → SRS хифза
     goAyah:(s,a)=>goSearchAyah(s,a)};
 }
 async function asrMod(){
@@ -1491,6 +1505,9 @@ async function asrMod(){
   }
 }
 function openVoiceSearch(){asrMod().then(m=>m&&m.openVoiceSearch());}
+// Живое чтение (слой режима 📖 Аяты): 0 — follow-along, 1 — «по памяти» (скрытый
+// текст, итоги аятов уходят в SRS хифза). Повторный вызов — перезапуск с текущего аята.
+function asrLiveStart(hidden){asrMod().then(m=>m&&m.startLive({hidden:!!hidden}));}
 
 function mediaPlayAyah(a){mediaMod().then(m=>m&&m.playFrom(ST.surah,a));}
 // «Слушать текущую суру» из панели 📚: старт с последней позиции в этой суре
@@ -6154,6 +6171,8 @@ function audioBlockHTML(){
     <button class="cov-map-open" style="margin:6px 0 0" onclick="mediaPlaySurah()">▶ Слушать текущую суру</button>
     <button class="cov-map-open" style="margin:6px 0 0" onclick="mediaNewSet()">➕ Новый набор записей</button>
     <button class="cov-map-open" style="margin:6px 0 0" onclick="openDiafilm()">🎬 Диафильм (полноэкранный визуальный ряд)</button>
+    <button class="cov-map-open" style="margin:6px 0 0" onclick="asrLiveStart(0)">🎤 Читать вслух — подсветка следит за чтением</button>
+    <button class="cov-map-open" style="margin:6px 0 0" onclick="asrLiveStart(1)">🕶 Читать по памяти — текст скрыт, итог в хифз</button>
     <div class="vp-note">Чтецы стримятся с everyayah.com (нужен интернет). Наборы записей — ваш голос, кнопка 🎙 в плеере; хранятся только на этом устройстве и работают офлайн. Диафильм — полноэкранное созерцание: аят на весь экран с атмосферной картинкой по теме (фихрист), кадр меняется по чтецу (без звука — свайпом); в кадре можно убрать картинку или аудио.</div></div></div>`;
 }
 // Новый набор записей: имя → tl_mediaSets; записи в него кладёт попап 🎙
