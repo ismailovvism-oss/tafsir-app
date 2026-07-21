@@ -1161,46 +1161,30 @@ body.df-open{overflow:hidden}
 .ab-rec-btn.has{color:var(--accent);border-color:var(--accent)}
 /* попап записи аята (🎙): НИЖНИЙ ЛИСТ по центру снизу — НЕ закрывает аят
    (текст записываемого аята подкручен выше, читается во время записи) */
-/* Попап голосового поиска (asr.js) — нижний лист, как rec-pop */
-.asr-pop{position:fixed;z-index:200;left:50%;transform:translateX(-50%);bottom:10px;
-  background:var(--bg-card);border:1px solid var(--accent);border-radius:14px;
-  box-shadow:0 -4px 24px rgba(0,0,0,.28);padding:12px 14px;width:min(420px,94vw);
-  max-height:70vh;overflow-y:auto;font-size:13px;color:var(--text)}
-.asr-pop .ap-title{font-weight:700;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
-.asr-pop .ap-x{border:none;background:transparent;color:var(--text-muted);font-size:16px;cursor:pointer;padding:0 4px}
-.asr-pop .ap-row{display:flex;gap:8px;margin-top:8px}
-.asr-pop .ap-row button{flex:1;font-family:inherit;font-size:14px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text);padding:11px 12px;cursor:pointer}
-.asr-pop .ap-row button.hot{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
-.asr-pop .ap-note{font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.45}
-.asr-pop .ap-listen{display:flex;align-items:center;gap:8px;font-size:14px}
-.asr-pop .ap-dot{width:10px;height:10px;border-radius:50%;background:#c0392b;animation:recblink 1.2s infinite;flex:0 0 auto}
-.asr-pop .ap-tr{font-size:16px;line-height:1.9;padding:6px 2px 8px;border-bottom:1px dashed var(--border);margin-bottom:6px}
-.asr-pop .ap-partial{font-size:15px;line-height:1.8;opacity:.7;min-height:1.4em;padding:4px 2px}
-.asr-pop .ap-res{padding:8px 6px;border-radius:10px;cursor:pointer}
-.asr-pop .ap-res:hover{background:var(--bg)}
-.asr-pop .ap-ar{font-size:15px;line-height:1.8}
-.asr-pop .ap-ref{font-size:11px;color:var(--text-sec);margin-top:2px}
-.sp-voice{font-family:inherit;font-size:11px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);padding:5px 9px;cursor:pointer;margin-left:auto}
-.sp-voice:hover{border-color:var(--accent);color:var(--accent)}
-/* Живое чтение (asr.js): бегущая подсветка, скрытие «по памяти», пилюля */
-.ayah-block.asr-cur{box-shadow:0 0 0 2px var(--accent);border-radius:8px}
-body.asr-hidemode .ayah-block:not(.asr-open) .ab-entry{filter:blur(9px);pointer-events:none;user-select:none}
-#asrPill{position:fixed;left:50%;transform:translateX(-50%);bottom:66px;z-index:190;
-  display:flex;align-items:center;gap:8px;max-width:94vw;
-  background:var(--bg-card);border:1px solid var(--accent);border-radius:999px;
-  box-shadow:0 4px 18px rgba(0,0,0,.25);padding:8px 14px;font-size:13px;color:var(--text)}
-#asrPill .asp-dot{width:9px;height:9px;border-radius:50%;background:#c0392b;animation:recblink 1.2s infinite;flex:0 0 auto}
-#asrPill .asp-tr{font-size:13px;opacity:.75;max-width:34vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#asrPill .asp-st{font-size:11px;color:var(--text-muted)}
-#asrPill button{border:none;background:transparent;font-size:16px;cursor:pointer;padding:2px 4px;color:var(--text)}
-/* Ручное чтение наизусть: крупные кнопки, чтобы попадать не глядя */
-#asrPill.asr-manual{width:min(480px,96vw);gap:6px;padding:8px 10px;border-radius:16px}
-#asrPill.asr-manual button{border:1px solid var(--border);border-radius:12px;background:var(--bg);font-size:20px;padding:14px 0;line-height:1}
-#asrPill.asr-manual .mv-prev{flex:1;min-width:56px}
-#asrPill.asr-manual .mv-next{flex:2.4;background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;font-size:17px}
-#asrPill.asr-manual .mv-aux{flex:0 0 auto;min-width:48px;font-size:16px}
-#asrPill.asr-manual .mv-cur{font-weight:700;font-size:14px;white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:1px}
-#asrPill.asr-manual .mv-cur small{font-weight:400;font-size:10px;color:var(--text-muted);max-width:72px;overflow:hidden;text-overflow:ellipsis}
+/* Чтение наизусть (hifz-ридер) — полноэкранный показ ОДНОГО аята (как диафильм).
+   Тап по ЛЮБОМУ месту экрана = следующий аят (можно нажимать не глядя);
+   крупная ‹ снизу — назад; свайпы ←/→ тоже листают. */
+.hreader{position:fixed;inset:0;z-index:70;background:var(--bg);display:flex;flex-direction:column;
+  cursor:pointer;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+.hreader .hr-top{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;
+  padding:calc(10px + env(safe-area-inset-top)) 14px 6px}
+.hreader .hr-key{font-size:13px;color:var(--text-muted);letter-spacing:.04em}
+.hreader .hr-x{background:var(--bg-card);color:var(--text-muted);font-size:16px;cursor:pointer;
+  width:40px;height:40px;border-radius:20px;border:1px solid var(--border)}
+.hreader .hr-main{flex:1;display:flex;overflow-y:auto;padding:10px 20px}
+.hreader .hr-ar{font-size:calc(30px*var(--rs-ar,1));line-height:2.1;direction:rtl;text-align:center;
+  color:var(--text);max-width:860px;margin:auto} /* margin:auto — короткий аят центрован, длинный скроллится */
+.hreader .hr-bottom{flex:0 0 auto;display:flex;align-items:center;gap:10px;
+  padding:8px 14px calc(12px + env(safe-area-inset-bottom))}
+.hreader .hr-prev{flex:0 0 auto;width:88px;height:64px;border:1px solid var(--border);border-radius:14px;
+  background:var(--bg-card);color:var(--text);font-size:28px;line-height:1;cursor:pointer}
+.hreader .hr-hint{flex:1;text-align:center;font-size:12px;color:var(--text-muted)}
+@media(min-width:820px) and (min-height:600px){.hreader .hr-ar{font-size:calc(38px*var(--rs-ar,1))}}
+@media (orientation:landscape) and (max-height:520px){
+  .hreader .hr-ar{font-size:calc(23px*var(--rs-ar,1));line-height:1.8}
+  .hreader .hr-prev{height:48px}
+}
+body.hr-open{overflow:hidden}
 
 .rec-pop{position:fixed;z-index:200;left:50%;transform:translateX(-50%);bottom:10px;
   background:var(--bg-card);border:1px solid var(--accent);border-radius:14px;
@@ -1412,11 +1396,6 @@ const SOURCES={
   // — поаятное CDN-аудио чтецов (media.js): {subdir} — каталог чтеца из
   //   config.json (audio.reciters), {file}=NNNSSS.mp3 (паддинг у вызывающего) —
   audio_cdn:       {baseUrl:"https://everyayah.com/data", pathTemplate:"{baseUrl}/{subdir}/{file}"},
-  // — распознавание речи (asr.js, голосовой поиск аята): рантайм transformers.js,
-  //   WASM onnxruntime и ONNX-модель Тартиля (whisper-base-ar-quran q8) — на R2
-  //   (зеркало r2-data/asr/, заливка ./upload_r2.sh asr). Всё крутится в браузере —
-  //   аудио пользователя никуда не отправляется.
-  asr:             {baseUrl:"https://pub-d99a56b61d914461b5864f421a013097.r2.dev/asr", pathTemplate:"{baseUrl}/{path}"},
   // — аятные тайминги ПОСУРНЫХ чтецов (type:"audio_surah"): один mp3 = вся сура,
   //   тайминги [start,end] на аят собирает build_timings.py (CTC-выравнивание).
   //   Есть → указатель следует за аятом внутри суры и можно перематывать на аят.
@@ -1491,36 +1470,6 @@ async function mediaMod(){
     return null;
   }
 }
-// --- ASR-модуль (голосовой поиск аята): ленивый ES-модуль, как media.js ---
-const ASR_VER="4";     // поднять при правке asr.js (сброс кеша браузера/CDN)
-let ASR=null;
-function asrCtx(){
-  return {resolveUrl,esc,escAttr,normalizeArabic,SURAHS,gs,ss,
-    get ST(){return ST;},
-    loadWhole:id=>loadWhole(id),   // текст Корана для сопоставления (монолит)
-    curTopAyah:()=>curTopAyah(),
-    hifzReview:(vk,g)=>Progress.hifzRecordReview(vk,g),   // «по памяти» → SRS хифза
-    goAyah:(s,a)=>goSearchAyah(s,a)};
-}
-async function asrMod(){
-  if(ASR)return ASR;
-  try{
-    const m=await import("./asr.js?v="+ASR_VER);
-    m.init(asrCtx());ASR=m;return m;
-  }catch(e){
-    console.error("asr.js не загрузился:",e);
-    alert("Не удалось загрузить модуль распознавания (при первом запуске нужна сеть).");
-    return null;
-  }
-}
-function openVoiceSearch(){asrMod().then(m=>m&&m.openVoiceSearch());}
-// Живое чтение (слой режима 📖 Аяты): 0 — follow-along, 1 — «по памяти» (скрытый
-// текст, итоги аятов уходят в SRS хифза). Повторный вызов — перезапуск с текущего аята.
-function asrLiveStart(hidden){asrMod().then(m=>m&&m.startLive({hidden:!!hidden}));}
-// Ручное чтение наизусть: экран следует за чтецом по большим кнопкам ‹/›,
-// без микрофона (🎤 в пилюле — опциональный голосовой поиск при запинке).
-function asrManualStart(){asrMod().then(m=>m&&m.startManual());}
-
 function mediaPlayAyah(a){mediaMod().then(m=>m&&m.playFrom(ST.surah,a));}
 // «Слушать текущую суру» из панели 📚: старт с последней позиции в этой суре
 function mediaPlaySurah(){
@@ -1567,6 +1516,94 @@ function exitDiafilm(viaBack){
   dfExitFs();
   if(!viaBack)consumeOverlay();
   if(pos&&pos.s)jumpTo({surah:pos.s,ayah:pos.a});   // вернуться в прежний режим на том же аяте
+}
+
+// ============================================================
+// ЧТЕНИЕ НАИЗУСТЬ (hifz-ридер): полноэкранный показ ОДНОГО аята — как кадр
+// диафильма, но только текст. Человек читает наизусть не глядя; тап по ЛЮБОМУ
+// месту экрана листает вперёд (запнулся → взглянул — на экране ровно текущий
+// аят), крупная ‹ снизу — назад, свайпы ←/→ тоже работают, границы сур
+// переходятся насквозь. Экран не гаснет (wake lock). Выход — ✕/Esc/«Назад»;
+// лента возвращается на последний аят сессии.
+// ============================================================
+let hrOpen=false;
+const HR={s:1,a:1,el:null,wake:null,want:false,swiped:false};
+async function hrWake(on){
+  try{
+    HR.want=!!on;
+    if(on){if(("wakeLock"in navigator)&&!HR.wake){HR.wake=await navigator.wakeLock.request("screen");
+      if(HR.wake&&HR.wake.addEventListener)HR.wake.addEventListener("release",()=>{HR.wake=null;});}}
+    else if(HR.wake){await HR.wake.release();HR.wake=null;}
+  }catch(e){HR.wake=null;}                     // нет API / отказ — молча
+}
+// свернули приложение (глянуть что-то) и вернулись — замок экрана возвращаем
+document.addEventListener("visibilitychange",()=>{
+  if(HR.want&&document.visibilityState==="visible"){HR.wake=null;hrWake(true);}
+});
+function hrStart(){
+  if(hrOpen)return;
+  dfRequestFs();                               // СИНХРОННО в жесте — весь экран, как диафильм
+  let s=ST.surah,a=curTopAyah()||1;
+  if(ST.homeMode||ST.hifzMode||ST.pageMode||ST.srcMode){  // не в ленте — от последней позиции чтения
+    const lp=gs("lastPos",null);if(lp&&lp.surah){s=lp.surah;a=lp.ayah||1;}
+  }
+  HR.s=s;HR.a=Math.min(a,(SURAHS[s-1]||{n:1}).n);HR.swiped=false;
+  hrOpen=true;pushOverlay();
+  document.body.classList.add("hr-open");
+  const el=document.createElement("div");
+  el.id="hifzReader";el.className="hreader";
+  el.innerHTML=`<div class="hr-top"><span class="hr-key" id="hrKey"></span>
+      <button class="hr-x" data-act="close" title="Закрыть">✕</button></div>
+    <div class="hr-main"><div class="hr-ar arabic-main" id="hrAr"></div></div>
+    <div class="hr-bottom"><button class="hr-prev" data-act="prev" title="Предыдущий аят">‹</button>
+      <span class="hr-hint">Тап в любом месте — следующий аят</span></div>`;
+  document.body.appendChild(el);HR.el=el;
+  el.addEventListener("click",e=>{
+    const b=e.target.closest("[data-act]");
+    if(b){if(b.dataset.act==="close")hrStop();else hrStep(-1);return;}
+    if(HR.swiped){HR.swiped=false;return;}     // click-хвост свайпа — не листать второй раз
+    hrStep(1);                                 // тап по любому месту = дальше
+  });
+  // свайпы ←/→ (как в диафильме): влево = следующий, вправо = предыдущий
+  let x0=null,y0=null;
+  el.addEventListener("touchstart",e=>{if(e.touches.length===1){x0=e.touches[0].clientX;y0=e.touches[0].clientY;}},{passive:true});
+  el.addEventListener("touchend",e=>{
+    if(x0==null)return;const t=e.changedTouches[0],dx=t.clientX-x0,dy=t.clientY-y0;x0=null;
+    if(Math.abs(dx)>48&&Math.abs(dx)>Math.abs(dy)*1.4){HR.swiped=true;hrStep(dx<0?1:-1);}
+  },{passive:true});
+  hrRender();hrWake(true);
+}
+function hrStop(viaBack){
+  if(!hrOpen)return;
+  hrOpen=false;hrWake(false);
+  document.body.classList.remove("hr-open");
+  if(HR.el){HR.el.remove();HR.el=null;}
+  dfExitFs();
+  if(!viaBack)consumeOverlay();
+  jumpTo({surah:HR.s,ayah:HR.a});              // лента — на последний аят сессии
+}
+function hrStep(d){
+  let s=HR.s,a=HR.a+d;
+  if(a<1){ if(s>1){s--;a=SURAHS[s-1].n;} else a=1; }
+  else if(a>SURAHS[s-1].n){ if(s<114){s++;a=1;} else a=SURAHS[s-1].n; }
+  HR.s=s;HR.a=a;hrRender();
+}
+async function hrRender(){
+  if(!hrOpen)return;
+  const su=SURAHS[HR.s-1];
+  const keyEl=document.getElementById("hrKey"),arEl=document.getElementById("hrAr");
+  if(keyEl)keyEl.textContent=HR.s+":"+HR.a+" · "+(su?su.ru:"");
+  const s=HR.s,a=HR.a;
+  let t=getArabicFromCache(s,a);
+  if(!t){                                      // чанк суры ещё не загружен
+    if(arEl)arEl.textContent="…";
+    try{await loadChunk("_arabic",s);}catch(e){}
+    if(!hrOpen||s!==HR.s||a!==HR.a)return;     // пока грузили — перелистнули/закрыли
+    t=getArabicFromCache(s,a);
+  }
+  if(arEl)arEl.textContent=t||"—";
+  const main=HR.el&&HR.el.querySelector(".hr-main");
+  if(main)main.scrollTop=0;                    // длинный аят — читать с начала
 }
 
 const SURAHS=[
@@ -6183,9 +6220,7 @@ function audioBlockHTML(){
     <button class="cov-map-open" style="margin:6px 0 0" onclick="mediaPlaySurah()">▶ Слушать текущую суру</button>
     <button class="cov-map-open" style="margin:6px 0 0" onclick="mediaNewSet()">➕ Новый набор записей</button>
     <button class="cov-map-open" style="margin:6px 0 0" onclick="openDiafilm()">🎬 Диафильм (полноэкранный визуальный ряд)</button>
-    <button class="cov-map-open" style="margin:6px 0 0" onclick="asrManualStart()">🤲 Чтение наизусть — листать аяты кнопками</button>
-    <button class="cov-map-open" style="margin:6px 0 0" onclick="asrLiveStart(0)">🎤 Читать вслух — подсветка следит за чтением</button>
-    <button class="cov-map-open" style="margin:6px 0 0" onclick="asrLiveStart(1)">🕶 Читать по памяти — текст скрыт, итог в хифз</button>
+    <button class="cov-map-open" style="margin:6px 0 0" onclick="hrStart()">🤲 Чтение наизусть — аят на весь экран, тап = дальше</button>
     <div class="vp-note">Чтецы стримятся с everyayah.com (нужен интернет). Наборы записей — ваш голос, кнопка 🎙 в плеере; хранятся только на этом устройстве и работают офлайн. Диафильм — полноэкранное созерцание: аят на весь экран с атмосферной картинкой по теме (фихрист), кадр меняется по чтецу (без звука — свайпом); в кадре можно убрать картинку или аудио.</div></div></div>`;
 }
 // Новый набор записей: имя → tl_mediaSets; записи в него кладёт попап 🎙
@@ -6424,7 +6459,6 @@ function openSearchTab(){
 function renderSearchPanel(el){
   el.innerHTML=`<div class="sp-opts">
       <label class="sp-opt-label"><input type="checkbox" ${ST.searchAll?"checked":""} onchange="ST.searchAll=this.checked;scheduleSearch(0)"> Искать во всех тафсирах</label>
-      <button class="sp-voice" onclick="openVoiceSearch()" title="Прочитайте аят вслух — найду его в Коране">🎤 Найти аят голосом</button>
     </div>
     <div class="sp-count hidden" id="spCount"></div>
     <div class="sp-results" id="spResults"></div>`;
@@ -6674,6 +6708,12 @@ function jumpToAyahEl(aid,flash){
 
 // Close search on Escape, open on Ctrl+F, block Ctrl+S/U
 document.addEventListener("keydown",function(e){
+  if(hrOpen){                                  // hifz-ридер поверх всего: свои клавиши
+    if(e.key==="Escape")hrStop();
+    else if(e.key==="ArrowLeft"||e.key===" "||e.key==="Enter"){e.preventDefault();hrStep(1);}
+    else if(e.key==="ArrowRight"){e.preventDefault();hrStep(-1);}
+    return;
+  }
   const neOv=document.getElementById("neOvl");
   if(e.key==="Escape"&&neOv&&neOv.style.display!=="none"){closeNoteEditor();return;}
   if(e.key==="Escape"&&document.getElementById("ioOvl")){closeIOModal();return;}
@@ -6693,7 +6733,7 @@ document.addEventListener("keydown",function(e){
 // ============================================================
 let pendingAyah=null;
 // Which open panels should the Back button / backdrop close (overlays only; the desktop sidebar is docked)
-function anyOverlayOpen(){return ST.rpanelOpen||ST.apanelOpen||ST.diafilm||ST.immersive||appAboutOpen()||progressOpen||spdOpen||(isM()&&ST.sidebarOpen);}
+function anyOverlayOpen(){return ST.rpanelOpen||ST.apanelOpen||ST.diafilm||hrOpen||ST.immersive||appAboutOpen()||progressOpen||spdOpen||(isM()&&ST.sidebarOpen);}
 let navBack=false; // true while we programmatically history.back() to consume our own overlay entry
 function pushOverlay(){if(!(history.state&&history.state.ov))history.pushState({ov:1},"");}
 function consumeOverlay(){if(history.state&&history.state.ov){navBack=true;history.back();}}
@@ -6705,6 +6745,7 @@ function closeAllPanelsUI(){
   if(ST.rpanelOpen){ST.rpanelOpen=false;document.getElementById("rpanel").classList.add("collapsed");}
   if(ST.apanelOpen){ST.apanelOpen=false;document.getElementById("apanel").classList.add("collapsed");}
   if(ST.diafilm)exitDiafilm(true);       // «Назад» выходит из диафильма (запись уже снята)
+  if(hrOpen)hrStop(true);                // «Назад» выходит из hifz-ридера (запись уже снята)
   if(ST.immersive)exitImmersive(true);   // Back button leaves immersive (entry already popped)
   if(isM()&&ST.sidebarOpen){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   updateBackdrop();
