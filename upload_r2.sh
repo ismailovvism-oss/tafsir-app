@@ -13,7 +13,7 @@
 #   ./upload_r2.sh              # copy: залить новое/изменённое (НИЧЕГО не удаляет)
 #   ./upload_r2.sh --dry-run    # показать, что бы залилось, без заливки
 #   ./upload_r2.sh --prune      # sync: как copy, НО удаляет на R2 лишнее (чистка)
-#   ./upload_r2.sh tafsirs      # ограничить одним подкаталогом (tafsirs|index|img|fonts)
+#   ./upload_r2.sh tafsirs      # ограничить одним подкаталогом (tafsirs|index|img|fonts|media|asr)
 # Флаги можно комбинировать: ./upload_r2.sh --dry-run --prune index
 set -euo pipefail
 
@@ -27,7 +27,7 @@ for a in "$@"; do
   case "$a" in
     --prune)   MODE="sync" ;;
     --dry-run) DRY=(--dry-run) ;;
-    img|index|tafsirs|fonts) ONLY="$a" ;;
+    img|index|tafsirs|fonts|media|asr) ONLY="$a" ;;
     *) echo "неизвестный аргумент: $a" >&2; exit 2 ;;
   esac
 done
