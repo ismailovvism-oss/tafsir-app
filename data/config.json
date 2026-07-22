@@ -810,6 +810,69 @@
       "reviewLevel": "caution"
     },
     {
+      "id": "kathir_ru",
+      "file": "tafsirs/kathir_ru.json",
+      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
+      "name": "Тафсир Ибн Касир (рус.)",
+      "nameAr": "مختصر تفسير ابن كثير",
+      "author": "Ибн Касир — Мухтасар",
+      "authorAr": "ابن كثير",
+      "group": "russian",
+      "kind": "tafsir",
+      "lang": "ru",
+      "era": "classical",
+      "tags": [
+        "hadith",
+        "history",
+        "aqida",
+        "draft"
+      ],
+      "year": "774 х.",
+      "translator": "Айрат Вахитов",
+      "reviewLevel": "unverified",
+      "fill": 1.0
+    },
+    {
+      "id": "podrostkam",
+      "file": "tafsirs/podrostkam.json",
+      "name": "Ясный тафсир",
+      "nameAr": "تفسير ميسر لليافعين",
+      "author": "ИИ-переложение классических тафсиров",
+      "authorAr": "",
+      "group": "russian",
+      "kind": "tafsir",
+      "lang": "ru",
+      "era": "modern",
+      "tags": [
+        "draft"
+      ],
+      "year": "2026",
+      "about": true,
+      "reviewLevel": "unverified",
+      "fill": 0.1001,
+      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev"
+    },
+    {
+      "id": "detyam",
+      "file": "tafsirs/detyam.json",
+      "name": "Ясный тафсир детям",
+      "nameAr": "تفسير ميسر للأطفال",
+      "author": "ИИ-переложение классических тафсиров",
+      "authorAr": "",
+      "group": "russian",
+      "kind": "tafsir",
+      "lang": "ru",
+      "era": "modern",
+      "tags": [
+        "draft"
+      ],
+      "year": "2026",
+      "about": true,
+      "reviewLevel": "unverified",
+      "fill": 0.1001,
+      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev"
+    },
+    {
       "id": "baghawi",
       "file": "tafsirs/baghawi.json",
       "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
@@ -844,27 +907,24 @@
       "fill": 0.1958
     },
     {
-      "id": "kathir_ru",
-      "file": "tafsirs/kathir_ru.json",
+      "id": "baghawi_ar",
+      "file": "tafsirs/baghawi_ar.json",
       "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "Тафсир Ибн Касир (рус.)",
-      "nameAr": "مختصر تفسير ابن كثير",
-      "author": "Ибн Касир — Мухтасар",
-      "authorAr": "ابن كثير",
-      "group": "russian",
+      "name": "تفسير البغوي (معالم التنزيل)",
+      "nameAr": "",
+      "author": "аль-Багави",
+      "authorAr": "أبو محمد الحسين بن مسعود البغوي",
+      "group": "classical_ar",
       "kind": "tafsir",
-      "lang": "ru",
+      "lang": "ar",
       "era": "classical",
       "tags": [
-        "hadith",
-        "history",
-        "aqida",
-        "draft"
+        "hadith"
       ],
-      "year": "774 х.",
-      "translator": "Айрат Вахитов",
-      "reviewLevel": "unverified",
-      "fill": 1.0
+      "year": "516 х.",
+      "about": true,
+      "fill": 1.0,
+      "counterpart": "baghawi"
     },
     {
       "id": "qurtubi_ru",
@@ -913,70 +973,6 @@
       "reviewLevel": "unverified",
       "fill": 0.1713,
       "counterpart": "ibn_abbas_ar"
-    },
-    {
-      "id": "baghawi_ar",
-      "file": "tafsirs/baghawi_ar.json",
-      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "تفسير البغوي (معالم التنزيل)",
-      "nameAr": "",
-      "author": "аль-Багави",
-      "authorAr": "أبو محمد الحسين بن مسعود البغوي",
-      "group": "classical_ar",
-      "kind": "tafsir",
-      "lang": "ar",
-      "era": "classical",
-      "tags": [
-        "hadith"
-      ],
-      "year": "516 х.",
-      "about": true,
-      "fill": 1.0,
-      "counterpart": "baghawi"
-    },
-    {
-      "id": "ibn_abbas_sel",
-      "file": "tafsirs/ibn_abbas_sel.json",
-      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "Мекканская школа тафсира (избранное)",
-      "nameAr": "تفسير ابن عباس — سور مختارة",
-      "author": "Ибн Аббас и мекканская школа",
-      "authorAr": "عبد الله بن عباس ومدرسة مكة",
-      "group": "russian",
-      "kind": "tafsir",
-      "lang": "ru",
-      "era": "classical",
-      "tags": [
-        "hadith",
-        "athar",
-        "isnad"
-      ],
-      "year": "68 х.",
-      "translator": "сост. Кенан Абу Абдуррахман",
-      "about": true,
-      "reviewLevel": "unverified",
-      "fill": 0.0165
-    },
-    {
-      "id": "saadi_ru",
-      "file": "tafsirs/saadi_ru.json",
-      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "Тафсир ас-Саади (рус.)",
-      "nameAr": "تفسير السعدي بالروسية",
-      "author": "Абдуррахман ас-Саади",
-      "authorAr": "عبدالرحمن السعدي",
-      "group": "russian",
-      "kind": "tafsir",
-      "lang": "ru",
-      "era": "modern",
-      "tags": [
-        "aqida",
-        "fiqh"
-      ],
-      "year": "",
-      "fill": 1.0,
-      "translator": "Эльмир Кулиев",
-      "reviewLevel": "unverified"
     },
     {
       "id": "ibn_abbas_ar",
@@ -1233,21 +1229,27 @@
       "counterpart": "qurtubi_ru"
     },
     {
-      "id": "muntahab",
-      "file": "tafsirs/muntahab.json",
+      "id": "ibn_abbas_sel",
+      "file": "tafsirs/ibn_abbas_sel.json",
       "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "Тафсир аль-Мунтахаб",
-      "nameAr": "المنتخب في تفسير القرآن",
-      "author": "Мин. вакфов Египта",
-      "authorAr": "",
+      "name": "Мекканская школа тафсира (избранное)",
+      "nameAr": "تفسير ابن عباس — سور مختارة",
+      "author": "Ибн Аббас и мекканская школа",
+      "authorAr": "عبد الله بن عباس ومدرسة مكة",
       "group": "russian",
       "kind": "tafsir",
       "lang": "ru",
-      "era": "modern",
-      "tags": [],
-      "year": "",
-      "fill": 1.0,
-      "reviewLevel": "unverified"
+      "era": "classical",
+      "tags": [
+        "hadith",
+        "athar",
+        "isnad"
+      ],
+      "year": "68 х.",
+      "translator": "сост. Кенан Абу Абдуррахман",
+      "about": true,
+      "reviewLevel": "unverified",
+      "fill": 0.0165
     },
     {
       "id": "ibn_abi_hatim",
@@ -1288,42 +1290,42 @@
       "fill": 1.0
     },
     {
-      "id": "detyam",
-      "file": "tafsirs/detyam.json",
-      "name": "Тафсир для детей (ИИ)",
-      "nameAr": "تفسير ميسر للأطفال",
-      "author": "ИИ-переложение классических тафсиров",
-      "authorAr": "",
+      "id": "saadi_ru",
+      "file": "tafsirs/saadi_ru.json",
+      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
+      "name": "Тафсир ас-Саади (рус.)",
+      "nameAr": "تفسير السعدي بالروسية",
+      "author": "Абдуррахман ас-Саади",
+      "authorAr": "عبدالرحمن السعدي",
       "group": "russian",
       "kind": "tafsir",
       "lang": "ru",
       "era": "modern",
       "tags": [
-        "draft"
+        "aqida",
+        "fiqh"
       ],
-      "year": "2026",
-      "about": true,
-      "reviewLevel": "unverified",
-      "fill": 0.0989
+      "year": "",
+      "fill": 1.0,
+      "translator": "Эльмир Кулиев",
+      "reviewLevel": "unverified"
     },
     {
-      "id": "podrostkam",
-      "file": "tafsirs/podrostkam.json",
-      "name": "Тафсир для подростков (ИИ)",
-      "nameAr": "تفسير ميسر لليافعين",
-      "author": "ИИ-переложение классических тафсиров",
+      "id": "muntahab",
+      "file": "tafsirs/muntahab.json",
+      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
+      "name": "Тафсир аль-Мунтахаб",
+      "nameAr": "المنتخب في تفسير القرآن",
+      "author": "Мин. вакфов Египта",
       "authorAr": "",
       "group": "russian",
       "kind": "tafsir",
       "lang": "ru",
       "era": "modern",
-      "tags": [
-        "draft"
-      ],
-      "year": "2026",
-      "about": true,
-      "reviewLevel": "unverified",
-      "fill": 0.0989
+      "tags": [],
+      "year": "",
+      "fill": 1.0,
+      "reviewLevel": "unverified"
     }
   ]
 }

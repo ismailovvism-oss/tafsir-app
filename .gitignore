@@ -146,3 +146,11 @@ data/media/_rai-test/
 data/media/filmstrip/**/*.png
 
 post-screens/
+# ИИ-тафсиры «Ясный тафсир» (podrostkam) и «Ясный тафсир детям» (detyam) — на R2
+# (dataBase); в репо не коммитим, пересоздаются build_ai_tafsirs.py из вольта.
+data/tafsirs/detyam.json
+data/tafsirs/detyam/
+data/index/detyam.json
+data/tafsirs/podrostkam.json
+data/tafsirs/podrostkam/
+data/index/podrostkam.json
