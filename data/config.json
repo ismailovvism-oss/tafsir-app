@@ -1286,6 +1286,44 @@
       "year": "",
       "about": true,
       "fill": 1.0
+    },
+    {
+      "id": "detyam",
+      "file": "tafsirs/detyam.json",
+      "name": "Тафсир для детей (ИИ)",
+      "nameAr": "تفسير ميسر للأطفال",
+      "author": "ИИ-переложение классических тафсиров",
+      "authorAr": "",
+      "group": "russian",
+      "kind": "tafsir",
+      "lang": "ru",
+      "era": "modern",
+      "tags": [
+        "draft"
+      ],
+      "year": "2026",
+      "about": true,
+      "reviewLevel": "unverified",
+      "fill": 0.0989
+    },
+    {
+      "id": "podrostkam",
+      "file": "tafsirs/podrostkam.json",
+      "name": "Тафсир для подростков (ИИ)",
+      "nameAr": "تفسير ميسر لليافعين",
+      "author": "ИИ-переложение классических тафсиров",
+      "authorAr": "",
+      "group": "russian",
+      "kind": "tafsir",
+      "lang": "ru",
+      "era": "modern",
+      "tags": [
+        "draft"
+      ],
+      "year": "2026",
+      "about": true,
+      "reviewLevel": "unverified",
+      "fill": 0.0989
     }
   ]
 }
