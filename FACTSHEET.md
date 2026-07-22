@@ -142,7 +142,9 @@
 ## 3. ТЕХНИЧЕСКОЕ
 
 - **Тип**: статический одностраничный веб-сайт. Один файл `index.html` (ванильный JS, ~3,4 тыс. строк), без сборки и фреймворков. Данные — JSON в `data/`. Хостинг — GitHub Pages.
-- **PWA**: **нет** (нет `manifest.json`, нет service worker). Обычный сайт; адаптив через CSS media-queries (`matchMedia`).
+- **PWA**: есть `manifest.webmanifest`, иконки 192/512 px и режим
+  `display: standalone` — Chrome устанавливает сайт как отдельное приложение. Service
+  worker нет: manifest отвечает за установку/окно, а не за полный офлайн-кэш.
 - **Данные** (`data/`):
   - `config.json` — реестр источников и групп (+ offline-зеркало `config.js`).
   - `coverage.json` — индекс покрытия: какие аяты есть у каждого источника (+ `coverage.js`).
@@ -161,4 +163,3 @@
 - **Maintainer-скрипты** (Python, идемпотентные): `convert.py`, `split.py`, `build_index.py`, `compute_fill.py`, `build_coverage.py`, `build_qpc.py`, `build_morph.py`, `build_kathir_ru.py`, `sync_config.py`, `validate_data.py`, `fix_kathir_blocks.py`.
 
 ---
-
