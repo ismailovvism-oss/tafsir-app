@@ -31,14 +31,24 @@ SOURCES = {
 }
 
 AR_RE = re.compile(r"[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]")
-SPAN_RE = re.compile(r'<span style="[^"]*">(.*?)</span>', re.S)
+SPAN_RE = re.compile(r"<span\b[^>]*>(.*?)</span>", re.S)  # и style=, и class="sharh"
+COMMENT_RE = re.compile(r"<!--.*?-->", re.S)  # контрольные блоки «ПРОВЕРИТЬ» и пр.
 AYAH_RE = re.compile(r"^\*\*(\d+)\.\*\*\s*(.*)$")
 CALLOUT_RE = re.compile(r"^>\s*\[!\w+\]-?\s*(.*)$")
 
 
 def convert_inline(text):
-    """HTML-спаны -> обычный текст; прочее оставляем как есть."""
-    return SPAN_RE.sub(lambda m: m.group(1).strip(), text)
+    """HTML-спаны -> обычный текст; прочее оставляем как есть.
+
+    Снимаем итеративно: SPAN_RE нежадный и на вложенных <span> без цикла
+    оставил бы литеральные теги. Цикл распрямляет любую глубину изнутри наружу.
+    """
+    for _ in range(10):
+        new = SPAN_RE.sub(lambda m: m.group(1).strip(), text)
+        if new == text:
+            break
+        text = new
+    return text
 
 
 def is_arabic_quote(line):
@@ -48,7 +58,15 @@ def is_arabic_quote(line):
 
 def parse_portion(path):
     """Разбирает один файл порции -> (intro, {аят: текст}, outro)."""
-    lines = open(path, encoding="utf-8").read().splitlines()
+    raw = open(path, encoding="utf-8").read()
+    raw = COMMENT_RE.sub("", raw)  # HTML-комментарии (контрольный блок) — вон
+    lines = raw.splitlines()
+    # YAML-фронтматтер ревизии (--- … ---) в начале файла
+    if lines and lines[0].strip() == "---":
+        for j in range(1, len(lines)):
+            if lines[j].strip() == "---":
+                lines = lines[j + 1:]
+                break
 
     intro_lines = []     # цитата введения
     ayahs = {}           # n -> [строки]
@@ -97,7 +115,7 @@ def parse_portion(path):
             i += 1
             continue
 
-        if is_arabic_quote(line):
+        if is_arabic_quote(line) or "{{ayah:" in s:
             i += 1
             continue
 
