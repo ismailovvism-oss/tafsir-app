@@ -849,7 +849,7 @@
       "year": "2026",
       "about": true,
       "reviewLevel": "unverified",
-      "fill": 0.2138,
+      "fill": 0.2777,
       "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev"
     },
     {
@@ -869,7 +869,7 @@
       "year": "2026",
       "about": true,
       "reviewLevel": "unverified",
-      "fill": 0.2138,
+      "fill": 0.2777,
       "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev"
     },
     {
@@ -959,6 +959,7 @@
       "nameAr": "مرويات ابن عباس في التفسير",
       "author": "Ибн Аббас (асары) + редакторские сводки",
       "authorAr": "عبد الله بن عباس",
+      "translator": "ИИ-перевод (Claude Opus 4.8; продолжение — Codex)",
       "group": "russian",
       "kind": "tafsir",
       "lang": "ru",
@@ -971,7 +972,7 @@
       ],
       "about": true,
       "reviewLevel": "unverified",
-      "fill": 0.1713,
+      "fill": 0.1724,
       "counterpart": "ibn_abbas_ar"
     },
     {
