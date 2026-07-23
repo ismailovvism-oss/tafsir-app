@@ -5,8 +5,9 @@ Smoke-проверка целостности данных перед публи
 
 Проверяет:
   - config.json валиден; config.js — точное зеркало config.json;
-  - каждый источник: монолит .json, чанки по сурам совпадают с index.json,
-    поисковый индекс на месте (для текстовых), поле fill совпадает с реальностью;
+  - каждый источник: монолит .json, чанки по сурам совпадают с index.json и с
+    соответствующими разделами монолита, поисковый индекс на месте (для
+    текстовых), поле fill совпадает с реальностью;
   - скан-источник (kind:image): каталог imgdir существует;
   - QPC: meta.pages страниц-чанков и шрифтов, 114 сур;
   - word-by-word: words/ и morph/ имеют одинаковый набор сур.
@@ -30,6 +31,20 @@ def err(msg):
 
 def warn(msg):
     warnings.append(msg)
+
+
+def files_equal(first, second):
+    """Byte-for-byte comparison without loading large R2 monoliths into memory."""
+    if os.path.getsize(first) != os.path.getsize(second):
+        return False
+    with open(first, "rb") as left, open(second, "rb") as right:
+        while True:
+            a = left.read(1024 * 1024)
+            b = right.read(1024 * 1024)
+            if a != b:
+                return False
+            if not a:
+                return True
 
 
 def mono_path(tid):
@@ -92,10 +107,10 @@ def check_source(t):
             err(f"[{tid}] каталог сканов не найден: data/{imgdir}")
         return
 
-    # источник с dataBase живёт на R2: каждый артефакт ищем и в data/, и в
-    # зеркале r2-data/ (монолит может быть локальным, а чанки — только на R2)
+    # Источник с dataBase обслуживается с R2, поэтому его зеркало проверяем
+    # первым. Иначе старый локальный каталог может скрыть свежие R2-чанки.
     on_r2 = bool(t.get("dataBase"))
-    bases = [DATA, R2DATA] if on_r2 else [DATA]
+    bases = [R2DATA, DATA] if on_r2 else [DATA]
 
     def find(*rel):
         for b in bases:
@@ -112,6 +127,17 @@ def check_source(t):
         else:
             err(f"[{tid}] нет монолита data/tafsirs/{tid}.json")
         return
+    local_mono = os.path.join(DATA, "tafsirs", tid + ".json")
+    r2_mono = os.path.join(R2DATA, "tafsirs", tid + ".json")
+    if on_r2 and os.path.isfile(local_mono) and os.path.isfile(r2_mono):
+        if not files_equal(local_mono, r2_mono):
+            err(f"[{tid}] локальный и R2-монолиты различаются")
+
+    try:
+        monolith = json.load(open(mono, encoding="utf-8"))
+    except Exception as e:
+        err(f"[{tid}] монолит не парсится: {e}")
+        return
 
     # чанки по сурам
     chunk_dir = find("tafsirs", tid)
@@ -126,6 +152,27 @@ def check_source(t):
                    if not os.path.isfile(os.path.join(chunk_dir, f"{s}.json"))]
         if missing:
             err(f"[{tid}] index.json ссылается на отсутствующие чанки: {missing[:10]}")
+        mismatched = []
+        for sura in surahs:
+            chunk_path = os.path.join(chunk_dir, f"{sura}.json")
+            if not os.path.isfile(chunk_path):
+                continue
+            try:
+                chunk = json.load(open(chunk_path, encoding="utf-8"))
+            except Exception as e:
+                err(f"[{tid}] чанк {sura}.json не парсится: {e}")
+                continue
+            if chunk != monolith.get(str(sura)):
+                mismatched.append(str(sura))
+        if mismatched:
+            err(f"[{tid}] чанки не совпадают с монолитом: {mismatched[:10]}")
+        indexed = {str(sura) for sura in surahs}
+        unindexed = [
+            sura for sura, value in monolith.items()
+            if sura != "0" and value and sura not in indexed
+        ]
+        if unindexed:
+            err(f"[{tid}] непустые суры отсутствуют в index.json: {unindexed[:10]}")
 
     # поисковый индекс
     if find("index", tid + ".json") is None:

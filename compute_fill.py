@@ -62,7 +62,9 @@ def main():
         f = round(min(1.0, n / TOTAL), 4)
         t["fill"] = f
         fills[t["id"]] = f
-    json.dump(cfg, open(cfg_json, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
+    with open(cfg_json, "w", encoding="utf-8") as output:
+        json.dump(cfg, output, ensure_ascii=False, indent=2)
+        output.write("\n")
 
     # config.js (offline mirror)
     cfg_js = os.path.join(ROOT, "data", "config.js")

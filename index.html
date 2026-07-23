@@ -1419,6 +1419,12 @@ const SOURCES={
   // — объёмные арабские тома (на будущее, лежат там же, что и тафсиры) —
   arabic_volumes:  {baseUrl:"data",  pathTemplate:"{baseUrl}/tafsirs/{source}/{sura}.json"},     // задел
 };
+// Локальная проверка тяжёлых источников до публикации в R2:
+//   python3 -m http.server 8000
+//   http://localhost:8000/?r2local=1#11
+// Флаг намеренно не сохраняется и на опубликованном сайте бесполезен, поскольку
+// gitignored-каталога r2-data там нет.
+const LOCAL_R2=/[?&]r2local=1(?:&|$)/.test(location.search);
 // Единая точка построения URL: подставляет baseUrl и параметры в шаблон класса.
 function resolveUrl(cls,params){
   const def=SOURCES[cls];
@@ -1430,7 +1436,7 @@ function resolveUrl(cls,params){
   // классы (config/coverage/about/…) не трогаем — они всегда локальны.
   if(params&&params.source&&(cls==="tafsir_text"||cls==="tafsir_monolith"||cls==="search_index"||cls==="quran_text")){
     const t=CONFIG&&CONFIG.tafsirs&&CONFIG.tafsirs.find(x=>x.id===params.source);
-    if(t&&t.dataBase)base=t.dataBase;
+    if(t&&t.dataBase)base=LOCAL_R2?"r2-data":t.dataBase;
   }
   let url=def.pathTemplate.split("{baseUrl}").join(base);
   if(params)for(const k in params)url=url.split("{"+k+"}").join(params[k]);

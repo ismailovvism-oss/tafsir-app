@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Слепое сравнение перевода Ибн Аббаса — 2:257</title>
+  <style>
+    :root{color-scheme:light dark;--bg:#f5f2eb;--card:#fff;--text:#28251f;--muted:#6d675d;--line:#d9d2c5;--accent:#1b5e3b;--soft:#e8f3ec}
+    @media(prefers-color-scheme:dark){:root{--bg:#181816;--card:#252522;--text:#e5e0d7;--muted:#aaa398;--line:#46423b;--accent:#75c496;--soft:#1e3427}}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif}
+    main{max-width:1500px;margin:auto;padding:28px 20px 48px}
+    h1{font-size:clamp(24px,4vw,38px);line-height:1.15;margin:0 0 10px}
+    h2{font-size:18px;margin:0;padding:16px 18px;border-bottom:1px solid var(--line)}
+    .lead{max-width:900px;color:var(--muted);margin:0 0 18px}
+    .notice{max-width:900px;padding:12px 14px;border-left:4px solid var(--accent);background:var(--soft);border-radius:6px;margin-bottom:18px}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 20px}
+    button{min-height:44px;padding:9px 15px;border:1px solid var(--accent);border-radius:9px;background:var(--accent);color:#fff;font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+    button.secondary{background:transparent;color:var(--accent)}
+    button:disabled{opacity:.55;cursor:wait}
+    button:focus-visible{outline:3px solid color-mix(in srgb,var(--accent),transparent 55%);outline-offset:2px}
+    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:start}
+    .panel{position:relative;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;min-width:0}
+    .text{white-space:pre-wrap;overflow-wrap:anywhere;padding:18px;max-height:72vh;overflow:auto}
+    .arabic{direction:rtl;text-align:right;font-family:"Noto Naskh Arabic","Amiri",serif;font-size:20px;line-height:2}
+    .locked .text{display:none}
+    .lock-message{padding:32px 18px;color:var(--muted);text-align:center}
+    .panel:not(.locked) .lock-message{display:none}
+    .status{min-height:24px;color:var(--muted);font-size:14px}
+    .meta{font-size:13px;color:var(--muted);margin-top:18px}
+    @media(max-width:980px){.grid{grid-template-columns:1fr}.text{max-height:none}}
+    @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Слепое сравнение перевода Ибн Аббаса</h1>
+    <p class="lead">Аль-Бакара, аят 257. Пробный перевод зафиксирован до чтения существующего русского варианта.</p>
+    <div class="notice">Сначала прочитайте арабский оригинал и пробный перевод. Текущий перевод скрыт и загрузится только после нажатия кнопки.</div>
+
+    <div class="actions">
+      <button id="reveal" type="button" aria-expanded="false">Показать текущий перевод</button>
+      <button id="copy" class="secondary" type="button">Скопировать пробный перевод</button>
+    </div>
+    <div id="status" class="status" role="status" aria-live="polite">Загрузка исходника и пробного перевода…</div>
+
+    <div class="grid">
+      <section class="panel" aria-labelledby="originalTitle">
+        <h2 id="originalTitle">Арабский оригинал</h2>
+        <div id="original" class="text arabic" lang="ar" dir="rtl"></div>
+      </section>
+      <section class="panel" aria-labelledby="trialTitle">
+        <h2 id="trialTitle">Пробный слепой перевод</h2>
+        <div id="trial" class="text"></div>
+      </section>
+      <section id="currentPanel" class="panel locked" aria-labelledby="currentTitle">
+        <h2 id="currentTitle">Текущий перевод проекта</h2>
+        <div class="lock-message">Нажмите «Показать текущий перевод», когда будете готовы сравнивать.</div>
+        <div id="current" class="text"></div>
+      </section>
+    </div>
+
+    <p class="meta">Страница сначала ищет данные в локальном `r2-data`, затем использует `dataBase` из `data/config.json`. Она ничего не изменяет в основных данных приложения.</p>
+  </main>
+
+  <script type="module">
+    const statusEl=document.getElementById("status");
+    const revealBtn=document.getElementById("reveal");
+    const copyBtn=document.getElementById("copy");
+    const currentPanel=document.getElementById("currentPanel");
+    let sample=null,currentLoaded=false;
+
+    async function json(url){
+      const r=await fetch(url,{cache:"no-store"});
+      if(!r.ok)throw new Error(`${r.status} ${url}`);
+      return r.json();
+    }
+
+    async function sourceChunk(id){
+      const cfg=await json("../data/config.json");
+      const src=cfg.tafsirs.find(x=>x.id===id);
+      if(!src)throw new Error(`Источник ${id} не найден в config`);
+      const chunkPath=src.file.replace(/\.json$/,`/${sample.surah}.json`);
+      const candidates=src.dataBase
+        ?[`../r2-data/${chunkPath}`,`${src.dataBase.replace(/\/$/,"")}/${chunkPath}`]
+        :[`../data/${chunkPath}`];
+      let last=null;
+      for(const url of candidates){try{return await json(url);}catch(e){last=e;}}
+      throw last||new Error(`Не удалось загрузить ${id}`);
+    }
+
+    async function init(){
+      try{
+        sample=await json("./ibn_abbas_2_257_blind.json");
+        const original=await sourceChunk(sample.sourceId);
+        document.getElementById("original").textContent=original[String(sample.ayah)]||"Фрагмент не найден";
+        document.getElementById("trial").textContent=sample.translation;
+        statusEl.textContent="Оригинал и пробный перевод загружены. Текущий перевод ещё не запрашивался.";
+      }catch(e){
+        statusEl.textContent="Ошибка загрузки: "+e.message;
+        revealBtn.disabled=true;copyBtn.disabled=true;
+      }
+    }
+
+    revealBtn.addEventListener("click",async()=>{
+      if(currentLoaded){
+        const hidden=currentPanel.classList.toggle("locked");
+        revealBtn.textContent=hidden?"Показать текущий перевод":"Скрыть текущий перевод";
+        revealBtn.setAttribute("aria-expanded",String(!hidden));
+        return;
+      }
+      revealBtn.disabled=true;statusEl.textContent="Загружается текущий перевод…";
+      try{
+        const current=await sourceChunk(sample.comparisonSourceId);
+        document.getElementById("current").textContent=current[String(sample.ayah)]||"Перевод этого аята не найден";
+        currentPanel.classList.remove("locked");currentLoaded=true;
+        revealBtn.textContent="Скрыть текущий перевод";
+        revealBtn.setAttribute("aria-expanded","true");
+        statusEl.textContent="Три колонки готовы к сравнению.";
+      }catch(e){statusEl.textContent="Не удалось загрузить текущий перевод: "+e.message;}
+      finally{revealBtn.disabled=false;}
+    });
+
+    copyBtn.addEventListener("click",async()=>{
+      if(!sample)return;
+      try{await navigator.clipboard.writeText(sample.translation);statusEl.textContent="Пробный перевод скопирован.";}
+      catch{statusEl.textContent="Браузер не разрешил копирование — выделите текст вручную.";}
+    });
+
+    init();
+  </script>
+</body>
+</html>

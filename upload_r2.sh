@@ -8,6 +8,8 @@
 #   r2-data/fonts/<pack>/pN.woff2-> <bucket>/fonts/<pack>/pN.woff2(шрифты мусхаф-паков)
 #
 # Инкрементально: rclone сверяет размер+mtime и грузит ТОЛЬКО изменённое.
+# Локальные резервные/временные файлы (*.bak, *.tmp, __pycache__) исключены и
+# никогда не публикуются; существующие такие объекты на R2 скрипт не удаляет.
 #
 # Использование:
 #   ./upload_r2.sh              # copy: залить новое/изменённое (НИЧЕГО не удаляет)
@@ -38,6 +40,7 @@ if [[ -n "$ONLY" ]]; then SUBSRC="$SRC/$ONLY"; SUBDST="/$ONLY"; fi
 echo ">> rclone $MODE  ${SUBSRC#"$SRC"/}  ->  $REMOTE:$BUCKET$SUBDST  ${DRY[*]:-}"
 "$RCLONE" "$MODE" "$SUBSRC" "$REMOTE:$BUCKET$SUBDST" \
   "${DRY[@]}" \
+  --exclude "*.bak" --exclude "*.tmp" --exclude "__pycache__/**" \
   --checksum \
   --transfers 16 --checkers 32 \
   --s3-no-check-bucket \
