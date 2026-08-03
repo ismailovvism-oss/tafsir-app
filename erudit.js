@@ -83,6 +83,7 @@ function snip(t,n){                            // короткая выжимк�
 const DEF_CFG={
   suraNames:{scope:"all",custom:"78-114",len:10,kinds:{name:true,arabic:true,count:true,order:true}},
   ayahs:{scope:"j30",custom:"78-114",len:10,lang:"mix",kinds:{sura:true,cont:true,next:true,word:true}},
+  scholar:{cats:"all",draft:false},
   tartib:{scope:"j30",custom:"78-114",len:10,kinds:{chain:true,spread:true,words:true}},
   words:{tier:"300",len:10,kinds:{w2m:true,m2w:true,root:true,same:true}},
   tajweed:{scope:"j30",custom:"78-114",len:10,kinds:{name:true,find:true}},
@@ -769,6 +770,252 @@ function tajweedTry(s,ayahs,spans,RULES,kind,pads){
   return null;
 }
 
+// ============================================================
+// УПРАЖНЕНИЕ 6 — «Кто хочет стать учёным»: лестница из 15 ступеней
+// ============================================================
+// Устроено НЕ как обычный раунд (там N вопросов и счёт верных), а как
+// восхождение: одна ошибка обрывает подъём, но взятые рубежи (5-я и 10-я
+// ступени) сохраняются. Поэтому у неё свой поток (E.view="ladder"), а не
+// движок раунда — правила слишком другие, чтобы втискивать их в общий.
+//
+// ГЛАВНОЕ ПРАВИЛО ДАННЫХ: в выдачу идут только вопросы с reviewed:true.
+// Банк составлен ассистентом, и богословскую пригодность утверждает мейнтейнер;
+// пока вычитки нет, упражнение честно говорит, что показывать нечего. Для самой
+// вычитки есть черновой режим — с явной пометкой на каждом вопросе.
+const RUNGS=[1,1,2,2,2,3,3,3,3,4,4,4,5,5,5];   // уровень сложности по ступеням
+const SAFE=[5,10];                              // взятые рубежи: сюда откатывает ошибка
+const QUIZ_CATS=[
+  {id:"all",label:"Всё вместе"},
+  {id:"ulum",label:"Коранические науки"},
+  {id:"tafsir",label:"Тафсир по аятам"},
+];
+let BANK=null;                                  // {questions:[...], cats:{id:name}, files:[…]}
+async function loadBank(){
+  if(BANK)return BANK;
+  const out={questions:[],cats:{},files:[]};
+  try{
+    const idx=await (await fetch(ctx.resolveUrl("quiz",{file:"index.json"}))).json();
+    for(const file of (idx.files||[])){
+      try{
+        const d=await (await fetch(ctx.resolveUrl("quiz",{file}))).json();
+        const src=file.replace(/\.json$/,"");
+        for(const c of (d.categories||[]))out.cats[c.id]=c.name;
+        for(const q of (d.questions||[]))out.questions.push(Object.assign({file:src},q));
+        out.files.push(file);
+      }catch(e){console.error("erudit: банк вопросов",file,e);}
+    }
+  }catch(e){console.error("erudit: индекс банка вопросов:",e);}
+  BANK=out;return BANK;
+}
+// Отметки вычитки: складываются локально и выгружаются файлом (apply_quiz_review.py
+// переносит их в сам банк). Браузер писать в репозиторий не может, поэтому цикл
+// «прошёл — отметил — применил скриптом» единственный рабочий.
+function reviewMarks(){const d=db();if(!d.review)d.review={};return d.review;}
+function markQuestion(id,val){
+  const m=reviewMarks();
+  if(m[id]===val)delete m[id];else m[id]=val;
+  dbSave();
+}
+const LD={rungs:[],idx:0,answered:null,removed:[],hints:null,over:false,won:false,book:null,draft:false};
+
+function quizPool(bank,c){
+  const draft=!!c.draft;
+  return bank.questions.filter(q=>{
+    if(!draft&&q.reviewed!==true)return false;
+    if(c.cats==="ulum"&&q.file!=="ulum")return false;
+    if(c.cats==="tafsir"&&q.file!=="tafsir")return false;
+    return true;
+  });
+}
+// Ступень требует своего уровня; если вопросов такого уровня не хватило, берём
+// ближайший — лучше слегка сбитая сложность, чем оборванная лестница.
+function pickRungs(pool){
+  const used=new Set(),out=[];
+  for(const lvl of RUNGS){
+    let cand=pool.filter(q=>q.level===lvl&&!used.has(q.id));
+    for(let d=1;d<=4&&!cand.length;d++)
+      cand=pool.filter(q=>!used.has(q.id)&&(q.level===lvl-d||q.level===lvl+d));
+    if(!cand.length)break;
+    const q=pick(cand);used.add(q.id);out.push(q);
+  }
+  return out;
+}
+async function startLadder(){
+  const c=cfg();
+  const bank=await loadBank();
+  const pool=quizPool(bank,c);
+  LD.rungs=pickRungs(pool);
+  LD.idx=0;LD.answered=null;LD.removed=[];LD.over=false;LD.won=false;LD.book=null;
+  LD.draft=!!c.draft;
+  LD.hints={fifty:true,book:true,swap:true};
+  LD.pool=pool;
+  LD.t0=Date.now();
+  E.view="ladder";render();
+}
+function ladderQ(){return LD.rungs[LD.idx]||null;}
+function ladderAnswer(i){
+  if(LD.answered!==null||LD.over)return;
+  const q=ladderQ();if(!q)return;
+  LD.answered=i;
+  const ok=i===q.a;
+  const st=exStat("scholar");
+  st.attempts++;if(ok)st.correct++;
+  if(!ok){
+    LD.over=true;
+    st.plays++;st.lastTs=Date.now();
+    if(LD.idx>st.best)st.best=LD.idx;          // рекорд — число взятых ступеней
+  }
+  dbSave();render();
+}
+function ladderNext(){
+  if(LD.over)return;
+  LD.idx++;LD.answered=null;LD.removed=[];LD.book=null;
+  if(LD.idx>=LD.rungs.length){
+    LD.over=true;LD.won=true;
+    const st=exStat("scholar");
+    st.plays++;st.lastTs=Date.now();
+    if(LD.idx>st.best)st.best=LD.idx;
+    dbSave();
+  }
+  render();
+}
+function safeReached(n){                        // сколько ступеней остаётся при ошибке
+  let s=0;for(const r of SAFE)if(n>=r)s=r;return s;
+}
+function hintFifty(){
+  const q=ladderQ();if(!q||!LD.hints.fifty||LD.answered!==null)return;
+  const wrong=shuffle(q.opts.map((_,i)=>i).filter(i=>i!==q.a)).slice(0,2);
+  LD.removed=wrong;LD.hints.fifty=false;render();
+}
+function hintSwap(){
+  const q=ladderQ();if(!q||!LD.hints.swap||LD.answered!==null)return;
+  const lvl=RUNGS[LD.idx]||q.level;
+  const used=new Set(LD.rungs.map(x=>x.id));
+  let cand=(LD.pool||[]).filter(x=>x.level===lvl&&!used.has(x.id));
+  if(!cand.length)cand=(LD.pool||[]).filter(x=>!used.has(x.id));
+  if(!cand.length)return;
+  LD.rungs[LD.idx]=pick(cand);
+  LD.removed=[];LD.hints.swap=false;LD.book=null;render();
+}
+// «Открыть аят» — подсказка, а не ответ: показываем сам аят из ref, не разбор.
+async function hintBook(){
+  const q=ladderQ();if(!q||!LD.hints.book||LD.answered!==null)return;
+  LD.hints.book=false;LD.book={loading:true};render();
+  const m=/^(\d+):(\d+)/.exec(q.ref||"");
+  if(!m){LD.book={text:"",note:"У этого вопроса нет привязки к аяту."};render();return;}
+  const s=+m[1],a=+m[2];
+  const tid=ctx.transId();
+  await Promise.all([Promise.resolve(ctx.ensureText("_arabic",s)).catch(()=>null),
+    tid?Promise.resolve(ctx.ensureText(tid,s)).catch(()=>null):null]);
+  LD.book={s,a,text:ar(s,a),tr:ru(tid,s,a)};
+  render();
+}
+function ladderHTML(){
+  const q=ladderQ(),n=LD.rungs.length;
+  if(!n)return `<div class="erd-back" data-act="hub">‹ К упражнениям</div>
+    <div class="erd-note" style="padding:24px 0;text-align:center">Вопросов для лестницы не нашлось.</div>`;
+  let h=`<div class="erd-top">
+      <span class="erd-count">Ступень ${Math.min(LD.idx+1,n)} / ${n}</span>
+      ${LD.draft?`<span class="erd-draft">черновик</span>`:""}
+      <button class="erd-quit" data-act="hub" title="Выйти">✕</button>
+    </div>`;
+  // Лестница — компактной полосой: пятнадцать строк отжимали вопрос за экран.
+  // Рубежи (5 и 10) помечены, текущая ступень подсвечена, подпись под полосой
+  // говорит уровень и сколько осталось до ближайшего рубежа.
+  h+=`<div class="erd-ladder">`;
+  for(let i=0;i<n;i++){
+    const st=i<LD.idx?"done":(i===LD.idx?"now":"");
+    h+=`<span class="erd-rung ${st}${SAFE.includes(i+1)?" safe":""}">${i+1}</span>`;
+  }
+  h+=`</div>`;
+  if(!LD.over){                                 // на итоговом экране подпись про «следующий рубеж» бессмысленна
+    const nextSafe=SAFE.find(r=>r>LD.idx);
+    h+=`<div class="erd-rung-cap">уровень ${RUNGS[LD.idx]||"—"}${
+      nextSafe?` · до рубежа ${nextSafe} осталось ${nextSafe-LD.idx} ${plural(nextSafe-LD.idx,"вопрос","вопроса","вопросов")}`:
+      (safeReached(LD.idx)?` · рубеж ${safeReached(LD.idx)} закреплён`:"")}</div>`;
+  }
+  if(LD.over)return h+ladderOverHTML();
+  if(!q)return h;
+
+  h+=`<div class="erd-q"><div class="erd-q-sub">${esc(bankCatName(q))}</div>
+    <div class="erd-q-ask">${esc(q.q)}</div></div>`;
+  const done=LD.answered!==null;
+  h+=`<div class="erd-opts">`;
+  for(let i=0;i<q.opts.length;i++){
+    if(LD.removed.includes(i)){h+=`<button class="erd-opt dim" disabled><span class="erd-num">${i+1}</span></button>`;continue;}
+    // Верный ответ подсвечивается сразу — короткая пауза перед следующей
+    // ступенью нужна, чтобы это было видно.
+    const cls=done?(i===q.a?" ok":(i===LD.answered?" bad":" dim")):"";
+    h+=`<button class="erd-opt${cls}" data-act="lans" data-v="${i}"${done?" disabled":""}><span class="erd-num">${i+1}</span>${esc(q.opts[i])}</button>`;
+  }
+  h+=`</div>`;
+  h+=`<div class="erd-hints">
+    <button class="erd-hint${LD.hints.fifty?"":" used"}" data-act="h50"${LD.hints.fifty?"":" disabled"}>50 : 50</button>
+    <button class="erd-hint${LD.hints.book?"":" used"}" data-act="hbook"${LD.hints.book?"":" disabled"}>📖 Открыть аят</button>
+    <button class="erd-hint${LD.hints.swap?"":" used"}" data-act="hswap"${LD.hints.swap?"":" disabled"}>🔄 Заменить вопрос</button>
+  </div>`;
+  if(LD.book)h+=bookHTML();
+  return h;
+}
+function bankCatName(q){
+  const b=BANK||{cats:{}};
+  return (b.cats[q.cat]||q.cat)+(q.file==="ulum"?" · науки":" · тафсир");
+}
+function bookHTML(){
+  const b=LD.book;
+  if(b.loading)return `<div class="erd-fb"><div class="erd-note">Открываю аят…</div></div>`;
+  if(!b.text)return `<div class="erd-fb"><div class="erd-note">${esc(b.note||"Аят не найден.")}</div></div>`;
+  return `<div class="erd-fb">
+    <div class="erd-ayah">${esc(b.text)}</div>
+    ${b.tr?`<div class="erd-tr">${esc(b.tr)}</div>`:""}
+    <div class="erd-addr">${b.s}:${b.a} · ${esc(SU(b.s).ru)}</div></div>`;
+}
+function ladderOverHTML(){
+  const n=LD.rungs.length,q=ladderQ();
+  const taken=LD.won?n:LD.idx;
+  const safe=safeReached(taken);
+  let h="";
+  if(!LD.won&&q){
+    h+=`<div class="erd-opts">`;
+    for(let i=0;i<q.opts.length;i++){
+      const cls=i===q.a?" ok":(i===LD.answered?" bad":" dim");
+      h+=`<button class="erd-opt${cls}" disabled><span class="erd-num">${i+1}</span>${esc(q.opts[i])}</button>`;
+    }
+    h+=`</div>`;
+  }
+  h+=`<div class="erd-res">
+    <div class="erd-res-ic">${LD.won?"🌟":(taken>=10?"👍":taken>=5?"🙂":"📚")}</div>
+    <div class="erd-res-score">${LD.won?"Все "+n+" ступеней":"Ступеней взято: "+taken}</div>
+    <div class="erd-res-sub">${LD.won?"Лестница пройдена целиком":
+      (safe?`Закреплённый рубеж: ${safe}-я ступень`:"Закреплённый рубеж не достигнут")} · ${mmss(Date.now()-LD.t0)}</div>
+  </div>`;
+  if(!LD.won&&q){
+    h+=`<div class="erd-fb bad"><div class="erd-fb-t">Верный ответ: ${esc(q.opts[q.a])}</div>
+      <div class="erd-fb-x">${esc(q.why)}</div>
+      <div class="erd-addr">Основание: ${esc(q.src)}${q.ref?" · "+esc(q.ref):""}</div>
+      ${q.ref?`<div class="erd-fb-acts"><button class="erd-link" data-act="go" data-v="${(q.ref.split(":")[0])}" data-a="${(q.ref.split(":")[1]||"1").split("-")[0]}">Открыть аят ›</button></div>`:""}
+      ${LD.draft?markHTML(q):""}</div>`;
+  }
+  h+=`<button class="erd-start" data-act="lstart">Ещё раз</button>
+    <button class="erd-start ghost" data-act="setup">Изменить настройки</button>
+    <button class="erd-back" data-act="hub" style="text-align:center">‹ К упражнениям</button>`;
+  return h;
+}
+// Черновой режим: отметки вычитки прямо во время прохождения.
+function markHTML(q){
+  const m=reviewMarks()[q.id];
+  return `<div class="erd-mark">
+    <span class="erd-note">Вычитка:</span>
+    <button class="erd-mk${m==="ok"?" ok":""}" data-act="mark" data-v="ok" data-q="${ctx.escAttr(q.id)}">✓ верно</button>
+    <button class="erd-mk${m==="bad"?" bad":""}" data-act="mark" data-v="bad" data-q="${ctx.escAttr(q.id)}">✕ спорно</button>
+    <span class="erd-note">${esc(q.id)}</span></div>`;
+}
+function exportMarks(){
+  const m=reviewMarks(),ids=Object.keys(m);
+  if(!ids.length){alert("Отметок пока нет.");return;}
+  ctx.downloadJSON({marks:m,count:ids.length},"quiz-review.json");
+}
+
 // ---------- реестр упражнений ----------
 const EXERCISES=[
   {id:"suraNames",ic:"🔢",title:"Названия сур",
@@ -786,6 +1033,9 @@ const EXERCISES=[
   {id:"tartib",ic:"🧩",title:"Тартиб",
    about:"Расставить по порядку: подряд идущие аяты, аяты вразброс, слова короткого аята.",
    kinds:TARTIB_KINDS,suraPool:10,genQ:genTartibQ},
+  {id:"scholar",ic:"🪜",title:"Кто хочет стать учёным",
+   about:"Пятнадцать ступеней возрастающей сложности: коранические науки и тафсир. Три подсказки, ошибка обрывает подъём, рубежи 5 и 10 закрепляются.",
+   ladder:true},
 ];
 const exById=id=>EXERCISES.find(x=>x.id===id);
 
@@ -871,7 +1121,7 @@ function quitRound(){
 }
 // «Назад» устройства: раунд/итог/настройка → список упражнений; из списка — выход из режима.
 export function back(){
-  if(E.view==="round"||E.view==="result"||E.view==="setup"){
+  if(E.view==="round"||E.view==="result"||E.view==="setup"||E.view==="ladder"){
     E.sess=null;E.view="hub";render();return true;
   }
   return false;
@@ -889,9 +1139,10 @@ export function render(){
   const el=document.getElementById("erdBody");
   if(!el)return;
   el.innerHTML=E.view==="hub"?hubHTML():E.view==="setup"?setupHTML():
+              E.view==="ladder"?ladderHTML():
               E.view==="round"?roundHTML():resultHTML();
   bindOnce();
-  if(E.view==="round")bindKeys();else unbindKeys();
+  if(E.view==="round"||E.view==="ladder")bindKeys();else unbindKeys();
 }
 
 function hubHTML(){
@@ -931,8 +1182,37 @@ function rootsProgressHTML(){
     firm&&totalN?` — это ${share}% слов Корана`:""}</div>`;
 }
 
+function ladderSetupHTML(){
+  const ex=exById("scholar"),c=cfg(),st=exStat("scholar");
+  const b=BANK,ready=b?b.questions.filter(q=>q.reviewed===true).length:null;
+  const total=b?b.questions.length:null;
+  let h=`<div class="erd-back" data-act="hub">‹ К упражнениям</div>
+    <div class="erd-h1">${ex.ic} ${esc(ex.title)}</div>
+    <div class="erd-lead">Пятнадцать ступеней: с первой по пятую — общеизвестное, дальше труднее. Одна ошибка обрывает подъём, но взятые рубежи (5-я и 10-я ступени) остаются за вами. Подсказок три, каждая — один раз за восхождение.</div>`;
+  h+=`<div class="erd-set"><div class="erd-set-h">Область вопросов</div><div class="erd-chips">`;
+  for(const t of QUIZ_CATS)
+    h+=`<button class="erd-chip${c.cats===t.id?" on":""}" data-act="qcats" data-v="${t.id}">${esc(t.label)}</button>`;
+  h+=`</div></div>`;
+  // Банк составлен ассистентом: без вычитки мейнтейнера показывать его нельзя.
+  // Черновой режим существует РАДИ вычитки и всегда помечает вопросы.
+  h+=`<div class="erd-set"><div class="erd-set-h">Готовность банка</div>`;
+  if(ready===null)h+=`<div class="erd-note">Загружаю банк вопросов…</div>`;
+  else h+=`<div class="erd-note">Вычитано и допущено к показу: <b>${ready}</b> из ${total}.</div>`;
+  if(ready===0)h+=`<div class="erd-bad">Вычитанных вопросов пока нет — восхождение по ним не собрать. Включите черновой режим, чтобы проверить банк.</div>`;
+  h+=`<label class="erd-kind"><input type="checkbox" data-act="qdraft"${c.draft?" checked":""}>
+      <span class="erd-kind-t">📝 Черновой режим</span>
+      <span class="erd-kind-h">Показывать невычитанные вопросы. Каждый помечается словом «черновик»; после ошибки можно отметить вопрос как верный или спорный, а отметки выгрузить файлом.</span></label>`;
+  if(Object.keys(reviewMarks()).length)
+    h+=`<button class="erd-start ghost" data-act="qexport">Выгрузить отметки вычитки (${Object.keys(reviewMarks()).length})</button>`;
+  h+=`</div>`;
+  if(st.plays)h+=`<div class="erd-note">Лучшее восхождение: ${st.best} ${plural(st.best,"ступень","ступени","ступеней")} · подходов: ${st.plays}</div>`;
+  h+=`<button class="erd-start" data-act="lstart">Начать восхождение ›</button>`;
+  return h;
+}
+
 function setupHTML(){
   const ex=exById(E.ex),c=cfg();
+  if(ex.ladder)return ladderSetupHTML();
   const bad=c.scope==="custom"?parseSuras(c.custom).bad:[];
   const n=scopeList(c).length;
   let h=`<div class="erd-back" data-act="hub">‹ К упражнениям</div>
@@ -1081,7 +1361,12 @@ function onClick(e){
   const t=e.target.closest("[data-act]");
   if(!t)return;
   const act=t.dataset.act,v=t.dataset.v;
-  if(act==="open"){E.ex=t.dataset.ex;E.view="setup";render();}
+  if(act==="open"){
+    E.ex=t.dataset.ex;E.view="setup";render();
+    // Банк нужен уже на экране настройки: там показывается, сколько вопросов
+    // вычитано, — иначе человек начнёт восхождение и упрётся в пустоту.
+    if((exById(E.ex)||{}).ladder)loadBank().then(()=>{if(E.view==="setup")render();});
+  }
   else if(act==="hub"){E.sess=null;E.view="hub";render();}
   else if(act==="setup"){E.view="setup";render();}
   else if(act==="scope"){cfg().scope=v;dbSave();render();}
@@ -1094,10 +1379,20 @@ function onClick(e){
   else if(act==="next"){nextQ();}
   else if(act==="quit"){quitRound();}
   else if(act==="go"){const a=+(t.dataset.a||0);if(a>1&&ctx.goAyah)ctx.goAyah(+v,a);else ctx.goSurah(+v);}
+  else if(act==="qcats"){cfg().cats=v;dbSave();render();}
+  else if(act==="lstart"){startLadder();}
+  else if(act==="lans"){ladderAnswer(+v);setTimeout(()=>{if(!LD.over)ladderNext();},650);}
+  else if(act==="h50"){hintFifty();}
+  else if(act==="hbook"){hintBook();}
+  else if(act==="hswap"){hintSwap();}
+  else if(act==="mark"){markQuestion(t.dataset.q,v);render();}
+  else if(act==="qexport"){exportMarks();}
   else if(act==="play"){if(ctx.playAyah)ctx.playAyah(+v,+(t.dataset.a||1));}
   else if(act==="root"){if(ctx.openRoot)ctx.openRoot(v);}
 }
 function onChange(e){
+  const d=e.target.closest("[data-act='qdraft']");
+  if(d){cfg().draft=d.checked;dbSave();render();return;}
   const t=e.target.closest("[data-act='kind']");
   if(!t)return;
   cfg().kinds[t.dataset.v]=t.checked;dbSave();
@@ -1119,6 +1414,15 @@ function onKey(e){
   // Из режима можно уйти минуя leave() (goSurah, deep-link, «Назад»): сверяемся
   // с флагом режима, иначе цифры продолжали бы отвечать на невидимый вопрос.
   if(!ctx.ST.eruditMode){unbindKeys();return;}
+  if(E.view==="ladder"){                       // лестница: 1–4 — ответ
+    const q=ladderQ();
+    if(!q||LD.answered!==null||LD.over)return;
+    const n=parseInt(e.key,10);
+    if(n>=1&&n<=q.opts.length&&!LD.removed.includes(n-1)){
+      ladderAnswer(n-1);setTimeout(()=>{if(!LD.over)ladderNext();},650);
+    }
+    return;
+  }
   const s=E.sess;if(!s||E.view!=="round"||!s.q)return;
   if(e.key==="Enter"||e.key===" "){
     if(s.answered!==null){e.preventDefault();nextQ();}

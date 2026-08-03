@@ -1321,6 +1321,28 @@ body.hr-open{overflow:hidden}
 .erd-hl{background:rgba(var(--accent-rgb),.18);border-bottom:2px solid var(--accent);border-radius:3px;padding:0 2px}
 .erd-tj{background:rgba(224,160,48,.22);border-bottom:2px solid #e0a030;border-radius:3px;padding:0 2px}
 .erd-card-p{font-size:12px;color:var(--accent);margin-top:7px}
+/* ── «Кто хочет стать учёным»: лестница ступеней, подсказки, отметки вычитки ── */
+.erd-ladder{display:flex;gap:3px;margin:9px 0 5px}
+.erd-rung{flex:1;min-width:0;text-align:center;padding:5px 0;border-radius:5px;
+  font-size:10px;font-weight:600;color:var(--text-muted);background:var(--bg-alt);
+  border-bottom:2px solid transparent}
+.erd-rung.safe{border-bottom-color:#e0a030}
+.erd-rung.done{background:rgba(46,160,110,.22);color:var(--text-sec)}
+.erd-rung.now{background:var(--accent);color:#fff}
+.erd-rung-cap{font-size:11px;color:var(--text-muted);margin-bottom:14px}
+.erd-hints{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px}
+.erd-hint{flex:1;min-width:92px;font-family:inherit;font-size:12px;padding:9px 6px;border:1px solid var(--border);
+  border-radius:9px;background:var(--bg-card);color:var(--text-sec);cursor:pointer}
+.erd-hint:hover:not(:disabled){border-color:var(--accent);color:var(--text)}
+.erd-hint.used{opacity:.4;cursor:default;text-decoration:line-through}
+.erd-draft{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#e0a030;
+  border:1px solid #e0a030;border-radius:5px;padding:1px 6px}
+.erd-mark{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:9px;
+  border-top:1px dashed var(--border);padding-top:8px}
+.erd-mk{font-family:inherit;font-size:11px;padding:4px 9px;border:1px solid var(--border);
+  border-radius:7px;background:var(--bg);color:var(--text-sec);cursor:pointer}
+.erd-mk.ok{background:#2ea06e;border-color:#2ea06e;color:#fff}
+.erd-mk.bad{background:#e05252;border-color:#e05252;color:#fff}
 .erd-fb-acts{display:flex;gap:12px;flex-wrap:wrap;margin-top:7px}
 .erd-fb-acts .erd-link{margin-top:0}
 .erd-ar{font-family:'Amiri Quran','Amiri',serif;direction:rtl;unicode-bidi:isolate;font-size:1.15em}
@@ -1493,6 +1515,7 @@ const SOURCES={
   // — пословный перевод (глосс) и морфология (грамматика) по сурам —
   glosses:         {baseUrl:"data",  pathTemplate:"{baseUrl}/wbw/words/{sura}.json"},
   erudit_pool:     {baseUrl:"data",  pathTemplate:"{baseUrl}/erudit/{file}"},   // служебные данные упражнений (build_erudit_pool.py)
+  quiz:            {baseUrl:"data",  pathTemplate:"{baseUrl}/quiz/{file}"},     // банк вопросов «Кто хочет стать учёным» (validate_quiz.py)
   morphology:      {baseUrl:"data",  pathTemplate:"{baseUrl}/wbw/morph/{sura}.json"},
   // — конкорданс: корень → все его вхождения в Коране (build_concordance.py из
   //   той же морфологии). ОДИН файл на весь Коран, а не чанки по сурам: карта
@@ -1611,7 +1634,7 @@ async function mediaMod(){
 // Код упражнений в index.html не входит: подсистема будет расти (аяты, темы,
 // тартиб, «Лестница знания» с банком вопросов), а страница и так велика. Пока
 // человек не открыл режим — модуль не грузится.
-const ERUDIT_VER="3";  // поднять при правке erudit.js (сброс кеша браузера/CDN)
+const ERUDIT_VER="4";  // поднять при правке erudit.js (сброс кеша браузера/CDN)
 let ERUDIT=null;
 async function eruditMod(){
   if(ERUDIT)return ERUDIT;
@@ -1636,6 +1659,7 @@ async function eruditMod(){
       openRoot:r=>selectRootView(r),                   // экран вхождений корня («где ещё встречается»)
       TJ_RULES,loadTajweed:s=>loadTajweed(s),          // правила таджвида и их места в аяте
       playAyah:(s,a)=>mediaMod().then(m=>m&&m.playFrom(s,a)),  // «послушать это место» в разборе
+      downloadJSON:(obj,name)=>downloadJSON(obj,name), // выгрузка отметок вычитки банка вопросов
     });
     ERUDIT=m;return m;
   }catch(e){

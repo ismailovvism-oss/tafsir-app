@@ -33,6 +33,10 @@ data/
     <id>/index.json ← список заполненных сур
     _arabic.json / _arabic_clean.json / _arabic_rasm.json ← канонический Коран
   index/<id>.json   ← инвертированный индекс поиска (build_index.py)
+  quiz/             ← банк вопросов «Лестницы знания»: ulum.json (64) + tafsir.json (72).
+                      Запись: {id,cat,level,q,opts[4],a,why,ref,src,reviewed,disputed?}.
+                      ПОКАЗЫВАТЬ ТОЛЬКО reviewed:true (вычитка мейнтейнера);
+                      проверка — validate_quiz.py
   qpc/v1/           ← данные печатного мусхафа (build_qpc.py)
   qpc/v4t/          ← данные цветного таджвид-мусхафа QPC v4 (build_qpc4t.py);
                       шрифты пака — НА R2 (r2-data/fonts/qpc-v4-tajweed, gitignored)
@@ -111,6 +115,8 @@ fonts/              ← самохостимые шрифты (.woff2)
 | `build_kathir_ru.py` | импорт русского Ибн Касира (см. ниже) |
 | `fix_kathir_blocks.py` | дозаполнить блочные отсылки kathir_ru (формат A) — разово |
 | `validate_data.py` | проверка целостности данных (запускать перед пушем) |
+| `apply_quiz_review.py` | перенести отметки вычитки (выгруженные из чернового режима «Кто хочет стать учёным») в банк: ok → reviewed:true, bad → flag «спорно» |
+| `validate_quiz.py` | проверка банка вопросов `data/quiz/*.json`: структура, уникальность id, ref сверяется с реальным текстом Корана; сводка по вычитке (reviewed) |
 
 ## Текущее состояние и подсистемы (что уже есть в коде)
 Подробная история — в `CHANGELOG.md` («новое сверху»). Кратко, последнее сверху:
