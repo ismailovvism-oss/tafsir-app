@@ -83,6 +83,9 @@ function snip(t,n){                            // короткая выжимк�
 const DEF_CFG={
   suraNames:{scope:"all",custom:"78-114",len:10,kinds:{name:true,arabic:true,count:true,order:true}},
   ayahs:{scope:"j30",custom:"78-114",len:10,lang:"mix",kinds:{sura:true,cont:true,next:true,word:true}},
+  tartib:{scope:"j30",custom:"78-114",len:10,kinds:{chain:true,spread:true,words:true}},
+  words:{tier:"300",len:10,kinds:{w2m:true,m2w:true,root:true,same:true}},
+  tajweed:{scope:"j30",custom:"78-114",len:10,kinds:{name:true,find:true}},
 };
 let DB=null;
 function db(){
@@ -187,6 +190,14 @@ function suraFact(id){
   const su=SU(id);
   return `${id}. ${esc(su.ru)} ${arSpan(su.name)} — ${su.n} ${plural(su.n,"аят","аята","аятов")}`;
 }
+// Задание-расстановка. Элемент — {v:строка-ключ, html:как выглядит, short:подпись
+// в ячейке}; порядок задаётся массивом ключей. Обобщено, потому что расставлять
+// приходится не только суры (аяты суры, слова аята).
+function sortQ(o){
+  return {kind:o.kind,type:"sort",ask:o.ask,sub:o.sub,body:o.body||"",
+    sura:o.sura,ayah:o.ayah,wkeys:o.wkeys,
+    items:shuffle(o.items),answer:o.answer,explain:o.explain};
+}
 function mcq(kind,ask,sub,correct,others,label,explain){
   const ids=shuffle([correct].concat(others));
   return {kind,ask,sub,sura:correct,
@@ -234,10 +245,10 @@ async function genSuraQ(c,pool){
   }
   const base=pool.length>=4?pool:range(1,114);     // расстановка четырёх сур
   const four=shuffle(base).slice(0,4).sort((a,b)=>a-b);
-  return {kind:"order",type:"sort",ask:"Расставьте суры по порядку мусхафа",
-    sub:"От первой к последней",sura:four[0],
-    items:shuffle(four),answer:four,
-    explain:four.map(x=>`${x}. ${esc(SU(x).ru)}`).join(" · ")};
+  return sortQ({kind:"order",ask:"Расставьте суры по порядку мусхафа",sub:"От первой к последней",
+    items:four.map(x=>({v:String(x),html:`${esc(SU(x).ru)} <span class="erd-ar">${esc(SU(x).name)}</span>`,short:SU(x).ru})),
+    answer:four.map(String),sura:four[0],wkeys:four.map(String),
+    explain:four.map(x=>`${x}. ${esc(SU(x).ru)}`).join(" · ")});
 }
 
 // ============================================================
@@ -446,6 +457,318 @@ function buildAyahQ(kind,s,a,c,pool,data,wantRu){
     explain:ayahFull(s,a,tid)+gloss};
 }
 
+// ============================================================
+// УПРАЖНЕНИЕ 3 — «Тартиб»: расставить по порядку
+// ============================================================
+const TARTIB_KINDS=[
+  {id:"chain",ic:"⛓",label:"Подряд идущие аяты",hint:"4 аята одного отрывка — вернуть порядок"},
+  {id:"spread",ic:"🔀",label:"Аяты вразброс",hint:"4 аята из разных мест суры"},
+  {id:"words",ic:"🔤",label:"Слова аята",hint:"Собрать короткий аят из слов"},
+];
+async function genTartibQ(c,pool,sess){
+  const kinds=TARTIB_KINDS.filter(k=>c.kinds[k.id]).map(k=>k.id);
+  const kind=kinds.length?pick(kinds):"chain";
+  const tried=new Set();
+  for(let attempt=0;attempt<6;attempt++){
+    const left=(sess.suras||pool).filter(x=>!tried.has(x));
+    if(!left.length)break;
+    const s=pickWeighted(left);tried.add(s);
+    await ensureSura(s,{});
+    const tid=ctx.transId(),su=SU(s);
+    if(kind==="words"){
+      // Короткий аят собирается из слов: длинный превращается в головоломку на
+      // внимание, а не на память — режем по 4–7 слов.
+      const cand=[];
+      for(let a=1;a<=su.n;a++){
+        const w=arWords(ar(s,a));
+        if(w.length>=4&&w.length<=7&&!startsWithBasmala(ar(s,a)))cand.push(a);
+      }
+      if(!cand.length)continue;
+      const a=pick(cand),w=arWords(ar(s,a));
+      return sortQ({kind:"words",ask:"Соберите аят из слов",sub:`${s}:${a} · ${SU(s).ru}`,
+        items:w.map((x,i)=>({v:String(i),html:`<span class="erd-ar">${esc(x)}</span>`,short:x})),
+        answer:w.map((_,i)=>String(i)),sura:s,ayah:a,wkeys:[String(s)],
+        explain:ayahFull(s,a,tid)});
+    }
+    if(su.n<5)continue;
+    // Первый аят суры несёт басмалу — его место в перемешанном наборе видно
+    // сразу, и задание решается без знания суры.
+    const lo=startsWithBasmala(ar(s,1))?2:1;
+    if(su.n-lo<3)continue;
+    let list;
+    if(kind==="chain"){                          // отрывок: переходы внутри блока
+      const start=lo+rnd(su.n-lo-2);
+      list=[start,start+1,start+2,start+3];
+    }else{                                       // вразброс: общий порядок суры
+      list=shuffle(range(lo,su.n)).slice(0,4).sort((x,y)=>x-y);
+    }
+    if(list.some(a=>a>su.n||!ar(s,a)))continue;
+    return sortQ({kind,ask:"Расставьте аяты по порядку",
+      sub:kind==="chain"?`Отрывок из суры ${SU(s).ru}`:`Вразброс по суре ${SU(s).ru}`,
+      // В ячейке — начало аята, а не слово «аят»: иначе не видно, что куда поставил.
+      items:list.map(a=>({v:String(a),
+        html:`<span class="erd-ar">${esc(snip(ar(s,a),8))}</span>`,short:snip(ar(s,a),2)})),
+      answer:list.map(String),sura:s,ayah:list[0],wkeys:[String(s)],
+      explain:list.map(a=>`<div class="erd-addr">${s}:${a}</div><div class="erd-ayah">${esc(ar(s,a))}</div>`).join("")});
+  }
+  return null;
+}
+
+// ============================================================
+// УПРАЖНЕНИЕ 4 — «Слова Корана»: частотный словарь по корням
+// ============================================================
+// Почему по КОРНЯМ, а не по словам: у упражнения появляется конец и измеримая
+// цель. Топ-100 корней покрывают 61% всех словоупотреблений Корана, топ-300 —
+// 83,5%. «Знаю 300 корней — понимаю пять слов из шести» — это навык, а не
+// викторина, и он прямо усиливает чтение.
+const WORD_KINDS=[
+  {id:"w2m",ic:"➡️",label:"Слово → значение",hint:"Что значит подсвеченное слово"},
+  {id:"m2w",ic:"⬅️",label:"Значение → слово",hint:"Какое слово в аяте это значит"},
+  {id:"root",ic:"🌿",label:"Корень слова",hint:"От какого корня это слово"},
+  {id:"same",ic:"🔗",label:"Однокоренное",hint:"Какое слово от того же корня"},
+];
+const TIERS=[
+  {id:"100",label:"Топ-100",sub:"61% слов",n:100},
+  {id:"300",label:"Топ-300",sub:"83% слов",n:300},
+  {id:"500",label:"Топ-500",sub:"92% слов",n:500},
+  {id:"all",label:"Все корни",sub:"1651",n:9999},
+];
+let ROOTLIST=null;                               // корни по убыванию частоты (считается один раз)
+function rootList(){
+  const R=ctx.getRoots();if(!R)return [];
+  if(!ROOTLIST)ROOTLIST=Object.keys(R).sort((a,b)=>R[b].n-R[a].n);
+  return ROOTLIST;
+}
+const ADDR=/^(\d+):(\d+):(\d+)$/;
+function rootAddrs(rec){                         // все адреса корня: [{s,a,w,form}]
+  const out=[];
+  for(const [form,addrs] of (rec.f||[])){
+    for(const ad of String(addrs).split(/\s+/)){
+      const m=ADDR.exec(ad);
+      if(m)out.push({s:+m[1],a:+m[2],w:+m[3],form});
+    }
+  }
+  return out;
+}
+function glossOf(gl,a,w){
+  const g=gl&&gl[String(a)]&&gl[String(a)][String(w)];
+  return g?(g.ru||g.en||""):"";
+}
+// Подсветить слово в аяте, собранном из морфологии (индексы слов = индексы глоссов).
+function wordLineHTML(words,idx,mode){
+  return words.map((w,i)=>i===idx-1
+    ? (mode==="gap"?`<span class="erd-gap">▁▁▁</span>`:`<span class="erd-hl">${esc(w)}</span>`)
+    : esc(w)).join(" ");
+}
+async function genWordQ(c,pool,sess){
+  await ctx.loadRoots();
+  const all=rootList();
+  if(!all.length)return null;
+  const tier=(TIERS.find(t=>t.id===c.tier)||TIERS[1]).n;
+  const R=ctx.getRoots();
+  const kinds=WORD_KINDS.filter(k=>c.kinds[k.id]).map(k=>k.id);
+  const kind=kinds.length?pick(kinds):"w2m";
+  const poolRoots=all.slice(0,Math.min(tier,all.length));
+
+  for(let attempt=0;attempt<7;attempt++){
+    const root=pickWeightedKey(poolRoots,r=>"root:"+r);
+    const rec=R[root];if(!rec)continue;
+    const addrs=rootAddrs(rec);if(!addrs.length)continue;
+
+    if(kind==="same"){                           // однокоренное — без загрузки суры
+      const forms=[...new Set((rec.f||[]).map(f=>f[0]).filter(Boolean))];
+      if(forms.length<2)continue;
+      const [mine,twin]=shuffle(forms).slice(0,2);
+      const others=[];
+      for(const r2 of shuffle(poolRoots)){
+        if(r2===root||others.length>=3)continue;
+        const f2=(R[r2].f||[])[0];
+        if(f2&&f2[0]&&f2[0]!==mine&&f2[0]!==twin)others.push(f2[0]);
+      }
+      if(others.length<3)continue;
+      const opts=shuffle([twin].concat(others));
+      return {kind,sub:"Однокоренное",ask:`Какое слово от того же корня, что и ${arSpan(mine)}?`,
+        wkeys:["root:"+root],
+        opts:opts.map(w=>({html:`<span class="erd-ar">${esc(w)}</span>`})),correct:opts.indexOf(twin),
+        explain:`Корень ${arSpan(root)} — ${esc((rec.g||[]).slice(0,3).join(" · "))}. Встречается ${rec.n} ${plural(rec.n,"раз","раза","раз")}.`,
+        root};
+    }
+
+    const ad=pick(addrs);
+    const [morph,gl]=await Promise.all([
+      Promise.resolve(ctx.loadMorph(ad.s)).catch(()=>null),
+      Promise.resolve(ctx.loadGloss(ad.s)).catch(()=>null),
+      Promise.resolve(ctx.ensureText("_arabic",ad.s)).catch(()=>null),
+    ]);
+    const words=morphWords(morph,ad.a);
+    if(!words.length||ad.w>words.length)continue;
+    const mine=words[ad.w-1];
+    const meaning=glossOf(gl,ad.a,ad.w);
+    const line=wordLineHTML(words,ad.w,kind==="m2w"?"gap":"hl");
+    const addr=`<div class="erd-addr">${ad.s}:${ad.a} · ${esc(SU(ad.s).ru)}</div>`;
+    const rootNote=`Корень ${arSpan(root)} — ${esc((rec.g||[]).slice(0,3).join(" · "))}; встречается ${rec.n} ${plural(rec.n,"раз","раза","раз")}.`;
+
+    if(kind==="root"){
+      const others=shuffle(poolRoots.filter(r=>r!==root)).slice(0,3);
+      if(others.length<3)continue;
+      const opts=shuffle([root].concat(others));
+      return {kind,sub:"Корень слова",ask:`От какого корня слово ${arSpan(mine)}?`,
+        body:`<div class="erd-ayah">${line}</div>${addr}`,
+        sura:ad.s,ayah:ad.a,wkeys:["root:"+root],root,
+        opts:opts.map(r=>({html:`<span class="erd-ar">${esc(r)}</span>`})),correct:opts.indexOf(root),
+        explain:rootNote+(meaning?` Здесь слово значит «${esc(meaning)}».`:"")};
+    }
+    if(!meaning)continue;
+    // Соперники — глоссы ДРУГИХ слов этого же аята: тот же стиль записи (с
+    // приставками «и», «в»), поэтому по виду не отсеиваются; и грузить ничего
+    // не надо. Не хватило — добираем подписями других корней.
+    const sameAyah=[];
+    for(let i=1;i<=words.length;i++){
+      if(i===ad.w)continue;
+      const g=glossOf(gl,ad.a,i);
+      if(g&&g!==meaning&&!sameAyah.some(o=>o.g===g))sameAyah.push({g,w:words[i-1]});
+    }
+    if(kind==="w2m"){
+      let others=shuffle(sameAyah).slice(0,3).map(o=>o.g);
+      for(const r2 of shuffle(poolRoots)){
+        if(others.length>=3)break;
+        const g2=(R[r2].g||[])[0];
+        if(g2&&g2!==meaning&&!others.includes(g2))others.push(g2);
+      }
+      if(others.length<3)continue;
+      const opts=shuffle([meaning].concat(others));
+      return {kind,sub:"Слово → значение",ask:`Что значит подсвеченное слово?`,
+        body:`<div class="erd-ayah">${line}</div>${addr}`,
+        sura:ad.s,ayah:ad.a,wkeys:["root:"+root],root,
+        opts:opts.map(t=>({html:esc(t)})),correct:opts.indexOf(meaning),
+        explain:`${arSpan(mine)} — «${esc(meaning)}». ${rootNote}`};
+    }
+    // m2w: значение → какое слово (в аяте слово скрыто)
+    let others=shuffle(sameAyah).slice(0,3).map(o=>o.w);
+    if(others.length<3)continue;
+    const opts=shuffle([mine].concat(others));
+    return {kind,sub:"Значение → слово",ask:`Какое слово значит «${esc(meaning)}»?`,
+      body:`<div class="erd-ayah">${line}</div>${addr}`,
+      sura:ad.s,ayah:ad.a,wkeys:["root:"+root],root,
+      opts:opts.map(w=>({html:`<span class="erd-ar">${esc(w)}</span>`})),correct:opts.indexOf(mine),
+      explain:`${arSpan(mine)} — «${esc(meaning)}». ${rootNote}`};
+  }
+  return null;
+}
+// Взвешивание по произвольному ключу (корень, правило), а не только по суре.
+function pickWeightedKey(list,keyOf){
+  let sum=0;
+  const w=list.map(x=>{
+    const st=db().items[keyOf(x)];
+    const v=(!st||!st.seen)?1.8:1+2.5*(st.wrong/st.seen);
+    sum+=v;return v;
+  });
+  let r=Math.random()*sum;
+  for(let i=0;i<list.length;i++){r-=w[i];if(r<=0)return list[i];}
+  return list[list.length-1];
+}
+
+// ============================================================
+// УПРАЖНЕНИЕ 5 — «Таджвид»: правила чтения
+// ============================================================
+// Данные — спаны data/tajweed (6174 аята, 60 074 места, 18 правил с русскими
+// пояснениями). Честная граница: узнавание правила глазами — не то же, что
+// применение при чтении, поэтому в разборе есть кнопка «послушать это место».
+const TJ_KINDS=[
+  {id:"name",ic:"🎨",label:"Какое это правило",hint:"Подсвечено место — назвать правило"},
+  {id:"find",ic:"🔍",label:"Найти правило",hint:"Дано правило — найти его место в аяте"},
+];
+async function genTajweedQ(c,pool,sess){
+  const RULES=ctx.TJ_RULES||[];
+  if(!RULES.length)return null;
+  const kinds=TJ_KINDS.filter(k=>c.kinds[k.id]).map(k=>k.id);
+  const kind=kinds.length?pick(kinds):"name";
+  const tried=new Set();
+  for(let attempt=0;attempt<7;attempt++){
+    const left=(sess.suras||pool).filter(x=>!tried.has(x));
+    if(!left.length)break;
+    const s=pickWeighted(left);tried.add(s);
+    const [spans]=await Promise.all([
+      Promise.resolve(ctx.loadTajweed(s)).catch(()=>null),
+      Promise.resolve(ctx.ensureText("_arabic",s)).catch(()=>null),
+    ]);
+    if(!spans)continue;
+    const ayahs=shuffle(Object.keys(spans).filter(a=>(spans[a]||[]).length>=4));
+    if(!ayahs.length)continue;
+    // Аяты перебираем ВНУТРИ суры: в коротких сурах спаны идут плотно, и один
+    // неудачный аят не повод менять суру целиком (иначе задание не собиралось).
+    const q=tajweedFromSura(s,ayahs,spans,RULES,kind);
+    if(q)return q;
+  }
+  return null;
+}
+// Сначала ищем аят, где четыре места расходятся при ШИРОКОМ фрагменте (6 знаков
+// вокруг): узкий фрагмент «…تَ…» не даёт контекста, и вопрос решается угадыванием.
+// Сузить отступ — крайняя мера, если во всей суре такого аята не нашлось.
+function tajweedFromSura(s,ayahs,spans,RULES,kind){
+  for(const pads of [[6],[4,2]]){
+    const q=tajweedTry(s,ayahs,spans,RULES,kind,pads);
+    if(q)return q;
+  }
+  return null;
+}
+function tajweedTry(s,ayahs,spans,RULES,kind,pads){
+  for(const key of ayahs.slice(0,8)){
+    const a=+key,text=ar(s,a);
+    if(!text)continue;
+    const list=(spans[key]||[]).filter(sp=>sp&&sp.length>=3&&RULES[sp[2]]);
+    if(list.length<4)continue;
+
+    if(kind==="name"){
+      const sp=pick(list),ri=+sp[2];
+      // Соперники — правила ТОГО ЖЕ семейства (общий css-класс: гунна, мадд…):
+      // спутать ихфа с идгамом можно, с калькалей — нет, и такой вариант
+      // отсеивается без знания.
+      const fam=RULES[ri][0];
+      const same=RULES.map((r,i)=>i).filter(i=>i!==ri&&RULES[i][0]===fam);
+      const other=RULES.map((r,i)=>i).filter(i=>i!==ri&&RULES[i][0]!==fam);
+      const d=shuffle(same).slice(0,2).concat(shuffle(other).slice(0,3)).slice(0,3);
+      if(d.length<3)continue;
+      const opts=shuffle([ri].concat(d));
+      return {kind,sub:"Какое это правило",ask:"Какое правило таджвида в подсвеченном месте?",
+        body:`<div class="erd-ayah">${esc(text.slice(0,sp[0]))}<span class="erd-tj">${esc(text.slice(sp[0],sp[1]))}</span>${esc(text.slice(sp[1]))}</div>
+          <div class="erd-addr">${s}:${a} · ${esc(SU(s).ru)}</div>`,
+        sura:s,ayah:a,wkeys:["tj:"+ri],
+        opts:opts.map(i=>({html:esc(RULES[i][1])})),correct:opts.indexOf(ri),
+        explain:`<b>${esc(RULES[ri][1])}</b> — ${esc(RULES[ri][2])}`,audio:true};
+    }
+    // find: дано правило — какое из четырёх мест ему соответствует.
+    // Варианты не должны ПЕРЕСЕКАТЬСЯ: соседние спаны дают почти одинаковые
+    // фрагменты, и вопрос превращается в разглядывание, а не в знание правила.
+    const sp=pick(list),ri=+sp[2];
+    // Отступ вокруг места подбираем: широкий фрагмент нагляднее, но в плотном
+    // аяте варианты начинают перекрываться — тогда сужаем, а не сдаёмся.
+    let PAD=pads[0],win=null,wrong=[];
+    for(const pad of pads){
+      PAD=pad;
+      win=x=>[Math.max(0,x[0]-PAD),Math.min(text.length,x[1]+PAD)];
+      const taken=[win(sp)];wrong=[];
+      for(const x of shuffle(list)){
+        if(+x[2]===ri||wrong.length>=3)continue;
+        const w=win(x);
+        if(taken.some(t=>w[0]<t[1]&&t[0]<w[1]))continue;
+        taken.push(w);wrong.push(x);
+      }
+      if(wrong.length>=3)break;
+    }
+    if(wrong.length<3)continue;
+    const frag=x=>text.slice(...win(x));
+    const opts=shuffle([sp].concat(wrong));
+    return {kind,sub:"Найти правило",ask:`Где здесь <b>${esc(RULES[ri][1])}</b>?`,
+      body:`<div class="erd-ayah">${esc(text)}</div><div class="erd-addr">${s}:${a} · ${esc(SU(s).ru)}</div>`,
+      sura:s,ayah:a,wkeys:["tj:"+ri],
+      opts:opts.map(x=>({html:`<span class="erd-ar">…${esc(frag(x))}…</span>`})),correct:opts.indexOf(sp),
+      explain:`<b>${esc(RULES[ri][1])}</b> — ${esc(RULES[ri][2])}<div class="erd-ayah">${esc(text.slice(0,sp[0]))}<span class="erd-tj">${esc(text.slice(sp[0],sp[1]))}</span>${esc(text.slice(sp[1]))}</div>`,
+      audio:true};
+  }
+  return null;
+}
+
 // ---------- реестр упражнений ----------
 const EXERCISES=[
   {id:"suraNames",ic:"🔢",title:"Названия сур",
@@ -454,6 +777,15 @@ const EXERCISES=[
   {id:"ayahs",ic:"📖",title:"Аяты",
    about:"Узнать суру по аяту, продолжить аят, назвать следующий, вспомнить пропущенное слово.",
    kinds:AYAH_KINDS,lang:true,suraPool:12,genQ:genAyahQ},
+  {id:"words",ic:"🔤",title:"Слова Корана",
+   about:"Частотный словарь по корням: топ-100 корней — это 61% всех слов Корана, топ-300 — 83%.",
+   kinds:WORD_KINDS,tiers:true,noScope:true,genQ:genWordQ},
+  {id:"tajweed",ic:"🎨",title:"Таджвид",
+   about:"Правила чтения: узнать правило в подсвеченном месте и найти его в аяте. 18 правил, 6174 аята.",
+   kinds:TJ_KINDS,suraPool:10,genQ:genTajweedQ},
+  {id:"tartib",ic:"🧩",title:"Тартиб",
+   about:"Расставить по порядку: подряд идущие аяты, аяты вразброс, слова короткого аята.",
+   kinds:TARTIB_KINDS,suraPool:10,genQ:genTartibQ},
 ];
 const exById=id=>EXERCISES.find(x=>x.id===id);
 
@@ -497,10 +829,10 @@ function answer(i){
 }
 // Расстановка: тап ставит суру в следующую свободную позицию (повторный — снимает);
 // когда все расставлены, проверяем разом — частичная проверка ничему не учит.
-function sortPick(id){
+function sortPick(v){
   const s=E.sess;if(!s||!s.q||s.answered!==null)return;
-  const at=s.sort.indexOf(id);
-  if(at>=0)s.sort.splice(at,1); else s.sort.push(id);
+  const at=s.sort.indexOf(v);
+  if(at>=0)s.sort.splice(at,1); else s.sort.push(v);
   if(s.sort.length===s.q.items.length){
     const ok=s.sort.every((x,i)=>x===s.q.answer[i]);
     s.answered=ok?0:1;                             // для сортировки важен факт, а не индекс
@@ -512,7 +844,7 @@ function recordAnswer(ok,q){
   const s=E.sess;
   if(ok){s.correct++;s.streak++;if(s.streak>s.bestStreak)s.bestStreak=s.streak;}
   else{s.streak=0;s.wrong.push({q});}
-  const keys=q.type==="sort"?q.answer.map(String):[String(q.sura)];
+  const keys=q.wkeys||[String(q.sura)];       // что считать «слабым местом»: сура, корень, правило
   for(const key of keys){const it=itemStat(key);it.seen++;if(!ok)it.wrong++;it.ts=Date.now();}
   const st=exStat(E.ex);st.attempts++;if(ok)st.correct++;
   dbSave();
@@ -568,14 +900,35 @@ function hubHTML(){
   for(const ex of EXERCISES){
     const st=exStat(ex.id);
     const acc=st.attempts?`${pct(st.correct,st.attempts)}% верных`:"ещё не проходили";
+    const extra=ex.id==="words"?rootsProgressHTML():"";
     h+=`<div class="erd-card" data-act="open" data-ex="${ex.id}">
       <div class="erd-card-h"><span class="erd-ic">${ex.ic}</span><span class="erd-card-t">${esc(ex.title)}</span><span class="erd-arrow">›</span></div>
       <div class="erd-card-s">${esc(ex.about)}</div>
+      ${extra}
       <div class="erd-card-m">${st.plays?`рекорд ${st.best} · ${acc} · ${st.plays} ${plural(st.plays,"подход","подхода","подходов")}`:"новое упражнение"}</div>
     </div>`;
   }
-  h+=`<div class="erd-soon"><b>Скоро:</b> аят по теме · расставить аяты по порядку · «Лестница знания» (вопросы по Корану и тафсиру).</div>`;
+  h+=`<div class="erd-soon"><b>Скоро:</b> аят по теме · «Лестница знания» (вопросы по Корану и тафсиру).</div>`;
   return h;
+}
+
+// Главный крючок словаря: не «сколько верных», а сколько корней освоено и
+// СКОЛЬКО СЛОВ КОРАНА это даёт. Долю считаем по тем же данным конкорданса.
+function rootsProgressHTML(){
+  const items=db().items;
+  const R=ctx.getRoots&&ctx.getRoots();
+  let seen=0,firm=0,firmN=0,totalN=0;
+  for(const k in items){
+    if(k.indexOf("root:")!==0)continue;
+    const st=items[k],root=k.slice(5);
+    seen++;
+    if(st.seen>=2&&st.wrong/st.seen<=0.34){firm++;if(R&&R[root])firmN+=R[root].n;}
+  }
+  if(!seen)return "";
+  if(R)for(const r in R)totalN+=R[r].n;
+  const share=totalN?Math.round(firmN*1000/totalN)/10:0;
+  return `<div class="erd-card-p">Корней в работе: <b>${seen}</b> · уверенно: <b>${firm}</b>${
+    firm&&totalN?` — это ${share}% слов Корана`:""}</div>`;
 }
 
 function setupHTML(){
@@ -584,14 +937,24 @@ function setupHTML(){
   const n=scopeList(c).length;
   let h=`<div class="erd-back" data-act="hub">‹ К упражнениям</div>
     <div class="erd-h1">${ex.ic} ${esc(ex.title)}</div>`;
-  h+=`<div class="erd-set"><div class="erd-set-h">Охват</div><div class="erd-chips">`;
-  for(const sc of SCOPES)
-    h+=`<button class="erd-chip${c.scope===sc.id?" on":""}" data-act="scope" data-v="${sc.id}">${esc(sc.label)}<small>${esc(sc.sub)}</small></button>`;
-  h+=`</div>`;
-  if(c.scope==="custom")
-    h+=`<input class="erd-inp" value="${ctx.escAttr(c.custom)}" placeholder="78-114, 36, 55" data-act="custom">
-      ${bad.length?`<div class="erd-bad">Не понял: ${esc(bad.join(", "))}</div>`:""}`;
-  h+=`<div class="erd-note">${n} ${plural(n,"сура","суры","сур")} в охвате${ex.suraPool&&n>ex.suraPool?` · в раунде — ${ex.suraPool} случайных из них`:""}</div></div>`;
+  if(ex.tiers){
+    // У словаря охват задаётся не сурами, а ЧАСТОТНОЙ ступенью: учить корни
+    // выгодно по убыванию частоты, тогда у занятий есть измеримая цель.
+    h+=`<div class="erd-set"><div class="erd-set-h">Ступень частотности</div><div class="erd-chips">`;
+    for(const t of TIERS)
+      h+=`<button class="erd-chip${c.tier===t.id?" on":""}" data-act="tier" data-v="${t.id}">${esc(t.label)}<small>${esc(t.sub)}</small></button>`;
+    h+=`</div><div class="erd-note">Корни идут по убыванию частоты: чем выше ступень, тем больше слов Корана вы понимаете без перевода.</div></div>`;
+  }
+  if(!ex.noScope){
+    h+=`<div class="erd-set"><div class="erd-set-h">Охват</div><div class="erd-chips">`;
+    for(const sc of SCOPES)
+      h+=`<button class="erd-chip${c.scope===sc.id?" on":""}" data-act="scope" data-v="${sc.id}">${esc(sc.label)}<small>${esc(sc.sub)}</small></button>`;
+    h+=`</div>`;
+    if(c.scope==="custom")
+      h+=`<input class="erd-inp" value="${ctx.escAttr(c.custom)}" placeholder="78-114, 36, 55" data-act="custom">
+        ${bad.length?`<div class="erd-bad">Не понял: ${esc(bad.join(", "))}</div>`:""}`;
+    h+=`<div class="erd-note">${n} ${plural(n,"сура","суры","сур")} в охвате${ex.suraPool&&n>ex.suraPool?` · в раунде — ${ex.suraPool} случайных из них`:""}</div></div>`;
+  }
 
   h+=`<div class="erd-set"><div class="erd-set-h">Сколько заданий</div><div class="erd-chips">`;
   for(const L of [10,20,40,0])
@@ -634,17 +997,18 @@ function roundHTML(){
   h+=`<div class="erd-q"><div class="erd-q-sub">${esc(q.sub)}</div><div class="erd-q-ask">${q.ask}</div>${q.body||""}</div>`;
 
   if(q.type==="sort"){
+    const byV=v=>q.items.find(it=>it.v===v);
     h+=`<div class="erd-sortline">`;
     for(let i=0;i<q.items.length;i++){
-      const id=s.sort[i];
-      h+=`<span class="erd-slot${id?" full":""}">${id?esc(SU(id).ru):i+1}</span>`;
+      const v=s.sort[i],it=v!=null?byV(v):null;
+      h+=`<span class="erd-slot${it?" full":""}">${it?esc(it.short||it.v):i+1}</span>`;
     }
     h+=`</div><div class="erd-opts">`;
-    for(const id of q.items){
-      const at=s.sort.indexOf(id),done=s.answered!==null;
-      const okPos=done&&q.answer[at]===id;
-      h+=`<button class="erd-opt${at>=0?" chosen":""}${done?(okPos?" ok":" bad"):""}" data-act="sort" data-v="${id}"${done?" disabled":""}>
-        ${at>=0?`<span class="erd-pos">${at+1}</span>`:""}${esc(SU(id).ru)} <span class="erd-ar">${esc(SU(id).name)}</span></button>`;
+    for(const it of q.items){
+      const at=s.sort.indexOf(it.v),done=s.answered!==null;
+      const okPos=done&&q.answer[at]===it.v;
+      h+=`<button class="erd-opt${at>=0?" chosen":""}${done?(okPos?" ok":" bad"):""}" data-act="sort" data-v="${ctx.escAttr(it.v)}"${done?" disabled":""}>
+        ${at>=0?`<span class="erd-pos">${at+1}</span>`:""}${it.html}</button>`;
     }
     h+=`</div>`;
   }else{
@@ -663,7 +1027,11 @@ function roundHTML(){
     h+=`<div class="erd-fb ${ok?"ok":"bad"}">
       <div class="erd-fb-t">${ok?"✓ Верно":"✕ Мимо"}</div>
       <div class="erd-fb-x">${q.explain}</div>
-      ${q.sura?`<button class="erd-link" data-act="go" data-v="${q.sura}" data-a="${q.ayah||1}">Открыть ${q.sura}${q.ayah?":"+q.ayah:""} ›</button>`:""}
+      <div class="erd-fb-acts">
+        ${q.sura?`<button class="erd-link" data-act="go" data-v="${q.sura}" data-a="${q.ayah||1}">Открыть ${q.sura}${q.ayah?":"+q.ayah:""} ›</button>`:""}
+        ${q.audio&&q.sura?`<button class="erd-link" data-act="play" data-v="${q.sura}" data-a="${q.ayah||1}">🔊 Послушать</button>`:""}
+        ${q.root?`<button class="erd-link" data-act="root" data-v="${ctx.escAttr(q.root)}">🌿 Где ещё встречается ›</button>`:""}
+      </div>
     </div>
     <button class="erd-start" data-act="next">${(s.len&&s.idx>=s.len)?"Итог ›":"Дальше ›"}</button>`;
   }
@@ -717,14 +1085,17 @@ function onClick(e){
   else if(act==="hub"){E.sess=null;E.view="hub";render();}
   else if(act==="setup"){E.view="setup";render();}
   else if(act==="scope"){cfg().scope=v;dbSave();render();}
+  else if(act==="tier"){cfg().tier=v;dbSave();render();}
   else if(act==="len"){cfg().len=+v;dbSave();render();}
   else if(act==="lang"){cfg().lang=v;dbSave();render();}
   else if(act==="start"||act==="again"){startRound();}
   else if(act==="ans"){answer(+v);}
-  else if(act==="sort"){sortPick(+v);}
+  else if(act==="sort"){sortPick(v);}
   else if(act==="next"){nextQ();}
   else if(act==="quit"){quitRound();}
   else if(act==="go"){const a=+(t.dataset.a||0);if(a>1&&ctx.goAyah)ctx.goAyah(+v,a);else ctx.goSurah(+v);}
+  else if(act==="play"){if(ctx.playAyah)ctx.playAyah(+v,+(t.dataset.a||1));}
+  else if(act==="root"){if(ctx.openRoot)ctx.openRoot(v);}
 }
 function onChange(e){
   const t=e.target.closest("[data-act='kind']");
@@ -756,7 +1127,7 @@ function onKey(e){
   const n=parseInt(e.key,10);
   if(n>=1&&n<=9){
     if(s.answered!==null)return;
-    if(s.q.type==="sort"){const id=s.q.items[n-1];if(id)sortPick(id);}
+    if(s.q.type==="sort"){const it=s.q.items[n-1];if(it)sortPick(it.v);}
     else if(n<=s.q.opts.length)answer(n-1);
   }
 }

@@ -544,7 +544,25 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .tag-results{flex:1;overflow-y:auto;padding:12px 16px}
 
 /* Tag popup on ayah */
-.tag-popup{z-index:30;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.15);width:260px;max-height:300px;display:flex;flex-direction:column;overflow:hidden}
+.tag-popup{z-index:30;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.15);width:290px;max-height:390px;display:flex;flex-direction:column;overflow:hidden}
+/* Кнопка тегов в строке аята: класс вместо инлайн-стилей — счётчик обновляется
+   точечно (refreshTagBtn) после разметки, без перерисовки всей ленты. */
+.ab-tag-btn{background:var(--bg-card);border:1px solid var(--border);border-radius:4px;padding:1px 6px;cursor:pointer;font-size:11px;color:var(--text-muted);font-family:inherit}
+.ab-tag-btn.has{background:var(--tag-bg);border-color:var(--tag-color);color:var(--tag-color)}
+/* Разметка потоком: недавние теги + диапазон аятов (см. openTagPopup) */
+.tp-recent{padding:6px 8px;border-bottom:1px solid var(--border);flex-shrink:0}
+.tp-recent-h{font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:5px}
+.tp-chips{display:flex;flex-wrap:wrap;gap:4px}
+.tp-chip{font-family:inherit;font-size:11px;line-height:1.2;padding:4px 7px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text-sec);cursor:pointer;max-width:100%;text-align:left}
+.tp-chip:hover{border-color:var(--tag-color)}
+.tp-chip.on{background:var(--tag-bg);border-color:var(--tag-color);color:var(--tag-color);font-weight:600}
+.tp-chip b{font-weight:600}
+.tp-chip small{color:var(--text-muted);font-weight:400}
+.tp-range{padding:6px 8px;border-top:1px solid var(--border);flex-shrink:0;font-size:11px;color:var(--text-muted)}
+.tp-range-row{display:flex;align-items:center;gap:5px}
+.tp-range input{width:56px;padding:3px 5px;border:1px solid var(--border);border-radius:5px;background:var(--bg);color:var(--text);font-family:inherit;font-size:11px}
+.tp-range input:focus{border-color:var(--tag-color);outline:none}
+.tp-range-hint{margin-top:4px;color:var(--tag-color)}
 .tag-popup-head{padding:6px 10px;border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--tag-color);display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
 .tag-popup-close{background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-muted);padding:0 2px}
 .tag-popup-list{flex:1;overflow-y:auto;padding:4px 0}
@@ -1021,6 +1039,13 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
 .hf-ru{font-size:14px;line-height:1.55;color:var(--text)}
 .hf-ru.sec{font-size:12px;color:var(--text-muted);margin-top:5px}
 .hf-ref{font-size:12px;color:var(--accent);font-weight:700;margin-bottom:6px}
+/* Адрес спрятан: «какая это сура?» — часть проверки, а не подсказка. Кнопка
+   открывает его отдельно от цепочки (вспомнил суру, но не продолжение). */
+.hf-ref-hide{font-family:inherit;font-size:12px;font-weight:700;color:var(--text-muted);background:var(--bg-alt);border:1px dashed var(--border);border-radius:7px;padding:4px 9px;margin-bottom:6px;cursor:pointer}
+.hf-ref-hide:hover{color:var(--accent);border-color:var(--accent)}
+/* Тот же вопрос под цепочкой: суру часто узнаёшь только по последнему аяту, и
+   тянуться обратно к верхней кнопке неудобно. */
+.hf-ref-hide.bot{display:block;width:100%;margin:13px 0 0;padding:9px}
 .hf-grade{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
 .hf-grade button{font-family:inherit;font-size:11px;padding:5px 10px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--text-sec);cursor:pointer}
 .hf-grade button.g0.on{background:#e05252;border-color:#e05252;color:#fff}
@@ -1181,9 +1206,20 @@ body.df-open{overflow:hidden}
 .hreader .hr-key{font-size:13px;color:var(--text-muted);letter-spacing:.04em}
 .hreader .hr-x{background:var(--bg-card);color:var(--text-muted);font-size:16px;cursor:pointer;
   width:40px;height:40px;border-radius:20px;border:1px solid var(--border)}
+/* Кнопки живут в ВЕРХНЕЙ полосе: тап «дальше» ловит весь экран, а сверху рука
+   бывает реже — случайных нажатий меньше, чем если положить их к ‹ внизу. */
+.hreader .hr-tools{display:flex;align-items:center;gap:7px}
+.hreader .hr-b{background:var(--bg-card);color:var(--text-muted);font-family:inherit;font-size:12px;
+  cursor:pointer;height:40px;padding:0 12px;border-radius:20px;border:1px solid var(--border)}
+.hreader .hr-b.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .hreader .hr-main{flex:1;display:flex;overflow-y:auto;padding:10px 20px}
+/* margin:auto на обёртке — короткий аят центрован, длинный скроллится */
+.hreader .hr-body{margin:auto;max-width:860px;width:100%}
 .hreader .hr-ar{font-size:calc(30px*var(--rs-ar,1));line-height:2.1;direction:rtl;text-align:center;
-  color:var(--text);max-width:860px;margin:auto} /* margin:auto — короткий аят центрован, длинный скроллится */
+  color:var(--text)}
+.hreader .hr-ru{font-size:calc(15px*var(--rs-ru,1));line-height:calc(1.6*var(--lh-ru,1));text-align:center;
+  color:var(--text-muted);margin-top:18px;padding-top:14px;border-top:1px solid var(--border)}
+.hreader .hr-ru:empty{display:none}
 .hreader .hr-bottom{flex:0 0 auto;display:flex;align-items:center;gap:10px;
   padding:8px 14px calc(12px + env(safe-area-inset-bottom))}
 .hreader .hr-prev{flex:0 0 auto;width:88px;height:64px;border:1px solid var(--border);border-radius:14px;
@@ -1282,6 +1318,11 @@ body.hr-open{overflow:hidden}
 .erd-addr{font-size:11px;color:var(--text-muted);margin-top:6px}
 .erd-gap{display:inline-block;min-width:3.2em;text-align:center;color:var(--accent);
   border-bottom:2px solid var(--accent);letter-spacing:.06em}
+.erd-hl{background:rgba(var(--accent-rgb),.18);border-bottom:2px solid var(--accent);border-radius:3px;padding:0 2px}
+.erd-tj{background:rgba(224,160,48,.22);border-bottom:2px solid #e0a030;border-radius:3px;padding:0 2px}
+.erd-card-p{font-size:12px;color:var(--accent);margin-top:7px}
+.erd-fb-acts{display:flex;gap:12px;flex-wrap:wrap;margin-top:7px}
+.erd-fb-acts .erd-link{margin-top:0}
 .erd-ar{font-family:'Amiri Quran','Amiri',serif;direction:rtl;unicode-bidi:isolate;font-size:1.15em}
 .erd-opt .erd-ar{font-size:1.45em}   /* в варианте ответа арабское имя часто единственный текст — мельчить нельзя */
 .erd-opts{display:flex;flex-direction:column;gap:8px}
@@ -1295,7 +1336,7 @@ body.hr-open{overflow:hidden}
 .erd-opt.dim{opacity:.5}
 .erd-opt:disabled{cursor:default}
 .erd-sortline{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:11px}
-.erd-slot{flex:1;min-width:64px;text-align:center;font-size:11px;padding:7px 4px;border:1px dashed var(--border);border-radius:8px;color:var(--text-muted)}
+.erd-slot{flex:1;min-width:64px;max-width:50%;text-align:center;font-size:11px;padding:7px 4px;border:1px dashed var(--border);border-radius:8px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .erd-slot.full{border-style:solid;border-color:var(--accent);color:var(--text)}
 .erd-fb{margin-top:14px;padding:11px 12px;border-radius:10px;border:1px solid var(--border)}
 .erd-fb.ok{border-color:#2ea06e;background:rgba(46,160,110,.09)}
@@ -1570,7 +1611,7 @@ async function mediaMod(){
 // Код упражнений в index.html не входит: подсистема будет расти (аяты, темы,
 // тартиб, «Лестница знания» с банком вопросов), а страница и так велика. Пока
 // человек не открыл режим — модуль не грузится.
-const ERUDIT_VER="2";  // поднять при правке erudit.js (сброс кеша браузера/CDN)
+const ERUDIT_VER="3";  // поднять при правке erudit.js (сброс кеша браузера/CDN)
 let ERUDIT=null;
 async function eruditMod(){
   if(ERUDIT)return ERUDIT;
@@ -1592,6 +1633,9 @@ async function eruditMod(){
       loadGloss:s=>loadWbwWords(s),                    // русские глоссы слов
       loadRoots:()=>loadRoots(),                       // конкорданс: формы одного корня — дистракторы
       getRoots:()=>ROOTS,
+      openRoot:r=>selectRootView(r),                   // экран вхождений корня («где ещё встречается»)
+      TJ_RULES,loadTajweed:s=>loadTajweed(s),          // правила таджвида и их места в аяте
+      playAyah:(s,a)=>mediaMod().then(m=>m&&m.playFrom(s,a)),  // «послушать это место» в разборе
     });
     ERUDIT=m;return m;
   }catch(e){
@@ -1673,7 +1717,7 @@ function exitDiafilm(viaBack){
 // лента возвращается на последний аят сессии.
 // ============================================================
 let hrOpen=false;
-const HR={s:1,a:1,el:null,wake:null,want:false,swiped:false};
+const HR={s:1,a:1,el:null,wake:null,want:false,swiped:false,ru:false};
 async function hrWake(on){
   try{
     HR.want=!!on;
@@ -1694,19 +1738,31 @@ function hrStart(){
     const lp=gs("lastPos",null);if(lp&&lp.surah){s=lp.surah;a=lp.ayah||1;}
   }
   HR.s=s;HR.a=Math.min(a,(SURAHS[s-1]||{n:1}).n);HR.swiped=false;
+  HR.ru=!!gs("hrRu",false);                    // показ перевода переживает выход из ридера
   hrOpen=true;pushOverlay();
   document.body.classList.add("hr-open");
   const el=document.createElement("div");
   el.id="hifzReader";el.className="hreader";
   el.innerHTML=`<div class="hr-top"><span class="hr-key" id="hrKey"></span>
-      <button class="hr-x" data-act="close" title="Закрыть">✕</button></div>
-    <div class="hr-main"><div class="hr-ar arabic-main" id="hrAr"></div></div>
+      <div class="hr-tools">
+        <button class="hr-b" data-act="top" title="В начало этой суры">⤒ к 1-му</button>
+        <button class="hr-b" id="hrRuBtn" data-act="ru" title="Перевод под аятом">перевод</button>
+        <button class="hr-x" data-act="close" title="Закрыть">✕</button>
+      </div></div>
+    <div class="hr-main"><div class="hr-body">
+      <div class="hr-ar arabic-main" id="hrAr"></div>
+      <div class="hr-ru" id="hrRu"></div></div></div>
     <div class="hr-bottom"><button class="hr-prev" data-act="prev" title="Предыдущий аят">‹</button>
       <span class="hr-hint">Тап в любом месте — следующий аят</span></div>`;
   document.body.appendChild(el);HR.el=el;
   el.addEventListener("click",e=>{
     const b=e.target.closest("[data-act]");
-    if(b){if(b.dataset.act==="close")hrStop();else hrStep(-1);return;}
+    if(b){const act=b.dataset.act;
+      if(act==="close")hrStop();
+      else if(act==="ru")hrToggleRu();
+      else if(act==="top")hrToSuraStart();
+      else hrStep(-1);
+      return;}
     if(HR.swiped){HR.swiped=false;return;}     // click-хвост свайпа — не листать второй раз
     hrStep(1);                                 // тап по любому месту = дальше
   });
@@ -1734,11 +1790,24 @@ function hrStep(d){
   else if(a>SURAHS[s-1].n){ if(s<114){s++;a=1;} else a=SURAHS[s-1].n; }
   HR.s=s;HR.a=a;hrRender();
 }
+// Перевод под аятом: подсказка для тех мест, где память держится на смысле.
+// Выбор источника — общий с проверкой заучивания (hifzRuId: первый включённый
+// перевод), чтобы «перевод» значил одно и то же во всём разделе.
+function hrToggleRu(){HR.ru=!HR.ru;ss("hrRu",HR.ru);hrRender();}
+// «К 1-му»: с середины суры вернуться к её началу — читают сурами, а не с того
+// места, где закрыли. Уже на первом аяте — уходим к началу ПРЕДЫДУЩЕЙ суры,
+// иначе кнопка выглядит сломанной (нажал — ничего не изменилось).
+function hrToSuraStart(){
+  if(HR.a===1&&HR.s>1)HR.s--;
+  HR.a=1;hrRender();
+}
 async function hrRender(){
   if(!hrOpen)return;
   const su=SURAHS[HR.s-1];
   const keyEl=document.getElementById("hrKey"),arEl=document.getElementById("hrAr");
+  const ruEl=document.getElementById("hrRu"),ruBtn=document.getElementById("hrRuBtn");
   if(keyEl)keyEl.textContent=HR.s+":"+HR.a+" · "+(su?su.ru:"");
+  if(ruBtn)ruBtn.classList.toggle("on",!!HR.ru);
   const s=HR.s,a=HR.a;
   let t=getArabicFromCache(s,a);
   if(!t){                                      // чанк суры ещё не загружен
@@ -1750,6 +1819,18 @@ async function hrRender(){
   if(arEl)arEl.textContent=t||"—";
   const main=HR.el&&HR.el.querySelector(".hr-main");
   if(main)main.scrollTop=0;                    // длинный аят — читать с начала
+  if(!ruEl)return;
+  if(!HR.ru){ruEl.textContent="";return;}
+  const rid=hifzRuId();
+  if(!rid){ruEl.textContent="Нет включённого перевода — включите его в 📚";return;}
+  let r=(getChunk(rid,s)||{})[String(a)];
+  if(!r){                                      // чанк перевода тянем так же лениво
+    ruEl.textContent="…";
+    try{await loadChunk(rid,s);}catch(e){}
+    if(!hrOpen||s!==HR.s||a!==HR.a||!HR.ru)return;
+    r=(getChunk(rid,s)||{})[String(a)];
+  }
+  ruEl.textContent=r||"—";                     // textContent: разметку перевода не рендерим
 }
 
 const SURAHS=[
@@ -2682,6 +2763,8 @@ async function hifzNextRound(){
   HF.sess.loading=false;renderHifz();
 }
 function hifzReveal(){if(HF.sess&&HF.sess.round)HF.sess.round.revealed=true;renderHifz();}
+// Адрес отдельно от цепочки: «вспомнил суру» и «вспомнил продолжение» — разные шаги.
+function hifzShowRef(){if(HF.sess&&HF.sess.round)HF.sess.round.refShown=true;renderHifz();}
 // Само-оценка звена: 0=не помню / 1=с трудом / 2=уверенно. Свидетельство уходит
 // в store по-аятно; сосед по порядку вспоминания даёт junction-состояние шва.
 // Ошибочный тап МОЖНО поправить, нажав другую кнопку: SRS-шаг заменяется через
@@ -2720,7 +2803,9 @@ function renderHifz(){
     <div class="hf-tabs">
       <button class="${HF.tab==="map"?"on":""}" onclick="hifzTab('map')">🗺 Карта</button>
       <button class="${HF.tab==="quiz"?"on":""}" onclick="hifzTab('quiz')">🎯 Проверка</button>
-    </div>`+(HF.tab==="map"?hifzMapHTML():hifzQuizHTML());
+    </div>
+    <button class="cov-map-open" onclick="hrStart()" title="Полноэкранный показ: один аят, тап по экрану — следующий">🤲 Чтение наизусть — аят на весь экран, тап = дальше</button>`
+    +(HF.tab==="map"?hifzMapHTML():hifzQuizHTML());
 }
 function hifzTab(t){HF.tab=t;if(t==="quiz"&&!HF.sess)hifzBeginSession();else renderHifz();}
 
@@ -3275,6 +3360,7 @@ function hifzQuizHTML(){
     <span>Показ:</span><div class="prog-seg"><button class="${S.lang==="ar"?"on":""}" onclick="hifzSet('lang','ar')">арабский</button><button class="${S.lang==="ru"?"on":""}" onclick="hifzSet('lang','ru')" title="${escAttr(ruName)}">перевод</button></div>
     <span>Цепочка:</span><div class="prog-step"><button onclick="hifzSet('K',${Math.max(1,(S.K||4)-1)})">−</button><b>${S.K||4}</b><button onclick="hifzSet('K',${Math.min(10,(S.K||4)+1)})">+</button></div>
     <label title="Сложный режим: вспоминать предыдущие аяты"><input type="checkbox" ${S.backward?"checked":""} onchange="hifzSet('backward',this.checked)"> назад</label>
+    <label title="Адрес (сура и номер аята) спрятан до нажатия — вспомнить, откуда аят, тоже часть проверки. Снимите галочку, если проверяете только продолжение: у аятов-рефренов без адреса нет одного ответа."><input type="checkbox" ${S.hideRef===false?"":"checked"} onchange="hifzSet('hideRef',this.checked)"> скрывать адрес</label>
     <label title="По умолчанию ВЫКЛ: проверка памяти — не чтение, серию и дневную цель не кормит"><input type="checkbox" ${S.feedActivity?"checked":""} onchange="hifzSet('feedActivity',this.checked)"> засчитывать в дневную цель</label>
   </div><div class="hf-muted" style="margin-top:7px">Изменения длины/направления применяются со следующей точки.</div></div>`;
   const sess=HF.sess;
@@ -3287,16 +3373,23 @@ function hifzQuizHTML(){
   const S2=Progress.hifzSettings();
   const dirWord=S2.backward?"НАЗАД":"вперёд";
   const first=R.chain[0].split(":"),fs=+first[0];
+  // Привязка сура:аят — сама по себе предмет проверки («откуда этот аят?»), поэтому
+  // по умолчанию СКРЫТА и открывается ТОЛЬКО своей кнопкой: раскрытие цепочки её не
+  // выдаёт (продолжение можно проверить, всё ещё не зная суру). Настройка `hideRef`
+  // возвращает прежнее поведение: адрес виден сразу — это нужно, когда проверяют
+  // только продолжение, а аят-рефрен без адреса неоднозначен.
+  const refOpen=S2.hideRef===false||R.refShown;
+  const refHTML=(s,tail)=>refOpen
+    ? `<div class="hf-ref">${esc(hifzSuName(s))} · ${tail}</div>`
+    : `<button class="hf-ref-hide" onclick="hifzShowRef()" title="Сначала вспомните, откуда этот аят">🙈 Откуда это? · 👁 показать адрес</button>`;
   let prompt;
   if(R.start){
     const sp=R.start.split(":"),ss=+sp[0],sa=+sp[1];
-    // Привязка сура:аят показывается ВСЕГДА (в переводе — обязательна по смыслу,
-    // в арабском — снимает неоднозначность повторяющихся аятов-рефренов).
-    prompt=`<div class="hf-ref">${esc(hifzSuName(ss))} · ${ss}:${sa}</div>
+    prompt=`${refHTML(ss,ss+":"+sa)}
       ${S2.lang==="ar"?`<div class="hf-ar arabic-main">${esc(getArabicFromCache(ss,sa))}</div>`:`<div class="hf-ru">${esc(hifzRuText(ss,sa))}</div>`}
       <div class="hf-muted" style="margin-top:9px">Продолжите по памяти <b>${dirWord}</b>: ${R.chain.length} ${R.chain.length===1?"аят":R.chain.length<5?"аята":"аятов"}.</div>`;
   }else{
-    prompt=`<div class="hf-ref">${esc(hifzSuName(fs))} · ${R.chain[0]}${R.chain.length>1?" …":""}</div>
+    prompt=`${refHTML(fs,R.chain[0]+(R.chain.length>1?" …":""))}
       <div class="hf-muted">Точка без соседа в охвате — вспомните ${R.chain.length===1?"этот аят":"аяты с этого места"} по памяти.</div>`;
   }
   let bodyHtml;
@@ -3310,11 +3403,16 @@ function hifzQuizHTML(){
       const main=S2.lang==="ar"?ar+(ru?`<div class="hf-ru sec">${esc(ru)}</div>`:""):`<div class="hf-ru">${esc(ru)||"<i>нет текста перевода</i>"}</div>`+ar;
       const g=R.grades[i];
       const btn=(gv,lab)=>`<button class="g${gv} ${g===gv?"on":""}" onclick="hifzGrade(${i},${gv})">${lab}</button>`;
-      return `<div class="hf-chain-item"><div class="hf-ref">${s}:${a}</div>${main}
+      // Номер аята в звене — тот же адрес: пока он скрыт, звенья нумеруем по порядку,
+      // иначе «83:1» над первым же аятом цепочки выдаёт суру в обход кнопки.
+      return `<div class="hf-chain-item"><div class="hf-ref">${refOpen?`${s}:${a}`:`звено ${i+1}`}</div>${main}
         <div class="hf-grade">${btn(0,"не помню")}${btn(1,"с трудом")}${btn(2,"уверенно")}</div></div>`;
     }).join("");
     const graded=Object.keys(R.grades).length;
-    bodyHtml=items+`<div class="prog-btns" style="margin-top:13px">
+    // Дубль кнопки адреса ПОД цепочкой: суру нередко узнаёшь только по последнему
+    // аяту — возвращаться к верхней кнопке ради этого не нужно.
+    const refBot=refOpen?"":`<button class="hf-ref-hide bot" onclick="hifzShowRef()" title="Сначала вспомните, откуда этот аят">🙈 Откуда это? · 👁 показать адрес</button>`;
+    bodyHtml=items+refBot+`<div class="prog-btns" style="margin-top:13px">
       <button class="prog-cont" style="margin-top:0" onclick="hifzNextRound()">Следующая точка →</button>
       <button onclick="hifzTab('map')">К карте</button></div>
       ${graded<R.chain.length?`<div class="hf-muted" style="margin-top:7px">Оценено ${graded} из ${R.chain.length} — неоценённые звенья в SRS не запишутся.</div>`
@@ -5696,7 +5794,7 @@ async function renderReading(el){
       const hn=hasNote(ST.surah,aid);const ht=hasAT(ST.surah,aid);
       html+=`<div class="ayah-block" data-aid="${aid}"><div class="ab-head">
         <div style="display:flex;align-items:center;gap:8px"><span class="ab-num">${aid}</span>
-          <button onclick="event.stopPropagation();openTagPopup(${aid},this)" style="background:${ht?'var(--tag-bg)':'var(--bg-card)'};border:1px solid ${ht?'var(--tag-color)':'var(--border)'};border-radius:4px;padding:1px 6px;cursor:pointer;font-size:11px;color:${ht?'var(--tag-color)':'var(--text-muted)'}" title="Теги">🏷${ht?' '+getATList(ST.surah,aid).length:''}</button>
+          <button class="ab-tag-btn${ht?' has':''}" data-tagbtn="${aid}" onclick="event.stopPropagation();openTagPopup(${aid},this)" title="Теги">🏷${ht?' '+getATList(ST.surah,aid).length:''}</button>
           <button class="cov-cnt-btn" onclick="event.stopPropagation();openCovPopup(${aid},this)" title="Переводов и тафсиров у этого аята">${covCountLabel(ST.surah,aid)}</button>
           <button class="ab-bm-btn ${isBookmarked(ST.surah,aid)?'on':''}" onclick="event.stopPropagation();toggleBookmark(${aid},this)" title="Закладка">${isBookmarked(ST.surah,aid)?'★':'☆'}</button>
           <button class="ab-note-btn ${hn?'has':''}" onclick="event.stopPropagation();toggleNote(${aid},this)" title="Заметка к аяту">📝</button>
@@ -6379,7 +6477,6 @@ function audioBlockHTML(){
     <button class="cov-map-open" style="margin:6px 0 0" onclick="mediaPlaySurah()">▶ Слушать текущую суру</button>
     <button class="cov-map-open" style="margin:6px 0 0" onclick="mediaNewSet()">➕ Новый набор записей</button>
     <button class="cov-map-open" style="margin:6px 0 0" onclick="openDiafilm()">🎬 Диафильм (полноэкранный визуальный ряд)</button>
-    <button class="cov-map-open" style="margin:6px 0 0" onclick="hrStart()">🤲 Чтение наизусть — аят на весь экран, тап = дальше</button>
     <div class="vp-note">Чтецы стримятся с everyayah.com (нужен интернет). Наборы записей — ваш голос, кнопка 🎙 в плеере; хранятся только на этом устройстве и работают офлайн. Диафильм — полноэкранное созерцание: аят на весь экран с атмосферной картинкой по теме (фихрист), кадр меняется по чтецу (без звука — свайпом); в кадре можно убрать картинку или аудио.</div></div></div>`;
 }
 // Новый набор записей: имя → tl_mediaSets; записи в него кладёт попап 🎙
@@ -7819,28 +7916,115 @@ function popupNodeHTML(node,anc,aid,current){
   return h+"</div>";
 }
 
+// ── Разметка потоком: недавние теги + диапазон аятов ──────────────────────
+// Систематическая разметка при чтении упирается не в дерево, а в число касаний:
+// раскрыть ветку, найти тег, поставить — и так на каждом аяте. Поэтому сверху
+// попапа лежат ПОСЛЕДНИЕ использованные теги (одно касание), а снизу — поле
+// «по аят N»: тогда один тег ложится сразу на смысловой блок (история Юсуфа,
+// аяты о рибе), а не на каждый аят отдельно.
+function getRecentTags(){
+  const raw=gs("recentTags",[]);
+  return Array.isArray(raw)?raw.filter(p=>typeof p==="string"&&tagExists(p)):[];  // переименованные/удалённые теги отсеиваем
+}
+function pushRecentTag(path){
+  const list=getRecentTags().filter(p=>p!==path);
+  list.unshift(path);
+  ss("recentTags",list.slice(0,8));
+}
+function tagExists(path){
+  let cur=getTagTree();
+  for(const part of String(path).split("/")){
+    const f=(cur||[]).find(n=>n.name===part);
+    if(!f)return false;
+    cur=f.children||[];
+  }
+  return true;
+}
+const tagLeaf=p=>{const i=p.lastIndexOf("/");return i<0?p:p.slice(i+1);};
+const tagParent=p=>{const i=p.lastIndexOf("/");return i<0?"":p.slice(0,i);};
+
+let _tagRangeTo=null;                      // верхняя граница диапазона (null = только текущий аят)
+function tagRangeList(aid){
+  const to=_tagRangeTo;
+  if(!to||to<=aid)return [aid];
+  const su=SURAHS[ST.surah-1],last=Math.min(to,su?su.n:to);
+  const out=[];for(let a=aid;a<=last;a++)out.push(a);
+  return out;
+}
+function tpSetRange(aid,val){
+  const n=parseInt(val,10);
+  _tagRangeTo=(n&&n>aid)?n:null;
+  const hint=document.querySelector("#tagPopup .tp-range-hint");
+  if(hint){
+    const list=tagRangeList(aid);
+    hint.textContent=list.length>1?`Тег ляжет на аяты ${aid}–${list[list.length-1]} (${list.length})`:"";
+  }
+  refreshTagPopup(aid);                    // галочки показывают состояние всего диапазона
+}
+// Счётчик у аята перерисовываем точечно: перерисовка всей ленты сбросила бы
+// прокрутку, а при разметке диапазона обновить нужно сразу несколько строк.
+function refreshTagBtn(aid){
+  const b=document.querySelector(`[data-tagbtn="${aid}"]`);
+  if(!b)return;
+  const n=getATList(ST.surah,aid).length;
+  b.classList.toggle("has",n>0);
+  b.textContent="🏷"+(n?" "+n:"");
+}
+
 function openTagPopup(aid,btnEl){
   if(ST.noTouch)return;
   closeTagPopup();
   openPopupAyah=aid;
+  _tagRangeTo=null;
 
   const tree=getTagTree();
   if(!tree.length){alert("Создайте теги в боковой панели (☰ → Теги)");return;}
 
-  const current=getATList(ST.surah,aid);
-
+  const su=SURAHS[ST.surah-1];
   const rect=btnEl.getBoundingClientRect();
   const popup=document.createElement("div");
   popup.className="tag-popup";
   popup.id="tagPopup";
   popup.style.position="fixed";
-  popup.style.top=Math.min(rect.bottom+4,window.innerHeight-310)+"px";
-  popup.style.left=Math.min(rect.left,window.innerWidth-270)+"px";
+  popup.style.top=Math.min(rect.bottom+4,window.innerHeight-400)+"px";
+  popup.style.left=Math.min(rect.left,window.innerWidth-300)+"px";
   popup.innerHTML=`<div class="tag-popup-head"><span>🏷 Теги · аят ${aid}</span><button class="tag-popup-close" onclick="closeTagPopup()">✕</button></div>
-    <div class="tag-popup-list">${tree.map(n=>popupNodeHTML(n,[],aid,current)).join("")}</div>`;
+    <div id="tpRecent">${recentTagsHTML(aid)}</div>
+    <div class="tag-popup-list">${tree.map(n=>popupNodeHTML(n,[],aid,commonTags(aid))).join("")}</div>
+    <div class="tp-range">
+      <div class="tp-range-row"><span>Пометить аяты ${aid}–</span>
+        <input type="number" min="${aid+1}" max="${su?su.n:6236}" placeholder="${aid}"
+          onclick="event.stopPropagation()" oninput="tpSetRange(${aid},this.value)"></div>
+      <div class="tp-range-hint"></div>
+    </div>`;
   document.body.appendChild(popup);
 
   setTimeout(()=>document.addEventListener("click",closeOnOutside),10);
+}
+// Галочка стоит, только если тег есть У ВСЕХ аятов диапазона: иначе касание
+// должно ДОБАВЛЯТЬ недостающим, а не снимать у тех, где он уже есть.
+function commonTags(aid){
+  const ayahs=tagRangeList(aid);
+  let out=getATList(ST.surah,ayahs[0]).slice();
+  for(const a of ayahs.slice(1)){
+    const l=getATList(ST.surah,a);
+    out=out.filter(p=>l.includes(p));
+    if(!out.length)break;
+  }
+  return out;
+}
+function recentTagsHTML(aid){
+  const list=getRecentTags();
+  if(!list.length)return "";
+  const common=commonTags(aid);
+  let h=`<div class="tp-recent"><div class="tp-recent-h">Недавние</div><div class="tp-chips">`;
+  for(const p of list){
+    const on=common.includes(p);
+    const par=tagParent(p);
+    h+=`<button class="tp-chip${on?" on":""}" onclick="event.stopPropagation();popupToggleTag(${aid},'${escAttr(p)}')" title="${escAttr(p)}">
+      ${on?"☑ ":""}<b>${esc(tagLeaf(p))}</b>${par?` <small>${esc(par)}</small>`:""}</button>`;
+  }
+  return h+`</div></div>`;
 }
 
 function closeOnOutside(e){
@@ -7854,23 +8038,38 @@ function closeOnOutside(e){
 function closeTagPopup(){
   const popup=document.getElementById("tagPopup");
   if(popup)popup.remove();
-  openPopupAyah=null;
+  openPopupAyah=null;_tagRangeTo=null;
   document.removeEventListener("click",closeOnOutside);
 }
 
+// Диапазон переключается как одно целое: если тег стоит НЕ у всех — доставляем
+// недостающим (частая правка «дотянуть блок»), если у всех — снимаем со всех.
 function popupToggleTag(aid,path){
-  event.stopPropagation();
-  toggleAT(ST.surah,aid,path);
+  if(typeof event!=="undefined"&&event)event.stopPropagation();
+  const ayahs=tagRangeList(aid);
+  const all=ayahs.every(a=>getATList(ST.surah,a).includes(path));
+  const at=getAyahTags();
+  for(const a of ayahs){
+    const k=ST.surah+":"+a,list=at[k]||[];
+    const has=list.includes(path);
+    if(all&&has)at[k]=list.filter(p=>p!==path);
+    else if(!all&&!has)at[k]=list.concat([path]);
+    if(at[k]&&!at[k].length)delete at[k];
+  }
+  setAyahTags(at);
+  pushRecentTag(path);                       // даже при снятии: тег «в работе», он ещё понадобится
+  for(const a of ayahs)refreshTagBtn(a);
   refreshTagPopup(aid);
 }
 
 function refreshTagPopup(aid){
   const popup=document.getElementById("tagPopup");
   if(!popup)return;
-  const tree=getTagTree();
-  const current=getATList(ST.surah,aid);
+  const common=commonTags(aid);
   const listEl=popup.querySelector(".tag-popup-list");
-  if(listEl)listEl.innerHTML=tree.map(n=>popupNodeHTML(n,[],aid,current)).join("");
+  if(listEl)listEl.innerHTML=getTagTree().map(n=>popupNodeHTML(n,[],aid,common)).join("");
+  const rec=document.getElementById("tpRecent");
+  if(rec)rec.innerHTML=recentTagsHTML(aid);
 }
 
 // Tag management
