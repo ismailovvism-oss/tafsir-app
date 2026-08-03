@@ -1232,6 +1232,83 @@ body.hr-open{overflow:hidden}
 /* режим «Хифз» в главном окне (бывший оверлей) */
 .hifz-screen{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 10px 46px}
 .hifz-screen>#hifzBody{max-width:760px;margin:0 auto}
+/* ── 🎓 Эрудит: занимательные упражнения (разметку рисует ленивый erudit.js) ── */
+.erd-screen{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 10px 46px}
+.erd-screen>#erdBody{max-width:640px;margin:0 auto}
+.erd-h1{font-size:19px;font-weight:700;color:var(--text);margin-bottom:6px}
+.erd-lead{font-size:12px;color:var(--text-muted);line-height:1.5;margin-bottom:14px}
+.erd-note{font-size:12px;color:var(--text-muted);margin-top:7px}
+.erd-bad{font-size:12px;color:#e05252;margin-top:5px}
+.erd-back{font-size:13px;color:var(--accent);cursor:pointer;padding:4px 0;margin-bottom:8px;display:block;background:none;border:none;font-family:inherit;width:100%}
+.erd-card{border:1px solid var(--border);border-radius:12px;padding:13px;margin-bottom:10px;background:var(--bg-card);cursor:pointer}
+.erd-card:hover{border-color:var(--accent)}
+.erd-card-h{display:flex;align-items:center;gap:9px}
+.erd-ic{font-size:20px;line-height:1}
+.erd-card-t{font-size:15px;font-weight:600;color:var(--text);flex:1}
+.erd-arrow{color:var(--text-muted);font-size:17px}
+.erd-card-s{font-size:12px;color:var(--text-sec);line-height:1.5;margin-top:6px}
+.erd-card-m{font-size:11px;color:var(--text-muted);margin-top:7px}
+.erd-soon{font-size:11px;color:var(--text-muted);line-height:1.6;border-top:1px dashed var(--border);padding-top:11px;margin-top:14px}
+.erd-set{border:1px solid var(--border);border-radius:11px;padding:11px 12px;margin-bottom:11px}
+.erd-set-h{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-bottom:9px}
+.erd-chips{display:flex;gap:6px;flex-wrap:wrap}
+.erd-chip{font-family:inherit;font-size:12px;padding:6px 11px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text-sec);cursor:pointer;display:inline-flex;flex-direction:column;align-items:center;line-height:1.25}
+.erd-chip small{font-size:9px;opacity:.7}
+.erd-chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.erd-inp{width:100%;margin-top:8px;padding:7px 9px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-family:inherit;font-size:13px;outline:none}
+.erd-inp:focus{border-color:var(--accent)}
+.erd-kind{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;padding:6px 0;cursor:pointer;font-size:13px;color:var(--text)}
+.erd-kind-h{font-size:11px;color:var(--text-muted)}
+.erd-start{display:block;width:100%;margin-top:12px;padding:12px;border:none;border-radius:10px;background:var(--accent);color:#fff;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer}
+.erd-start:hover{background:var(--accent-hover)}
+.erd-start.ghost{background:var(--bg);color:var(--text-sec);border:1px solid var(--border);font-weight:500;font-size:13px}
+.erd-top{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text-muted)}
+.erd-count{font-weight:600;color:var(--text-sec)}
+.erd-score{color:var(--accent);font-weight:600}
+.erd-streak{color:#e0a030;font-weight:600}
+.erd-quit{margin-left:auto;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);border-radius:7px;font-size:13px;line-height:1;padding:4px 8px;cursor:pointer;font-family:inherit}
+.erd-prog{height:5px;border-radius:4px;background:var(--bg-alt);overflow:hidden;margin:7px 0 16px}
+.erd-prog i{display:block;height:100%;background:var(--accent);transition:width .25s}
+.erd-q{margin-bottom:15px}
+.erd-q-sub{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:6px}
+.erd-q-ask{font-size:18px;line-height:1.45;color:var(--text);font-weight:500}
+/* Аят в вопросе и в разборе: оригинал — RTL, шрифт и размер как в ленте чтения */
+.erd-ayah{font-family:'Amiri Quran','Amiri',serif;direction:rtl;text-align:right;
+  font-size:calc(22px*var(--rs-ar,1));line-height:calc(1.95*var(--lh-ar,1));color:var(--text);margin-top:10px}
+.erd-tr{font-size:13px;line-height:1.55;color:var(--text-sec);margin-top:7px}
+.erd-tr.big{font-size:16px;line-height:1.5;color:var(--text);margin-top:10px}
+.erd-addr{font-size:11px;color:var(--text-muted);margin-top:6px}
+.erd-gap{display:inline-block;min-width:3.2em;text-align:center;color:var(--accent);
+  border-bottom:2px solid var(--accent);letter-spacing:.06em}
+.erd-ar{font-family:'Amiri Quran','Amiri',serif;direction:rtl;unicode-bidi:isolate;font-size:1.15em}
+.erd-opt .erd-ar{font-size:1.45em}   /* в варианте ответа арабское имя часто единственный текст — мельчить нельзя */
+.erd-opts{display:flex;flex-direction:column;gap:8px}
+.erd-opt{display:flex;align-items:center;gap:9px;text-align:left;width:100%;padding:12px 13px;border:1px solid var(--border);border-radius:10px;background:var(--bg-card);color:var(--text);font-family:inherit;font-size:15px;cursor:pointer;line-height:1.35}
+.erd-opt:hover:not(:disabled){border-color:var(--accent)}
+.erd-num,.erd-pos{flex-shrink:0;width:21px;height:21px;border-radius:6px;background:var(--bg-alt);color:var(--text-muted);font-size:11px;display:inline-flex;align-items:center;justify-content:center}
+.erd-pos{background:var(--accent);color:#fff}
+.erd-opt.chosen{border-color:var(--accent)}
+.erd-opt.ok{border-color:#2ea06e;background:rgba(46,160,110,.12)}
+.erd-opt.bad{border-color:#e05252;background:rgba(224,82,82,.10)}
+.erd-opt.dim{opacity:.5}
+.erd-opt:disabled{cursor:default}
+.erd-sortline{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:11px}
+.erd-slot{flex:1;min-width:64px;text-align:center;font-size:11px;padding:7px 4px;border:1px dashed var(--border);border-radius:8px;color:var(--text-muted)}
+.erd-slot.full{border-style:solid;border-color:var(--accent);color:var(--text)}
+.erd-fb{margin-top:14px;padding:11px 12px;border-radius:10px;border:1px solid var(--border)}
+.erd-fb.ok{border-color:#2ea06e;background:rgba(46,160,110,.09)}
+.erd-fb.bad{border-color:#e05252;background:rgba(224,82,82,.08)}
+.erd-fb-t{font-size:13px;font-weight:700;margin-bottom:5px;color:var(--text)}
+.erd-fb-x{font-size:13px;line-height:1.5;color:var(--text-sec)}
+.erd-link{margin-top:7px;border:none;background:none;color:var(--accent);font-family:inherit;font-size:12px;cursor:pointer;padding:0}
+.erd-res{text-align:center;padding:18px 0 6px}
+.erd-res-ic{font-size:38px;line-height:1}
+.erd-res-score{font-size:30px;font-weight:700;color:var(--text);margin-top:8px}
+.erd-res-sub{font-size:12px;color:var(--text-muted);margin-top:5px}
+.erd-record{font-size:13px;font-weight:600;color:var(--accent);margin-top:9px}
+.erd-wrong{border-top:1px dashed var(--border);padding:9px 0}
+.erd-wrong-q{font-size:13px;color:var(--text);line-height:1.4}
+.erd-wrong-a{font-size:12px;color:var(--text-muted);margin-top:4px;line-height:1.45}
 /* вкладка «Вид» в боковой панели */
 .vp-wrap{padding:10px 12px 34px}
 /* панель закладок: кнопка разворота в главное окно */
@@ -1372,6 +1449,7 @@ const SOURCES={
   search_index:    {baseUrl:"data",  pathTemplate:"{baseUrl}/index/{source}.json"},
   // — пословный перевод (глосс) и морфология (грамматика) по сурам —
   glosses:         {baseUrl:"data",  pathTemplate:"{baseUrl}/wbw/words/{sura}.json"},
+  erudit_pool:     {baseUrl:"data",  pathTemplate:"{baseUrl}/erudit/{file}"},   // служебные данные упражнений (build_erudit_pool.py)
   morphology:      {baseUrl:"data",  pathTemplate:"{baseUrl}/wbw/morph/{sura}.json"},
   // — конкорданс: корень → все его вхождения в Коране (build_concordance.py из
   //   той же морфологии). ОДИН файл на весь Коран, а не чанки по сурам: карта
@@ -1484,6 +1562,58 @@ async function mediaMod(){
     return null;
   }
 }
+// ============================================================
+// «🎓 Эрудит» — занимательные упражнения (erudit.js, тоже ленивый ES-модуль)
+// ============================================================
+// Код упражнений в index.html не входит: подсистема будет расти (аяты, темы,
+// тартиб, «Лестница знания» с банком вопросов), а страница и так велика. Пока
+// человек не открыл режим — модуль не грузится.
+const ERUDIT_VER="2";  // поднять при правке erudit.js (сброс кеша браузера/CDN)
+let ERUDIT=null;
+async function eruditMod(){
+  if(ERUDIT)return ERUDIT;
+  try{
+    const m=await import("./erudit.js?v="+ERUDIT_VER);
+    m.init({
+      get ST(){return ST;},
+      SURAHS,gs,ss,esc,escAttr,resolveUrl,
+      goSurah:id=>goSurah(id),
+      goAyah:(s,a)=>{goAyah(s,a);flashAyah(a);},
+      // Текст: те же чанки и кеш, что у ленты чтения — упражнение не заводит
+      // собственной копии Корана и не грузит того, что уже загружено.
+      ensureText:(id,s)=>loadChunk(id,s),
+      getText:(id,s,a)=>{const c=getChunk(id,s);return c?(c[a]||""):"";},
+      getArabic:(s,a)=>getArabicFromCache(s,a),
+      transId:()=>diafilmTransId(),                    // первый включённый перевод (не хардкод)
+      transName:id=>{const t=CONFIG.tafsirs.find(x=>x.id===id);return t?t.name:"";},
+      loadMorph:s=>loadWbwMorph(s),                    // разбор слов (для «пропущенного слова»)
+      loadGloss:s=>loadWbwWords(s),                    // русские глоссы слов
+      loadRoots:()=>loadRoots(),                       // конкорданс: формы одного корня — дистракторы
+      getRoots:()=>ROOTS,
+    });
+    ERUDIT=m;return m;
+  }catch(e){
+    console.error("erudit.js не загрузился:",e);
+    const b=document.getElementById("erdBody");
+    if(b)b.innerHTML=`<div class="erd-note" style="text-align:center;padding:24px">Не удалось загрузить модуль упражнений (при первом запуске нужна сеть).</div>`;
+    return null;
+  }
+}
+function eruditEnterMode(){
+  renderCB();renderBottomNav();renderSB();
+  const cb=document.getElementById("centerBody");
+  if(cb)cb.innerHTML=`<div class="erd-screen"><div id="erdBody"><div class="erd-note" style="padding:20px">Загружаю упражнения…</div></div></div>`;
+  eruditMod().then(m=>m&&m.enterMode());
+  pushOverlay();                                 // запись для «Назад»: раунд → список упражнений
+}
+// Рендер режима в главное окно (из renderCenterBody). Модуль может быть ещё не
+// загружен — тогда рисуем заглушку и просим его дорисовать себя самому.
+function renderEruditScreen(el){
+  el.innerHTML=`<div class="erd-screen"><div id="erdBody"></div></div>`;
+  if(ERUDIT)ERUDIT.render();else eruditMod().then(m=>m&&m.enterMode());
+}
+function openErudit(){setMode("erudit");}
+
 function mediaPlayAyah(a){mediaMod().then(m=>m&&m.playFrom(ST.surah,a));}
 // «Слушать текущую суру» из панели 📚: старт с последней позиции в этой суре
 function mediaPlaySurah(){
@@ -1558,7 +1688,7 @@ function hrStart(){
   if(hrOpen)return;
   dfRequestFs();                               // СИНХРОННО в жесте — весь экран, как диафильм
   let s=ST.surah,a=curTopAyah()||1;
-  if(ST.homeMode||ST.hifzMode||ST.pageMode||ST.srcMode){  // не в ленте — от последней позиции чтения
+  if(ST.homeMode||ST.hifzMode||ST.eruditMode||ST.pageMode||ST.srcMode){  // не в ленте — от последней позиции чтения
     const lp=gs("lastPos",null);if(lp&&lp.surah){s=lp.surah;a=lp.ayah||1;}
   }
   HR.s=s;HR.a=Math.min(a,(SURAHS[s-1]||{n:1}).n);HR.swiped=false;
@@ -1739,6 +1869,7 @@ let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,apan
   homeMode:false,    // 5-й режим «Главная»: экран по умолчанию при открытии (недавнее + быстрые ссылки)
   homeEdit:false,    // на Главной открыт редактор быстрых ссылок (не сохраняется)
   hifzMode:false,    // 6-й режим «Хифз»: проверка заучивания в главном окне (бывший оверлей)
+  eruditMode:false,  // 7-й режим «🎓 Эрудит»: занимательные упражнения (код — ленивый erudit.js)
   bmView:false,      // полноэкранный список закладок в главном окне (панель — навигатор, окно — контент)
 };
 let CONFIG={groups:[],tafsirs:[]};
@@ -1785,7 +1916,7 @@ function curTopAyah(){
 // стрелками ‹ › и свайпом возвращало туда, где ты был в той суре (а не к началу).
 const surahPos={};
 function saveLastPos(){
-  if(ST.homeMode||ST.selectedTag||ST.scanSource||ST.bookIntro||ST.srcMode||ST.hifzMode||ST.bmView||ST.notesView)return;  // Главная/теги/скан/введение/источник/хифз/закладки — не позиция чтения
+  if(ST.homeMode||ST.selectedTag||ST.scanSource||ST.bookIntro||ST.srcMode||ST.hifzMode||ST.eruditMode||ST.bmView||ST.notesView)return;  // Главная/теги/скан/введение/источник/хифз/эрудит/закладки — не позиция чтения
   const mode=ST.pageMode?"page":"ayat";   // «words» больше не режим, а слой (ST.wbwLayer) — в позицию чтения не входит
   const ayah=curTopAyah();
   ss("lastPos",{surah:ST.surah,ayah,page:ST.mushafPage||1,mode});
@@ -4279,7 +4410,7 @@ async function warnOrigLoad(det,id,key){
 function openWarnMap(id){
   closeAbout();
   ST.topicSel=null;ST.selectedTag=null;ST.rootView=null;ST.bookIntro=false;ST.homeMode=false;
-  ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;
+  ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;
   ST.warnMap=id;
   const h=id==="*"?"#warnmap":"#warnmap="+id;                    // шэрабельный deep-link; «Назад» уходит по истории
   if(location.hash!==h)history.pushState({warnMap:id},"",h);
@@ -4615,7 +4746,7 @@ function renderNotesPanel(el){
 function goNoteAyah(s,a){ST.notesView=false;closeSidebarM();goAyah(s,a);flashAyah(a);}
 function openNotesScreen(){
   ST.notesView=true;ST.bmView=false;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;
-  ST.homeMode=false;ST.scanSource=null;ST.srcMode=false;ST.bookIntro=false;ST.hifzMode=false;
+  ST.homeMode=false;ST.scanSource=null;ST.srcMode=false;ST.bookIntro=false;ST.hifzMode=false;ST.eruditMode=false;
   closeSidebarM();
   render();
 }
@@ -4650,7 +4781,7 @@ async function renderNotesScreen(el){
   el.innerHTML=html+`</div>`;
 }
 function openBookmarksScreen(){
-  ST.bmView=true;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.homeMode=false;ST.scanSource=null;ST.srcMode=false;ST.bookIntro=false;ST.hifzMode=false;
+  ST.bmView=true;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.homeMode=false;ST.scanSource=null;ST.srcMode=false;ST.bookIntro=false;ST.hifzMode=false;ST.eruditMode=false;
   if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   render();
 }
@@ -4710,14 +4841,16 @@ function renderCB(){
   // «Колонки/Список» переехал в ⚙ Вид → «Раскладка переводов» (чтобы не
   // путался с режимами). Бывший 🔤 «Слова» — теперь СЛОЙ (📚 → «Со словами»):
   // разбор слова нужен при чтении тафсира, а не вместо него.
-  const ayatOn=!ST.homeMode&&!ST.hifzMode&&!ST.pageMode&&!ST.srcMode;
+  const other=ST.homeMode||ST.hifzMode||ST.eruditMode;   // «не лента и не мусхаф» — экраны-режимы
+  const ayatOn=!other&&!ST.pageMode&&!ST.srcMode;
   const mBtn=(on,m,icon,lab,title)=>`<button class="${on?'on':''}" onclick="setMode('${m}')" title="${title}">${icon}${lab?`<span class="ml">${lab}</span>`:""}</button>`;
   const modeSeg=`<span class="seg seg-sm seg-modes">`
     +mBtn(ST.homeMode,"home","🏠","","Главная")
     +mBtn(ayatOn,"ayat","📖","Аяты","Аяты + перевод")
-    +mBtn(!ST.homeMode&&!ST.hifzMode&&ST.pageMode,"page","📕","Мусхаф","Постраничный мусхаф")
-    +mBtn(!ST.homeMode&&!ST.hifzMode&&ST.srcMode,"source","🗂","Источник","Чтение по покрытию одного источника")
+    +mBtn(!other&&ST.pageMode,"page","📕","Мусхаф","Постраничный мусхаф")
+    +mBtn(!other&&ST.srcMode,"source","🗂","Источник","Чтение по покрытию одного источника")
     +mBtn(ST.hifzMode,"hifz","🧠","Хифз","Проверка заучивания: карта памяти и тренажёр")
+    +mBtn(ST.eruditMode,"erudit","🎓","Эрудит","Занимательные упражнения по Корану")
     +`</span>`;
   if(ST.homeMode){
     setCtx("🏠 Главная");
@@ -4725,6 +4858,10 @@ function renderCB(){
   }
   if(ST.hifzMode){
     setCtx("🧠 Заучивание");
+    bar.innerHTML=`<div class="cb-right">${modeSeg}</div>`;return;
+  }
+  if(ST.eruditMode){
+    setCtx("🎓 Эрудит");
     bar.innerHTML=`<div class="cb-right">${modeSeg}</div>`;return;
   }
   if(ST.bmView){
@@ -4752,6 +4889,7 @@ function renderCenterBody(){
   const el=document.getElementById("centerBody");
   if(ST.homeMode)return renderHome(el);
   if(ST.hifzMode)return renderHifzScreen(el);
+  if(ST.eruditMode)return renderEruditScreen(el);
   if(ST.bookIntro)return renderBookIntro(el);
   if(ST.scanSource)return renderScanReader(el);
   if(ST.srcMode)return renderSourceMode(el);
@@ -4839,6 +4977,11 @@ function renderHome(el){
   html+=`<div class="home-sec"><div class="home-nav-link" onclick="openRootsPanel()" title="Указатель корней: все места, где встречается корень">
     <span class="hnl-ic">🌿</span>
     <span class="hnl-main">Корни слов <span class="hnl-sub">— где ещё встречается это слово</span></span>
+    <span class="hnl-arrow">›</span></div></div>`;
+  // — Эрудит (занимательные упражнения) —
+  html+=`<div class="home-sec"><div class="home-nav-link" onclick="openErudit()" title="Занимательные упражнения: названия сур, аяты, темы">
+    <span class="hnl-ic">🎓</span>
+    <span class="hnl-main">Эрудит <span class="hnl-sub">— занимательные упражнения по Корану</span></span>
     <span class="hnl-arrow">›</span></div></div>`;
   // — Карта заблуждений (редакторские предупреждения по источникам) —
   const warnSrcN=Object.keys(WARN).filter(id=>warnCount(id)>0).length;
@@ -5728,7 +5871,7 @@ function openTopics(){
 }
 function selectTopic(id){
   ST.topicSel=id;
-  ST.selectedTag=null;ST.rootView=null;ST.warnMap=null;ST.bookIntro=false;ST.homeMode=false;ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;
+  ST.selectedTag=null;ST.rootView=null;ST.warnMap=null;ST.bookIntro=false;ST.homeMode=false;ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;
   if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   render();
 }
@@ -5836,7 +5979,7 @@ function selectRootView(v){
   ST.rootView=v;ST.rootForm=null;ST.rootLimit=20;ST.warnMap=null;
   if(v==="*")ST.rootQ="";                      // указатель открывается чистым, без прошлого фильтра
   ST.topicSel=null;ST.selectedTag=null;ST.bookIntro=false;ST.homeMode=false;
-  ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;
+  ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;
   hideWordCard();                              // экран открывается ИЗ карточки — она бы висела поверх
   if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   render();
@@ -6082,7 +6225,7 @@ function booksWithMuqaddima(){
   return getEnabledList().filter(t=>t.id!=="_notes"&&t.kind!=="image"&&t.muqaddima);
 }
 function openBookIntro(){
-  ST.bookIntro=true;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.scanSource=null;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;ST.homeMode=false;
+  ST.bookIntro=true;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.scanSource=null;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;ST.homeMode=false;
   if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   render();
 }
@@ -6675,7 +6818,7 @@ function onSearchKey(e){
 function goSearchResult(surah,ayah){
   closeSidebarM();
   ST.surah=surah;
-  ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;
+  ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.homeMode=false;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;
   // ST.scrollToAyah обязателен: renderCenter асинхронный и при ТОЙ ЖЕ суре сам
   // возвращает скролл на прежний верхний аят (якорь) — без этого переход из
   // поиска отбрасывало назад, на аят, с которого поиск открывали.
@@ -6770,14 +6913,14 @@ function pushHomeHash(){const h="#home";if(location.hash!==h)history.pushState({
 function applyHash(initial){
   const raw=decodeURIComponent((location.hash||"").replace(/^#/,"")).trim();
   if(raw==="home"){                                  // явный «#home» (например, «назад» на Главную)
-    ST.homeMode=true;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;if(!initial)render();return true;
+    ST.homeMode=true;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;if(!initial)render();return true;
   }
   if(raw==="warnmap"||raw.startsWith("warnmap=")){    // deep-link «Карта заблуждений»: #warnmap / #warnmap=<id>
     const wid=raw==="warnmap"?"*":raw.slice(8);
     // неизвестный/скрытый источник → общий индекс (для скрытых карта доступна только в dev-режиме)
     ST.warnMap=(wid!=="*"&&CONFIG.tafsirs&&CONFIG.tafsirs.find(t=>t.id===wid))?wid:"*";
     ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.bookIntro=false;ST.homeMode=false;
-    ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;
+    ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;
     if(!initial)render();return true;
   }
   const m=raw.match(/^(\d+)(?::(\d+))?$/);
@@ -6789,7 +6932,7 @@ function applyHash(initial){
   const stateAyah=(st&&st.surah===sid&&st.ayah)?st.ayah:null;     // позиция, запомненная при скролле → «назад»
   pendingAyah=hashAyah;
   const changing=(ST.surah!==sid||ST.selectedTag||ST.homeMode||ST.hifzMode||ST.bmView||ST.warnMap);
-  if(changing){ST.surah=sid;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;}
+  if(changing){ST.surah=sid;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.homeMode=false;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;}
   if(!hashAyah&&stateAyah&&(changing||initial))ST.scrollToAyah=stateAyah;  // встанем на аят при рендере (без анимации)
   if(hashAyah&&changing&&!initial)ST.scrollToAyah=hashAyah;       // иначе якорь той же суры вернёт старый аят
   if(changing&&!initial)render();
@@ -6807,6 +6950,14 @@ window.addEventListener("popstate",()=>{
   // проверка → карта); ov-запись уже снята этим back — возвращаем её, чтобы
   // следующий «Назад» тоже пришёл к нам. С уровня джузов — выход из режима
   // на экран, который описывает текущий хеш (#N или #home).
+  // «Назад» в РЕЖИМЕ эрудита: сперва раунд → список упражнений, и только со
+  // списка — выход из режима (как подъём по уровням карты хифза).
+  if(ST.eruditMode){
+    if(ERUDIT&&ERUDIT.back()){pushOverlay();return;}
+    ST.eruditMode=false;
+    applyHash(true);render();
+    return;
+  }
   if(ST.hifzMode){
     if(hifzZoomBack()){pushOverlay();return;}
     ST.hifzMode=false;
@@ -6908,7 +7059,7 @@ function sbJumpGo(){
   if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   goAyahRef(ref);
 }
-function goSurah(id){ST.surah=id;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.bookIntro=false;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;{const st=qpcMeta&&qpcMeta.surahStart&&qpcMeta.surahStart[id];if(st)ST.mushafPage=st.page;}if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}pushSurahHash(id);render();}
+function goSurah(id){ST.surah=id;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.bookIntro=false;ST.homeMode=false;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;{const st=qpcMeta&&qpcMeta.surahStart&&qpcMeta.surahStart[id];if(st)ST.mushafPage=st.page;}if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}pushSurahHash(id);render();}
 
 // --- Reading display settings (⚙ Вид): sizes AR/RU, line spacing AR/RU, margins
 const VIEW_DEFAULTS={fsAr:1,fsRu:1,lhAr:1,lhRu:1,mar:0,sbScale:1};
@@ -7139,7 +7290,7 @@ function goAyahRef(ref){
   if(!ST.pageMode)flashAyah(ref.ayah);
 }
 function goAyah(surah,ayah){
-  ST.surah=surah;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.homeMode=false;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;ST.bookIntro=false;ST.scrollToAyah=ayah||1;
+  ST.surah=surah;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.homeMode=false;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;ST.bookIntro=false;ST.scrollToAyah=ayah||1;
   if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   pushSurahHash(surah);render();
 }
@@ -7175,6 +7326,17 @@ function setMode(mode){
       hifzEnterMode();                         // асинхронная инициализация + рендер
     }
     return;
+  }
+  if(mode==="erudit"){                         // 7-й режим «🎓 Эрудит» (упражнения)
+    if(!ST.eruditMode){
+      if(ST.hifzMode){ST.hifzMode=false;consumeOverlay();}
+      ST.eruditMode=true;ST.homeMode=false;ST.srcMode=false;ST.pageMode=false;
+      eruditEnterMode();
+    }
+    return;
+  }
+  if(ST.eruditMode){                                    // уходим из эрудита: снять его ov-запись
+    ST.eruditMode=false;if(ERUDIT)ERUDIT.leave();consumeOverlay();
   }
   if(ST.hifzMode){ST.hifzMode=false;consumeOverlay();}   // уходим из хифза: снять его ov-запись «Назад»
   if(mode==="home"){                           // 5-й режим «Главная»
@@ -7721,7 +7883,7 @@ function addTag(val){
 // экраны, которые renderCenter проверяет РАНЬШЕ selectedTag (Главная, скан,
 // режим источника, введение): иначе тап по тегу оттуда молча ничего не делал.
 function selectTag(path){
-  ST.selectedTag=path;ST.bookIntro=false;ST.homeMode=false;ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.bmView=false;ST.notesView=false;
+  ST.selectedTag=path;ST.bookIntro=false;ST.homeMode=false;ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;
   if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   render();
 }
