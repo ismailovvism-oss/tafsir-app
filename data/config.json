@@ -598,7 +598,7 @@
     {
       "id": "krachkovsky",
       "file": "tafsirs/krachkovsky.json",
-      "name": "Перевод Крачковского",
+      "name": "Крачковский",
       "nameAr": "ترجمة كراتشكوفسكي",
       "author": "",
       "authorAr": "",
@@ -614,7 +614,7 @@
     {
       "id": "kuliev",
       "file": "tafsirs/kuliev.json",
-      "name": "Перевод Кулиева",
+      "name": "Кулиев",
       "nameAr": "ترجمة كولييف",
       "author": "",
       "authorAr": "",
@@ -632,7 +632,7 @@
     {
       "id": "osmanov",
       "file": "tafsirs/osmanov.json",
-      "name": "Перевод Османова",
+      "name": "Османов",
       "nameAr": "ترجمة عثمانوف",
       "author": "",
       "authorAr": "",
@@ -650,7 +650,7 @@
       "id": "abuadel",
       "file": "tafsirs/abuadel.json",
       "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "Перевод Абу Аделя",
+      "name": "Абу Адель",
       "nameAr": "ترجمة أبو عادل",
       "author": "",
       "authorAr": "",
@@ -684,7 +684,7 @@
     {
       "id": "porokhova",
       "file": "tafsirs/porokhova.json",
-      "name": "Перевод Пороховой",
+      "name": "Порохова",
       "nameAr": "ترجمة بوروخوفا",
       "author": "",
       "authorAr": "",
@@ -701,7 +701,7 @@
     {
       "id": "sablukov",
       "file": "tafsirs/sablukov.json",
-      "name": "Перевод Саблукова",
+      "name": "Саблуков",
       "nameAr": "ترجمة سابلوكوف",
       "author": "",
       "authorAr": "",
@@ -718,7 +718,7 @@
     {
       "id": "rysjanov",
       "file": "tafsirs/rysjanov.json",
-      "name": "Перевод Рысжанова",
+      "name": "Рысжанов",
       "nameAr": "ترجمة ريسجانوف",
       "author": "",
       "authorAr": "",
@@ -737,7 +737,7 @@
     {
       "id": "isaeva",
       "file": "tafsirs/isaeva.json",
-      "name": "Перевод Исаевой",
+      "name": "Исаева",
       "nameAr": "ترجمة إيساييفا",
       "author": "",
       "authorAr": "",
@@ -849,7 +849,7 @@
       "year": "2026",
       "about": true,
       "reviewLevel": "unverified",
-      "fill": 0.5645,
+      "fill": 0.5686,
       "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev"
     },
     {
@@ -869,7 +869,7 @@
       "year": "2026",
       "about": true,
       "reviewLevel": "unverified",
-      "fill": 0.5645,
+      "fill": 0.5686,
       "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev"
     },
     {
