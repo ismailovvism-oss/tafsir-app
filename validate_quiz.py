@@ -66,6 +66,7 @@ def main():
         return 0
 
     errs, seen_ids = [], {}
+    ans_pos = collections.Counter()
     total = reviewed_total = disputed_total = 0
     per_file = []
 
@@ -109,6 +110,8 @@ def main():
             check_ref(q.get("ref", ""), quran, errs, qid)
 
             by_cat[cat] += 1
+            if isinstance(a, int):
+                ans_pos[a] += 1
             by_level[lvl] += 1
             if q.get("reviewed") is True:
                 rev += 1
@@ -130,6 +133,14 @@ def main():
             print(f"      {cname:<36} {by_cat[cid]:>3}  (вычитано {by_cat_rev[cid]})")
 
     print(f"\nВсего в банке: {total} | вычитано: {reviewed_total} | спорных: {disputed_total}")
+    # Соглашение банка: верный ответ пишется первым — так его видно при вычитке.
+    # Значит порядок вариантов обязан перемешиваться при показе, иначе всё
+    # упражнение решается нажатием первой кнопки. Печатаем распределение, чтобы
+    # перекос был виден сразу.
+    print("распределение индекса верного ответа: " +
+          ", ".join(f"{k}: {v}" for k, v in sorted(ans_pos.items())))
+    if len(ans_pos) == 1:
+        print("  (норма для этого банка: ответ пишется первым, а перемешивает показ — erudit.js, shuffledQ)")
     if reviewed_total == 0:
         print("ВНИМАНИЕ: вычитанных записей нет — показывать в приложении нечего "
               "(в выдачу допускаются только reviewed:true).")

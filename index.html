@@ -1634,7 +1634,7 @@ async function mediaMod(){
 // Код упражнений в index.html не входит: подсистема будет расти (аяты, темы,
 // тартиб, «Лестница знания» с банком вопросов), а страница и так велика. Пока
 // человек не открыл режим — модуль не грузится.
-const ERUDIT_VER="4";  // поднять при правке erudit.js (сброс кеша браузера/CDN)
+const ERUDIT_VER="6";  // поднять при правке erudit.js (сброс кеша браузера/CDN)
 let ERUDIT=null;
 async function eruditMod(){
   if(ERUDIT)return ERUDIT;
@@ -3405,7 +3405,7 @@ function hifzQuizHTML(){
   const refOpen=S2.hideRef===false||R.refShown;
   const refHTML=(s,tail)=>refOpen
     ? `<div class="hf-ref">${esc(hifzSuName(s))} · ${tail}</div>`
-    : `<button class="hf-ref-hide" onclick="hifzShowRef()" title="Сначала вспомните, откуда этот аят">🙈 Откуда это? · 👁 показать адрес</button>`;
+    : `<button class="hf-ref-hide" onclick="hifzShowRef()" title="Сначала вспомните, откуда этот аят">🙈 Какая это сура? · 👁 показать суру</button>`;
   let prompt;
   if(R.start){
     const sp=R.start.split(":"),ss=+sp[0],sa=+sp[1];
@@ -3429,13 +3429,13 @@ function hifzQuizHTML(){
       const btn=(gv,lab)=>`<button class="g${gv} ${g===gv?"on":""}" onclick="hifzGrade(${i},${gv})">${lab}</button>`;
       // Номер аята в звене — тот же адрес: пока он скрыт, звенья нумеруем по порядку,
       // иначе «83:1» над первым же аятом цепочки выдаёт суру в обход кнопки.
-      return `<div class="hf-chain-item"><div class="hf-ref">${refOpen?`${s}:${a}`:`звено ${i+1}`}</div>${main}
+      return `<div class="hf-chain-item"><div class="hf-ref">${refOpen?`${esc(hifzSuName(s))} · ${s}:${a}`:`звено ${i+1}`}</div>${main}
         <div class="hf-grade">${btn(0,"не помню")}${btn(1,"с трудом")}${btn(2,"уверенно")}</div></div>`;
     }).join("");
     const graded=Object.keys(R.grades).length;
     // Дубль кнопки адреса ПОД цепочкой: суру нередко узнаёшь только по последнему
     // аяту — возвращаться к верхней кнопке ради этого не нужно.
-    const refBot=refOpen?"":`<button class="hf-ref-hide bot" onclick="hifzShowRef()" title="Сначала вспомните, откуда этот аят">🙈 Откуда это? · 👁 показать адрес</button>`;
+    const refBot=refOpen?"":`<button class="hf-ref-hide bot" onclick="hifzShowRef()" title="Сначала вспомните, откуда этот аят">🙈 Какая это сура? · 👁 показать суру</button>`;
     bodyHtml=items+refBot+`<div class="prog-btns" style="margin-top:13px">
       <button class="prog-cont" style="margin-top:0" onclick="hifzNextRound()">Следующая точка →</button>
       <button onclick="hifzTab('map')">К карте</button></div>

@@ -236,12 +236,15 @@ async function genSuraQ(c,pool){
     const cand=pool.filter(x=>x>=2&&x<=113);
     const id=cand.length?pickWeighted(cand):2;
     const after=Math.random()<0.5,ans=after?id+1:id-1;
-    const near=[id,ans+1,ans-1,ans+2,ans-2].filter(x=>x>=1&&x<=114&&x!==ans);
+    // НИ номера суры в вопросе, НИ номеров в вариантах: с ними «перед №97»
+    // решается вычитанием, а порядок ИМЁН (то, что и проверяем) знать не нужно.
+    // Сама спрошенная сура в дистракторы не идёт — своим же соседом не бывает.
+    const near=[ans+1,ans-1,ans+2,ans-2].filter(x=>x>=1&&x<=114&&x!==ans&&x!==id);
     const d=shuffle([...new Set(near)]).slice(0,3);
-    while(d.length<3){const x=1+rnd(114);if(x!==ans&&!d.includes(x))d.push(x);}
+    while(d.length<3){const x=1+rnd(114);if(x!==ans&&x!==id&&!d.includes(x))d.push(x);}
     return mcq("order",
-      `Какая сура идёт <b>${after?"после":"перед"}</b> «${esc(SU(id).ru)}» (№${id})?`,
-      "Порядок мусхафа",ans,d,x=>`${x}. ${esc(SU(x).ru)}`,
+      `Какая сура идёт <b>${after?"после":"перед"}</b> «${esc(SU(id).ru)}»?`,
+      "Порядок мусхафа",ans,d,x=>`${esc(SU(x).ru)} ${arSpan(SU(x).name)}`,
       `${after?"После":"Перед"} ${id}. ${esc(SU(id).ru)} идёт ${suraFact(ans)}`);
   }
   const base=pool.length>=4?pool:range(1,114);     // расстановка четырёх сур
@@ -827,6 +830,13 @@ function quizPool(bank,c){
     return true;
   });
 }
+// В банке верный ответ всегда стоит ПЕРВЫМ (`"a": 0`) — так его видно при
+// вычитке. Значит порядок вариантов обязан перемешиваться при показе, иначе
+// упражнение решается без единого вопроса: всегда жми первую кнопку.
+function shuffledQ(q){
+  const idx=shuffle(q.opts.map((_,i)=>i));
+  return Object.assign({},q,{opts:idx.map(i=>q.opts[i]),a:idx.indexOf(q.a)});
+}
 // Ступень требует своего уровня; если вопросов такого уровня не хватило, берём
 // ближайший — лучше слегка сбитая сложность, чем оборванная лестница.
 function pickRungs(pool){
@@ -836,7 +846,7 @@ function pickRungs(pool){
     for(let d=1;d<=4&&!cand.length;d++)
       cand=pool.filter(q=>!used.has(q.id)&&(q.level===lvl-d||q.level===lvl+d));
     if(!cand.length)break;
-    const q=pick(cand);used.add(q.id);out.push(q);
+    const q=pick(cand);used.add(q.id);out.push(shuffledQ(q));
   }
   return out;
 }
@@ -894,7 +904,7 @@ function hintSwap(){
   let cand=(LD.pool||[]).filter(x=>x.level===lvl&&!used.has(x.id));
   if(!cand.length)cand=(LD.pool||[]).filter(x=>!used.has(x.id));
   if(!cand.length)return;
-  LD.rungs[LD.idx]=pick(cand);
+  LD.rungs[LD.idx]=shuffledQ(pick(cand));
   LD.removed=[];LD.hints.swap=false;LD.book=null;render();
 }
 // «Открыть аят» — подсказка, а не ответ: показываем сам аят из ref, не разбор.
