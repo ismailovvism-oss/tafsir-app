@@ -59,11 +59,16 @@
   --text:#2D2A26;--text-sec:#5A5650;--text-muted:#AAA59C;
 }
 :root,[data-theme="light"],[data-theme="green"],[data-theme="blue"],[data-theme="gold"]{
-  --note-bg:#FFFBF0;--note-border:#E8D8A0;--note-color:#9E7C20;
+  /* Заметки выводятся из ТЕМЫ (2026-08-07): раньше жёстко-жёлтые (#FFFBF0)
+     выбивались из гаммы. color-mix от карточки+акцента → гармонично в любой
+     теме и в скинах (там свои bg-card/accent каскадом). */
+  --note-bg:color-mix(in srgb,var(--bg-card) 90%,var(--accent) 10%);
+  --note-border:color-mix(in srgb,var(--border) 55%,var(--accent) 45%);
+  --note-color:var(--accent);
   --tag-bg:#EDE7F6;--tag-color:#5E35B1;
   --sidebar-w:240px;
 }
-[data-theme="dark"]{--note-bg:#2A2818;--note-border:#4A4520;--note-color:#C8A830;--tag-bg:#2A2440;--tag-color:#9E8DE0}
+[data-theme="dark"]{--note-bg:color-mix(in srgb,var(--bg-card) 88%,var(--accent) 12%);--note-border:color-mix(in srgb,var(--border) 55%,var(--accent) 45%);--note-color:var(--accent);--tag-bg:#2A2440;--tag-color:#9E8DE0}
 
 /* ===== СКИНЫ ЧТЕНИЯ («манускрипт», ⚙ Вид → Оформление) =====
    Палитра переопределяется ЛОКАЛЬНО на .reading: внутренние элементы читают те
@@ -879,8 +884,16 @@ body.notouch .wbw-cell{pointer-events:none;cursor:default}
 .bn-arrow{background:var(--bg-alt);border:1px solid var(--border);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:inherit;font-size:16px;line-height:1;color:var(--text);flex:none}
 .bn-arrow:disabled{opacity:.35;cursor:default}
 .bn-mid{display:flex;align-items:center;gap:6px;flex:1;min-width:0}
-.bn-unit{flex:none;padding:6px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-family:inherit;font-size:12px;outline:none}
-.bn-val{flex:1;min-width:0;padding:6px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-family:inherit;font-size:13px;outline:none}
+/* Единый навигатор (2026-08-07): селекты .bn-unit/.bn-val заменены кнопкой-позицией */
+.bn-pos{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:6px;padding:7px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-family:inherit;font-size:13px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bn-pos:hover{border-color:var(--accent)}
+.bn-chev{opacity:.5;font-size:9px;flex-shrink:0}
+.ash-units{display:flex;gap:5px;padding:0 10px 10px}
+.ash-units button{flex:1;border:1px solid var(--border);background:var(--bg);border-radius:8px;padding:7px 3px;font-size:12px;font-weight:600;color:var(--text-sec);cursor:pointer;font-family:inherit}
+.ash-units button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.ash-numgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:6px;padding:2px 10px 8px}
+.ash-numgrid .ash-chip{text-align:center;padding:7px 0}
+.ash-numgrid .ash-chip.cur{background:var(--accent);border-color:var(--accent);color:#fff}
 /* Режим без касания: кнопочная панель вне области текста + блокировка касаний текста */
 .notouch-nav{display:flex;align-items:stretch;gap:6px;padding:6px 8px}
 .nt-btn{flex:1;min-height:48px;border:1px solid var(--border);border-radius:8px;background:var(--bg-alt);color:var(--text);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-user-select:none;user-select:none;touch-action:none;-webkit-tap-highlight-color:transparent}
@@ -6122,30 +6135,69 @@ async function copyAyahRange(aid){
     alert(`Скопировано: ${to-aid+1} ${to-aid+1===1?"аят":"аятов"} (${ST.surah}:${aid}${to>aid?"–"+to:""})`);
   }catch(e){alert("Не удалось скопировать");}
 }
-// -- НАВИГАТОР позиции (тап по «Сура · аят» в шапке) --
+// -- ЕДИНЫЙ НАВИГАТОР (тап по «Сура · аят» в шапке И по позиции в нижней панели) --
+// Единицы Сура/Страница/Джуз/Хизб (общие с листанием ‹ › низа, ST.navUnit),
+// умное поле («2:255» — аят, число — по активной единице, «:255» — аят текущей
+// суры) и сетки значений для джузов/хизбов.
 function openNavSheet(){
   if(ST.noTouch)return;
-  const rec=getRecent().slice(0,6);
-  const chips=rec.map(r=>{
-    const su=SURAHS.find(s=>s.id===r.surah);
-    return `<button class="ash-chip" onclick="closeAyahSheet();goAyah(${r.surah},${r.ayah||1})">${esc((su?su.ru:r.surah)+(r.ayah&&r.ayah>1?" · "+r.ayah:""))}</button>`;
-  }).join("");
-  const su=SURAHS.find(x=>x.id===ST.surah);
-  openSheetShell("Перейти","сура : аят",
-    `<div class="ash-jump"><input id="ashJumpInp" autocomplete="off" placeholder="2:255 — или номер суры" onkeydown="if(event.key==='Enter')ashJumpGo()"><button onclick="ashJumpGo()" title="Перейти">→</button></div>`+
-    `<div class="ash-chips" style="padding-top:0">`+
+  const u=ST.navUnit;
+  const units=[["surah","Сура"],["page","Страница"],["juz","Джуз"],["hizb","Хизб"]];
+  const ub=units.map(([v,n])=>`<button class="${v===u?'on':''}" onclick="navSheetUnit('${v}')">${n}</button>`).join("");
+  const ph=u==="page"?"Номер страницы (1–604)":u==="juz"?"Номер джуза (1–30)":u==="hizb"?"Номер хизба (1–60)":"2:255 · номер суры · :аят";
+  let body="";
+  const p=curPos();
+  if(u==="surah"){
+    const su=SURAHS.find(x=>x.id===ST.surah);
+    const rec=getRecent().slice(0,6);
+    const chips=rec.map(r=>{
+      const s2=SURAHS.find(s=>s.id===r.surah);
+      return `<button class="ash-chip" onclick="closeAyahSheet();goAyah(${r.surah},${r.ayah||1})">${esc((s2?s2.ru:r.surah)+(r.ayah&&r.ayah>1?" · "+r.ayah:""))}</button>`;
+    }).join("");
+    body=`<div class="ash-chips" style="padding-top:0">`+
       `<button class="ash-chip" onclick="closeAyahSheet();goAyah(${ST.surah},1)" title="К первому аяту текущей суры">⤒ Начало суры</button>`+
       `<button class="ash-chip" onclick="closeAyahSheet();goAyah(${ST.surah},${su?su.n:1})" title="К последнему аяту текущей суры">⤓ Конец суры</button>`+
-    `</div>`+
-    (chips?`<div class="ash-cap">Недавнее</div><div class="ash-chips">${chips}</div>`:"")+
-    `<div class="ash-div"></div><button class="ash-row" onclick="closeAyahSheet();openSurahsTab()">${IC.list}Все суры и джузы<span class="sub">→</span></button>`);
+      `</div>`+
+      (chips?`<div class="ash-cap">Недавнее</div><div class="ash-chips">${chips}</div>`:"")+
+      `<div class="ash-div"></div>`+
+      (booksWithMuqaddima().length?`<button class="ash-row" onclick="closeAyahSheet();openBookIntro()">§ Введение (المقدمة)<span class="sub">→</span></button>`:"")+
+      `<button class="ash-row" onclick="closeAyahSheet();openSurahsTab()">${IC.list}Все суры и джузы<span class="sub">→</span></button>`;
+  }else if(u==="juz"){
+    body=`<div class="ash-cap">Джузы</div><div class="ash-numgrid">`+
+      Array.from({length:30},(_,i)=>`<button class="ash-chip ${i+1===p.juz?'cur':''}" onclick="closeAyahSheet();navJumpJuz(${i+1})">${i+1}</button>`).join("")+`</div>`;
+  }else if(u==="hizb"){
+    body=`<div class="ash-cap">Хизбы</div><div class="ash-numgrid">`+
+      Array.from({length:60},(_,i)=>`<button class="ash-chip ${i+1===p.hizb?'cur':''}" onclick="closeAyahSheet();navJumpHizb(${i+1})">${i+1}</button>`).join("")+`</div>`;
+  }else{
+    const total=qpcMeta&&qpcMeta.pages||604;
+    body=`<div class="ash-cap">Сейчас — страница ${p.page} из ${total}</div>`+
+      `<div class="ash-chips"><button class="ash-chip" onclick="closeAyahSheet();navJumpPage(${Math.max(1,p.page-1)})">‹ предыдущая</button><button class="ash-chip" onclick="closeAyahSheet();navJumpPage(${Math.min(total,p.page+1)})">следующая ›</button></div>`;
+  }
+  openSheetShell("Перейти","",
+    `<div class="ash-units">${ub}</div>`+
+    `<div class="ash-jump"><input id="ashJumpInp" autocomplete="off" placeholder="${ph}" onkeydown="if(event.key==='Enter')ashJumpGo()"><button onclick="ashJumpGo()" title="Перейти">→</button></div>`+
+    body);
   const inp=document.getElementById("ashJumpInp");if(inp&&!isM())inp.focus();
 }
+// Смена единицы: общая с листанием ‹ › нижней панели (setNavUnit persist+перерисовка низа)
+function navSheetUnit(u){setNavUnit(u);openNavSheet();}
 function ashJumpGo(){
   const inp=document.getElementById("ashJumpInp");if(!inp)return;
-  const ref=parseAyahRef(inp.value);
-  if(!ref){inp.classList.add("bad");inp.select();setTimeout(()=>inp.classList.remove("bad"),700);return;}
-  closeAyahSheet();goAyahRef(ref);
+  const v=inp.value.trim();
+  const bad=()=>{inp.classList.add("bad");inp.select();setTimeout(()=>inp.classList.remove("bad"),700);};
+  if(!v){bad();return;}
+  const go=ref=>{closeAyahSheet();goAyahRef(ref);};
+  if(/^:\d+$/.test(v)){const r=parseAyahRef(v.slice(1));r?go(r):bad();return;}   // «:255» — аят текущей суры
+  if(v.includes(":")){const r=parseAyahRef(v);r?go(r):bad();return;}             // «2:255»
+  const n=parseInt(v,10);
+  if(isFinite(n)){
+    const u=ST.navUnit,total=qpcMeta&&qpcMeta.pages||604;
+    if(u==="page"&&n>=1&&n<=total){closeAyahSheet();navJumpPage(n);return;}
+    if(u==="juz"&&n>=1&&n<=30){closeAyahSheet();navJumpJuz(n);return;}
+    if(u==="hizb"&&n>=1&&n<=60){closeAyahSheet();navJumpHizb(n);return;}
+    if(u==="surah"&&n>=1&&n<=114){closeAyahSheet();goSurah(n);return;}
+  }
+  const r=parseAyahRef(v);r?go(r):bad();   // запасной путь: «255» вне диапазона единицы = аят текущей суры
 }
 function openSurahsTab(){
   ST.sidebarOpen=true;
@@ -8214,40 +8266,29 @@ function renderBottomNav(){
     bindNoTouchScroll(el);
     return;
   }
-  const p=curPos(),u=ST.navUnit,total=qpcMeta&&qpcMeta.pages||604;
-  const units=[["surah","Сура"],["page","Страница"],["juz","Джуз"],["hizb","Хизб"]];
-  const unitSel=`<select class="bn-unit" onchange="setNavUnit(this.value)" title="Что листать">`+
-    units.map(([v,n])=>`<option value="${v}" ${v===u?"selected":""}>${n}</option>`).join("")+`</select>`;
-  let opts,idx,max;
-  if(u==="surah"){
-    const opt=s=>{const nosrc=ST.srcMode&&ST.srcSel&&!covPairs(ST.srcSel,s.id);return`<option value="${s.id}" ${s.id===p.surah?"selected":""}>${s.id}. ${esc(s.ru)}${nosrc?" ∅":""}</option>`;};
-    const introOpt=booksWithMuqaddima().length?`<option value="intro" ${ST.bookIntro?"selected":""}>§ Введение (المقدمة)</option>`:"";
-    if(qpcMeta){ // объединённый пикер: «▸ Джуз N (начало)» как ссылка + суры джуза, в мусхафной очередности
-      let o=introOpt;
-      for(let J=1;J<=30;J++){
-        const sin=SURAHS.filter(s=>juzOfSurah(s.id)===J);
-        const js=qpcMeta.juzStart[J];const su=js&&SURAHS.find(x=>x.id===js.surah);
-        const ref=su?` — ${esc(su.ru)}${js.ayah>1?" : "+js.ayah:""}`:"";
-        o+=`<optgroup label="Джуз ${J}">`
-          +`<option value="j${J}">▸ Джуз ${J} (начало)${ref}</option>`
-          +sin.map(opt).join("")+`</optgroup>`;
-      }
-      opts=o;
-    }else opts=introOpt+SURAHS.map(opt).join("");
-    idx=p.surah;max=114;
-  }
-  else if(u==="page"){opts=Array.from({length:total},(_,i)=>`<option value="${i+1}" ${i+1===p.page?"selected":""}>Страница ${i+1}</option>`).join("");idx=p.page;max=total;}
-  else if(u==="juz"){opts=Array.from({length:30},(_,i)=>`<option value="${i+1}" ${i+1===p.juz?"selected":""}>Джуз ${i+1}</option>`).join("");idx=p.juz;max=30;}
-  else{opts=Array.from({length:60},(_,i)=>`<option value="${i+1}" ${i+1===p.hizb?"selected":""}>Хизб ${i+1}</option>`).join("");idx=p.hizb;max=60;}
-  const valSel=`<select class="bn-val" onchange="navJumpValue(this.value)">${opts}</select>`;
+  // ЕДИНЫЙ НАВИГАТОР (2026-08-07): вместо двух селектов — кнопка-подпись позиции,
+  // открывающая тот же лист «Перейти», что и позиция в шапке (openNavSheet, там
+  // единицы Сура/Страница/Джуз/Хизб, поле и сетки). Стрелки ‹ › остаются.
+  const p=curPos(),total=qpcMeta&&qpcMeta.pages||604;
   // arrow bounds follow the STEP unit (page in mushaf mode), not the picker
   const su=stepUnit();
   const aidx=su==="surah"?p.surah:su==="page"?p.page:su==="juz"?p.juz:p.hizb;
   const amax=su==="surah"?114:su==="page"?total:su==="juz"?30:60;
   const tip=su==="page"?"страница":su==="surah"?"сура":su==="juz"?"джуз":"хизб";
   el.innerHTML=`<button class="bn-arrow" onclick="stepSection(-1)" ${aidx<=1?"disabled":""} title="Предыдущая ${tip}">‹</button>`+
-    `<span class="bn-mid">${unitSel}${valSel}</span>`+
+    `<button class="bn-pos" onclick="openNavSheet()" title="Перейти: сура, аят, джуз, хизб, страница">${navPosLabel(p,total)}<span class="bn-chev">▾</span></button>`+
     `<button class="bn-arrow" onclick="stepSection(1)" ${aidx>=amax?"disabled":""} title="Следующая ${tip}">›</button>`;
+}
+// Подпись позиции для нижней панели — по текущей единице листания
+function navPosLabel(p,total){
+  const s=SURAHS.find(x=>x.id===p.surah);
+  const sn=s?`${s.id}. ${esc(s.ru)}`:"";
+  if(ST.pageMode)return`стр. ${p.page} / ${total} · ${sn}`;
+  const u=ST.navUnit;
+  if(u==="page")return`стр. ${p.page} · ${sn}`;
+  if(u==="juz")return`джуз ${p.juz} · ${sn}`;
+  if(u==="hizb")return`хизб ${p.hizb} · ${sn}`;
+  return sn;
 }
 // Горизонтальный свайп по области чтения → пред./след. раздел. Включается
 // настройкой ST.swipeNav (⚙ Вид). Отключён в «Колонках» (свой горизонтальный
@@ -9150,8 +9191,9 @@ document.addEventListener("keydown",e=>{
     if(ST.pageMode||ST.homeMode||ST.hifzMode||ST.eruditMode)return;
     const bar=document.getElementById("centerBar");if(!bar)return;
     const y=t.scrollTop;
-    if(Math.abs(y-lastY)>4)bar.classList.toggle("cb-hide",y>lastY&&y>80);
-    lastY=y;
+    const d=y-lastY;lastY=y;
+    if(Math.abs(d)>400)return;                        // прыжок (переход к аяту) — не прятать
+    if(Math.abs(d)>4)bar.classList.toggle("cb-hide",d>0&&y>80);
   },true);
 })();
 loadConfig();
