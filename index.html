@@ -349,7 +349,7 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .ab-note-expand{background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:3px 9px;font:inherit;font-size:11px;font-weight:600;color:var(--note-color);cursor:pointer}
 .ab-note-expand:hover{background:var(--note-bg);border-color:var(--note-color)}
 /* Большой редактор заметки (модал на весь экран) */
-.ne-ovl{position:fixed;inset:0;z-index:140;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:20px}
+.ne-ovl{position:fixed;inset:0;z-index:320;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:20px}
 .ne-box{display:flex;flex-direction:column;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 48px rgba(0,0,0,.4);width:100%;max-width:920px;height:85vh;max-height:85vh;overflow:hidden}
 .ne-head{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border)}
 .ne-title{font-size:14px;font-weight:700;color:var(--text);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -5488,7 +5488,8 @@ function buildAyahBody(aid,enabled,loaded){
     if(t.id==="_notes"){
       const note=getNote(ST.surah,aid);
       html+=`<div class="ab-entry" style="background:var(--note-bg)">
-        <div class="ab-entry-label" style="color:var(--note-color)">📝 Мои заметки</div>
+        <div class="ab-entry-label" style="color:var(--note-color);display:flex;align-items:center">📝 Мои заметки
+          <button class="ab-note-expand" style="margin-left:auto" onclick="openNoteEditor(${ST.surah},${aid})" title="Полноэкранный редактор размышления: аят перед глазами, каркас вопросов, markdown">⤢ Развернуть</button></div>
         <textarea class="ab-note-area" placeholder="Ваши мысли..." oninput="saveNote(${ST.surah},${aid},this.value)">${esc(note)}</textarea>
       </div>`;
     } else {
@@ -6079,9 +6080,13 @@ function closeNoteEditor(){
   if(noteEd){                         // синхронизируем индикаторы и инлайн-поле под аятом
     const a=noteEd.a,has=hasNote(noteEd.s,a);
     const block=document.querySelector(`.ayah-block[data-aid="${a}"]`);
+    const stuTa=document.querySelector(".stu-note-ta");
+    if(stuTa)stuTa.value=getNote(noteEd.s,noteEd.a);
+    refreshAyahMarks(a);
     if(block){
       const btn=block.querySelector(".ab-note-btn");if(btn){btn.classList.toggle("has",has);btn.classList.remove("on");}
       const inlineTa=block.querySelector(".ab-note-inline textarea");if(inlineTa)inlineTa.value=getNote(noteEd.s,a);
+      const layerTa=block.querySelector(".ab-note-area");if(layerTa)layerTa.value=getNote(noteEd.s,a);
       const dots=block.querySelector(".ab-tag-dots");if(dots)dots.innerHTML=has?'<span class="ab-note-dot"></span>':'';
     }
   }
@@ -8933,7 +8938,8 @@ async function renderStuBody(){
               :html+`<div class="vp-note">Пословный разбор для этого аята недоступен.</div>`)+wbwAttrHTML();
   }else{
     const tags=getATList(s,a);
-    html+=`<div class="stu-entry"><div class="who">Заметка</div>
+    html+=`<div class="stu-entry"><div class="who" style="display:flex;align-items:center">Заметка
+        <button class="ab-note-expand" style="margin-left:auto" onclick="openNoteEditor(${s},${a})" title="Полноэкранный редактор размышления">⤢ Редактор</button></div>
       <textarea class="stu-note-ta" placeholder="Заметка к аяту ${s}:${a}…" oninput="saveNote(${s},${a},this.value);refreshAyahMarks(${a})">${esc(getNote(s,a))}</textarea></div>`+
       `<div class="stu-entry"><div class="who">Теги</div><div class="stu-tagrow">${tags.length?tags.map(p=>`<span class="stu-tag">${esc(p.split("/").pop())}</span>`).join(""):'<span style="color:var(--text-muted);font-size:12px">нет тегов</span>'}
       <button class="ash-chip" onclick="openTagPopup(${a},this)">🏷 Изменить…</button></div></div>`;
