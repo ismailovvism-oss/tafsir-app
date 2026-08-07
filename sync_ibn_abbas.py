@@ -79,6 +79,21 @@ def sync_monolith(scratch: Path, sura: str) -> None:
             raise RuntimeError(f"monolith verification failed: {target}")
         print(f"synced {sura}: {len(chunk)} entries -> {target.relative_to(ROOT)}")
 
+    sync_chunk_index(scratch, sura, chunk_path.parent)
+
+
+def sync_chunk_index(scratch: Path, sura: str, chunk_dir: Path) -> None:
+    """Keep the chunk list next to the chunks in step with a newly added sura."""
+    index_path = chunk_dir / "index.json"
+    with index_path.open(encoding="utf-8") as source:
+        surahs = json.load(source)
+    if any(str(entry) == str(sura) for entry in surahs):
+        return
+    backup_once(index_path, scratch / "backups" / "chunk-index-ibn_abbas.json.before-sync")
+    surahs = sorted(surahs + [str(sura)], key=int)
+    atomic_json(index_path, surahs)
+    print(f"synced index of chunks: {len(surahs)} suras -> {index_path.relative_to(ROOT)}")
+
 
 def sync_index(scratch: Path) -> None:
     source = ROOT / "data" / "index" / f"{SOURCE_ID}.json"

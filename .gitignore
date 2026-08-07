@@ -154,3 +154,7 @@ data/index/detyam.json
 data/tafsirs/podrostkam.json
 data/tafsirs/podrostkam/
 data/index/podrostkam.json
+
+# временные копии страницы для headless-проверок (см. CLAUDE.md)
+_test.html
+_swtest*.html
