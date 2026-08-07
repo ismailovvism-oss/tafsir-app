@@ -1514,6 +1514,15 @@ svg.svgi{width:19px;height:19px;stroke:currentColor;stroke-width:1.9;fill:none;s
 .stu-note-ta{width:100%;min-height:130px;border:1px solid var(--border);border-radius:10px;background:var(--bg-card);color:var(--text);font-family:inherit;font-size:13.5px;line-height:1.6;padding:10px 12px;resize:vertical}
 .stu-tagrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px}
 .stu-tag{border:1px solid var(--border);background:var(--bg-alt);border-radius:999px;padding:4px 11px;font-size:12px;color:var(--text-sec)}
+/* ═══ Этап 3, порция 3: «По памяти» в hifz-ридере + полировка ═══ */
+.hreader .hr-body.hr-veiled .hr-ar,.hreader .hr-body.hr-veiled .hr-ru{filter:blur(14px);opacity:.3;pointer-events:none}
+.hr-veil-hint{display:none;position:absolute;inset:0;align-items:center;justify-content:center;pointer-events:none;
+  font-size:14px;color:var(--text-sec);text-align:center;padding:0 30px;line-height:1.6}
+.hr-body.hr-veiled~.hr-veil-hint,.hr-main:has(.hr-veiled) .hr-veil-hint{display:flex}
+/* тактильный отклик на новых контролах; глобальный видимый фокус с клавиатуры */
+.ab-ico:active,.ab-num-btn:active,.ash-row:active,.cb-chip:active,.cb-home:active,.hdr-menu button:active,.rp-preset:active{transform:scale(.95)}
+@media (prefers-reduced-motion:reduce){.ab-ico:active,.ab-num-btn:active,.ash-row:active,.cb-chip:active,.cb-home:active,.hdr-menu button:active,.rp-preset:active{transform:none}}
+button:focus-visible,[onclick]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 </style>
 </head>
 <body data-theme="green">
@@ -1886,6 +1895,8 @@ function hrStart(){
   }
   HR.s=s;HR.a=Math.min(a,(SURAHS[s-1]||{n:1}).n);HR.swiped=false;
   HR.ru=!!gs("hrRu",false);                    // показ перевода переживает выход из ридера
+  HR.hide=!!gs("hrHide",false);                // «по памяти»: аят скрыт, 1-й тап — показать
+  HR.veiled=HR.hide;
   hrOpen=true;pushOverlay();
   document.body.classList.add("hr-open");
   const el=document.createElement("div");
@@ -1893,12 +1904,14 @@ function hrStart(){
   el.innerHTML=`<div class="hr-top"><span class="hr-key" id="hrKey"></span>
       <div class="hr-tools">
         <button class="hr-b" data-act="top" title="В начало этой суры">⤒ к 1-му</button>
+        <button class="hr-b" id="hrHideBtn" data-act="hide" title="По памяти: аят скрыт — вспомни, первый тап показывает, второй листает">по памяти</button>
         <button class="hr-b" id="hrRuBtn" data-act="ru" title="Перевод под аятом">перевод</button>
         <button class="hr-x" data-act="close" title="Закрыть">✕</button>
       </div></div>
-    <div class="hr-main"><div class="hr-body">
+    <div class="hr-main" style="position:relative"><div class="hr-body" id="hrBody">
       <div class="hr-ar arabic-main" id="hrAr"></div>
-      <div class="hr-ru" id="hrRu"></div></div></div>
+      <div class="hr-ru" id="hrRu"></div></div>
+      <div class="hr-veil-hint">Вспомни аят и прочитай вслух.<br>Тап — показать, ещё тап — дальше.</div></div>
     <div class="hr-bottom"><button class="hr-prev" data-act="prev" title="Предыдущий аят">‹</button>
       <span class="hr-hint">Тап в любом месте — следующий аят</span></div>`;
   document.body.appendChild(el);HR.el=el;
@@ -1908,9 +1921,11 @@ function hrStart(){
       if(act==="close")hrStop();
       else if(act==="ru")hrToggleRu();
       else if(act==="top")hrToSuraStart();
+      else if(act==="hide")hrToggleHide();
       else hrStep(-1);
       return;}
     if(HR.swiped){HR.swiped=false;return;}     // click-хвост свайпа — не листать второй раз
+    if(HR.hide&&HR.veiled){HR.veiled=false;hrVeil();return;}  // «по памяти»: 1-й тап раскрывает
     hrStep(1);                                 // тап по любому месту = дальше
   });
   // свайпы ←/→ (как в диафильме): влево = следующий, вправо = предыдущий
@@ -1935,7 +1950,21 @@ function hrStep(d){
   let s=HR.s,a=HR.a+d;
   if(a<1){ if(s>1){s--;a=SURAHS[s-1].n;} else a=1; }
   else if(a>SURAHS[s-1].n){ if(s<114){s++;a=1;} else a=SURAHS[s-1].n; }
-  HR.s=s;HR.a=a;hrRender();
+  HR.s=s;HR.a=a;
+  if(HR.hide)HR.veiled=true;                   // «по памяти»: новый аят снова скрыт
+  hrRender();
+}
+// «По памяти» (Ayat-паттерн): аят скрыт размытием — вспомни и прочитай вслух,
+// первый тап показывает (сверка), второй листает. Вуаль кроет и перевод.
+function hrToggleHide(){
+  HR.hide=!HR.hide;ss("hrHide",HR.hide);
+  HR.veiled=HR.hide;
+  hrVeil();
+  const b=document.getElementById("hrHideBtn");if(b)b.classList.toggle("on",HR.hide);
+}
+function hrVeil(){
+  const body=document.getElementById("hrBody");
+  if(body)body.classList.toggle("hr-veiled",!!(HR.hide&&HR.veiled));
 }
 // Перевод под аятом: подсказка для тех мест, где память держится на смысле.
 // Выбор источника — общий с проверкой заучивания (hifzRuId: первый включённый
@@ -1955,6 +1984,9 @@ async function hrRender(){
   const ruEl=document.getElementById("hrRu"),ruBtn=document.getElementById("hrRuBtn");
   if(keyEl)keyEl.textContent=HR.s+":"+HR.a+" · "+(su?su.ru:"");
   if(ruBtn)ruBtn.classList.toggle("on",!!HR.ru);
+  const hideBtn=document.getElementById("hrHideBtn");
+  if(hideBtn)hideBtn.classList.toggle("on",!!HR.hide);
+  hrVeil();
   const s=HR.s,a=HR.a;
   let t=getArabicFromCache(s,a);
   if(!t){                                      // чанк суры ещё не загружен
