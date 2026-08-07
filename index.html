@@ -6870,9 +6870,9 @@ function quranBlockHTML(){
   // «Со словами» — слой над той же поверхностью, как и таджвид (а не редакция:
   // редакции отвечают на вопрос «какой текст», слой — «как он разложен»).
   const wl=`<label class="vp-check"><input type="checkbox" ${ST.wbwLayer?"checked":""} onchange="toggleWbwLayer()"> Со словами (пословный разбор)</label>`;
-  const wlNote=ST.wbwLayer&&tajweedActive()
-    ? `<div class="vp-note">Со словами + текстовое начертание: цвета таджвида на словах не показываются — разметка правил привязана к сплошному тексту. Нужны и слова, и цвета — включите печатное начертание (⚙ Вид), там цвет в самом шрифте.</div>`
-    : "";
+  // (2026-08-07: цвета таджвида работают и на словах текстовых начертаний —
+  //  слова режутся из сплошного _arabic; старая оговорка снята)
+  const wlNote="";
   return `<div class="rp-quran"><div class="rp-sec-head">🕋 Оригинал (арабский текст)</div>
     <div class="rp-q-body">${rows}${tj}${wl}
     <div class="vp-note">Правила чтения цветом — в любом начертании: в печатном это цветное издание 1441 г.х., в остальных — раскраска текста. Действует для редакции «С огласовками»; касание окрашенной буквы — название правила.</div>
@@ -8678,10 +8678,13 @@ async function renderStuBody(){
     }
   }else if(tab==="words"){
     // напрямую (не loadWbwLayer: тот выходит при выключенном слое «Со словами»)
-    const loaded={};
+    const loaded={_arabic:getChunk("_arabic",s)};   // сплошной текст — для слов-кусков и таджвида
     const ps=[loadWbwWords(s).then(d=>loaded.__wbwW=d)];
     if(activePack())ps.push(loadPackSurah(ST.arFont,s).then(d=>loaded.__qpc=d));
-    else ps.push(loadWbwMorph(s).then(d=>loaded.__wbwM=d));
+    else{
+      ps.push(loadWbwMorph(s).then(d=>loaded.__wbwM=d));
+      if(tajweedActive())ps.push(loadTajweed(s).then(d=>loaded.__tj=d));
+    }
     await Promise.all(ps);
     if(stale())return;
     const grid=wbwGridHTML(s,a,loaded);
@@ -8728,15 +8731,53 @@ function wbwGridHTML(surah,aid,loaded){
   }else{
     const ws=(loaded.__wbwM||{})[key];
     if(!ws)return "";
-    for(const pos of Object.keys(ws).sort((a,b)=>+a-+b)){
-      const text=ws[pos].map(sg=>sg.ar||"").join("");
-      cells+=wbwCellHTML(`${surah}:${aid}:${pos}`,`<span class="wbw-ar wbw-ar-text">${esc(text)}</span>`,gloss(pos));
+    const posKeys=Object.keys(ws).sort((a,b)=>+a-+b);
+    // ЦВЕТА ТАДЖВИДА НА СЛОВАХ (2026-08-07): пословный счёт сплошного _arabic
+    // (по пробелам, без токенов-знаков, минус басмала в 1-х аятах) совпадает с
+    // корпусом на 6232/6236 аятах — тогда слово рисуется КУСКОМ _arabic, и его
+    // фрагмент разметки таджвида пересчитывается в локальные координаты. В 4
+    // аятах-исключениях (напр. 37:130 «Иль-Ясин») — старая склейка морфологии.
+    const arFull=(loaded["_arabic"]||{})[key];
+    const aw=arFull?arWordTokens(arFull,surah,aid,posKeys.length):null;
+    if(aw){
+      const tj=loaded.__tj&&loaded.__tj[key];
+      posKeys.forEach((pos,i)=>{
+        const t=aw[i];
+        const inner=tj?tajweedSliceHTML(arFull,tj,t.off,t.off+t.w.length):t.w;
+        cells+=wbwCellHTML(`${surah}:${aid}:${pos}`,`<span class="wbw-ar wbw-ar-text">${inner}</span>`,gloss(pos));
+      });
+    }else{
+      for(const pos of posKeys){
+        const text=ws[pos].map(sg=>sg.ar||"").join("");
+        cells+=wbwCellHTML(`${surah}:${aid}:${pos}`,`<span class="wbw-ar wbw-ar-text">${esc(text)}</span>`,gloss(pos));
+      }
     }
   }
   if(!cells)return "";
   // Концевой знак аята не рисуем: у блока аята в ленте есть свой номер (в кружке),
   // а в паке этот знак — глиф, которого у текстовых начертаний просто нет.
   return `<div class="wbw-grid">${cells}</div>`;
+}
+// Слова сплошного _arabic с их смещениями: токен считается словом, только если
+// содержит арабскую букву (знаки вакфа ۛ ۖ — не слова); в 1-х аятах сур (кроме
+// 1 и 9) отрезается басмала (в корпусе её нет). null = счёт не сошёлся.
+function arWordTokens(t,surah,aid,expectN){
+  const re=/[^ ]+/g,out=[];let m;
+  while((m=re.exec(t)))if(/[ء-يٱ]/.test(m[0]))out.push({w:m[0],off:m.index});
+  if(out.length===expectN)return out;
+  if(aid===1&&surah!==1&&surah!==9&&out.length===expectN+4)return out.slice(4);
+  return null;
+}
+// Фрагмент разметки таджвида для подстроки [a,b): глобальные спаны аята
+// клипуются пересечением и сдвигаются в координаты слова.
+function tajweedSliceHTML(text,spans,a,b){
+  const local=[];
+  for(const sp of spans){
+    const s=Math.max(sp[0],a),e=Math.min(sp[1],b);
+    if(s<e)local.push([s-a,e-a,sp[2]]);
+  }
+  const w=text.slice(a,b);
+  return local.length?tajweedHTML(w,local):w;
 }
 // Атрибуция глосса/разбора — требование лицензий (data-quran CC BY-NC-ND, корпус GPL),
 // поэтому висит там же, где показан глосс: под лентой, пока слой включён.
