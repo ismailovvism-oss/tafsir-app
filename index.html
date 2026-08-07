@@ -359,6 +359,14 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .ne-close{background:none;border:none;font-size:24px;line-height:1;color:var(--text-muted);cursor:pointer;padding:0 4px;border-radius:6px}
 .ne-close:hover{color:var(--text);background:var(--bg-alt)}
 .ne-toolbar{display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--bg-alt)}
+/* Тадаббур-верстак, фаза 1: аят в шапке редактора; слова — кнопки-вставки */
+.ne-ayah{padding:8px 16px 6px;border-bottom:1px solid var(--border);max-height:30vh;overflow-y:auto;background:var(--bg)}
+.ne-ayah-ar{font-family:'Scheherazade New','Amiri Quran','Noto Naskh Arabic',serif;font-size:calc(21px*var(--rs-ar,1));line-height:2;direction:rtl;text-align:right;color:var(--text)}
+.ne-w{cursor:pointer;border-radius:5px;padding:0 1px}
+.ne-w:hover{background:var(--accent-bg)}
+.ne-ayah-ru{font-size:12.5px;line-height:1.55;color:var(--text-sec);margin-top:4px}
+.ayah-ref{color:var(--accent);font-weight:600;text-decoration:none;border-bottom:1px dashed var(--accent)}
+.ayah-ref:hover{background:var(--accent-bg)}
 .ne-btn{min-width:30px;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font:inherit;font-size:13px;line-height:1;color:var(--text-sec);cursor:pointer}
 .ne-btn:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-bg)}
 .ne-sep{width:1px;align-self:stretch;background:var(--border);margin:2px 3px}
@@ -5908,19 +5916,23 @@ function openNoteEditor(s,a){
   const tb=(t,title,inner)=>`<button class="ne-btn" onclick="neFmt('${t}')" title="${title}">${inner}</button>`;
   ov.innerHTML=`<div class="ne-box" data-m="edit" role="dialog" aria-modal="true">
     <div class="ne-head">
-      <span class="ne-title">📝 Заметка · аят ${a}</span>
+      <span class="ne-title">📝 Размышление · ${s}:${a}</span>
       <span class="ne-modes">
         <button class="ne-mode on" data-m="edit" onclick="neMode('edit')">✏ Правка</button>
         <button class="ne-mode" data-m="preview" onclick="neMode('preview')">👁 Просмотр</button>
+        <button class="ne-mode" onclick="neExport()" title="Скачать заметку с аятом файлом markdown (для Obsidian и т.п.)">⬇ .md</button>
       </span>
       <button class="ne-close" onclick="closeNoteEditor()" aria-label="Закрыть">×</button>
     </div>
+    <div class="ne-ayah" id="neAyah"><div class="ne-ayah-ar" id="neAyahAr">…</div><div class="ne-ayah-ru" id="neAyahRu"></div></div>
     <div class="ne-toolbar">
       ${tb('bold','Жирный','<b>Ж</b>')}${tb('italic','Курсив','<i>К</i>')}${tb('mono','Моноширинный','&lt;/&gt;')}
       <span class="ne-sep"></span>
       ${tb('h','Заголовок','H')}${tb('quote','Цитата','❝')}${tb('ul','Список','•')}${tb('ol','Нумерованный список','1.')}
       <span class="ne-sep"></span>
       ${tb('hr','Линия','―')}${tb('table','Таблица','▦')}${tb('card','Карточка [[ ::подсказка ]]','[[ ]]')}
+      <span class="ne-sep"></span>
+      ${tb('tmpl','Каркас размышления: 4 вопроса тадаббура','☰ Каркас')}
     </div>
     <div class="ne-body">
       <div class="ne-pane edit"><textarea id="neArea" class="ne-area" placeholder="Пишите заметку… поддерживается markdown: **жирный**, *курсив*, &gt; цитата, # заголовок, списки, | таблицы |" oninput="neInput()">${esc(getNote(s,a))}</textarea></div>
@@ -5929,7 +5941,36 @@ function openNoteEditor(s,a){
   </div>`;
   ov.style.display="flex";
   neInput(); // первичный предпросмотр
+  neLoadAyah(s,a); // аят в шапке редактора (слова кликабельны — вставка в текст)
   const ta=document.getElementById("neArea");if(ta){ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);}
+}
+// Аят внутри редактора (фаза 1 «Тадаббур-верстака»): арабский со словами-кнопками
+// (тап по слову — вставка в заметку как цитата) + первый включённый перевод.
+async function neLoadAyah(s,a){
+  try{await loadChunk("_arabic",s);}catch(e){}
+  if(!noteEd||noteEd.s!==s||noteEd.a!==a)return;
+  const arEl=document.getElementById("neAyahAr"),ruEl=document.getElementById("neAyahRu");
+  const ar=getArabicFromCache(s,a)||"";
+  if(arEl)arEl.innerHTML=ar?ar.split(" ").filter(Boolean).map(w=>`<span class="ne-w" onclick="neInsert(this.textContent+' ')" title="Вставить слово в заметку">${w}</span>`).join(" "):"—";
+  const t=getEnabledList().find(x=>x.kind!=="image"&&x.kind!=="quran"&&x.id!=="_notes"&&x.lang!=="ar")||CONFIG.tafsirs.find(x=>x.id==="kuliev");
+  if(!t||!ruEl)return;
+  try{await loadChunk(t.id,s);}catch(e){}
+  if(!noteEd||noteEd.s!==s||noteEd.a!==a)return;
+  ruEl.textContent=getChunk(t.id,s)?.[String(a)]||"";
+}
+// Экспорт «аят + перевод + размышление» файлом markdown (совместимо с Obsidian)
+function neExport(){
+  if(!noteEd)return;
+  const {s,a}=noteEd;
+  const su=SURAHS.find(x=>x.id===s);
+  const ar=getArabicFromCache(s,a)||"";
+  const ruEl=document.getElementById("neAyahRu");
+  const md=`# ${su?su.ru:s} ${s}:${a}\n\n> ${ar}\n\n> ${ruEl?ruEl.textContent:""}\n\n---\n\n${getNote(s,a)}\n`;
+  const b=new Blob([md],{type:"text/markdown"});
+  const u=URL.createObjectURL(b);
+  const link=document.createElement("a");link.href=u;link.download=`tadabbur-${s}-${a}.md`;
+  document.body.appendChild(link);link.click();link.remove();
+  setTimeout(()=>URL.revokeObjectURL(u),3000);
 }
 function neMode(m){
   const box=document.querySelector("#neOvl .ne-box");if(!box)return;
@@ -5943,7 +5984,32 @@ function neInput(){
   const ta=document.getElementById("neArea");if(!ta)return;
   saveNote(noteEd.s,noteEd.a,ta.value);
   const pv=document.getElementById("nePreview");
-  if(pv)pv.innerHTML=ta.value.trim()?mdRender(ta.value):'<span style="color:var(--text-muted)">Здесь появится предпросмотр…</span>';
+  if(pv)pv.innerHTML=ta.value.trim()?ayahLinkify(mdRender(ta.value)):'<span style="color:var(--text-muted)">Здесь появится предпросмотр…</span>';
+}
+// Адреса аятов в заметке («2:255») — кликабельные ссылки (фаза 1 тадаббура).
+// Только в предпросмотре ЗАМЕТОК (в тафсирах не линкуем — там свои отсылки).
+function ayahLinkify(html){
+  return html.replace(/(^|[\s(>«;,—-])(\d{1,3}):(\d{1,3})(?![\d:])/g,(m,pre,s,a)=>{
+    const su=SURAHS.find(x=>x.id===+s);
+    if(!su||+a<1||+a>su.n)return m;
+    return `${pre}<a href="#" class="ayah-ref" onclick="closeNoteEditor();closeAyahSheet();goAyah(${+s},${+a});return false">${s}:${a}</a>`;
+  });
+}
+// Обратные связи: в каких МОИХ заметках упомянут адрес этого аята
+function noteBacklinks(s,a){
+  const notes=getNotes(),self=s+":"+a,out=[];
+  const re=new RegExp("(^|[^0-9:])"+s+":"+a+"($|[^0-9])");
+  for(const k in notes){if(k!==self&&notes[k]&&re.test(notes[k]))out.push(k);}
+  return out;
+}
+function openBacklinksSheet(aid){
+  const bl=noteBacklinks(ST.surah,aid);
+  const rows=bl.map(k=>{
+    const [s2,a2]=k.split(":").map(Number);
+    const su=SURAHS.find(x=>x.id===s2);
+    return `<button class="ash-row" onclick="closeAyahSheet();goAyah(${s2},${a2})">${IC.pen}<span style="min-width:0"><b>${su?esc(su.ru):s2} ${s2}:${a2}</b><br><span style="font-size:11.5px;color:var(--text-muted)">${esc(noteSnippet(getNotes()[k]||"",90))}</span></span></button>`;
+  }).join("");
+  openSheetShell(`Упоминания ${ST.surah}:${aid}`,"в ваших заметках",rows||`<div class="vp-note">Нет упоминаний.</div>`);
 }
 // Оборачивание выделения / вставка markdown — только синтаксис, который умеет mdRender.
 function neWrap(before,after,placeholder){
@@ -5983,6 +6049,7 @@ function neFmt(type){
   else if(type==="hr")neInsert("\n\n---\n\n");
   else if(type==="table")neInsert("\n\n| Столбец | Столбец |\n| --- | --- |\n| ячейка | ячейка |\n\n");
   else if(type==="card")neWrap("[[","::подсказка]]","слово");
+  else if(type==="tmpl")neInsert("\n\n### Почему именно эти слова?\n\n\n\n### Что аят говорит обо мне?\n\n\n\n### С какими аятами связан?\n\n\n\n### Какое действие следует?\n\n");
 }
 function closeNoteEditor(){
   const ov=document.getElementById("neOvl");if(ov)ov.style.display="none";
@@ -6113,13 +6180,15 @@ function openAyahSheet(aid){
     `<button class="ash-row" onclick="closeAyahSheet();openDiafilm(${aid})">${IC.film}Диафильм</button>`+
     `<button class="ash-row" onclick="closeAyahSheet();mediaRecPopup(${aid},ayahAnchorEl(${aid}))">${IC.mic}Записать чтение</button>`+
     `<button class="ash-row" onclick="copyAyah(${aid},this)">${IC.copy}Копировать аят<span class="sub"></span></button>`+
+    (hn?`<button class="ash-row" onclick="copyAyah(${aid},this,true)">${IC.copy}Копировать с заметкой<span class="sub"></span></button>`:"")+
     `<button class="ash-row" onclick="copyAyahRange(${aid})">${IC.copy}Копировать диапазон…</button>`+
+    (noteBacklinks(ST.surah,aid).length?`<button class="ash-row" onclick="openBacklinksSheet(${aid})">${IC.pen}Упоминания в заметках<span class="sub">${noteBacklinks(ST.surah,aid).length} →</span></button>`:"")+
     (peekKind?`<button class="ash-row" onclick="closeAyahSheet();togglePeek(${aid},null,'${peekKind}')">${IC.eye}${peekKind==="ru"?"Показать перевод":"Показать оригинал"}</button>`:"")+
     `<div class="ash-div"></div>`+
     `<button class="ash-row" onclick="closeAyahSheet();openCovPopup(${aid},ayahAnchorEl(${aid}))">${IC.lib}Источники к аяту<span class="sub">${c?c.tr+" пер. · "+c.taf+" таф. →":"→"}</span></button>`);
 }
-// Копировать: арабский + первый включённый перевод + адрес
-async function copyAyah(aid,btn){
+// Копировать: арабский + первый включённый перевод + адрес (+ заметка по флагу)
+async function copyAyah(aid,btn,withNote){
   const sub=btn?btn.querySelector(".sub"):null;
   try{
     await loadChunk("_arabic",ST.surah);
@@ -6128,7 +6197,8 @@ async function copyAyah(aid,btn){
     const t=getEnabledList().find(x=>x.kind!=="image"&&x.kind!=="quran"&&x.id!=="_notes"&&x.lang!=="ar");
     if(t){await loadChunk(t.id,ST.surah);tr=getChunk(t.id,ST.surah)?.[String(aid)]||"";}
     const su=SURAHS.find(s=>s.id===ST.surah);
-    const txt=(ar?ar+"\n\n":"")+(tr?tr+"\n\n":"")+`(Коран, ${su?su.ru+", ":""}${ST.surah}:${aid})`;
+    const note=withNote?getNote(ST.surah,aid):"";
+    const txt=(ar?ar+"\n\n":"")+(tr?tr+"\n\n":"")+`(Коран, ${su?su.ru+", ":""}${ST.surah}:${aid})`+(note?`\n\n${note}`:"");
     await navigator.clipboard.writeText(txt);
     if(sub)sub.textContent="скопировано ✓";
   }catch(e){if(sub)sub.textContent="не удалось";}
