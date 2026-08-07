@@ -94,6 +94,14 @@ body[data-skin="sepia"] .reading{--bg-card:rgba(252,243,218,.5);--bg-alt:rgba(23
 body[data-skin="dark"] .reading{--bg-card:rgba(255,244,214,.05);--bg-alt:rgba(255,244,214,.08);--border:#4a3d26;--border-light:#3c3220;--text:#e7d8b4;--text-sec:#cbbb92;--text-muted:#8c7c5a;
   --accent:#c9a84c;--accent-hover:#daba5e;--accent-bg:rgba(201,168,76,.12);--accent-rgb:201,168,76}
 body[data-skin] .reading .ayah-block{box-shadow:0 1px 6px rgba(50,34,10,.16)}
+/* Заметки внутри скина — от ЧЕРНИЛ скина, не от акцента темы: формула та же,
+   но объявлена на .reading, где --accent уже охра (иначе var() успевает
+   вычислиться на body с цветом темы и приходит в ленту «готовым» зелёным). */
+body[data-skin] .reading{
+  --note-bg:color-mix(in srgb,var(--bg-card) 88%,var(--accent) 12%);
+  --note-border:color-mix(in srgb,var(--border) 55%,var(--accent) 45%);
+  --note-color:var(--accent);
+}
 /* Заголовки ленты — старорусская вязь (Ruslan Display). Номер аята (.ab-num) сюда
    НЕ входит: вязь в кружке 24px нечитаема — цифры остаются гротеском. */
 body[data-skin] .reading .ab-entry-label,body[data-skin] .reading .sura-intro-head{font-family:'Ruslan Display','IBM Plex Sans',sans-serif;font-weight:400}
