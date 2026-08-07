@@ -1478,6 +1478,8 @@ svg.svgi{width:19px;height:19px;stroke:currentColor;stroke-width:1.9;fill:none;s
 .ash-jump{display:flex;gap:7px;padding:4px 10px 10px}
 .ash-jump input{flex:1;padding:10px 12px;border:1.4px solid var(--accent);border-radius:9px;font-size:14px;background:var(--bg);color:var(--text);font-family:inherit;outline:none;min-width:0}
 .ash-jump input.bad{border-color:#d23b2c}
+.ash-jump .ash-sura{flex:0 0 84px}
+.ash-colon{align-self:center;font-weight:700;color:var(--text-muted)}
 .ash-jump button{border:none;background:var(--accent);color:#fff;border-radius:9px;padding:0 16px;font-size:14px;cursor:pointer;font-family:inherit}
 .ash-cap{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);padding:8px 12px 3px}
 .ash-chips{display:flex;gap:6px;flex-wrap:wrap;padding:2px 10px 6px}
@@ -6144,7 +6146,7 @@ function openNavSheet(){
   const u=ST.navUnit;
   const units=[["surah","Сура"],["page","Страница"],["juz","Джуз"],["hizb","Хизб"]];
   const ub=units.map(([v,n])=>`<button class="${v===u?'on':''}" onclick="navSheetUnit('${v}')">${n}</button>`).join("");
-  const ph=u==="page"?"Номер страницы (1–604)":u==="juz"?"Номер джуза (1–30)":u==="hizb"?"Номер хизба (1–60)":"2:255 · номер суры · :аят";
+  const ph=u==="page"?"Номер страницы (1–604)":u==="juz"?"Номер джуза (1–30)":"Номер хизба (1–60)";
   let body="";
   const p=curPos();
   if(u==="surah"){
@@ -6173,10 +6175,13 @@ function openNavSheet(){
     body=`<div class="ash-cap">Сейчас — страница ${p.page} из ${total}</div>`+
       `<div class="ash-chips"><button class="ash-chip" onclick="closeAyahSheet();navJumpPage(${Math.max(1,p.page-1)})">‹ предыдущая</button><button class="ash-chip" onclick="closeAyahSheet();navJumpPage(${Math.min(total,p.page+1)})">следующая ›</button></div>`;
   }
+  // На вкладке «Сура» — ПАРА полей «Сура : Аят», сура подставлена текущая:
+  // прыжок на аят своей суры = набрать только его номер (просьба пользователя).
+  const jump=u==="surah"
+    ?`<div class="ash-jump"><input id="ashSuraInp" class="ash-sura" inputmode="numeric" autocomplete="off" value="${ST.surah}" title="Номер суры (1–114)" onkeydown="if(event.key==='Enter')ashJumpGo()"><span class="ash-colon">:</span><input id="ashJumpInp" inputmode="numeric" autocomplete="off" placeholder="аят" title="Номер аята (пусто — к началу суры)" onkeydown="if(event.key==='Enter')ashJumpGo()"><button onclick="ashJumpGo()" title="Перейти">→</button></div>`
+    :`<div class="ash-jump"><input id="ashJumpInp" inputmode="numeric" autocomplete="off" placeholder="${ph}" onkeydown="if(event.key==='Enter')ashJumpGo()"><button onclick="ashJumpGo()" title="Перейти">→</button></div>`;
   openSheetShell("Перейти","",
-    `<div class="ash-units">${ub}</div>`+
-    `<div class="ash-jump"><input id="ashJumpInp" autocomplete="off" placeholder="${ph}" onkeydown="if(event.key==='Enter')ashJumpGo()"><button onclick="ashJumpGo()" title="Перейти">→</button></div>`+
-    body);
+    `<div class="ash-units">${ub}</div>`+jump+body);
   const inp=document.getElementById("ashJumpInp");if(inp&&!isM())inp.focus();
 }
 // Смена единицы: общая с листанием ‹ › нижней панели (setNavUnit persist+перерисовка низа)
@@ -6184,20 +6189,30 @@ function navSheetUnit(u){setNavUnit(u);openNavSheet();}
 function ashJumpGo(){
   const inp=document.getElementById("ashJumpInp");if(!inp)return;
   const v=inp.value.trim();
-  const bad=()=>{inp.classList.add("bad");inp.select();setTimeout(()=>inp.classList.remove("bad"),700);};
-  if(!v){bad();return;}
-  const go=ref=>{closeAyahSheet();goAyahRef(ref);};
-  if(/^:\d+$/.test(v)){const r=parseAyahRef(v.slice(1));r?go(r):bad();return;}   // «:255» — аят текущей суры
-  if(v.includes(":")){const r=parseAyahRef(v);r?go(r):bad();return;}             // «2:255»
+  const bad=el=>{el.classList.add("bad");el.select();setTimeout(()=>el.classList.remove("bad"),700);};
+  if(ST.navUnit==="surah"){
+    // пара полей «Сура : Аят»; аят пуст — к началу суры; «2:255» в поле аята тоже поймём
+    const sInp=document.getElementById("ashSuraInp");
+    if(v.includes(":")){const r=parseAyahRef(v);if(r){closeAyahSheet();goAyahRef(r);}else bad(inp);return;}
+    const sN=Math.round(+((sInp&&sInp.value.trim())||ST.surah));
+    const su=SURAHS.find(x=>x.id===sN);
+    if(!su){if(sInp)bad(sInp);return;}
+    if(!v){closeAyahSheet();goSurah(sN);return;}
+    const aN=Math.round(+v);
+    if(!(aN>=1&&aN<=su.n)){bad(inp);return;}
+    closeAyahSheet();goAyah(sN,aN);
+    return;
+  }
+  if(!v){bad(inp);return;}
+  if(v.includes(":")){const r=parseAyahRef(v);if(r){closeAyahSheet();goAyahRef(r);}else bad(inp);return;}
   const n=parseInt(v,10);
   if(isFinite(n)){
     const u=ST.navUnit,total=qpcMeta&&qpcMeta.pages||604;
     if(u==="page"&&n>=1&&n<=total){closeAyahSheet();navJumpPage(n);return;}
     if(u==="juz"&&n>=1&&n<=30){closeAyahSheet();navJumpJuz(n);return;}
     if(u==="hizb"&&n>=1&&n<=60){closeAyahSheet();navJumpHizb(n);return;}
-    if(u==="surah"&&n>=1&&n<=114){closeAyahSheet();goSurah(n);return;}
   }
-  const r=parseAyahRef(v);r?go(r):bad();   // запасной путь: «255» вне диапазона единицы = аят текущей суры
+  bad(inp);
 }
 function openSurahsTab(){
   ST.sidebarOpen=true;
