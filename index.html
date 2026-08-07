@@ -6130,8 +6130,13 @@ function openNavSheet(){
     const su=SURAHS.find(s=>s.id===r.surah);
     return `<button class="ash-chip" onclick="closeAyahSheet();goAyah(${r.surah},${r.ayah||1})">${esc((su?su.ru:r.surah)+(r.ayah&&r.ayah>1?" · "+r.ayah:""))}</button>`;
   }).join("");
+  const su=SURAHS.find(x=>x.id===ST.surah);
   openSheetShell("Перейти","сура : аят",
     `<div class="ash-jump"><input id="ashJumpInp" autocomplete="off" placeholder="2:255 — или номер суры" onkeydown="if(event.key==='Enter')ashJumpGo()"><button onclick="ashJumpGo()" title="Перейти">→</button></div>`+
+    `<div class="ash-chips" style="padding-top:0">`+
+      `<button class="ash-chip" onclick="closeAyahSheet();goAyah(${ST.surah},1)" title="К первому аяту текущей суры">⤒ Начало суры</button>`+
+      `<button class="ash-chip" onclick="closeAyahSheet();goAyah(${ST.surah},${su?su.n:1})" title="К последнему аяту текущей суры">⤓ Конец суры</button>`+
+    `</div>`+
     (chips?`<div class="ash-cap">Недавнее</div><div class="ash-chips">${chips}</div>`:"")+
     `<div class="ash-div"></div><button class="ash-row" onclick="closeAyahSheet();openSurahsTab()">${IC.list}Все суры и джузы<span class="sub">→</span></button>`);
   const inp=document.getElementById("ashJumpInp");if(inp&&!isM())inp.focus();
