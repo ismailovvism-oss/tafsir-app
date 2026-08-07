@@ -17,8 +17,12 @@
 <style>
 /* Reem Kufi (SIL OFL) — self-hosted for offline; see fonts/ReemKufi-OFL.txt */
 @font-face{font-family:'Reem Kufi';font-style:normal;font-weight:400 700;font-display:swap;src:url('fonts/ReemKufi.woff2') format('woff2')}
-/* KFGQPC Uthmanic Hafs — почерк Усмана Таха из мусхафа Мадани (self-hosted) */
-@font-face{font-family:'KFGQPC Uthmanic';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/UthmanicHafs.woff2') format('woff2')}
+/* «Каллиграфический» — Scheherazade New (SIL, OFL): эталонный шейпинг коранической
+   орфографии. Заменил KFGQPC Uthmanic 2026-08-07: наш UthmanicHafs.woff2 битый —
+   знак ۟ (و в ءامنوا۟/أو۟لٰٓئك) рисовался крупной розеткой в строке, на мобильных
+   рендерерах ломались и медиальные буквы (пунктирные кружки). Файл оставлен для
+   макетов, в приложении не используется. */
+@font-face{font-family:'Scheherazade New';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/ScheherazadeNew.woff2') format('woff2')}
 /* Amiri Quran (SIL OFL) — открытый мусхафный насх (self-hosted) */
 @font-face{font-family:'Amiri Quran';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/AmiriQuran.woff2') format('woff2')}
 /* Старинные русские шрифты (OFL): Ruslan Display — вязь для заголовков скинов;
@@ -765,7 +769,7 @@ body.immersive .immersive-exit:hover{opacity:1;background:rgba(0,0,0,.32)}
 [data-arfont="hafs"] .arabic-main,
 [data-arfont="hafs"] .wbw-ar-text,
 [data-arfont="hafs"] .ab-entry-text.rtl,
-[data-arfont="hafs"] .col-table td.rtl{font-family:'KFGQPC Uthmanic','Amiri Quran','Noto Naskh Arabic',serif;line-height:2.1}
+[data-arfont="hafs"] .col-table td.rtl{font-family:'Scheherazade New','Amiri Quran','Noto Naskh Arabic',serif;line-height:2.3}
 /* Мусхафный насх (Amiri Quran) */
 [data-arfont="amiri"] .arabic-main,
 [data-arfont="amiri"] .wbw-ar-text,
@@ -815,8 +819,8 @@ body.mushaf-full .mushaf-page{max-width:none;border:none;border-radius:0;box-sha
 .mushaf-page .m-line .qpc-w{display:inline-block}
 .m-empty{min-height:calc(28px*var(--rs-ar,1)*1.2)}
 .m-surah-head{text-align:center;margin:10px 0;padding:6px 0;border-top:2px solid #c9a84c;border-bottom:2px solid #c9a84c}
-.m-surah-name{font-family:'KFGQPC Uthmanic','Amiri Quran',serif;font-size:24px;color:#7a5c12;direction:rtl}
-.m-basmala{text-align:center;direction:rtl;font-family:'KFGQPC Uthmanic','Amiri Quran',serif;font-size:24px;line-height:2;color:#1a1a1a;margin:4px 0}
+.m-surah-name{font-family:'Scheherazade New','Amiri Quran',serif;font-size:24px;color:#7a5c12;direction:rtl}
+.m-basmala{text-align:center;direction:rtl;font-family:'Scheherazade New','Amiri Quran',serif;font-size:24px;line-height:2;color:#1a1a1a;margin:4px 0}
 .mushaf-nav{display:flex;align-items:center;justify-content:center;gap:14px;padding:14px;flex:none}
 .m-pageno{font-size:12px;color:var(--text-sec)}
 @media(max-width:768px){.mushaf-page{padding:18px 14px}.mushaf-page .m-line{font-size:calc(22px*var(--rs-ar,1))}.m-surah-name,.m-basmala{font-size:21px}}
@@ -1481,6 +1485,18 @@ svg.svgi{width:19px;height:19px;stroke:currentColor;stroke-width:1.9;fill:none;s
 .cb-chip:hover{border-color:var(--accent);color:var(--accent)}
 .cb-chip svg.svgi{width:14px;height:14px}
 .cb-chip .chip-lbl{max-width:110px;overflow:hidden;text-overflow:ellipsis}
+/* сег «Аяты|Мусхаф» и 🏠 НЕ сжимаются (подписи всегда целиком) — ужимаются чипы;
+   на узких экранах чип «Слои» остаётся одной иконкой (текст под ней и так ясен) */
+.cb-read .seg,.cb-read .cb-home{flex-shrink:0}
+@media(max-width:430px){
+  .cb-read{gap:5px}
+  .cb-read .cb-home{width:32px;min-width:32px}
+  .cb-read .seg button{padding:5px 7px;font-size:11.5px;gap:4px}
+  .cb-read .seg svg.svgi{width:13px;height:13px}
+  .cb-chip{padding:5px 8px;gap:4px}
+  .cb-chip .chip-lbl{max-width:74px}
+  .cb-chip.cb-chip-layers span{display:none}
+}
 .center-bar{transition:max-height .22s,padding .22s;max-height:90px}
 .center-bar.cb-hide{max-height:0;padding-top:0;padding-bottom:0;border-bottom-width:0;overflow:hidden}
 @media (prefers-reduced-motion:reduce){.center-bar{transition:none}}
@@ -5150,7 +5166,7 @@ function renderCB(){
     `</span>`+
     `<span class="cb-chips">`+
     `<button class="cb-chip" onclick="openRPanelTab('sel')" title="Переводы и тафсиры: что читать">${IC.book}<span class="chip-lbl">${esc(srcChipLabel())}</span></button>`+
-    `<button class="cb-chip" onclick="openRPanelTab('orig')" title="Слои: редакции арабского, таджвид, пословный разбор">${IC.layers}<span>Слои</span></button>`+
+    `<button class="cb-chip cb-chip-layers" onclick="openRPanelTab('orig')" title="Слои: редакции арабского, таджвид, пословный разбор">${IC.layers}<span>Слои</span></button>`+
     `</span></div>`;
   if(ST.homeMode){
     setCtx("Главная");
