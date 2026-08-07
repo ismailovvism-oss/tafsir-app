@@ -1497,6 +1497,23 @@ svg.svgi{width:19px;height:19px;stroke:currentColor;stroke-width:1.9;fill:none;s
 /* этап 3: отдельный размер шрифта ТАФСИРОВ — записи kind:tafsir получают свой
    множитель через подмену --rs-ru (внутри entry все правила уже на этой var) */
 .ab-entry.taf{--rs-ru:var(--rs-ru-taf,1)}
+/* ═══ Этап 3, порция 2: Study Mode — фокус-экран одного аята ═══ */
+.study-ovl{position:fixed;inset:0;z-index:260;background:var(--bg);display:flex;flex-direction:column}
+.stu-head{display:flex;align-items:center;gap:6px;padding:8px 10px;background:var(--header-bg);color:var(--header-text);flex-shrink:0}
+.stu-head .stu-pos{flex:1;text-align:center;font-size:14.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stu-head .stu-pos .ar{font-family:'Hafs','Amiri',serif;opacity:.75;font-weight:400}
+.stu-head button{display:flex;align-items:center;justify-content:center;min-width:40px;min-height:38px;border:none;background:none;color:var(--header-text);border-radius:9px;cursor:pointer;font-size:17px;font-family:inherit}
+.stu-head button:hover{background:rgba(255,255,255,.09)}
+.stu-tabs{display:flex;gap:5px;padding:8px 10px;background:var(--bg);border-bottom:1px solid var(--border-l,var(--border-light));flex-shrink:0}
+.stu-tabs button{flex:1;border:1px solid var(--border);background:var(--bg-card);border-radius:9px;padding:8px 4px;font-size:12.5px;font-weight:600;color:var(--text-sec);cursor:pointer;font-family:inherit}
+.stu-tabs button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.stu-body{flex:1;overflow-y:auto;padding:14px 16px 40px;max-width:760px;width:100%;margin:0 auto}
+.stu-ar{font-size:calc(26px*var(--rs-ar,1));line-height:calc(2*var(--lh-ar,1));text-align:right;direction:rtl;margin-bottom:14px;color:var(--text)}
+.stu-entry{margin-bottom:18px}
+.stu-entry .who{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:5px}
+.stu-note-ta{width:100%;min-height:130px;border:1px solid var(--border);border-radius:10px;background:var(--bg-card);color:var(--text);font-family:inherit;font-size:13.5px;line-height:1.6;padding:10px 12px;resize:vertical}
+.stu-tagrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px}
+.stu-tag{border:1px solid var(--border);background:var(--bg-alt);border-radius:999px;padding:4px 11px;font-size:12px;color:var(--text-sec)}
 </style>
 </head>
 <body data-theme="green">
@@ -5998,9 +6015,11 @@ function openAyahSheet(aid){
     `<button class="ash-row" onclick="closeAyahSheet();toggleNote(${aid},null)">${IC.pen}Заметка<span class="sub">${hn?'есть':''}</span></button>`+
     `<button class="ash-row" onclick="closeAyahSheet();openTagPopup(${aid},ayahAnchorEl(${aid}))">${IC.tag}Теги<span class="sub">${tagsSub}</span></button>`+
     `<div class="ash-div"></div>`+
+    `<button class="ash-row" onclick="openStudy(${aid})">${IC.bookopen}Изучение аята<span class="sub">тафсиры · слова · моё</span></button>`+
     `<button class="ash-row" onclick="closeAyahSheet();openDiafilm(${aid})">${IC.film}Диафильм</button>`+
     `<button class="ash-row" onclick="closeAyahSheet();mediaRecPopup(${aid},ayahAnchorEl(${aid}))">${IC.mic}Записать чтение</button>`+
     `<button class="ash-row" onclick="copyAyah(${aid},this)">${IC.copy}Копировать аят<span class="sub"></span></button>`+
+    `<button class="ash-row" onclick="copyAyahRange(${aid})">${IC.copy}Копировать диапазон…</button>`+
     (peekKind?`<button class="ash-row" onclick="closeAyahSheet();togglePeek(${aid},null,'${peekKind}')">${IC.eye}${peekKind==="ru"?"Показать перевод":"Показать оригинал"}</button>`:"")+
     `<div class="ash-div"></div>`+
     `<button class="ash-row" onclick="closeAyahSheet();openCovPopup(${aid},ayahAnchorEl(${aid}))">${IC.lib}Источники к аяту<span class="sub">${c?c.tr+" пер. · "+c.taf+" таф. →":"→"}</span></button>`);
@@ -6019,6 +6038,28 @@ async function copyAyah(aid,btn){
     await navigator.clipboard.writeText(txt);
     if(sub)sub.textContent="скопировано ✓";
   }catch(e){if(sub)sub.textContent="не удалось";}
+}
+// Копировать диапазон аятов (арабский + первый перевод + адрес, до 50 аятов)
+async function copyAyahRange(aid){
+  const su=SURAHS.find(x=>x.id===ST.surah);const max=su?su.n:aid;
+  const v=prompt(`Копировать аяты с ${aid} по (не больше ${Math.min(max,aid+49)}):`,Math.min(aid+2,max));
+  if(v===null)return;
+  const to=Math.max(aid,Math.min(max,aid+49,parseInt(v,10)||aid));
+  closeAyahSheet();
+  try{
+    await loadChunk("_arabic",ST.surah);
+    const t=getEnabledList().find(x=>x.kind!=="image"&&x.kind!=="quran"&&x.id!=="_notes"&&x.lang!=="ar");
+    if(t)await loadChunk(t.id,ST.surah);
+    let out="";
+    for(let a=aid;a<=to;a++){
+      const ar=getArabicFromCache(ST.surah,a)||"";
+      const tr=t?(getChunk(t.id,ST.surah)?.[String(a)]||""):"";
+      out+=(to>aid?`${a}. `:"")+(ar?ar+"\n":"")+(tr?tr+"\n":"")+"\n";
+    }
+    out+=`(Коран, ${su?su.ru+", ":""}${ST.surah}:${aid}${to>aid?"–"+to:""})`;
+    await navigator.clipboard.writeText(out);
+    alert(`Скопировано: ${to-aid+1} ${to-aid+1===1?"аят":"аятов"} (${ST.surah}:${aid}${to>aid?"–"+to:""})`);
+  }catch(e){alert("Не удалось скопировать");}
 }
 // -- НАВИГАТОР позиции (тап по «Сура · аят» в шапке) --
 function openNavSheet(){
@@ -7340,7 +7381,7 @@ document.addEventListener("keydown",function(e){
 // ============================================================
 let pendingAyah=null;
 // Which open panels should the Back button / backdrop close (overlays only; the desktop sidebar is docked)
-function anyOverlayOpen(){return ST.rpanelOpen||ST.apanelOpen||ST.diafilm||hrOpen||ST.immersive||appAboutOpen()||progressOpen||spdOpen||(isM()&&ST.sidebarOpen);}
+function anyOverlayOpen(){return ST.rpanelOpen||ST.apanelOpen||ST.diafilm||hrOpen||ST.immersive||appAboutOpen()||progressOpen||spdOpen||!!STU||(isM()&&ST.sidebarOpen);}
 let navBack=false; // true while we programmatically history.back() to consume our own overlay entry
 function pushOverlay(){if(!(history.state&&history.state.ov))history.pushState({ov:1},"");}
 function consumeOverlay(){if(history.state&&history.state.ov){navBack=true;history.back();}}
@@ -7353,6 +7394,7 @@ function closeAllPanelsUI(){
   if(ST.apanelOpen){ST.apanelOpen=false;document.getElementById("apanel").classList.add("collapsed");}
   if(ST.diafilm)exitDiafilm(true);       // «Назад» выходит из диафильма (запись уже снята)
   if(hrOpen)hrStop(true);                // «Назад» выходит из hifz-ридера (запись уже снята)
+  if(STU)closeStudy(true);               // «Назад» закрывает фокус-экран аята (запись уже снята)
   if(ST.immersive)exitImmersive(true);   // Back button leaves immersive (entry already popped)
   if(isM()&&ST.sidebarOpen){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   updateBackdrop();
@@ -8505,6 +8547,95 @@ async function renderMtrBox(){
   if(body&&MTR&&MTR.s===s&&MTR.a===a)body.innerHTML=txt?mdRender(txt):'<span style="color:var(--text-muted)">— у этого аята нет текста в выбранном переводе</span>';
 }
 
+// ── Study Mode — фокус-экран одного аята (этап 3, порция 2) ──────────────────
+// Дополняет ленту, НЕ заменяет (тафсиры из ленты не выселяются — принцип из
+// UI_REDESIGN.md). Вкладки: Тафсиры (все включённые, без сворачивания) /
+// Слова (пословный разбор, тап по слову → грам-карточка) / Моё (заметка+теги).
+// Листание ‹ › сквозь границы сур; выход — на просмотренный аят.
+let STU=null;   // {s,a,tab}
+function openStudy(aid){
+  if(ST.noTouch)return;
+  closeAyahSheet();
+  STU={s:ST.surah,a:aid,tab:gs("stuTab","taf")};
+  pushOverlay();                                     // «Назад» закрывает фокус-экран
+  renderStudy();
+}
+function closeStudy(viaBack){
+  if(!STU)return;
+  const {s,a}=STU;STU=null;
+  const ov=document.getElementById("studyOvl");if(ov)ov.remove();
+  if(!viaBack)consumeOverlay();
+  if(!ST.pageMode&&s===ST.surah)jumpToAyahEl(a,true);
+  else goAyah(s,a);                                  // ушли в другую суру — честный переход
+}
+function stuStep(dir){
+  if(!STU)return;
+  const nx=mtrNextA(STU.s,STU.a,dir);if(!nx)return;
+  if(nx.s!==STU.s)ST.surah=nx.s;                     // теги/заметки/попапы читают ST.surah
+  STU.s=nx.s;STU.a=nx.a;
+  renderStudy();
+}
+function stuTab(t){if(!STU)return;STU.tab=t;ss("stuTab",t);renderStudy();}
+function renderStudy(){
+  if(!STU)return;
+  let ov=document.getElementById("studyOvl");
+  if(!ov){ov=document.createElement("div");ov.id="studyOvl";ov.className="study-ovl";document.body.appendChild(ov);}
+  const su=SURAHS.find(x=>x.id===STU.s);
+  const tabBtn=(id,lab)=>`<button class="${STU.tab===id?'on':''}" onclick="stuTab('${id}')">${lab}</button>`;
+  ov.innerHTML=`<div class="stu-head">
+      <button onclick="closeStudy()" title="Закрыть (Esc)">${IC.x}</button>
+      <button onclick="stuStep(-1)" title="Предыдущий аят (←)">‹</button>
+      <div class="stu-pos">${su?esc(su.ru):STU.s} · ${STU.s}:${STU.a} <span class="ar">${su?su.name:""}</span></div>
+      <button onclick="stuStep(1)" title="Следующий аят (→)">›</button>
+    </div>
+    <div class="stu-tabs">${tabBtn("taf","Тафсиры")+tabBtn("words","Слова")+tabBtn("mine","Моё")}</div>
+    <div class="stu-body" id="stuBody"><div style="text-align:center;color:var(--text-muted);padding:30px">Загрузка…</div></div>`;
+  renderStuBody();
+}
+async function renderStuBody(){
+  if(!STU)return;
+  const {s,a,tab}=STU;
+  const body=()=>document.getElementById("stuBody");
+  const stale=()=>!STU||STU.s!==s||STU.a!==a||STU.tab!==tab;  // за время await могли листнуть
+  await loadChunk("_arabic",s);
+  if(stale())return;
+  const ar=getArabicFromCache(s,a)||"";
+  let html=ar?`<div class="stu-ar selectable">${ar}</div>`:"";
+  if(tab==="taf"){
+    const en=getEnabledList().filter(t=>t.id!=="_notes"&&t.kind!=="image"&&t.kind!=="quran");
+    if(!en.length)html+=`<div class="vp-note">Ни один перевод или тафсир не включён — чип источников в панели чтения.</div>`;
+    for(const t of en){
+      await loadChunk(t.id,s);
+      if(stale())return;
+      const text=getChunk(t.id,s)?.[String(a)]||"";
+      if(!text)continue;
+      const {body:tb,notes}=splitNotes(text);
+      html+=`<div class="stu-entry ab-entry ${t.kind==="tafsir"?'taf':''}" style="border:none;padding:0">
+        <div class="who">${esc(t.name)}</div>
+        <div class="ab-entry-text md selectable ${t.lang==="ar"?'rtl':''}">${tb?renderRefs(tb):'—'}</div>
+        ${notes.length?renderFootnotes(notes):''}</div>`;
+    }
+  }else if(tab==="words"){
+    // напрямую (не loadWbwLayer: тот выходит при выключенном слое «Со словами»)
+    const loaded={};
+    const ps=[loadWbwWords(s).then(d=>loaded.__wbwW=d)];
+    if(activePack())ps.push(loadPackSurah(ST.arFont,s).then(d=>loaded.__qpc=d));
+    else ps.push(loadWbwMorph(s).then(d=>loaded.__wbwM=d));
+    await Promise.all(ps);
+    if(stale())return;
+    const grid=wbwGridHTML(s,a,loaded);
+    html=(grid?`<div class="arabic-main" style="margin-bottom:10px">${grid}</div><div class="vp-note">Тап по слову — грамматика и корень; тап по корню в карточке — все вхождения.</div>`
+              :html+`<div class="vp-note">Пословный разбор для этого аята недоступен.</div>`)+wbwAttrHTML();
+  }else{
+    const tags=getATList(s,a);
+    html+=`<div class="stu-entry"><div class="who">Заметка</div>
+      <textarea class="stu-note-ta" placeholder="Заметка к аяту ${s}:${a}…" oninput="saveNote(${s},${a},this.value);refreshAyahMarks(${a})">${esc(getNote(s,a))}</textarea></div>`+
+      `<div class="stu-entry"><div class="who">Теги</div><div class="stu-tagrow">${tags.length?tags.map(p=>`<span class="stu-tag">${esc(p.split("/").pop())}</span>`).join(""):'<span style="color:var(--text-muted);font-size:12px">нет тегов</span>'}
+      <button class="ash-chip" onclick="openTagPopup(${a},this)">🏷 Изменить…</button></div></div>`;
+  }
+  const el=body();if(el&&!stale())el.innerHTML=html;
+}
+
 // --- Слой «Со словами»: сетка слов вместо арабской строки аята ---------------
 // Бывший отдельный режим 🔤. Каждое слово несёт data-loc="сура:аят:слово" (тап →
 // грам-карточка корпуса) и рисуется ОДНИМ ИЗ ДВУХ способов:
@@ -8875,6 +9006,31 @@ document.addEventListener("scroll",hideWordCard,true);
 document.addEventListener("scroll",saveLastPosSoon,true);  // обновлять последнюю позицию по мере чтения
 // Open sidebar by default on desktop
 if(!isM()){ST.sidebarOpen=true;document.getElementById("sidebar").classList.remove("collapsed");}
+// Клавиатурная навигация (этап 3, tanzil-паттерн; только вне полей ввода):
+// ←/→ — сура или страница (текущая единица низа), пробел — плеер с текущего
+// аята, Esc — закрыть фокус-экран аята; в фокус-экране ←/→ листают аяты.
+document.addEventListener("keydown",e=>{
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  const t=e.target;
+  if(t&&(t.tagName==="INPUT"||t.tagName==="TEXTAREA"||t.tagName==="SELECT"||t.isContentEditable))return;
+  if(STU){                                            // фокус-экран аята
+    if(e.key==="ArrowLeft"){stuStep(-1);e.preventDefault();}
+    else if(e.key==="ArrowRight"){stuStep(1);e.preventDefault();}
+    else if(e.key==="Escape"){closeStudy();e.preventDefault();}
+    return;
+  }
+  if(ashEl||hdrMenuEl){if(e.key==="Escape"){closeAyahSheet();closeHdrMenu();e.preventDefault();}return;}
+  if(anyOverlayOpen()||noteEd)return;                 // свои клавиши у оверлеев — не мешаем
+  if(ST.homeMode||ST.hifzMode||ST.eruditMode||ST.selectedTag||ST.bmView||ST.notesView||ST.warnMap||ST.rootView||ST.topicSel)return;
+  if(e.key==="ArrowLeft"){stepSection(-1);e.preventDefault();}
+  else if(e.key==="ArrowRight"){stepSection(1);e.preventDefault();}
+  else if(e.key===" "){
+    const pp=document.querySelector('#mediaPill [data-act="pp"]');
+    if(pp)pp.click();
+    else{const a=curTopAyah();if(a)mediaPlayAyah(a);}
+    e.preventDefault();
+  }
+});
 // Auto-hide бара чтения (этап 2): прокрутка ленты вниз прячет [Аяты|Мусхаф]+чипы,
 // вверх — возвращает; шапка остаётся. Scroll не всплывает — ловим capture-фазой.
 (function(){
