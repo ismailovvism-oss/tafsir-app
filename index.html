@@ -370,7 +370,7 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .ab-entry.warn-critical{border-left:3px solid #d23b2c;padding-left:9px;background:rgba(210,59,44,.05)}
 .ab-entry.warn-moderate{border-left:3px solid #d79a2b;padding-left:9px;background:rgba(215,154,43,.05)}
 .ab-entry.warn-minor{border-left:3px solid #6a8cc0;padding-left:9px}
-.warn-badge{display:inline-flex;align-items:center;gap:2px;margin-left:6px;padding:1px 7px;border-radius:999px;border:1px solid;font-size:11px;font-weight:700;cursor:pointer;vertical-align:middle;line-height:1.5}
+.warn-badge{display:inline-flex;align-items:center;gap:2px;margin-left:6px;padding:1px 7px;border-radius:999px;border:1px solid;font-size:11px;font-weight:700;cursor:default;vertical-align:middle;line-height:1.5}
 .warn-badge.lv-critical{color:#d23b2c;border-color:#d23b2c;background:rgba(210,59,44,.1)}
 .warn-badge.lv-moderate{color:#b9822a;border-color:#d79a2b;background:rgba(215,154,43,.12)}
 .warn-badge.lv-minor{color:#4d6fa3;border-color:#6a8cc0;background:rgba(106,140,192,.12)}
@@ -703,7 +703,7 @@ body.immersive .header,body.immersive .footer,
 body.immersive .sidebar,body.immersive .rpanel,body.immersive .center-bar,
 body.immersive .bottom-nav,body.immersive .panel-backdrop{display:none!important}
 .immersive-exit{display:none}
-body.immersive .immersive-exit{display:flex;position:fixed;top:10px;right:10px;z-index:200;width:34px;height:34px;align-items:center;justify-content:center;border:none;border-radius:50%;background:rgba(0,0,0,.18);color:var(--text);font-size:15px;cursor:pointer;opacity:.3;transition:opacity .15s,background .15s}
+body.immersive .immersive-exit{display:flex;position:fixed;top:10px;right:10px;z-index:200;width:38px;height:38px;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:50%;background:var(--bg-card);color:var(--text);font-size:15px;cursor:pointer;opacity:.75;transition:opacity .15s,background .15s;box-shadow:0 2px 8px rgba(0,0,0,.18)}
 body.immersive .immersive-exit:hover{opacity:1;background:rgba(0,0,0,.32)}
 
 /* RIGHT PANEL extras */
@@ -944,6 +944,15 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
 .io-p{font-size:13px;line-height:1.5;color:var(--text-muted);margin-bottom:12px}
 .io-acts{display:flex;gap:8px;justify-content:flex-end}
 .io-acts.io-wrap{flex-wrap:wrap;margin-bottom:8px}
+/* — Экран «📥 Скачать для офлайна» (наборы данных) — */
+.off-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-light)}
+.off-main{flex:1;min-width:0}
+.off-name{font-size:13px;font-weight:600;color:var(--text)}
+.off-note{font-size:11px;color:var(--text-muted);line-height:1.35;margin-top:2px}
+.off-dl{flex-shrink:0;width:38px;height:38px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text);font-size:16px;cursor:pointer}
+.off-dl:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.off-dl.done{border-color:var(--accent);color:var(--accent)}
+.off-dl:disabled{opacity:.35;cursor:default}
 /* — Модуль ПРОГРЕССА ЧТЕНИЯ (дашборд + карта покрытия) — */
 .prog-box{max-width:660px;width:100%;text-align:left}
 .prog-h{font-size:18px;font-weight:700;margin:0 0 2px;color:var(--text)}
@@ -1266,7 +1275,10 @@ body.hr-open{overflow:hidden}
 /* ── Единая система режимов/панелей ── */
 /* переключатель режимов: иконка+подпись; на узких экранах — только иконки */
 .seg-modes .ml{margin-left:4px}
-@media(max-width:680px){.seg-modes .ml{display:none}.seg-modes button{padding:5px 8px;font-size:13px}}
+/* этап 2: сегментов стало два («Аяты|Мусхаф») — подписи видны всегда */
+@media(max-width:680px){.seg-modes button{padding:5px 9px;font-size:12px}}
+.seg-modes button{display:inline-flex;align-items:center;gap:5px}
+.seg-modes svg.svgi{width:14px;height:14px}
 /* режим «Хифз» в главном окне (бывший оверлей) */
 .hifz-screen{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 10px 46px}
 .hifz-screen>#hifzBody{max-width:760px;margin:0 auto}
@@ -1390,23 +1402,117 @@ body.hr-open{overflow:hidden}
 .qt-step{display:inline-flex;align-items:center;gap:6px}
 .qt-step button{width:22px;height:22px;border:1px solid rgba(var(--accent-rgb),.35);border-radius:6px;background:rgba(var(--accent-rgb),.06);color:var(--text);cursor:pointer;font-size:13px;line-height:1;font-family:inherit}
 .qt-step b{min-width:34px;text-align:center;font-size:11px;color:var(--text)}
+
+/* ═══ Редизайн, этап 1 (UI_REDESIGN.md): SVG-иконки, шапка, панелька аята, листы ═══ */
+svg.svgi{width:19px;height:19px;stroke:currentColor;stroke-width:1.9;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;pointer-events:none}
+.btn-i{display:inline-flex;align-items:center;justify-content:center;min-width:38px;min-height:36px}
+.h-ctx-btn{background:none;border:none;cursor:pointer;font-family:inherit;text-align:left;padding:5px 8px;border-radius:8px;display:flex;align-items:center;gap:5px;min-height:36px}
+.h-ctx-btn:hover{background:rgba(255,255,255,.09)}
+.h-ctx-btn:empty{display:none}
+.h-ctx-chev{opacity:.55;font-size:9px;flex-shrink:0}
+.hdr-menu{position:fixed;top:48px;right:8px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.22);padding:5px;z-index:250;min-width:215px}
+.hdr-menu button{display:flex;align-items:center;gap:12px;width:100%;border:none;background:none;text-align:left;padding:10px 12px;border-radius:9px;font-size:13.5px;font-family:inherit;color:var(--text);cursor:pointer}
+.hdr-menu button:hover{background:var(--bg-alt)}
+.hdr-menu svg.svgi{color:var(--text-sec);width:17px;height:17px}
+/* панелька аята: номер · ▶ · метки · ☆ · ⋯ */
+.ab-row{display:flex;align-items:center;gap:2px;width:100%}
+.ab-num-btn{display:inline-flex;align-items:center;justify-content:center;min-width:38px;height:32px;padding:0 9px;border:1px solid var(--border);border-radius:999px;background:var(--bg-card);color:var(--accent);font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer}
+.ab-num-btn:hover{border-color:var(--accent)}
+.ab-ico{display:inline-flex;align-items:center;justify-content:center;width:38px;height:32px;border:none;background:none;color:var(--text-sec);border-radius:999px;cursor:pointer;padding:0}
+.ab-ico:hover{color:var(--accent);background:var(--bg-card)}
+.ab-ico svg.svgi{width:16px;height:16px}
+.ab-ico.ab-bm.on{color:#c8971b}
+.ab-ico.ab-bm.on svg.svgi{fill:#c8971b;stroke:#c8971b}
+.ab-marks{margin-left:auto;display:flex;align-items:center;gap:8px;color:var(--text-muted);font-size:11px;cursor:pointer;padding:0 4px;min-height:32px}
+.ab-marks .mk{display:inline-flex;align-items:center;gap:3px}
+.ab-marks svg.svgi{width:13px;height:13px}
+/* нижний лист (лист аята / навигатор) */
+.ash-veil{position:fixed;inset:0;background:rgba(10,20,14,.45);z-index:300}
+.ash{position:fixed;left:0;right:0;bottom:0;margin:0 auto;max-width:560px;background:var(--bg-card);border:1px solid var(--border);border-bottom:none;border-radius:16px 16px 0 0;z-index:301;max-height:82vh;max-height:82dvh;display:flex;flex-direction:column;animation:ashUp .22s ease-out}
+@keyframes ashUp{from{transform:translateY(40%);opacity:.5}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.ash{animation:none}}
+.ash-grab{width:36px;height:4px;border-radius:2px;background:var(--border);margin:8px auto 2px;flex-shrink:0}
+.ash-head{display:flex;align-items:center;gap:10px;padding:6px 16px;flex-shrink:0}
+.ash-head .t{font-size:14px;font-weight:700}
+.ash-head .s{font-size:11.5px;color:var(--text-sec)}
+.ash-x{margin-left:auto;border:none;background:var(--bg-alt);border-radius:999px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:var(--text-sec);cursor:pointer;flex-shrink:0}
+.ash-body{overflow-y:auto;padding:0 8px 14px}
+.ash-row{display:flex;align-items:center;gap:13px;width:100%;border:none;background:none;text-align:left;padding:11px 12px;border-radius:10px;font-size:13.5px;font-family:inherit;color:var(--text);cursor:pointer}
+.ash-row:hover{background:var(--bg-alt)}
+.ash-row svg.svgi{color:var(--text-sec);width:17px;height:17px}
+.ash-row .sub{margin-left:auto;font-size:11px;color:var(--text-muted);text-align:right;flex-shrink:0;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ash-row.on svg.svgi{color:#c8971b;fill:#c8971b;stroke:#c8971b}
+.ash-div{border-top:1px solid var(--border-light);margin:5px 10px}
+.ash-jump{display:flex;gap:7px;padding:4px 10px 10px}
+.ash-jump input{flex:1;padding:10px 12px;border:1.4px solid var(--accent);border-radius:9px;font-size:14px;background:var(--bg);color:var(--text);font-family:inherit;outline:none;min-width:0}
+.ash-jump input.bad{border-color:#d23b2c}
+.ash-jump button{border:none;background:var(--accent);color:#fff;border-radius:9px;padding:0 16px;font-size:14px;cursor:pointer;font-family:inherit}
+.ash-cap{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);padding:8px 12px 3px}
+.ash-chips{display:flex;gap:6px;flex-wrap:wrap;padding:2px 10px 6px}
+.ash-chip{border:1px solid var(--border);background:var(--bg-alt);border-radius:999px;padding:6px 12px;font-size:12px;color:var(--text-sec);cursor:pointer;font-family:inherit}
+.ash-chip:hover{border-color:var(--accent);color:var(--accent)}
+.rp-reorder-btn{margin-left:auto;border:1px solid var(--border);background:var(--bg-card);border-radius:7px;padding:2px 8px;font-size:11px;cursor:pointer;color:var(--text-sec);font-family:inherit}
+.rp-reorder-btn.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.col-num{cursor:pointer}
+/* ═══ Этап 2: панель чтения [🏠][Аяты|Мусхаф][чипы], вкладки 📚, подсказка ═══ */
+.cb-read{display:flex;align-items:center;gap:7px;width:100%;min-width:0}
+.cb-home{display:inline-flex;align-items:center;justify-content:center;width:36px;height:32px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-sec);border-radius:9px;cursor:pointer;flex-shrink:0;padding:0}
+.cb-home:hover{border-color:var(--accent);color:var(--accent)}
+.cb-home.on{background:var(--accent-bg);border-color:var(--accent);color:var(--accent)}
+.cb-home svg.svgi{width:16px;height:16px}
+.cb-chips{display:flex;align-items:center;gap:6px;margin-left:auto;min-width:0;overflow-x:auto;scrollbar-width:none}
+.cb-chips::-webkit-scrollbar{display:none}
+.cb-chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-sec);border-radius:999px;padding:5px 11px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;min-height:30px}
+.cb-chip:hover{border-color:var(--accent);color:var(--accent)}
+.cb-chip svg.svgi{width:14px;height:14px}
+.cb-chip .chip-lbl{max-width:110px;overflow:hidden;text-overflow:ellipsis}
+.center-bar{transition:max-height .22s,padding .22s;max-height:90px}
+.center-bar.cb-hide{max-height:0;padding-top:0;padding-bottom:0;border-bottom-width:0;overflow:hidden}
+@media (prefers-reduced-motion:reduce){.center-bar{transition:none}}
+.read-hint{margin:2px 0 10px;display:flex;align-items:center;gap:9px;background:var(--accent-bg);border:1px solid rgba(var(--accent-rgb),.35);color:var(--text);border-radius:12px;padding:9px 12px;font-size:12.5px}
+.read-hint b{color:var(--accent)}
+.read-hint button{margin-left:auto;border:none;background:none;color:var(--text-sec);cursor:pointer;padding:4px;font-size:13px;flex-shrink:0}
+.rp-tabs{display:flex;gap:5px;padding:0 0 8px;position:sticky;top:0;background:var(--panel,var(--bg-alt));z-index:2}
+.rp-tabs button{flex:1;border:1px solid var(--border);background:var(--bg);border-radius:8px;padding:7px 3px;font-size:11.5px;font-weight:600;color:var(--text-sec);cursor:pointer;font-family:inherit}
+.rp-tabs button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.rp-presets{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 10px}
+.rp-preset{border:1px solid var(--border);background:var(--bg-card);border-radius:999px;padding:6px 11px;font-size:11.5px;color:var(--text-sec);cursor:pointer;font-family:inherit}
+.rp-preset:hover{border-color:var(--accent);color:var(--accent)}
+.rp-filters-btn{display:flex;align-items:center;gap:7px;border:1px solid var(--border);background:var(--bg-card);border-radius:9px;padding:8px 12px;font-size:12px;color:var(--text-sec);cursor:pointer;font-family:inherit;margin:0 0 8px;width:100%}
+.rp-filters-btn.on{border-color:var(--accent);color:var(--accent)}
+.rp-add-cat{display:flex;align-items:center;gap:8px;width:100%;border:1px dashed var(--border);background:none;border-radius:9px;padding:9px 12px;font-size:12.5px;font-weight:600;color:var(--accent);cursor:pointer;font-family:inherit;margin-top:8px}
+.rp-add-cat:hover{border-color:var(--accent)}
+/* ═══ Этап 3: бокс перевода текущего аята в мусхафе (tanzil-паттерн) ═══ */
+#mtrHost{display:contents} /* иначе sticky заперт в собственном мини-контейнере */
+.mtr-box{position:sticky;bottom:6px;z-index:5;width:min(640px,96%);margin:10px auto 0;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.12);font-size:13.5px;line-height:1.55;flex-shrink:0}
+.mtr-head{display:flex;align-items:center;gap:6px;padding:6px 10px}
+.mtr-head .mtr-pos{border:none;background:var(--bg-alt);border-radius:999px;padding:4px 11px;font-size:12px;font-weight:700;color:var(--accent);cursor:pointer;font-family:inherit}
+.mtr-head .mtr-nav{border:none;background:none;color:var(--text-sec);cursor:pointer;width:32px;height:30px;border-radius:8px;font-size:14px;padding:0}
+.mtr-head .mtr-nav:hover{background:var(--bg-alt)}
+.mtr-head .mtr-src{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-muted);margin-left:2px}
+.mtr-head .mtr-x{margin-left:auto;border:none;background:none;color:var(--text-sec);cursor:pointer;padding:4px 8px;font-size:12px}
+.mtr-body{padding:0 14px 10px;max-height:26vh;overflow-y:auto}
+.mtr-closed{position:sticky;bottom:6px;z-index:5;margin:10px auto 0;display:block;border:1px solid var(--border);background:var(--bg-card);border-radius:999px;padding:6px 14px;font-size:12px;color:var(--text-sec);cursor:pointer;font-family:inherit;box-shadow:0 4px 12px rgba(0,0,0,.1);flex-shrink:0}
+.mtr-closed:hover{border-color:var(--accent);color:var(--accent)}
+/* этап 3: отдельный размер шрифта ТАФСИРОВ — записи kind:tafsir получают свой
+   множитель через подмену --rs-ru (внутри entry все правила уже на этой var) */
+.ab-entry.taf{--rs-ru:var(--rs-ru-taf,1)}
 </style>
 </head>
 <body data-theme="green">
 
+<!-- Шапка (редизайн этап 1): 9 кнопок → 4, монохромные SVG вместо эмодзи.
+     Позиция (hCtx) — КНОПКА-навигатор (openNavSheet); 📊/🎧/⚙/⛶ — в меню ⋯. -->
 <header class="header">
   <div class="header-left">
-    <button class="btn-i" onclick="toggleSidebar()" title="Суры / Теги">☰</button>
+    <button class="btn-i" onclick="toggleSidebar()" title="Панель: суры, поиск, теги, закладки, настройки"><svg class="svgi" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg></button>
     <div class="h-brand"><div class="h-title">مكتبة التفاسير</div><div class="h-sub">TAFSIR LIBRARY</div></div>
-    <h2 class="h-ctx" id="hCtx"></h2>
+    <button class="h-ctx h-ctx-btn" id="hCtx" onclick="openNavSheet()" title="Перейти: сура и аят"></button>
   </div>
   <div class="h-right">
-    <button class="btn-i" onclick="openSearchTab()" title="Поиск по текстам и переход по номеру аята">🔍</button>
-    <button class="btn-i" onclick="openProgress()" title="Прогресс чтения">📊</button>
-    <button class="btn-i" onclick="toggleRPanel()" title="Переводы и тафсиры">📚</button>
-    <button class="btn-i" id="hAudioBtn" onclick="toggleAudioPanel()" title="Аудио: чтец, наборы, визуальный ряд">🎧</button>
-    <button class="btn-i" id="hViewBtn" onclick="toggleViewPanel()" title="Вид: шрифт, размеры, тема, режимы">⚙</button>
-    <button class="btn-i" id="fsBtn" onclick="toggleFullscreen()" title="Во весь экран">⛶</button>
+    <button class="btn-i" onclick="openSearchTab()" title="Поиск по текстам и переход по номеру аята"><svg class="svgi" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4a7 7 0 1 1 0 14 7 7 0 0 1 0-14z"/><path d="m21 21-4.3-4.3"/></svg></button>
+    <button class="btn-i" onclick="toggleRPanel()" title="Переводы и тафсиры"><svg class="svgi" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></button>
+    <button class="btn-i" id="hMoreBtn" onclick="toggleHdrMenu(event)" title="Ещё: прогресс, аудио, вид, весь экран"><svg class="svgi" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor" stroke="none"><circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/></svg></button>
   </div>
 </header>
 
@@ -1445,7 +1551,7 @@ body.hr-open{overflow:hidden}
 
   <aside class="rpanel collapsed" id="rpanel">
     <div class="rp-head"><span>📚 Тексты и тафсиры</span><button class="btn-i" onclick="closeRPanel()" style="font-size:11px" title="Закрыть">✕</button></div>
-    <div class="rp-search"><input placeholder="Поиск по названию / автору…" oninput="ST.rpFilter=this.value.toLowerCase();renderRP();" id="rpSearchInput"></div>
+    <div class="rp-search"><input placeholder="Поиск по названию / автору…" oninput="ST.rpFilter=this.value.toLowerCase();if(ST.rpFilter)ST.rpTab='cat';renderRP();" id="rpSearchInput"></div>
     <div class="rp-list" id="rpList"></div>
   </aside>
 
@@ -1457,7 +1563,7 @@ body.hr-open{overflow:hidden}
 <div class="panel-backdrop" id="panelBackdrop" onclick="panelBackdrop()"></div>
 <button class="immersive-exit" onclick="exitImmersive()" title="Выйти из режима чтения (или кнопка «Назад»)">✕</button>
 
-<footer class="footer"><span id="footerInfo"></span><span>v4.4</span></footer>
+<footer class="footer"><span id="footerInfo"></span><span>v4.5</span></footer>
 
 <!-- ============================================================
   ОФФЛАЙН-РЕЖИМ: раскомментируйте строки ниже для работы без сервера.
@@ -1601,7 +1707,7 @@ function scanDirOf(t){return t.imgdir||("img/"+t.id);}
 // первом обращении (▶ у аята или блок «🎧 Аудио» в панели 📚). Пока аудио не
 // трогали: ни байта кода, ни <audio>-элементов. media.js — ES-модуль, наши
 // let-глобалы (ST/CONFIG/qpcMeta) ему не видны — передаём контекст геттерами.
-const MEDIA_VER="18";   // поднять при правке media.js (сброс кеша браузера/CDN)
+const MEDIA_VER="19";   // поднять при правке media.js (сброс кеша браузера/CDN)
 let MEDIA=null;        // загруженный модуль (null = ещё не загружался)
 function mediaCtx(){
   return {
@@ -1947,6 +2053,7 @@ let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,apan
   rpFilter:"",
   fsAr:1,            // Arabic reading text size (⚙ Вид)
   fsRu:1,            // Russian reading text size (⚙ Вид)
+  fsTaf:1,           // множитель размера ТАФСИРОВ поверх русского (⚙ Вид, этап 3)
   lhAr:1,            // Arabic line-spacing multiplier (⚙ Вид)
   lhRu:1,            // Russian line-spacing multiplier (⚙ Вид)
   mar:0,             // extra reading margins in px (⚙ Вид)
@@ -4807,6 +4914,9 @@ function toggleBookmark(aid,btn){
   setBookmarks(b);
   const on=k in b;
   if(btn){btn.classList.toggle("on",on);btn.textContent=on?"★":"☆";}
+  // звезда в панельке аята (SVG, заливка классом .on) — обновить точечно
+  const fb=document.querySelector(`.ab-ico.ab-bm[data-bm="${aid}"]`);
+  if(fb)fb.classList.toggle("on",on);
   if(ST.sbTab==="bookmarks")renderSB();             // обновить список, если открыт
 }
 function removeBookmark(k){const b=getBookmarks();delete b[k];setBookmarks(b);renderSB();}
@@ -4944,7 +5054,8 @@ async function renderBookmarksScreen(el){
 function renderCB(){
   const bar=document.getElementById("centerBar");
   const ctx=document.getElementById("hCtx");
-  const setCtx=h=>{if(ctx)ctx.innerHTML=h||"";};
+  // hCtx — кнопка-навигатор (openNavSheet): к тексту дорисовываем стрелку ▾
+  const setCtx=h=>{if(ctx)ctx.innerHTML=h?h+'<span class="h-ctx-chev">▼</span>':"";};
   const su=SURAHS.find(s=>s.id===ST.surah);
   const vb=document.getElementById("hViewBtn");if(vb)vb.classList.toggle("active",ST.sidebarOpen&&ST.sbTab==="view"); // подсветка ⚙ в шапке (вкладка «Вид» открыта)
 
@@ -4960,49 +5071,95 @@ function renderCB(){
     bar.innerHTML=`<div class="cb-right"><span class="t-badge">📖 ${esc(ts?ts.name:'Скан')}</span><button class="btn-s" onclick="openScan('${ST.scanSource}')" title="Вернуться к тексту">✕ К тексту</button></div>`;
     return;
   }
-  // Переключатель 5 режимов: иконка + подпись; на узких экранах подпись
-  // прячется CSS-ом (.seg-modes .ml) — остаются одни иконки, всё помещается.
-  // «Колонки/Список» переехал в ⚙ Вид → «Раскладка переводов» (чтобы не
-  // путался с режимами). Бывший 🔤 «Слова» — теперь СЛОЙ (📚 → «Со словами»):
-  // разбор слова нужен при чтении тафсира, а не вместо него.
-  const other=ST.homeMode||ST.hifzMode||ST.eruditMode;   // «не лента и не мусхаф» — экраны-режимы
+  // ЭТАП 2 редизайна: бар чтения вместо «пульта» из 6 режимов.
+  // [🏠] [Аяты|Мусхаф] [чип источников] [Слои]. Хифз/Эрудит — Главная и меню ⋯;
+  // «Источник» — вход из 📚 («Карта покрытия») и cov-попапа (setMode('source')
+  // работает как раньше, убран только вход из бара).
+  bar.classList.remove("cb-hide");                       // auto-hide сбрасываем при перерисовке
+  const other=ST.homeMode||ST.hifzMode||ST.eruditMode;
   const ayatOn=!other&&!ST.pageMode&&!ST.srcMode;
-  const mBtn=(on,m,icon,lab,title)=>`<button class="${on?'on':''}" onclick="setMode('${m}')" title="${title}">${icon}${lab?`<span class="ml">${lab}</span>`:""}</button>`;
-  const modeSeg=`<span class="seg seg-sm seg-modes">`
-    +mBtn(ST.homeMode,"home","🏠","","Главная")
-    +mBtn(ayatOn,"ayat","📖","Аяты","Аяты + перевод")
-    +mBtn(!other&&ST.pageMode,"page","📕","Мусхаф","Постраничный мусхаф")
-    +mBtn(!other&&ST.srcMode,"source","🗂","Источник","Чтение по покрытию одного источника")
-    +mBtn(ST.hifzMode,"hifz","🧠","Хифз","Проверка заучивания: карта памяти и тренажёр")
-    +mBtn(ST.eruditMode,"erudit","🎓","Эрудит","Занимательные упражнения по Корану")
-    +`</span>`;
+  const pageOn=!other&&ST.pageMode;
+  const readBar=
+    `<div class="cb-read">`+
+    `<button class="cb-home ${ST.homeMode?'on':''}" onclick="setMode('home')" title="Главная">${IC.home}</button>`+
+    `<span class="seg seg-sm seg-modes">`+
+    `<button class="${ayatOn?'on':''}" onclick="setMode('ayat')" title="Лента: аяты с переводами и тафсирами">${IC.list}<span class="ml">Аяты</span></button>`+
+    `<button class="${pageOn?'on':''}" onclick="setMode('page')" title="Постраничный мусхаф">${IC.bookopen}<span class="ml">Мусхаф</span></button>`+
+    `</span>`+
+    `<span class="cb-chips">`+
+    `<button class="cb-chip" onclick="openRPanelTab('sel')" title="Переводы и тафсиры: что читать">${IC.book}<span class="chip-lbl">${esc(srcChipLabel())}</span></button>`+
+    `<button class="cb-chip" onclick="openRPanelTab('orig')" title="Слои: редакции арабского, таджвид, пословный разбор">${IC.layers}<span>Слои</span></button>`+
+    `</span></div>`;
   if(ST.homeMode){
-    setCtx("🏠 Главная");
-    bar.innerHTML=`<div class="cb-right">${modeSeg}</div>`;return;
+    setCtx("Главная");
+    bar.innerHTML=readBar;return;
   }
   if(ST.hifzMode){
     setCtx("🧠 Заучивание");
-    bar.innerHTML=`<div class="cb-right">${modeSeg}</div>`;return;
+    bar.innerHTML=readBar;return;
   }
   if(ST.eruditMode){
     setCtx("🎓 Эрудит");
-    bar.innerHTML=`<div class="cb-right">${modeSeg}</div>`;return;
+    bar.innerHTML=readBar;return;
   }
   if(ST.bmView){
     setCtx("★ Закладки");
-    bar.innerHTML=`<div class="cb-right"><button class="btn-s" onclick="ST.bmView=false;ST.notesView=false;render();">← Назад</button>${modeSeg}</div>`;return;
+    bar.innerHTML=`<div class="cb-read"><button class="btn-s" onclick="ST.bmView=false;ST.notesView=false;render();">← Назад</button></div>`;return;
   }
   if(ST.srcMode){
     // при чтении заголовок = сура (как обычно); имя источника живёт в его компактной шапке (без дубля)
     setCtx(ST.srcSel?`${su.ru} <span class="ar">${su.name}</span>`:"📖 Выбор источника");
-    bar.innerHTML=`<div class="cb-right">${modeSeg}</div>`;return;
+    bar.innerHTML=readBar;return;
   }
   if(ST.pageMode){
     setCtx(pageLocation(ST.mushafPage));
-    bar.innerHTML=`<div class="cb-right">${modeSeg}</div>`;return;
+    bar.innerHTML=readBar;return;
   }
   setCtx(`${su.ru} <span class="ar">${su.name}</span>`);
-  bar.innerHTML=`<div class="cb-right">${modeSeg}</div>`;
+  bar.innerHTML=readBar;
+}
+// Чип источников: сам показывает, что включено (правила именования — UI_REDESIGN.md)
+function srcChipLabel(){
+  const en=getEnabledList().filter(t=>t.id!=="_notes");
+  if(!en.length)return "Оригинал";
+  const first=(en[0].name||"").replace(/\s*\(.*$/,"").trim()||en[0].name;
+  return en.length>1?first+" +"+(en.length-1):first;
+}
+// Открыть панель 📚 сразу на нужной вкладке (чипы бара, «Слои» → «Оригинал и слои»)
+function openRPanelTab(tab){
+  ST.rpTab=tab;
+  if(!ST.rpanelOpen)toggleRPanel();else renderRP();
+}
+// ── Пресеты наборов источников (панель 📚 → «Выбрано») ─────────────────────
+// Правило (UI_REDESIGN.md): молча не перезаписывать — перед применением пресета
+// текущая РУЧНАЯ подборка автосохраняется в «Мой набор» (localStorage myPreset).
+function presetSnapshot(){
+  return {ids:getEnabledList().filter(t=>t.id!=="_notes").map(t=>t.id),wbw:!!ST.wbwLayer,tj:!!ST.tajweed};
+}
+function applyPresetState(ids,wbw,tj){
+  CONFIG.tafsirs.forEach(t=>{if(t.kind!=="quran"&&t.kind!=="image")ST.enabled[t.id]=false;});
+  ids.forEach(id=>{if(CONFIG.tafsirs.find(t=>t.id===id))ST.enabled[id]=true;});
+  setEnabled(ST.enabled);setUserOrder(ids.slice());
+  if(wbw!==undefined&&!!ST.wbwLayer!==!!wbw)toggleWbwLayer();   // штатные тогглеры —
+  if(tj!==undefined&&!!ST.tajweed!==!!tj)toggleTajweed();       // они знают про паки/персист
+  renderRP();renderCB();renderCenter();
+}
+function applyPreset(kind){
+  // первый включённый перевод (или Кулиев), первый включённый тафсир (или Ибн Касир)
+  const en=getEnabledList().filter(t=>t.id!=="_notes");
+  const isTr=t=>t.group==="translations"&&t.lang!=="ar";
+  const isTaf=t=>t.kind==="tafsir";
+  const tr=(en.find(isTr)||CONFIG.tafsirs.find(t=>t.id==="kuliev")||CONFIG.tafsirs.find(isTr)||{}).id;
+  const taf=(en.find(isTaf)||CONFIG.tafsirs.find(t=>t.id==="kathir_ru")||CONFIG.tafsirs.find(isTaf)||{}).id;
+  if(kind==="mine"){
+    const p=gs("myPreset",null);
+    if(p&&Array.isArray(p.ids))applyPresetState(p.ids,p.wbw,p.tj);
+    return;
+  }
+  ss("myPreset",presetSnapshot());                              // не потерять ручную подборку
+  if(kind==="tr")applyPresetState(tr?[tr]:[],false,undefined);
+  else if(kind==="taf")applyPresetState([tr,taf].filter(Boolean),false,undefined);
+  else if(kind==="study")applyPresetState(tr?[tr]:[],true,true);
 }
 
 // -- CENTER BODY --
@@ -5101,6 +5258,11 @@ function renderHome(el){
   html+=`<div class="home-sec"><div class="home-nav-link" onclick="openRootsPanel()" title="Указатель корней: все места, где встречается корень">
     <span class="hnl-ic">🌿</span>
     <span class="hnl-main">Корни слов <span class="hnl-sub">— где ещё встречается это слово</span></span>
+    <span class="hnl-arrow">›</span></div></div>`;
+  // — Заучивание (хифз): режим ушёл из бара (этап 2) — вход отсюда и из меню ⋯ —
+  html+=`<div class="home-sec"><div class="home-nav-link" onclick="setMode('hifz')" title="Карта памяти и проверка заучивания">
+    <span class="hnl-ic">🧠</span>
+    <span class="hnl-main">Заучивание <span class="hnl-sub">— карта памяти и проверка (хифз)</span></span>
     <span class="hnl-arrow">›</span></div></div>`;
   // — Эрудит (занимательные упражнения) —
   html+=`<div class="home-sec"><div class="home-nav-link" onclick="openErudit()" title="Занимательные упражнения: названия сур, аяты, темы">
@@ -5284,20 +5446,23 @@ function sourceEntryHTML(t,text,aid,adhoc,blockOf){
   const wCls=wtop?` warn-${wtop}`:"";
   const wLabel=(warns.find(w=>w.cta)||{}).cta||WARN_CTA[wtop]||"Пояснение";
   const wCnt=warns.length>1?" ("+warns.length+")":"";
-  const wBadge=wtop?`<button class="warn-badge lv-${wtop}" onclick="event.stopPropagation();openWarnPopup('${escAttr(t.id)}',${aid})" title="Нажмите — редакция объясняет, в чём проблема этого места">⚠ ${esc(wLabel)}${wCnt}</button>`:"";
+  // Один ⚠-компонент (этап 1 редизайна): бейдж у имени — ПАССИВНЫЙ индикатор
+  // уровня, единственная кликабельная точка — плашка warn-inline под текстом.
+  const wBadge=wtop?`<span class="warn-badge lv-${wtop}" title="У этого места есть редакционное пояснение — см. плашку ниже">⚠ ${esc(wLabel)}${wCnt}</span>`:"";
   const wInline=wtop?`<button class="warn-inline lv-${wtop}" onclick="event.stopPropagation();openWarnPopup('${escAttr(t.id)}',${aid})" title="Открыть разбор">⚠ ${esc(wLabel)}${wCnt} — открыть разбор →</button>`:"";
   const blk=(!blockOf&&text)?parseBlockRef(text):null;
   if(blk){
-    return `<div class="ab-entry${isApprovedHere(t)?' approved':''}${wCls}"${adhoc?' style="border-left:2px solid var(--accent)"':''}>
+    return `<div class="ab-entry${t.kind==="tafsir"?' taf':''}${isApprovedHere(t)?' approved':''}${wCls}"${adhoc?' style="border-left:2px solid var(--accent)"':''}>
       <div class="ab-entry-label">${esc(t.name)} <span class="lbl-ar">${t.nameAr||''}</span>${wBadge}${segCredit(t)}${badge}${counterpartChip(t)}</div>
       <div class="cov-blockref">📎 Разобрано в блоке <b>${blk.from}–${blk.to}</b> <button class="cov-goto" onclick="goAyah(${ST.surah},${blk.target})">перейти к аяту ${blk.target} →</button></div>
+      ${wInline}
     </div>`;
   }
   const {body,notes}=text?splitNotes(text):{body:null,notes:[]};
   const inner=body?renderRefs(body):'<span style="color:var(--text-muted)">—</span>';
   const long=!ST.noTouch&&body&&body.length>600; // в режиме без касания — сразу развёрнуто, без кнопки
   const blockNote=blockOf?`<div class="cov-blocknote">показан блок ${blockOf[0]}–${blockOf[1]} (этот аят входит в него)</div>`:"";
-  return `<div class="ab-entry${isApprovedHere(t)?' approved':''}${wCls}"${adhoc?' style="border-left:2px solid var(--accent)"':''}>
+  return `<div class="ab-entry${t.kind==="tafsir"?' taf':''}${isApprovedHere(t)?' approved':''}${wCls}"${adhoc?' style="border-left:2px solid var(--accent)"':''}>
     <div class="ab-entry-label">${esc(t.name)} <span class="lbl-ar">${t.nameAr||''}</span>${wBadge}${segCredit(t)}${badge}${counterpartChip(t)}</div>
     ${blockNote}
     <div class="ab-entry-text md selectable ${isAr?'rtl':''} ${long?'clamped':''}">${inner}</div>
@@ -5605,10 +5770,12 @@ function setupHydration(area,enabled,loaded){
 // Вставляется в .ayah-block, переживает виртуализацию; при смене суры — сбрасывается.
 function toggleNote(aid,btn){
   if(ST.noTouch)return;
-  const block=btn.closest(".ayah-block");if(!block)return;
+  // btn может быть null — вызов из листа аята (openAyahSheet); блок ищем по aid
+  const block=(btn&&btn.closest(".ayah-block"))||document.querySelector(`.ayah-block[data-aid="${aid}"]`);
+  if(!block)return;
   const ex=block.querySelector(".ab-note-inline");
-  if(ex){ex.remove();btn.classList.toggle("on",false);btn.classList.toggle("has",hasNote(ST.surah,aid));return;}
-  btn.classList.add("on");
+  if(ex){ex.remove();if(btn){btn.classList.toggle("on",false);btn.classList.toggle("has",hasNote(ST.surah,aid));}return;}
+  if(btn)btn.classList.add("on");
   const div=document.createElement("div");div.className="ab-note-inline";
   div.innerHTML=`<div class="ab-note-bar"><button class="ab-note-expand" onclick="openNoteEditor(${ST.surah},${aid})" title="Развернуть на весь экран с форматированием">⤢ Развернуть</button></div>`+
     `<textarea class="ab-note-area" placeholder="Заметка к аяту ${aid}…" oninput="noteInput(this,${aid})">${esc(getNote(ST.surah,aid))}</textarea>`;
@@ -5622,6 +5789,7 @@ function noteInput(ta,aid){
   const has=hasNote(ST.surah,aid);
   const btn=block.querySelector(".ab-note-btn");if(btn)btn.classList.toggle("has",has);
   const dots=block.querySelector(".ab-tag-dots");if(dots)dots.innerHTML=has?'<span class="ab-note-dot"></span>':'';
+  refreshAyahMarks(aid);                            // метка ✏ в панельке аята
   renderF();
 }
 
@@ -5731,13 +5899,15 @@ function closeNoteEditor(){
 // Разовый показ перевода/оригинала ОДНОГО аята (кнопка ru/ar в панели аята).
 // Блок вставляется в .ayah-block (рядом с .ab-body), переживает виртуализацию;
 // при смене суры/режима всё перерисовывается заново — состояние само сбрасывается.
-async function togglePeek(aid,btn){
+async function togglePeek(aid,btn,kindArg){
   if(ST.noTouch)return;
-  const block=btn.closest(".ayah-block");if(!block)return;
+  // btn может быть null — вызов из листа аята; тогда kind приходит аргументом
+  const block=(btn&&btn.closest(".ayah-block"))||document.querySelector(`.ayah-block[data-aid="${aid}"]`);
+  if(!block)return;
   const ex=block.querySelector(".ab-peek");
-  if(ex){ex.remove();btn.classList.remove("on");return;}
-  btn.classList.add("on");
-  const kind=btn.dataset.peek;
+  if(ex){ex.remove();if(btn)btn.classList.remove("on");return;}
+  if(btn)btn.classList.add("on");
+  const kind=btn?btn.dataset.peek:kindArg;
   const lbl=kind==="ru"?"Перевод":"Оригинал";
   const div=document.createElement("div");div.className="ab-peek";
   div.innerHTML=`<span class="ab-peek-lbl">${lbl}</span><span style="color:var(--text-muted)">…</span>`;
@@ -5753,6 +5923,146 @@ async function togglePeek(aid,btn){
   div.innerHTML=`<span class="ab-peek-lbl">${lbl}</span>`+
     (kind==="ru"?`<div class="ab-peek-t md selectable">${text?mdRender(text):'—'}</div>`
                 :`<div class="ab-peek-t rtl selectable">${text||'—'}</div>`);
+}
+
+// ═══ Редизайн, этап 1: SVG-иконки, лист аята, навигатор позиции, меню шапки ═══
+// (см. UI_REDESIGN.md; механика листов — по образцу warn-pop/rec-pop)
+const IC={
+  play:'<svg class="svgi" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5.5v13l11-6.5z"/></svg>',
+  star:'<svg class="svgi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.6-5 4.4 1.5 6.5L12 16.7 6 20.1l1.5-6.5-5-4.4 6.6-.6z"/></svg>',
+  more:'<svg class="svgi" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor" stroke="none"><circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/></svg>',
+  pen:'<svg class="svgi" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>',
+  tag:'<svg class="svgi" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8z"/><path d="M7 7h.01"/></svg>',
+  film:'<svg class="svgi" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v16H3z"/><path d="M7 4v16"/><path d="M17 4v16"/><path d="M3 9h4"/><path d="M3 15h4"/><path d="M17 9h4"/><path d="M17 15h4"/></svg>',
+  mic:'<svg class="svgi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><path d="M12 18v4"/></svg>',
+  copy:'<svg class="svgi" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 9h12v12H9z"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+  x:'<svg class="svgi" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>',
+  chart:'<svg class="svgi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>',
+  head:'<svg class="svgi" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19v-5a9 9 0 0 1 18 0v5"/><path d="M3 14h3a1.5 1.5 0 0 1 1.5 1.5v3A1.5 1.5 0 0 1 6 20H3z"/><path d="M21 14h-3a1.5 1.5 0 0 0-1.5 1.5v3A1.5 1.5 0 0 0 18 20h3z"/></svg>',
+  sliders:'<svg class="svgi" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 4h-7"/><path d="M10 4H3"/><path d="M21 12h-9"/><path d="M8 12H3"/><path d="M21 20h-5"/><path d="M12 20H3"/><path d="M14 2v4"/><path d="M8 10v4"/><path d="M16 18v4"/></svg>',
+  maxi:'<svg class="svgi" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>',
+  lib:'<svg class="svgi" viewBox="0 0 24 24" aria-hidden="true"><path d="m16 6 4 14"/><path d="M12 6v14"/><path d="M8 8v12"/><path d="M4 4v16"/></svg>',
+  eye:'<svg class="svgi" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><path d="M12 9a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"/></svg>',
+  list:'<svg class="svgi" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3.5 6h.01"/><path d="M3.5 12h.01"/><path d="M3.5 18h.01"/></svg>',
+  home:'<svg class="svgi" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22v-8h6v8"/></svg>',
+  bookopen:'<svg class="svgi" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
+  book:'<svg class="svgi" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+  layers:'<svg class="svgi" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 10 6-10 6L2 8z"/><path d="m2 14 10 6 10-6"/></svg>',
+  target:'<svg class="svgi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18z"/><path d="M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8z"/><path d="M12 12h.01"/></svg>',
+  grad:'<svg class="svgi" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 9 12 4 2 9l10 5z"/><path d="M6 11.5V17c3.2 2.6 8.8 2.6 12 0v-5.5"/></svg>'
+};
+// Метки-состояния в панельке аята: заметка + число тегов (индикаторы, не кнопки)
+function marksHTML(s,aid){
+  const hn=hasNote(s,aid);const n=getATList(s,aid).length;
+  return (hn?`<span class="mk" title="Есть заметка">${IC.pen}</span>`:"")+
+         (n?`<span class="mk" title="Тегов: ${n}">${IC.tag}${n}</span>`:"");
+}
+function refreshAyahMarks(aid){
+  const el=document.querySelector(`.ab-marks[data-marks="${aid}"]`);
+  if(el)el.innerHTML=marksHTML(ST.surah,aid);
+}
+// Якорь для позиционируемых попапов (теги/покрытие/запись), когда вызов из листа
+function ayahAnchorEl(aid){
+  return document.querySelector(`.ayah-block[data-aid="${aid}"] .ab-num-btn`)
+    ||document.querySelector(`.col-num[data-aid="${aid}"]`)
+    ||document.querySelector(`.ayah-block[data-aid="${aid}"] .ab-num`)
+    ||document.body;
+}
+// -- нижний лист (общая оболочка листа аята и навигатора) --
+let ashEl=null;
+function closeAyahSheet(){if(ashEl){ashEl.veil.remove();ashEl.sheet.remove();ashEl=null;}}
+function openSheetShell(title,sub,bodyHTML){
+  closeAyahSheet();closeHdrMenu();
+  const veil=document.createElement("div");veil.className="ash-veil";veil.onclick=closeAyahSheet;
+  const sheet=document.createElement("div");sheet.className="ash";
+  sheet.innerHTML=`<div class="ash-grab"></div><div class="ash-head"><span class="t">${title}</span>${sub?`<span class="s">${sub}</span>`:""}<button class="ash-x" onclick="closeAyahSheet()" title="Закрыть">${IC.x}</button></div><div class="ash-body">${bodyHTML}</div>`;
+  document.body.appendChild(veil);document.body.appendChild(sheet);
+  ashEl={veil,sheet};
+}
+// -- ЛИСТ АЯТА: все действия одним тапом (номер аята или ⋯) --
+function openAyahSheet(aid){
+  if(ST.noTouch)return;
+  const su=SURAHS.find(s=>s.id===ST.surah);
+  const bm=isBookmarked(ST.surah,aid);
+  const hn=hasNote(ST.surah,aid);
+  const tags=getATList(ST.surah,aid);
+  const tagsSub=tags.length?esc(tags.slice(0,2).map(p=>p.split("/").pop()).join(" · "))+(tags.length>2?" +"+(tags.length-2):""):"";
+  const c=covLoadFailed?null:covCountByKind(ST.surah,aid);
+  // peek — как в renderReading: только когда включён один «полюс» (см. peekKind)
+  const en=getEnabledList().filter(t=>t.kind!=="image");
+  const hasAr=getEnabledQuranTexts().length>0;
+  const hasTr=en.some(t=>t.id!=="_notes"&&t.lang!=="ar");
+  const peekKind=hasAr&&!hasTr?"ru":(hasTr&&!hasAr?"ar":null);
+  openSheetShell(`Аят ${ST.surah}:${aid}`,su?esc(su.ru):"",
+    `<button class="ash-row ${bm?'on':''}" onclick="closeAyahSheet();toggleBookmark(${aid},null)">${IC.star}Закладка<span class="sub">${bm?'добавлена':''}</span></button>`+
+    `<button class="ash-row" onclick="closeAyahSheet();toggleNote(${aid},null)">${IC.pen}Заметка<span class="sub">${hn?'есть':''}</span></button>`+
+    `<button class="ash-row" onclick="closeAyahSheet();openTagPopup(${aid},ayahAnchorEl(${aid}))">${IC.tag}Теги<span class="sub">${tagsSub}</span></button>`+
+    `<div class="ash-div"></div>`+
+    `<button class="ash-row" onclick="closeAyahSheet();openDiafilm(${aid})">${IC.film}Диафильм</button>`+
+    `<button class="ash-row" onclick="closeAyahSheet();mediaRecPopup(${aid},ayahAnchorEl(${aid}))">${IC.mic}Записать чтение</button>`+
+    `<button class="ash-row" onclick="copyAyah(${aid},this)">${IC.copy}Копировать аят<span class="sub"></span></button>`+
+    (peekKind?`<button class="ash-row" onclick="closeAyahSheet();togglePeek(${aid},null,'${peekKind}')">${IC.eye}${peekKind==="ru"?"Показать перевод":"Показать оригинал"}</button>`:"")+
+    `<div class="ash-div"></div>`+
+    `<button class="ash-row" onclick="closeAyahSheet();openCovPopup(${aid},ayahAnchorEl(${aid}))">${IC.lib}Источники к аяту<span class="sub">${c?c.tr+" пер. · "+c.taf+" таф. →":"→"}</span></button>`);
+}
+// Копировать: арабский + первый включённый перевод + адрес
+async function copyAyah(aid,btn){
+  const sub=btn?btn.querySelector(".sub"):null;
+  try{
+    await loadChunk("_arabic",ST.surah);
+    const ar=getArabicFromCache(ST.surah,aid)||"";
+    let tr="";
+    const t=getEnabledList().find(x=>x.kind!=="image"&&x.kind!=="quran"&&x.id!=="_notes"&&x.lang!=="ar");
+    if(t){await loadChunk(t.id,ST.surah);tr=getChunk(t.id,ST.surah)?.[String(aid)]||"";}
+    const su=SURAHS.find(s=>s.id===ST.surah);
+    const txt=(ar?ar+"\n\n":"")+(tr?tr+"\n\n":"")+`(Коран, ${su?su.ru+", ":""}${ST.surah}:${aid})`;
+    await navigator.clipboard.writeText(txt);
+    if(sub)sub.textContent="скопировано ✓";
+  }catch(e){if(sub)sub.textContent="не удалось";}
+}
+// -- НАВИГАТОР позиции (тап по «Сура · аят» в шапке) --
+function openNavSheet(){
+  if(ST.noTouch)return;
+  const rec=getRecent().slice(0,6);
+  const chips=rec.map(r=>{
+    const su=SURAHS.find(s=>s.id===r.surah);
+    return `<button class="ash-chip" onclick="closeAyahSheet();goAyah(${r.surah},${r.ayah||1})">${esc((su?su.ru:r.surah)+(r.ayah&&r.ayah>1?" · "+r.ayah:""))}</button>`;
+  }).join("");
+  openSheetShell("Перейти","сура : аят",
+    `<div class="ash-jump"><input id="ashJumpInp" autocomplete="off" placeholder="2:255 — или номер суры" onkeydown="if(event.key==='Enter')ashJumpGo()"><button onclick="ashJumpGo()" title="Перейти">→</button></div>`+
+    (chips?`<div class="ash-cap">Недавнее</div><div class="ash-chips">${chips}</div>`:"")+
+    `<div class="ash-div"></div><button class="ash-row" onclick="closeAyahSheet();openSurahsTab()">${IC.list}Все суры и джузы<span class="sub">→</span></button>`);
+  const inp=document.getElementById("ashJumpInp");if(inp&&!isM())inp.focus();
+}
+function ashJumpGo(){
+  const inp=document.getElementById("ashJumpInp");if(!inp)return;
+  const ref=parseAyahRef(inp.value);
+  if(!ref){inp.classList.add("bad");inp.select();setTimeout(()=>inp.classList.remove("bad"),700);return;}
+  closeAyahSheet();goAyahRef(ref);
+}
+function openSurahsTab(){
+  ST.sidebarOpen=true;
+  const sb=document.getElementById("sidebar");if(sb)sb.classList.remove("collapsed");
+  setSbTab("surahs");
+  updateBackdrop();
+}
+// -- МЕНЮ ⋯ в шапке: Прогресс / Аудио / Вид / Весь экран --
+let hdrMenuEl=null;
+function closeHdrMenu(){if(hdrMenuEl){hdrMenuEl.remove();hdrMenuEl=null;document.removeEventListener("click",_hmOut);}}
+function _hmOut(e){if(hdrMenuEl&&!hdrMenuEl.contains(e.target)&&!e.target.closest("#hMoreBtn"))closeHdrMenu();}
+function toggleHdrMenu(e){
+  if(e)e.stopPropagation();
+  if(hdrMenuEl){closeHdrMenu();return;}
+  const m=document.createElement("div");m.className="hdr-menu";m.id="hdrMenu";
+  m.innerHTML=
+    `<button onclick="closeHdrMenu();openProgress()">${IC.chart}Прогресс чтения</button>`+
+    `<button onclick="closeHdrMenu();setMode('hifz')">${IC.target}Заучивание (хифз)</button>`+
+    `<button onclick="closeHdrMenu();setMode('erudit')">${IC.grad}Эрудит</button>`+
+    `<button onclick="closeHdrMenu();toggleAudioPanel()">${IC.head}Аудио и чтецы</button>`+
+    `<button onclick="closeHdrMenu();toggleViewPanel()">${IC.sliders}Вид и настройки</button>`+
+    `<button onclick="closeHdrMenu();toggleFullscreen()">${IC.maxi}${ST.immersive?"Выйти из режима чтения":"Во весь экран"}</button>`;
+  document.body.appendChild(m);hdrMenuEl=m;
+  setTimeout(()=>document.addEventListener("click",_hmOut),10);
 }
 
 async function renderReading(el){
@@ -5814,19 +6124,20 @@ async function renderReading(el){
     const peekKind=hasAr&&!hasTr?"ru":(hasTr&&!hasAr?"ar":null);
     // Lightweight skeleton: header + empty body per ayah; bodies hydrate on demand
     let html=buildSuraIntro(enabled,loaded);
+    // Одноразовая подсказка после редизайна (этап 2, гасится навсегда крестиком)
+    if(!gs("tip45",false))html+=`<div class="read-hint"><span>Новое: <b>тап по номеру аята</b> — все действия (теги, заметка, диафильм…). Хифз и Эрудит — на <b>Главной</b> и в меню <b>⋯</b>.</span><button onclick="ss('tip45',true);this.parentElement.remove()" title="Больше не показывать">✕</button></div>`;
+    // Панелька аята (этап 1 редизайна): номер · ▶ · метки-состояния · ☆ · ⋯.
+    // Теги/заметка/диафильм/запись/копия/счётчик покрытия — в листе аята
+    // (openAyahSheet, вход — номер или ⋯); метки — индикаторы, но тап по ним
+    // тоже открывает лист. Peek ru/ar — там же.
     for(const aid of ayahIds){
-      const hn=hasNote(ST.surah,aid);const ht=hasAT(ST.surah,aid);
       html+=`<div class="ayah-block" data-aid="${aid}"><div class="ab-head">
-        <div style="display:flex;align-items:center;gap:8px"><span class="ab-num">${aid}</span>
-          <button class="ab-tag-btn${ht?' has':''}" data-tagbtn="${aid}" onclick="event.stopPropagation();openTagPopup(${aid},this)" title="Теги">🏷${ht?' '+getATList(ST.surah,aid).length:''}</button>
-          <button class="cov-cnt-btn" onclick="event.stopPropagation();openCovPopup(${aid},this)" title="Переводов и тафсиров у этого аята">${covCountLabel(ST.surah,aid)}</button>
-          <button class="ab-bm-btn ${isBookmarked(ST.surah,aid)?'on':''}" onclick="event.stopPropagation();toggleBookmark(${aid},this)" title="Закладка">${isBookmarked(ST.surah,aid)?'★':'☆'}</button>
-          <button class="ab-note-btn ${hn?'has':''}" onclick="event.stopPropagation();toggleNote(${aid},this)" title="Заметка к аяту">📝</button>
-          <button class="ab-play-btn" onclick="event.stopPropagation();mediaPlayAyah(${aid})" title="Слушать с этого аята (запись голоса — 🎙 в плеере)">▶</button>
-          <button class="ab-play-btn" onclick="event.stopPropagation();openDiafilm(${aid})" title="Полноэкранный визуальный ряд с этого аята">🎬</button>
-          ${peekKind?`<button class="ab-peek-btn" data-peek="${peekKind}" onclick="event.stopPropagation();togglePeek(${aid},this)" title="${peekKind==='ru'?'Показать перевод этого аята':'Показать оригинал этого аята'}">${peekKind}</button>`:''}
+        <div class="ab-row"><button class="ab-num-btn" onclick="event.stopPropagation();openAyahSheet(${aid})" title="Все действия с аятом">${aid}</button>
+          <button class="ab-ico" onclick="event.stopPropagation();mediaPlayAyah(${aid})" title="Слушать с этого аята">${IC.play}</button>
+          <span class="ab-marks" data-marks="${aid}" onclick="event.stopPropagation();openAyahSheet(${aid})">${marksHTML(ST.surah,aid)}</span>
+          <button class="ab-ico ab-bm ${isBookmarked(ST.surah,aid)?'on':''}" data-bm="${aid}" onclick="event.stopPropagation();toggleBookmark(${aid},null)" title="Закладка">${IC.star}</button>
+          <button class="ab-ico" onclick="event.stopPropagation();openAyahSheet(${aid})" title="Ещё действия">${IC.more}</button>
         </div>
-        <div class="ab-tag-dots">${hn?'<span class="ab-note-dot"></span>':''}</div>
       </div><div class="ab-body" data-aid="${aid}" style="min-height:48px"></div></div>`;
     }
     if(ST.wbwLayer)html+=wbwAttrHTML();          // лицензии глосса/разбора — там же, где глосс
@@ -5857,7 +6168,7 @@ async function renderReading(el){
     html+=`<colgroup><col style="width:44px">${cols.map(()=>'<col>').join("")}</colgroup>`;
     html+=`<thead><tr><th>#</th>${cols.map(c=>`<th>${esc(c.name)}</th>`).join("")}</tr></thead><tbody>`;
     for(const aid of ayahIds){
-      html+=`<tr><td class="col-num" data-aid="${aid}">${aid}</td>`;
+      html+=`<tr><td class="col-num" data-aid="${aid}" onclick="openAyahSheet(${aid})" title="Действия с аятом">${aid}</td>`;
       for(const col of cols){
         if(col.isArabic){
           const pk=activePack();const qd=loaded["__qpc"];
@@ -6253,6 +6564,7 @@ function toggleFacet(key,v){
 }
 function clearFacets(){ST.facets={lang:[],kind:[],era:[],tags:[]};renderRP();}
 function anyFacetActive(){return Object.values(ST.facets).some(a=>a&&a.length);}
+function facetActiveCount(){return Object.values(ST.facets).reduce((n,a)=>n+(a?a.length:0),0);}
 function renderFacetBar(){
   let h=`<div class="rp-facets">`;
   for(const key of ["lang","kind","era"]){
@@ -6500,8 +6812,7 @@ function audioBlockHTML(){
     <div class="rp-q-body">${rows}${setRows}${manage}
     <button class="cov-map-open" style="margin:6px 0 0" onclick="mediaPlaySurah()">▶ Слушать текущую суру</button>
     <button class="cov-map-open" style="margin:6px 0 0" onclick="mediaNewSet()">➕ Новый набор записей</button>
-    <button class="cov-map-open" style="margin:6px 0 0" onclick="openDiafilm()">🎬 Диафильм (полноэкранный визуальный ряд)</button>
-    <div class="vp-note">Чтецы стримятся с everyayah.com (нужен интернет). Наборы записей — ваш голос, кнопка 🎙 в плеере; хранятся только на этом устройстве и работают офлайн. Диафильм — полноэкранное созерцание: аят на весь экран с атмосферной картинкой по теме (фихрист), кадр меняется по чтецу (без звука — свайпом); в кадре можно убрать картинку или аудио.</div></div></div>`;
+    <div class="vp-note">Чтецы стримятся с everyayah.com (нужен интернет). Наборы записей — ваш голос, кнопка 🎙 в плеере; хранятся только на этом устройстве и работают офлайн. Диафильм (полноэкранный визуальный ряд) — кнопка 🎬 в плеере или в меню аята (тап по номеру).</div></div></div>`;
 }
 // Новый набор записей: имя → tl_mediaSets; записи в него кладёт попап 🎙
 function mediaNewSet(){
@@ -6585,33 +6896,49 @@ function renderRP(){
   if(!el)return;
   const q=ST.rpFilter||"";
   const sh=srcHiddenSet();
-  let html=renderFacetBar();
+  // ЭТАП 2 редизайна: три вкладки «Выбрано | Каталог | Оригинал и слои»;
+  // фасеты — за кнопкой «Фильтры»; пресеты наборов; «Оригинал» — своя вкладка.
+  const tab=ST.rpTab||"sel";
+  const tb=(id,lab)=>`<button class="${tab===id?'on':''}" onclick="ST.rpTab='${id}';renderRP()">${lab}</button>`;
+  let html=`<div class="rp-tabs">${tb("sel","Выбрано")+tb("cat","Каталог")+tb("orig","Оригинал и слои")}</div>`;
 
-  // Карта покрытия (Уровень 3) — где какой источник есть, где дыры
-  html+=`<button class="cov-map-open" onclick="setMode('source')">🗺 Карта покрытия · чтение по источнику</button>`;
-
-  // 0. Оригинал: редакции арабского + начертание + таджвид (см. quranBlockHTML)
-  html+=quranBlockHTML();
-  // (Аудио переехало в ОТДЕЛЬНУЮ панель 🎧 — кнопка в шапке; renderAudioPanel.
-  //  Панель 📚 — чисто тексты/переводы/тафсиры, чтобы не мешать чтению текстом.)
-
-  // 1. Enabled (pinned, reorderable) — переводы/тафсиры; арабский — в блоке выше.
-  const enAll=getEnabledList().filter(t=>t.id!=="_notes");
-  if(enAll.length){
-    html+=`<div class="rp-sec-head">✓ Включено · ${enAll.length}</div>`;
-    enAll.forEach(t=>{html+=tItem(t,true,true);});
+  if(tab==="orig"){
+    // Редакции арабского + таджвид + пословный слой (см. quranBlockHTML)
+    el.innerHTML=html+quranBlockHTML();
+    return;
   }
 
-  // 2. Notes toggle (standalone special)
-  const notesOn=ST.enabled._notes;
-  html+=`<div class="t-item special ${notesOn?'checked':''}" onclick="toggleEn('_notes')">
-    <div class="t-check">${notesOn?'✓':''}</div>
-    <div class="t-info"><div class="t-name">📝 Мои заметки <span style="font-weight:400;color:var(--text-muted);font-size:10px">· личные</span></div></div>
-  </div>`;
-  // (Резервная копия — экспорт/импорт — перенесена в ⚙ Вид, чтобы разгрузить панель.)
+  if(tab==="sel"){
+    // Пресеты наборов: текущая ручная подборка автосохраняется в «Мой набор»
+    html+=`<div class="rp-presets">`+
+      `<button class="rp-preset" onclick="applyPreset('tr')" title="Оставить один перевод смыслов">Только перевод</button>`+
+      `<button class="rp-preset" onclick="applyPreset('taf')" title="Перевод + один тафсир">Перевод + тафсир</button>`+
+      `<button class="rp-preset" onclick="applyPreset('study')" title="Перевод + пословный разбор и таджвид">Учёба</button>`+
+      (gs("myPreset",null)?`<button class="rp-preset" onclick="applyPreset('mine')" title="Вернуть вашу сохранённую подборку">Мой набор</button>`:"")+
+      `</div>`;
+    const enAll=getEnabledList().filter(t=>t.id!=="_notes");
+    if(enAll.length){
+      // ▲▼ порядка — только в явном режиме «упорядочить» (этап 1: меньше микро-кнопок)
+      html+=`<div class="rp-sec-head" style="display:flex;align-items:center;gap:8px">✓ Включено · ${enAll.length}${enAll.length>1?`<button class="rp-reorder-btn ${ST.rpReorder?'on':''}" onclick="event.stopPropagation();ST.rpReorder=!ST.rpReorder;renderRP()" title="Изменить порядок источников">⇅ порядок</button>`:''}</div>`;
+      enAll.forEach(t=>{html+=tItem(t,true,!!ST.rpReorder);});
+    }else{
+      html+=`<div class="vp-note">Ни один перевод или тафсир не включён — показывается только арабский текст. Добавьте из каталога.</div>`;
+    }
+    const notesOn=ST.enabled._notes;
+    html+=`<div class="t-item special ${notesOn?'checked':''}" onclick="toggleEn('_notes')">
+      <div class="t-check">${notesOn?'✓':''}</div>
+      <div class="t-info"><div class="t-name">📝 Мои заметки <span style="font-weight:400;color:var(--text-muted);font-size:10px">· личные</span></div></div>
+    </div>`;
+    html+=`<button class="rp-add-cat" onclick="ST.rpTab='cat';renderRP()">＋ Добавить из каталога</button>`;
+    html+=`<button class="cov-map-open" style="margin-top:10px" onclick="setMode('source')">🗺 Карта покрытия · чтение по источнику</button>`;
+    el.innerHTML=html;
+    return;
+  }
 
-  // 3. Catalog — not-yet-enabled items, filtered by facets + search
-  html+=`<div class="rp-sec-head" style="border-top:1px solid var(--border);margin-top:4px;padding-top:8px">Каталог</div>`;
+  // tab==="cat": фильтры — по запросу, дальше каталог как раньше
+  const facN=facetActiveCount();
+  html+=`<button class="rp-filters-btn ${ST.rpFacetsOpen?'on':''}" onclick="ST.rpFacetsOpen=!ST.rpFacetsOpen;renderRP()">⚲ Фильтры${facN?` · ${facN}`:""} <span style="margin-left:auto">${ST.rpFacetsOpen?"▴":"▾"}</span></button>`;
+  if(ST.rpFacetsOpen)html+=renderFacetBar();
   let anyShown=false;
   CONFIG.groups.forEach(g=>{
     let items=CONFIG.tafsirs.filter(t=>t.group===g.id&&t.kind!=="quran"&&(t.kind==="image"||!ST.enabled[t.id])&&!sh.has(t.id)).filter(passFacets);
@@ -7185,12 +7512,13 @@ function sbJumpGo(){
 function goSurah(id){ST.surah=id;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.bookIntro=false;ST.homeMode=false;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;{const st=qpcMeta&&qpcMeta.surahStart&&qpcMeta.surahStart[id];if(st)ST.mushafPage=st.page;}if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}pushSurahHash(id);render();}
 
 // --- Reading display settings (⚙ Вид): sizes AR/RU, line spacing AR/RU, margins
-const VIEW_DEFAULTS={fsAr:1,fsRu:1,lhAr:1,lhRu:1,mar:0,sbScale:1};
-const VIEW_LIMITS={fsAr:[0.7,2.4,0.1],fsRu:[0.7,2.2,0.1],lhAr:[0.7,2.0,0.1],lhRu:[0.7,2.0,0.1],mar:[0,160,16],sbScale:[0.8,1.8,0.1]};
+const VIEW_DEFAULTS={fsAr:1,fsRu:1,fsTaf:1,lhAr:1,lhRu:1,mar:0,sbScale:1};
+const VIEW_LIMITS={fsAr:[0.7,2.4,0.1],fsRu:[0.7,2.2,0.1],fsTaf:[0.7,2.2,0.1],lhAr:[0.7,2.0,0.1],lhRu:[0.7,2.0,0.1],mar:[0,160,16],sbScale:[0.8,1.8,0.1]};
 function applyView(){
   const s=document.body.style;
   s.setProperty("--rs-ar",ST.fsAr);
   s.setProperty("--rs-ru",ST.fsRu);
+  s.setProperty("--rs-ru-taf",(ST.fsRu*(ST.fsTaf||1)).toFixed(3)); // тафсиры: свой множитель поверх русского
   s.setProperty("--lh-ar",ST.lhAr);
   s.setProperty("--lh-ru",ST.lhRu);
   s.setProperty("--mar",ST.mar+"px");
@@ -7274,7 +7602,10 @@ function toggleViewPanel(){
 // Шим совместимости: все обработчики настроек зовут renderViewPanel() —
 // теперь это перерисовка вкладки «Вид» боковой панели (если она открыта).
 function renderViewPanel(){if(ST.sbTab==="view")renderSB();}
-function renderViewTab(el){el.innerHTML=`<div class="vp-wrap">`+viewPanelHTML()+`</div>`;}
+function renderViewTab(el){
+  el.innerHTML=`<div class="vp-wrap">`+viewPanelHTML()+`</div>`;
+  if(ST.vpTab==="data")offlineStatLine();      // строка «сколько занято» — асинхронная (Cache API)
+}
 function viewPanelHTML(){
   const pct=k=>Math.round(ST[k]*100)+"%";
   const step=(label,key,val)=>`<div class="vp-row"><span>${label}</span><span class="vp-step"><button onclick="bumpView('${key}',-1)">−</button><b>${val}</b><button onclick="bumpView('${key}',1)">+</button></span></div>`;
@@ -7333,7 +7664,7 @@ function viewPanelHTML(){
     AR_UI_FONTS.map(f=>{const on=f==="qpc1"?isPrintedFont():ST.arFont===f;
       return `<button class="vp-font ${on?"on":""}" title="${AR_FONT_TITLES[f]}" onclick="setArFontUI('${f}')">${AR_FONT_NAMES[f]}</button>`;}).join("")+
     `</div>${ST.tajweed?`<div class="vp-note">Включены цвета таджвида (галочка — в 📚 Источниках).</div>`:""}</div>`;
-  const sizeGroup=`<div class="vp-group"><div class="vp-label">Размер шрифта</div>${step("Арабский","fsAr",pct("fsAr"))}${step("Русский","fsRu",pct("fsRu"))}</div>`+
+  const sizeGroup=`<div class="vp-group"><div class="vp-label">Размер шрифта</div>${step("Арабский","fsAr",pct("fsAr"))}${step("Русский","fsRu",pct("fsRu"))}${step("Тафсиры","fsTaf",pct("fsTaf"))}</div>`+
     `<div class="vp-group"><div class="vp-label">Межстрочный интервал</div>${step("Арабский","lhAr",pct("lhAr"))}${step("Русский","lhRu",pct("lhRu"))}</div>`+
     `<div class="vp-group"><div class="vp-label">Поля</div>${step("Отступы по краям","mar",ST.mar+"px")}</div>`+
     `<div class="vp-group"><div class="vp-label">Боковая панель (суры, теги)</div>${step("Размер","sbScale",pct("sbScale"))}</div>`;
@@ -7357,7 +7688,7 @@ function viewPanelHTML(){
   let body;
   if(tab==="look")body=themeGroup+skinGroup+visualPackGroup+navGroup+ntGroup;
   else if(tab==="src")body=sourcesGroup;
-  else if(tab==="data")body=backupGroup+aboutRow+resetBtn;
+  else if(tab==="data")body=offlineGroupHTML()+backupGroup+aboutRow+resetBtn;
   else body=quranHint+fontGroup+sizeGroup+layoutGroup;   // «Текст» (по умолчанию)
   return bar+body;
 }
@@ -7369,6 +7700,258 @@ function setVisualPackUI(id){
   ss("visualPack",id);
   renderViewPanel();
   mediaMod().then(m=>{if(m)m.setVisualPack(id);renderCenter();});
+}
+
+// ============================================================
+// ОФЛАЙН: service worker (оболочка) + Cache API (скачанное)
+// ============================================================
+// Слой 1 — воркер sw.js: держит оболочку по стратегии NETWORK-FIRST, поэтому
+//   приложение запускается без сети, но обновления доезжают как обычно.
+// Слой 2 — экран «📥 Офлайн»: пользователь сам выбирает, что скачать; кеш
+//   наполняем ОТСЮДА (Cache API доступен странице), воркер оттуда только читает.
+// Имена кешей ОБЯЗАНЫ совпадать с sw.js.
+const SW_SHELL_CACHE="tl-shell-1";
+const SW_OFFLINE_CACHE="tl-offline-1";
+function swOk(){return "serviceWorker" in navigator && "caches" in window && window.isSecureContext;}
+function offlineOn(){return gs("offlineSw",1)?true:false;}   // по умолчанию включено (слой 1 — без настройки)
+
+async function swInit(){
+  if(!swOk())return;
+  // Аварийный выключатель. Если воркер когда-нибудь начнёт мешать, а отладить
+  // чужой телефон нельзя — «?nosw=1» снимает регистрацию и чистит ОБА кеша.
+  if(/[?&]nosw=1(?:&|$)/.test(location.search)){ss("offlineSw",0);await swTeardown(true);return;}
+  if(!offlineOn()){await swTeardown(false);return;}
+  try{await navigator.serviceWorker.register("sw.js",{updateViaCache:"none"});}catch(e){return;}
+  // Догрузку оболочки откладываем: она не должна конкурировать с первым рендером.
+  setTimeout(offlineWarm,4000);
+}
+// Снять воркер. dropOffline=false — скачанное СОХРАНЯЕМ (человек может вернуть
+// галочку; терять мегабайты из-за переключателя нечестно).
+async function swTeardown(dropOffline){
+  try{for(const r of await navigator.serviceWorker.getRegistrations())await r.unregister();}catch(e){}
+  try{for(const n of await caches.keys()){
+    if(n===SW_OFFLINE_CACHE&&!dropOffline)continue;
+    if(n.indexOf("tl-")===0)await caches.delete(n);
+  }}catch(e){}
+}
+// Что воркер не может доложить сам: версионные модули (он не знает MEDIA_VER/
+// ERUDIT_VER) и шрифты Google — их <link> уходит no-cors, ответ непрозрачный и
+// кешировать его нечем; забираем те же адреса обычным CORS-запросом.
+async function offlineWarm(){
+  if(!swOk()||!offlineOn())return;
+  try{
+    const c=await caches.open(SW_SHELL_CACHE);
+    const list=["media.js?v="+MEDIA_VER,"erudit.js?v="+ERUDIT_VER];
+    const gf=document.querySelector('link[rel="stylesheet"][href*="fonts.googleapis.com"]');
+    if(gf){
+      const r=await fetch(gf.href,{mode:"cors"});
+      if(r.ok){
+        const css=await r.clone().text();
+        await c.put(gf.href,r);
+        (css.match(/https:\/\/fonts\.gstatic\.com\/[^)"']+/g)||[]).forEach(u=>list.push(u));
+      }
+    }
+    // Параллельно, а не по очереди: на медленной сети последовательный цикл не
+    // успевает добежать до конца за сеанс, и часть шрифтов офлайн так и не появится.
+    await Promise.all(list.map(async u=>{if(!(await c.match(u)))await c.add(u).catch(()=>{});}));
+  }catch(e){}
+}
+
+// ─── Что скачивать: охват (суры) × набор (класс данных) ───
+// Охват держим в ST (не в localStorage): это выбор «на сейчас», а не настройка.
+function offScopeSuras(){
+  const sc=ST.offScope||"juz";
+  if(sc==="sura")return [ST.surah||1];
+  if(sc==="all")return SURAHS.map(s=>s.id);
+  const j=offCurJuz(),r=j?hifzJuzRange(j):null;
+  if(!r)return [ST.surah||1];
+  const out=[];for(let s=r.from.s;s<=r.to.s;s++)out.push(s);
+  return out;
+}
+// Джуз, в котором сейчас читаем: по первому аяту текущей суры (границы — из qpcMeta).
+function offCurJuz(){
+  const js=qpcMeta&&qpcMeta.juzStart;if(!js)return null;
+  let cur=1;
+  for(let j=1;j<=30;j++){
+    const a=js[j];if(!a)continue;
+    if(a.surah<(ST.surah||1)||(a.surah===(ST.surah||1)&&a.ayah<=1))cur=j;else break;
+  }
+  return cur;
+}
+// Источники, включённые в чтение: арабские редакции, переводы, тафсиры. Скан
+// (kind:image) не берём — у него нет по-аятных данных, там страницы-картинки.
+function offEnabledIds(){
+  const out=[];
+  for(const k in ST.enabled){
+    if(!ST.enabled[k]||k==="_notes")continue;
+    const t=CONFIG.tafsirs&&CONFIG.tafsirs.find(x=>x.id===k);
+    if(!t||t.kind==="image")continue;
+    out.push(k);
+  }
+  return out;
+}
+function offUrlsTexts(su){
+  const out=[];
+  for(const id of offEnabledIds())for(const s of su)out.push(resolveUrl(chunkClass(id),{source:id,sura:s}));
+  return out;
+}
+function offUrlsWbw(su){
+  const out=[resolveUrl("concordance",{})];
+  for(const s of su){out.push(resolveUrl("glosses",{sura:s}));out.push(resolveUrl("morphology",{sura:s}));}
+  return out;
+}
+function offUrlsTajweed(su){return su.map(s=>resolveUrl("tajweed_spans",{sura:s}));}
+// Мусхаф — самый тяжёлый набор: на каждую страницу свой шрифт (~80 КБ).
+// Страницы берём по паку, которым мусхаф реально рисуется (pagePack).
+function offUrlsMushaf(su){
+  const pack=pagePack();if(!pack)return [];
+  const out=[resolveUrl("mushaf_glyphs",{path:pack.meta})],pages=new Set();
+  for(const s of su){
+    const info=SURAHS.find(x=>x.id===s);if(!info)continue;
+    out.push(resolveUrl("mushaf_glyphs",{path:`${pack.dataDir}/${s}.json`}));
+    const a=verseToPage(s+":1"),b=verseToPage(s+":"+info.n);
+    if(a&&b)for(let p=a;p<=b;p++)pages.add(p);
+  }
+  for(const p of pages){
+    out.push(resolveUrl("mushaf_glyphs",{path:`${pack.pageDir}/${p}.json`}));
+    out.push(resolveUrl(pack.fontSrc||"mushaf_fonts",{path:pack.fontFile(p)}));
+  }
+  return out;
+}
+const OFF_SETS=[
+  {id:"texts",  icon:"📖", name:"Тексты, переводы и тафсиры", urls:offUrlsTexts,
+   note:"Всё, что сейчас включено в чтение (панель 📚). Выключенные источники не качаются."},
+  {id:"wbw",    icon:"🔤", name:"Пословный разбор и корни",   urls:offUrlsWbw,
+   note:"Слова с переводом, грамматика, конкорданс корней (~1 МБ разово)."},
+  {id:"tajweed",icon:"🎨", name:"Цвета таджвида",             urls:offUrlsTajweed,
+   note:"Разметка правил для текстовых начертаний. В печатном цвет уже в шрифте."},
+  {id:"mushaf", icon:"📕", name:"Мусхаф: страницы и шрифты",  urls:offUrlsMushaf,
+   note:"Самый тяжёлый набор: у каждой страницы свой шрифт, ~80 КБ на страницу."},
+];
+
+// Ключи офлайн-кеша одним запросом: поштучный match на тысячах адресов заметно
+// тормозил бы отрисовку экрана.
+async function offCachedSet(){
+  try{const c=await caches.open(SW_OFFLINE_CACHE);
+    return new Set((await c.keys()).map(r=>r.url));}catch(e){return new Set();}
+}
+function offFmtMB(b){return b>=1048576?(b/1048576).toFixed(b>=10485760?0:1)+" МБ":Math.max(1,Math.round(b/1024))+" КБ";}
+// «1 файл / 2 файла / 5 файлов» — без этого счётчики читаются как машинный лог.
+function offFiles(n){
+  const a=n%100,b=n%10;
+  return n+" "+((a>=11&&a<=14)?"файлов":b===1?"файл":(b>=2&&b<=4)?"файла":"файлов");
+}
+
+async function offlineStatLine(){
+  const el=document.getElementById("offStat");if(!el)return;
+  const have=await offCachedSet();
+  let usage=0;
+  try{if(navigator.storage&&navigator.storage.estimate)usage=(await navigator.storage.estimate()).usage||0;}catch(e){}
+  el.textContent=have.size?`Скачано: ${offFiles(have.size)} · приложение занимает ≈ ${offFmtMB(usage)}`
+                          :"Пока ничего не скачано.";
+}
+
+function offlineGroupHTML(){
+  if(!swOk())return `<div class="vp-group"><div class="vp-label">📥 Офлайн</div>`+
+    `<div class="vp-note">Браузер не поддерживает офлайн-режим (нужен https и современный движок).</div></div>`;
+  const on=offlineOn();
+  return `<div class="vp-group"><div class="vp-label">📥 Офлайн (работа без интернета)</div>`+
+    `<label class="vp-check"><input type="checkbox" ${on?"checked":""} onchange="toggleOfflineSw()"> Работать без интернета</label>`+
+    `<div class="vp-note">Приложение запускается и открывает скачанное даже без сети. На обновления это не влияет: код всегда сначала запрашивается из сети, кеш подставляется, только когда её нет.</div>`+
+    (on?`<div class="data-io-btns" style="margin-top:6px">`+
+      `<button class="data-io-btn" onclick="openOfflineManager()">📥 Что скачать</button>`+
+      `<button class="data-io-btn" onclick="offlineDropAll()" title="Удалить всё скачанное (оболочка останется)">🗑 Очистить</button>`+
+    `</div><div class="vp-note" id="offStat">…</div>`:"")+
+    `</div>`;
+}
+function toggleOfflineSw(){
+  const on=!offlineOn();
+  ss("offlineSw",on?1:0);
+  (on?swInit():swTeardown(false)).then(()=>{renderViewPanel();if(on)setTimeout(offlineStatLine,300);});
+  renderViewPanel();
+}
+
+function openOfflineManager(){if(!ST.offScope)ST.offScope="juz";_offMsg="";renderOfflineManager();}
+async function renderOfflineManager(){
+  const su=offScopeSuras();
+  const have=await offCachedSet();
+  const SC=[["sura","Текущая сура"],["juz","Текущий джуз"],["all","Весь Коран"]];
+  const scBar=SC.map(([id,n])=>`<button class="vp-font ${(ST.offScope||"juz")===id?"on":""}" onclick="offSetScope('${id}')">${esc(n)}</button>`).join("");
+  const j=offCurJuz();
+  const scNote=(ST.offScope==="all")?`Все 114 сур.`
+    :(ST.offScope==="sura")?`Сура ${ST.surah}: ${esc((SURAHS.find(s=>s.id===ST.surah)||{}).ru||"")}.`
+    :`Джуз ${j||"?"}: суры ${su[0]}–${su[su.length-1]}.`;
+  const rows=OFF_SETS.map(s=>{
+    let urls=[];try{urls=s.urls(su);}catch(e){}
+    const uniq=[...new Set(urls)];
+    const got=uniq.filter(u=>have.has(new URL(u,location.href).href)).length;
+    const done=uniq.length&&got>=uniq.length;
+    return `<div class="off-row">
+      <div class="off-main"><div class="off-name">${s.icon} ${esc(s.name)}</div>
+        <div class="off-note">${esc(s.note)}</div>
+        <div class="off-note">${offFiles(uniq.length)}${got?` · уже есть ${got}`:""}</div></div>
+      <button class="off-dl ${done?"done":""}" onclick="offlineDownload('${s.id}')" ${uniq.length?"":"disabled"}>${done?"✓":"⬇"}</button>
+    </div>`;
+  }).join("");
+  openIOModal(`<div class="io-h">📥 Скачать для офлайна</div>
+    <div class="io-p">Выберите охват, затем нажмите ⬇ у нужного набора. Скачанное открывается без интернета и мгновенно — аяты не меняются, перепроверять их нечего.</div>
+    <div class="vp-fonts">${scBar}</div>
+    <div class="vp-note">${scNote}</div>
+    <div style="max-height:46vh;overflow:auto;text-align:left;margin-top:6px">${rows}</div>
+    <div class="vp-note" id="offProg">${esc(_offMsg)}</div>
+    <div class="io-acts"><button class="home-btn" onclick="offlineDropAll(true)">🗑 Очистить</button><button class="home-btn prim" onclick="closeIOModal()">Готово</button></div>`);
+  offlineStatLine();
+}
+function offSetScope(v){ST.offScope=v;renderOfflineManager();}
+
+// Итог последней докачки: переживает перерисовку экрана, иначе сообщение
+// «Готово: N файлов» гасло бы в тот же миг, когда список обновляется.
+let _offBusy=false,_offMsg="";
+// Качаем ПАРАЛЛЕЛЬНО по 6: последовательно 604 страницы мусхафа ждать невозможно,
+// а больше шести соединений браузер всё равно не даст.
+async function offlineDownload(setId){
+  if(_offBusy)return;
+  const set=OFF_SETS.find(s=>s.id===setId);if(!set)return;
+  const prog=document.getElementById("offProg");
+  const urls=[...new Set(set.urls(offScopeSuras()))];
+  // Охват «Весь Коран» на десятке включённых источников — это сотни мегабайт и
+  // долгие минуты; молча начинать такое с одного касания нельзя.
+  if(urls.length>300&&!confirm(`Скачать ${offFiles(urls.length)}? Это может занять сотни мегабайт и несколько минут.`))return;
+  _offBusy=true;_offMsg="";
+  let done=0,bytes=0,fail=0;
+  const say=()=>{if(prog)prog.textContent=`Скачивание: ${done}/${urls.length} · ${offFmtMB(bytes)}${fail?` · не удалось: ${fail}`:""}`;};
+  say();
+  try{
+    const c=await caches.open(SW_OFFLINE_CACHE);
+    let i=0;
+    const worker=async()=>{
+      while(i<urls.length){
+        const u=urls[i++];
+        try{
+          if(await c.match(u)){done++;if(done%12===0)say();continue;}
+          const r=await fetch(u);
+          if(r.ok){bytes+=+(r.headers.get("content-length")||0);await c.put(u,r);}
+          else fail++;
+        }catch(e){fail++;}
+        done++;
+        if(done%12===0)say();
+      }
+    };
+    await Promise.all(Array.from({length:6},worker));
+    _offMsg=fail
+      ? `Готово: ${urls.length-fail} из ${urls.length} (${offFmtMB(bytes)}). Не удалось скачать ${fail} — проверьте связь и повторите.`
+      : `Готово: ${offFiles(urls.length)}, ${offFmtMB(bytes)}.`;
+  }catch(e){
+    _offMsg="Не удалось сохранить: возможно, на устройстве кончилось место.";
+  }
+  if(prog)prog.textContent=_offMsg;
+  _offBusy=false;
+  renderOfflineManager();
+}
+async function offlineDropAll(fromModal){
+  if(!confirm("Удалить всё скачанное для офлайна? Оболочка приложения останется, тексты будут снова браться из сети."))return;
+  try{await caches.delete(SW_OFFLINE_CACHE);}catch(e){}
+  if(fromModal)renderOfflineManager();else{renderViewPanel();setTimeout(offlineStatLine,200);}
 }
 
 // --- 📑 Переход: jump by surah / juz / rub al-hizb / page (both modes) -------
@@ -7813,7 +8396,8 @@ async function renderMushafPage(el){
   const pack=pagePack();
   const meta=await loadQpcMeta();const total=meta?.pages||604;
   let pg=Math.max(1,Math.min(total,ST.mushafPage||1));ST.mushafPage=pg;
-  el.innerHTML=`<div class="mushaf-shell"><div id="mushafPage" class="mushaf-page"><div style="text-align:center;color:var(--text-muted);padding:40px">Загрузка страницы ${pg}…</div></div></div>`;
+  el.innerHTML=`<div class="mushaf-shell"><div id="mushafPage" class="mushaf-page"><div style="text-align:center;color:var(--text-muted);padding:40px">Загрузка страницы ${pg}…</div></div><div id="mtrHost"></div></div>`;
+  mtrOnPage(pg);                                     // бокс перевода текущего аята (tanzil)
   const data=await loadQpcPage(pack,pg);
   const host=document.getElementById("mushafPage");if(!host)return;
   if(!data){host.innerHTML=`<div style="padding:40px;text-align:center;color:var(--text-muted)">Нет данных для страницы ${pg}</div>`;}
@@ -7857,6 +8441,68 @@ async function renderMushafPage(el){
     mushafResizeObs.observe(host);
   }
   // prev/next handled by the shared bottom navigation bar
+}
+
+// ── Бокс перевода текущего аята в мусхафе (этап 3, tanzil-паттерн) ──────────
+// Страница остаётся чистой; перевод ОДНОГО аята — плашкой под ней: листается
+// ‹ › в пределах страницы, следует за чтецом (подписка на ось аята media.js),
+// тап по номеру — лист аята. Выключенный бокс — узкая пилюля «Перевод».
+let MTR=null;            // {s,a} — текущий аят бокса
+let mtrSubbed=false;     // подписка на onAyahChange сделана (после загрузки media)
+function mtrNextA(s,a,dir){
+  const su=SURAHS.find(x=>x.id===s);if(!su)return null;
+  if(dir>0){if(a<su.n)return{s,a:a+1};return s<114?{s:s+1,a:1}:null;}
+  if(a>1)return{s,a:a-1};
+  return s>1?{s:s-1,a:SURAHS[s-2].n}:null;
+}
+function mtrOnPage(pg){
+  const st=qpcMeta&&qpcMeta.pageStart&&qpcMeta.pageStart[pg];
+  if(st&&(!MTR||pageOfAyahIdx(MTR.s,MTR.a)!==pg))MTR={s:st.surah,a:st.ayah};
+  renderMtrBox();
+  if(MEDIA&&!mtrSubbed){mtrSubbed=true;MEDIA.onAyahChange((s,a)=>{if(ST.pageMode&&ST.mushafTr){MTR={s,a};renderMtrBox();}});}
+}
+// Страница аята (линейно по pageStart — как pageOfAyah в media.js)
+function pageOfAyahIdx(s,a){
+  if(!qpcMeta||!qpcMeta.pageStart)return null;
+  const total=qpcMeta.pages||604,k=s*1000+a;
+  let pg=null;
+  for(let p=1;p<=total;p++){
+    const st=qpcMeta.pageStart[p];if(!st)continue;
+    if(st.surah*1000+st.ayah<=k)pg=p;else break;
+  }
+  return pg;
+}
+function mtrStep(dir){
+  const nx=MTR&&mtrNextA(MTR.s,MTR.a,dir);
+  if(!nx)return;
+  // в пределах текущей страницы; шаг за границу листает страницу мусхафа
+  const pg=pageOfAyahIdx(nx.s,nx.a);
+  MTR={s:nx.s,a:nx.a};
+  if(pg&&pg!==ST.mushafPage){ST.mushafPage=pg;renderCenter();}
+  else renderMtrBox();
+}
+function mtrToggle(on){ST.mushafTr=on;ss("mushafTr",on);renderMtrBox();}
+async function renderMtrBox(){
+  const host=document.getElementById("mtrHost");if(!host)return;
+  if(!ST.mushafTr){host.innerHTML=`<button class="mtr-closed" onclick="mtrToggle(true)">Перевод аята ▴</button>`;return;}
+  if(!MTR){host.innerHTML="";return;}
+  const {s,a}=MTR;
+  const su=SURAHS.find(x=>x.id===s);
+  const t=getEnabledList().find(x=>x.kind!=="image"&&x.kind!=="quran"&&x.id!=="_notes"&&x.lang!=="ar")
+    ||CONFIG.tafsirs.find(x=>x.id==="kuliev")||null;
+  host.innerHTML=`<div class="mtr-box"><div class="mtr-head">
+      <button class="mtr-nav" onclick="mtrStep(-1)" title="Предыдущий аят">‹</button>
+      <button class="mtr-pos" onclick="ST.surah=${s};openAyahSheet(${a})" title="Действия с аятом">${su?esc(su.ru):s} ${s}:${a}</button>
+      <button class="mtr-nav" onclick="mtrStep(1)" title="Следующий аят">›</button>
+      <span class="mtr-src">${t?esc(t.name):""}</span>
+      <button class="mtr-x" onclick="mtrToggle(false)" title="Свернуть">Скрыть ▾</button>
+    </div><div class="mtr-body md selectable" id="mtrBody">…</div></div>`;
+  const body=document.getElementById("mtrBody");
+  if(!t){if(body)body.textContent="Включите перевод в панели 📚";return;}
+  await loadChunk(t.id,s);
+  const txt=getChunk(t.id,s)?.[String(a)]||"";
+  // за время загрузки могли перелистнуть — не затираем чужой аят
+  if(body&&MTR&&MTR.s===s&&MTR.a===a)body.innerHTML=txt?mdRender(txt):'<span style="color:var(--text-muted)">— у этого аята нет текста в выбранном переводе</span>';
 }
 
 // --- Слой «Со словами»: сетка слов вместо арабской строки аята ---------------
@@ -7988,8 +8634,9 @@ function tpSetRange(aid,val){
 // Счётчик у аята перерисовываем точечно: перерисовка всей ленты сбросила бы
 // прокрутку, а при разметке диапазона обновить нужно сразу несколько строк.
 function refreshTagBtn(aid){
+  refreshAyahMarks(aid);                            // метки в панельке аята (лента)
   const b=document.querySelector(`[data-tagbtn="${aid}"]`);
-  if(!b)return;
+  if(!b)return;                                     // старая кнопка 🏷 (режим «Источник»)
   const n=getATList(ST.surah,aid).length;
   b.classList.toggle("has",n>0);
   b.textContent="🏷"+(n?" "+n:"");
@@ -8171,6 +8818,7 @@ const _vnum=(v,d)=>{v=parseFloat(v);return isFinite(v)?v:d;};
 const _oldScale=gs("fontScale",null);
 ST.fsAr=_vnum(gs("fsAr",_oldScale!=null?_oldScale:1),1);
 ST.fsRu=_vnum(gs("fsRu",_oldScale!=null?_oldScale:1),1);
+ST.fsTaf=_vnum(gs("fsTaf",1),1);   // отдельный размер тафсиров (этап 3)
 const _oldLh=gs("lh",1);
 ST.lhAr=_vnum(gs("lhAr",_oldLh),1);
 ST.lhRu=_vnum(gs("lhRu",_oldLh),1);
@@ -8197,6 +8845,7 @@ ST.vpTab=gs("vpTab","text");               // активный под-таб п�
 ST.srcBarOpen=gs("srcBarOpen",false);     // шапка режима источника: развёрнута? (по умолчанию свёрнута)
 ST.collapsedKinds=gs("collapsedKinds",{translation:true}); // под аятом: какие группы свёрнуты (переводы — по умолч.)
 ST.wbwLayer=gs("wbwLayer",gs("wbwMode",false)); // слой «Со словами»; миграция: у кого был включён режим 🔤 — получит слой
+ST.mushafTr=gs("mushafTr",false); // мусхаф: бокс перевода текущего аята (этап 3, tanzil)
 ST.noTouch=gs("noTouch",false); ST.ntH=gs("ntH",60); // «Режим без касания»
 ST.swipeNav=gs("swipeNav",true); // свайп смены суры (вкл. по умолчанию)
 applyNoTouch();
@@ -8226,7 +8875,23 @@ document.addEventListener("scroll",hideWordCard,true);
 document.addEventListener("scroll",saveLastPosSoon,true);  // обновлять последнюю позицию по мере чтения
 // Open sidebar by default on desktop
 if(!isM()){ST.sidebarOpen=true;document.getElementById("sidebar").classList.remove("collapsed");}
+// Auto-hide бара чтения (этап 2): прокрутка ленты вниз прячет [Аяты|Мусхаф]+чипы,
+// вверх — возвращает; шапка остаётся. Scroll не всплывает — ловим capture-фазой.
+(function(){
+  const cb=document.getElementById("centerBody");if(!cb)return;
+  let lastY=0;
+  cb.addEventListener("scroll",e=>{
+    const t=e.target;
+    if(!t.classList||!t.classList.contains("reading"))return;   // только лента
+    if(ST.pageMode||ST.homeMode||ST.hifzMode||ST.eruditMode)return;
+    const bar=document.getElementById("centerBar");if(!bar)return;
+    const y=t.scrollTop;
+    if(Math.abs(y-lastY)>4)bar.classList.toggle("cb-hide",y>lastY&&y>80);
+    lastY=y;
+  },true);
+})();
 loadConfig();
+swInit();          // офлайн-слой: воркер оболочки (network-first) + кеш скачанного
 </script>
 </body>
 </html>

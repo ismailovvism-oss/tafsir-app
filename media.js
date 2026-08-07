@@ -168,8 +168,10 @@ const P={
   active:false,             // панель показана (плеер «включён»)
   min:false,                // панель свёрнута в полоску
   rate:1,
-  repeat:0,                 // повтор аята: 0=выкл, 2/3=N раз, Infinity=∞
+  repeat:0,                 // повтор аята: 0=выкл, N раз (любое), Infinity=∞
   played:0,                 // сколько раз доигран текущий аят (для repeat)
+  gap:0,                    // пауза после аята, сек («успеть повторить за чтецом»)
+  gapT:null,                // таймер паузы (гасится при паузе/стопе/перемотке)
   range:null,               // повтор диапазона {a:{sura,ayah}, b:{sura,ayah}}
   rangeArm:null,            // первый тап A–B: помечено начало, ждём конец
   err:"",
@@ -272,14 +274,20 @@ function onTimeUpdate(){
   const a=ayahAtTime(t,P.audio.currentTime);
   if(a&&a!==POS.ayah)setPos(POS.sura,a);
 }
+// Пауза после аята (P.gap): и перед повтором, и перед следующим аятом — приём
+// хифза «повторить за чтецом». Пауза срывается паузой/стопом/перемоткой.
+function gapThen(fn){
+  clearTimeout(P.gapT);
+  if(P.gap>0)P.gapT=setTimeout(()=>{if(P.playing)fn();},P.gap*1000);
+  else fn();
+}
 async function onEnded(){
   P.played++;
-  if(P.repeat&&P.played<P.repeat){P.audio.currentTime=0;P.audio.play();return;}
+  if(P.repeat&&P.played<P.repeat){gapThen(()=>{P.audio.currentTime=0;P.audio.play();});return;}
   P.played=0;
   const nx=await nextPlayable(POS.sura,POS.ayah);
   if(!nx){P.playing=false;renderBar();return;}       // конец Корана / пустой набор
-  setPos(nx.sura,nx.ayah);
-  playCur();
+  gapThen(()=>{setPos(nx.sura,nx.ayah);playCur();});
 }
 async function prefetchNext(){
   let nx=null;
@@ -296,7 +304,7 @@ async function prefetchNext(){
 }
 function togglePlay(){
   const au=ensureAudio();
-  if(P.playing){au.pause();P.playing=false;renderBar();return;}
+  if(P.playing){au.pause();P.playing=false;clearTimeout(P.gapT);renderBar();return;}
   if(au.getAttribute("src")&&!au.ended){ // пауза → продолжить с места
     au.play().catch(()=>{});P.playing=true;renderBar();
   }else playCur();                       // остановились на конце — заново текущий аят
@@ -313,11 +321,12 @@ function navStep(dir){
     t=dir>0?nextAyah(POS.sura,POS.ayah):prevAyah(POS.sura,POS.ayah);
   }
   if(!t)return;
-  P.played=0;setPos(t.sura,t.ayah);playCur();
+  P.played=0;clearTimeout(P.gapT);setPos(t.sura,t.ayah);playCur();
 }
 function stopAll(){
   closeMenu();
   P.playing=false;P.active=false;P.range=null;P.rangeArm=null;P.played=0;P.err="";P.token++;
+  clearTimeout(P.gapT);
   if(P.audio){P.audio.pause();P.audio.removeAttribute("src");P.audio.load();}
   if(P.pre)P.pre.removeAttribute("src");
   if(P.objUrl){URL.revokeObjectURL(P.objUrl);P.objUrl=null;}
@@ -457,11 +466,17 @@ function openMenu(){
 function openRepeatMenu(){
   closeMenu();
   const rowNone=!P.repeat&&!P.range;
+  const customN=P.repeat&&P.repeat!==2&&P.repeat!==3&&P.repeat!==Infinity?P.repeat:"";
   let h=`<div class="mm-h">Повтор одного аята</div>`+
     `<button data-loop="off" class="${rowNone?"on":""}">Без повтора</button>`+
     `<button data-loop="r2" class="${P.repeat===2?"on":""}">Повторять 2 раза</button>`+
     `<button data-loop="r3" class="${P.repeat===3?"on":""}">Повторять 3 раза</button>`+
     `<button data-loop="rinf" class="${P.repeat===Infinity?"on":""}">Повторять бесконечно</button>`+
+    // произвольное N — станок хифза (до 1000, как у Ayat KSU)
+    `<div class="mm-range">Своё число: <input class="mm-in" id="mmRepN" type="number" inputmode="numeric" min="2" max="1000" value="${customN||5}"${customN?' style="border-color:var(--accent)"':''}> <button class="mm-go" data-loop="rn">Повторять</button></div>`+
+    // пауза после аята — «успеть повторить за чтецом»; действует и на повтор, и на переход
+    `<div class="mm-h">Пауза после аята</div>`+
+    `<div class="mm-range">Тишина: <select class="mm-in" id="mmGap" style="width:auto">${[0,1,2,3,5,10].map(s=>`<option value="${s}"${P.gap===s?" selected":""}>${s?s+" сек":"без паузы"}</option>`).join("")}</select> <span style="opacity:.7">— повторить за чтецом</span></div>`+
     `<div class="mm-h">Повтор диапазона аятов</div>`;
   if(P.range)
     h+=`<button data-loop="abclear" class="on">Диапазон ${P.range.a.sura}:${P.range.a.ayah} – ${P.range.b.sura}:${P.range.b.ayah} · сбросить</button>`;
@@ -474,8 +489,19 @@ function openRepeatMenu(){
       <button class="mm-go" data-loop="abset">Повторять</button></div>`;
   const menu=document.createElement("div");
   menu.id="mediaMenu";menu.className="media-menu";menu.innerHTML=h;
+  menu.addEventListener("change",e=>{
+    if(e.target.id==="mmGap"){
+      P.gap=Math.max(0,parseInt(e.target.value,10)||0);
+      ctx.ss("mediaGap",P.gap);
+    }
+  });
   menu.addEventListener("click",e=>{
     const b=e.target.closest("[data-loop]");if(!b)return;
+    if(b.dataset.loop==="rn"){
+      const v=Math.max(2,Math.min(1000,parseInt(menu.querySelector("#mmRepN").value,10)||2));
+      P.repeat=v;P.range=null;P.rangeArm=null;P.played=0;closeMenu();renderBar();
+      return;
+    }
     if(b.dataset.loop==="abset"){
       const n2=ayahCount(POS.sura)||1;
       const cl=v=>Math.max(1,Math.min(n2,parseInt(v,10)||1));
@@ -903,6 +929,7 @@ export function init(c){
   ctx=c;
   P.rate=+ctx.gs("mediaRate",1)||1;
   if(!RATE_STEPS.includes(P.rate))P.rate=1;
+  P.gap=Math.max(0,+ctx.gs("mediaGap",0)||0);
   P.min=ctx.gs("mediaMin",true)!==false;   // плеер свёрнут в тонкую полоску по умолчанию
   onAyahChange(followText);     // текстовый слой — первый подписчик оси аята
   onAyahChange(dfOnAyah);       // диафильм — тот же указатель ведёт кадр
