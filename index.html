@@ -39,6 +39,12 @@
 /* --accent-rgb — акцент в RGB-компонентах для полупрозрачных оттенков
    rgba(var(--accent-rgb),α): им красятся декоративные поверхности (таблица
    Корана, плитки Главной, чипы, карточки) — так смена темы реально меняет вид */
+/* «Светлая» — тема из макета редизайна (по умолчанию): белые карточки на
+   спокойном нейтральном тёпло-сером, зелёный акцент. От «Зелёной» отличается
+   поверхностями: меньше жёлто-кремового, больше воздуха. */
+[data-theme="light"]{--accent:#1B5E3B;--accent-bg:#E8F3EC;--accent-hover:#24794E;--header-bg:#14331F;--header-text:#EDE8DD;--accent-rgb:27,94,59;
+  --bg:#EFECE5;--bg-alt:#E7E4DC;--bg-card:#FFFFFF;--border:#DEDAD1;--border-light:#E7E3DB;
+  --text:#33312A;--text-sec:#66625A;--text-muted:#9C978C}
 [data-theme="green"]{--accent:#1B5E3B;--accent-bg:#E8F3EC;--accent-hover:#24794E;--header-bg:#14331F;--header-text:#EDE8DD;--accent-rgb:27,94,59}
 [data-theme="blue"]{--accent:#1B4E8E;--accent-bg:#E3EDF8;--accent-hover:#2868B0;--header-bg:#132D4F;--header-text:#E0E8F0;--accent-rgb:27,78,142}
 [data-theme="gold"]{--accent:#8B6914;--accent-bg:#FDF5E6;--accent-hover:#A67C1A;--header-bg:#3D2E0A;--header-text:#F0E8D0;--accent-rgb:139,105,20}
@@ -47,6 +53,8 @@
 :root,[data-theme="green"],[data-theme="blue"],[data-theme="gold"]{
   --bg:#FAF8F5;--bg-alt:#F0EDE6;--bg-card:#fff;--border:#E5E0D8;--border-light:#E8E3DA;
   --text:#2D2A26;--text-sec:#5A5650;--text-muted:#AAA59C;
+}
+:root,[data-theme="light"],[data-theme="green"],[data-theme="blue"],[data-theme="gold"]{
   --note-bg:#FFFBF0;--note-border:#E8D8A0;--note-color:#9E7C20;
   --tag-bg:#EDE7F6;--tag-color:#5E35B1;
   --sidebar-w:240px;
@@ -66,9 +74,16 @@ body[data-skin="dark"]{--skin-bg:#251d12;--skin-grad:linear-gradient(160deg,#2c2
 body[data-skin="parchment"]{--skin-blotch:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='700' height='700'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.011' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.36 0 0 0 0 0.15 0 0 0 0.09 0'/%3E%3C/filter%3E%3Crect width='700' height='700' filter='url(%23b)'/%3E%3C/svg%3E"),radial-gradient(220px 160px at 84% 10%,rgba(139,101,38,.09),transparent 70%),radial-gradient(170px 130px at 10% 76%,rgba(120,84,30,.08),transparent 70%),radial-gradient(110px 85px at 66% 90%,rgba(139,101,38,.07),transparent 70%)}
 body[data-skin="sepia"]{--skin-blotch:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='700' height='700'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012' numOctaves='3' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.42 0 0 0 0 0.28 0 0 0 0 0.09 0 0 0 0.14 0'/%3E%3C/filter%3E%3Crect width='700' height='700' filter='url(%23b)'/%3E%3C/svg%3E"),radial-gradient(240px 170px at 80% 14%,rgba(122,84,26,.13),transparent 70%),radial-gradient(180px 140px at 8% 70%,rgba(104,70,20,.12),transparent 70%),radial-gradient(150px 115px at 74% 32%,transparent 56%,rgba(110,74,24,.12) 62%,transparent 68%),radial-gradient(130px 100px at 30% 92%,rgba(122,84,26,.10),transparent 70%)}
 body[data-skin] .reading{background-color:var(--skin-bg);background-image:var(--skin-noise),var(--skin-blotch,none),var(--skin-vin),var(--skin-grad)}
-body[data-skin="parchment"] .reading,body[data-skin="sepia"] .reading{--bg-card:rgba(255,252,242,.55);--bg-alt:rgba(244,232,202,.65);--border:#c2ab77;--border-light:#d3c090;--text:#382a10;--text-sec:#4c3a1c;--text-muted:#93805a}
-body[data-skin="sepia"] .reading{--bg-card:rgba(252,243,218,.5);--bg-alt:rgba(236,220,182,.6);--border:#af9460;--border-light:#c3ab74}
-body[data-skin="dark"] .reading{--bg-card:rgba(255,244,214,.05);--bg-alt:rgba(255,244,214,.08);--border:#4a3d26;--border-light:#3c3220;--text:#e7d8b4;--text-sec:#cbbb92;--text-muted:#8c7c5a}
+/* ГАРМОНИЗАЦИЯ (2026-08-07): скин — самодостаточная «бумага с чернилами».
+   Внутри .reading переопределяется и АКЦЕНТ (номера аятов, кнопки, ссылки,
+   чекбоксы красятся охрой-чернилами, а не зелёным/синим темы) — жёлтая бумага
+   больше не спорит ни с одной темой; тема остаётся на «раме» (шапка, бары,
+   панели). Всё новое (панелька аята, листы) на var(--…) — подхватывает само. */
+body[data-skin="parchment"] .reading,body[data-skin="sepia"] .reading{--bg-card:rgba(255,252,242,.55);--bg-alt:rgba(244,232,202,.65);--border:#c2ab77;--border-light:#d3c090;--text:#382a10;--text-sec:#4c3a1c;--text-muted:#93805a;
+  --accent:#6d5415;--accent-hover:#85681f;--accent-bg:rgba(139,105,20,.13);--accent-rgb:109,84,21}
+body[data-skin="sepia"] .reading{--bg-card:rgba(252,243,218,.5);--bg-alt:rgba(236,220,182,.6);--border:#af9460;--border-light:#c3ab74;--accent:#5f470f;--accent-hover:#785c18;--accent-rgb:95,71,15}
+body[data-skin="dark"] .reading{--bg-card:rgba(255,244,214,.05);--bg-alt:rgba(255,244,214,.08);--border:#4a3d26;--border-light:#3c3220;--text:#e7d8b4;--text-sec:#cbbb92;--text-muted:#8c7c5a;
+  --accent:#c9a84c;--accent-hover:#daba5e;--accent-bg:rgba(201,168,76,.12);--accent-rgb:201,168,76}
 body[data-skin] .reading .ayah-block{box-shadow:0 1px 6px rgba(50,34,10,.16)}
 /* Заголовки ленты — старорусская вязь (Ruslan Display). Номер аята (.ab-num) сюда
    НЕ входит: вязь в кружке 24px нечитаема — цифры остаются гротеском. */
@@ -1525,7 +1540,7 @@ svg.svgi{width:19px;height:19px;stroke:currentColor;stroke-width:1.9;fill:none;s
 button:focus-visible,[onclick]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 </style>
 </head>
-<body data-theme="green">
+<body data-theme="light">
 
 <!-- Шапка (редизайн этап 1): 9 кнопок → 4, монохромные SVG вместо эмодзи.
      Позиция (hCtx) — КНОПКА-навигатор (openNavSheet); 📊/🎧/⚙/⛶ — в меню ⋯. -->
@@ -4843,9 +4858,7 @@ function renderFootnotes(notes){
 function setTheme(t){
   ST.theme=t;
   document.body.setAttribute("data-theme",t);
-  document.querySelectorAll(".theme-dot").forEach(d=>d.classList.toggle("active",d.style.background.includes(
-    t==="green"?"1B5E3B":t==="blue"?"1B4E8E":t==="gold"?"8B6914":"333"
-  )));
+  document.querySelectorAll(".theme-dot").forEach(d=>d.classList.toggle("active",d.dataset.th===t));
   ss("theme",t);
 }
 
@@ -7692,7 +7705,7 @@ function viewPanelHTML(){
     `<label class="vp-check"><input type="checkbox" ${ST.swipeNav?"checked":""} onchange="toggleSwipeNav()"> Свайп влево/вправо листает суру</label>`+
     `<div class="vp-note">В «Колонках» свайп всегда отключён (там горизонтальная прокрутка). Сура также листается кнопками ‹ › внизу.</div></div>`;
   const themeGroup=`<div class="vp-group"><div class="vp-label">Тема</div><div class="theme-dots vp-themes">`+
-    [["green","#1B5E3B"],["blue","#1B4E8E"],["gold","#8B6914"],["dark","#333"]].map(([t,c])=>`<span class="theme-dot ${ST.theme===t?'active':''}" style="background:${c}" title="${t}" onclick="setTheme('${t}')"></span>`).join("")+
+    [["light","linear-gradient(135deg,#fff 50%,#1B5E3B 50%)","Светлая (как макет)"],["green","#1B5E3B","Зелёная"],["blue","#1B4E8E","Синяя"],["gold","#8B6914","Золотая"],["dark","#333","Тёмная"]].map(([t,c,n])=>`<span class="theme-dot ${ST.theme===t?'active':''}" data-th="${t}" style="background:${c}" title="${n}" onclick="setTheme('${t}')"></span>`).join("")+
     `</div></div>`;
   const SKINS=[["none","Обычный"],["parchment","Пергамент"],["sepia","Старая бумага"],["dark","Тёмный манускрипт"]];
   const RUFONTS=[["std","Обычный"],["old","Книжный XIX в."],["corm","Антиква XVI в."],["marck","Рукописный"]];
@@ -8972,7 +8985,7 @@ function deleteTag(path){
 }
 
 // Init theme + reading font scale
-const savedTheme=gs("theme","green");
+const savedTheme=gs("theme","light");   // по умолчанию — «Светлая» (тема макета редизайна)
 setTheme(savedTheme);
 // migrate the old single font scale → separate AR/RU sizes.
 // _vnum: настройки вида ОБЯЗАНЫ быть конечными числами — старый формат стораджа
@@ -8996,11 +9009,12 @@ ST.arFont=gs("arFont","qpc1"); // default: печатный мусхаф
 ST.tajweed=gs("tajweed",ST.arFont==="qpc4t");
 if(ST.arFont==="qpc1"||ST.arFont==="qpc4t")ST.arFont=ST.tajweed?"qpc4t":"qpc1"; // нормализовать связку
 applyArFont();
-// Оформление чтения: у НОВЫХ пользователей (нет сохранённого выбора) скин по
-// умолчанию — пергамент, а при тёмной теме — тёмный манускрипт. Явный выбор
-// пользователя (включая «Обычный») сохраняется и уважается. Шрифт — обычный.
+// Оформление чтения: у НОВЫХ пользователей (нет сохранённого выбора) скина НЕТ —
+// чистый «макетный» вид светлой темы (2026-08-07; раньше по умолчанию был
+// пергамент — источник «жёлтой гаммы» из коробки); при тёмной теме — тёмный
+// манускрипт. Явный выбор пользователя (включая «Обычный») сохраняется и уважается.
 ST.skin=gs("skin",null);
-if(ST.skin==null)ST.skin=(ST.theme==="dark")?"dark":"parchment";
+if(ST.skin==null)ST.skin=(ST.theme==="dark")?"dark":"none";
 ST.ruFont=gs("ruFont","std");
 applySkin();
 ST.navUnit=gs("navUnit","surah");
