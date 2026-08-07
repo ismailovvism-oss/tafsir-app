@@ -367,6 +367,25 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .ne-ayah-ru{font-size:12.5px;line-height:1.55;color:var(--text-sec);margin-top:4px}
 .ayah-ref{color:var(--accent);font-weight:600;text-decoration:none;border-bottom:1px dashed var(--accent)}
 .ayah-ref:hover{background:var(--accent-bg)}
+/* Маркер слов (тадаббур, фаза 2): 4 полупрозрачных маркера — видны в любой теме */
+.whl{border-radius:4px;padding:0 1px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.whl-1{background:rgba(255,213,79,.45)}
+.whl-2{background:rgba(129,199,132,.42)}
+.whl-3{background:rgba(100,181,246,.38)}
+.whl-4{background:rgba(240,98,146,.34)}
+.qpc-w.whl{padding:0 2px}
+.mkw-pal{display:flex;align-items:center;gap:8px;padding:4px 14px 10px}
+.mkw-dot{width:30px;height:30px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0}
+.mkw-dot.on{border-color:var(--accent)}
+.mkw-dot.erase{background:var(--bg-alt);color:var(--text-sec);font-size:14px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border)}
+.mkw-dot.erase.on{border:2px solid var(--accent)}
+.mkw-words{direction:rtl;text-align:right;padding:4px 14px 10px;font-family:'Scheherazade New','Amiri Quran','Noto Naskh Arabic',serif;font-size:calc(24px*var(--rs-ar,1));line-height:2.2}
+.mkw-w{cursor:pointer;border-radius:6px;padding:1px 3px;display:inline}
+.mkw-w:hover{outline:1px dashed var(--accent)}
+.hl-row{display:flex;align-items:center;gap:10px;width:100%;border:none;background:var(--bg-card);border:1px solid var(--border-light);border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer;font-family:inherit;color:var(--text);font-size:13px;text-align:left}
+.hl-row:hover{border-color:var(--accent)}
+.hl-dots{display:flex;gap:4px;margin-left:auto}
+.hl-dots span{width:14px;height:14px;border-radius:50%}
 .ne-btn{min-width:30px;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font:inherit;font-size:13px;line-height:1;color:var(--text-sec);cursor:pointer}
 .ne-btn:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-bg)}
 .ne-sep{width:1px;align-self:stretch;background:var(--border);margin:2px 3px}
@@ -2222,7 +2241,7 @@ function setUserOrder(o){ss("userOrder",o);}
 const SYNC_ENDPOINT="https://tafsir-sync.qaadiy-tafsir.workers.dev";
 // Ключи ЛИЧНЫХ данных, участвующих в облачной синхронизации (совпадают с
 // personalDataObj); настройки вида (шрифты/тема/раскладка) НЕ синхронизируются.
-const SYNCED_KEYS=new Set(["notes","bookmarks","ayahTags","tagTree","progress"]);
+const SYNCED_KEYS=new Set(["notes","bookmarks","ayahTags","tagTree","progress","wordHl"]);
 let _syncDirty=false;      // менялись ли синк-ключи с последней отправки
 let _syncStatusMsg="";     // последнее сообщение статуса для строки в ⚙ Вид
 function gs(k,d){try{const v=localStorage.getItem("tl_"+k);return v?JSON.parse(v):d;}catch(e){return d;}}
@@ -4753,7 +4772,7 @@ async function warnOrigLoad(det,id,key){
 function openWarnMap(id){
   closeAbout();
   ST.topicSel=null;ST.selectedTag=null;ST.rootView=null;ST.bookIntro=false;ST.homeMode=false;
-  ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;
+  ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;ST.hlView=false;
   ST.warnMap=id;
   const h=id==="*"?"#warnmap":"#warnmap="+id;                    // шэрабельный deep-link; «Назад» уходит по истории
   if(location.hash!==h)history.pushState({warnMap:id},"",h);
@@ -5073,11 +5092,13 @@ function noteSnippet(t,len){
 }
 function renderNotesPanel(el){
   const notes=getNotes(),keys=noteKeysSorted(ST.search);
+  const hlN=Object.keys(wordHl()).length;
+  const hlBtn=hlN?`<div class="bm-tools"><button class="hf-go" onclick="ST.hlView=true;if(isM()){ST.sidebarOpen=false;document.getElementById('sidebar').classList.add('collapsed');}render()" title="Аяты с выделенными маркером словами">🖊 Мои выделения · ${hlN}</button></div>`:"";
   if(!Object.keys(notes).length){
-    el.innerHTML='<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:11px">Заметок пока нет.<br>Откройте аят и нажмите 📝 в его панели.</div>';
+    el.innerHTML=hlBtn+'<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:11px">Заметок пока нет.<br>Откройте аят и нажмите 📝 в его панели.</div>';
     return;
   }
-  el.innerHTML=`<div class="bm-tools"><button class="hf-go" onclick="openNotesScreen()" title="Список заметок с текстами аятов в главном окне">⛶ На весь экран</button></div>`
+  el.innerHTML=hlBtn+`<div class="bm-tools"><button class="hf-go" onclick="openNotesScreen()" title="Список заметок с текстами аятов в главном окне">⛶ На весь экран</button></div>`
     +(keys.length?keys.map(k=>{
       const[s,a]=k.split(":");const su=SURAHS.find(x=>x.id==+s);
       return `<div class="bm-row nt-row" onclick="goNoteAyah(${+s},${+a})">
@@ -5087,7 +5108,7 @@ function renderNotesPanel(el){
     }).join("")
     :'<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:11px">Ничего не найдено</div>');
 }
-function goNoteAyah(s,a){ST.notesView=false;closeSidebarM();goAyah(s,a);flashAyah(a);}
+function goNoteAyah(s,a){ST.notesView=false;ST.hlView=false;closeSidebarM();goAyah(s,a);flashAyah(a);}
 function openNotesScreen(){
   ST.notesView=true;ST.bmView=false;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;
   ST.homeMode=false;ST.scanSource=null;ST.srcMode=false;ST.bookIntro=false;ST.hifzMode=false;ST.eruditMode=false;
@@ -5151,7 +5172,7 @@ async function renderBookmarksScreen(el){
     const su=SURAHS.find(x=>x.id==+s);
     const arText=getArabicFromCache(+s,+a);
     const trText=getAnyTranslation(+s,+a);
-    html+=`<div class="tr-ayah" onclick="ST.bmView=false;ST.notesView=false;goAyah(${+s},${+a})">
+    html+=`<div class="tr-ayah" onclick="ST.bmView=false;ST.notesView=false;ST.hlView=false;goAyah(${+s},${+a})">
       <div class="tr-ayah-ref">${su?su.ru:s} : ${a}${b[k]?`<span class="tr-origins"><span class="t-pill">${esc(b[k])}</span></span>`:""}</div>
       ${arText?`<div class="tr-ayah-ar">${arText}</div>`:""}
       ${trText?`<div class="tr-ayah-tr">${trText}</div>`:""}
@@ -5214,7 +5235,7 @@ function renderCB(){
   }
   if(ST.bmView){
     setCtx("★ Закладки");
-    bar.innerHTML=`<div class="cb-read"><button class="btn-s" onclick="ST.bmView=false;ST.notesView=false;render();">← Назад</button></div>`;return;
+    bar.innerHTML=`<div class="cb-read"><button class="btn-s" onclick="ST.bmView=false;ST.notesView=false;ST.hlView=false;render();">← Назад</button></div>`;return;
   }
   if(ST.srcMode){
     // при чтении заголовок = сура (как обычно); имя источника живёт в его компактной шапке (без дубля)
@@ -5285,6 +5306,7 @@ function renderCenterBody(){
   if(ST.scanSource)return renderScanReader(el);
   if(ST.srcMode)return renderSourceMode(el);
   if(ST.bmView)return renderBookmarksScreen(el);
+  if(ST.hlView)return renderHlScreen(el);
   if(ST.notesView)return renderNotesScreen(el);
   if(ST.rootView)return rootScreen(el);
   if(ST.warnMap)return warnMapScreen(el);
@@ -5447,14 +5469,15 @@ function buildAyahBody(aid,enabled,loaded){
     }
     // Печатный мусхаф (QPC): главный огласованный текст рисуем глифами страницы
     if(pack&&qt.id==="_arabic"&&qpcData&&qpcData[String(aid)]){
-      html+=`<div class="ab-entry">${lbl}${renderPackAyah(pack,qpcData[String(aid)])}</div>`;
+      html+=`<div class="ab-entry">${lbl}${renderPackAyah(pack,qpcData[String(aid)],null,hlFor(ST.surah,aid))}</div>`;
       continue;
     }
     const at=loaded[qt.id]?.[String(aid)];
     if(!at)continue;
     // раскраска таджвида (фаза B) — только огласованная редакция, текстовые шрифты
     const tjs=qt.id==="_arabic"&&loaded.__tj&&loaded.__tj[String(aid)];
-    html+=`<div class="ab-entry">${lbl}<div class="ab-entry-text arabic-main selectable">${tjs?tajweedHTML(at,tjs):at}</div></div>`;
+    // маркер слов — тоже только на огласованной (якоря слов считаны по ней)
+    html+=`<div class="ab-entry">${lbl}<div class="ab-entry-text arabic-main selectable">${qt.id==="_arabic"?arHlHTML(at,ST.surah,aid,tjs||null):at}</div></div>`;
   }
   // Заголовки групп «Переводы»/«Тафсиры» под аятом — только если включены оба вида сразу.
   const realSrc=enabled.filter(t=>t.id!=="_notes");
@@ -6118,7 +6141,8 @@ const IC={
   book:'<svg class="svgi" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
   layers:'<svg class="svgi" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 10 6-10 6L2 8z"/><path d="m2 14 10 6 10-6"/></svg>',
   target:'<svg class="svgi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18z"/><path d="M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8z"/><path d="M12 12h.01"/></svg>',
-  grad:'<svg class="svgi" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 9 12 4 2 9l10 5z"/><path d="M6 11.5V17c3.2 2.6 8.8 2.6 12 0v-5.5"/></svg>'
+  grad:'<svg class="svgi" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 9 12 4 2 9l10 5z"/><path d="M6 11.5V17c3.2 2.6 8.8 2.6 12 0v-5.5"/></svg>',
+  marker:'<svg class="svgi" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 21 3-1 11-11-2-2L4 18z"/><path d="m14 5 2-2 5 5-2 2"/><path d="M3 21h7"/></svg>'
 };
 // Метки-состояния в панельке аята — ПРЯМЫЕ входы (просьба пользователя):
 // тап по ✏ открывает заметку этого аята, тап по 🏷 — попап тегов.
@@ -6148,7 +6172,7 @@ function ayahAnchorEl(aid){
 }
 // -- нижний лист (общая оболочка листа аята и навигатора) --
 let ashEl=null;
-function closeAyahSheet(){if(ashEl){ashEl.veil.remove();ashEl.sheet.remove();ashEl=null;}}
+function closeAyahSheet(){if(ashEl){const rr=ashEl.onCloseRender;ashEl.veil.remove();ashEl.sheet.remove();ashEl=null;if(rr){MKW=null;renderCenter();}}}
 function openSheetShell(title,sub,bodyHTML){
   closeAyahSheet();closeHdrMenu();
   const veil=document.createElement("div");veil.className="ash-veil";veil.onclick=closeAyahSheet;
@@ -6177,6 +6201,7 @@ function openAyahSheet(aid){
     `<button class="ash-row" onclick="closeAyahSheet();openTagPopup(${aid},ayahAnchorEl(${aid}))">${IC.tag}Теги<span class="sub">${tagsSub}</span></button>`+
     `<div class="ash-div"></div>`+
     `<button class="ash-row" onclick="openStudy(${aid})">${IC.bookopen}Изучение аята<span class="sub">тафсиры · слова · моё</span></button>`+
+    `<button class="ash-row" onclick="openWordMarker(${aid})">${IC.marker}Маркер слов<span class="sub">${hlFor(ST.surah,aid)?Object.keys(hlFor(ST.surah,aid)).length+" выделено":""}</span></button>`+
     `<button class="ash-row" onclick="closeAyahSheet();openDiafilm(${aid})">${IC.film}Диафильм</button>`+
     `<button class="ash-row" onclick="closeAyahSheet();mediaRecPopup(${aid},ayahAnchorEl(${aid}))">${IC.mic}Записать чтение</button>`+
     `<button class="ash-row" onclick="copyAyah(${aid},this)">${IC.copy}Копировать аят<span class="sub"></span></button>`+
@@ -6186,6 +6211,72 @@ function openAyahSheet(aid){
     (peekKind?`<button class="ash-row" onclick="closeAyahSheet();togglePeek(${aid},null,'${peekKind}')">${IC.eye}${peekKind==="ru"?"Показать перевод":"Показать оригинал"}</button>`:"")+
     `<div class="ash-div"></div>`+
     `<button class="ash-row" onclick="closeAyahSheet();openCovPopup(${aid},ayahAnchorEl(${aid}))">${IC.lib}Источники к аяту<span class="sub">${c?c.tr+" пер. · "+c.taf+" таф. →":"→"}</span></button>`);
+}
+// ── МАРКЕР СЛОВ: оверлей выделения (тадаббур, фаза 2) ───────────────────────
+let MKW=null;   // {s,a,color} — открытый маркер
+async function openWordMarker(aid){
+  if(ST.noTouch)return;
+  closeAyahSheet();
+  MKW={s:ST.surah,a:aid,color:1};
+  await loadChunk("_arabic",ST.surah);
+  if(!MKW)return;
+  renderWordMarker();
+}
+function renderWordMarker(){
+  if(!MKW)return;
+  const {s,a}=MKW;
+  const text=getArabicFromCache(s,a)||"";
+  const toks=arHlTokens(text,s,a);
+  const hl=hlFor(s,a)||{};
+  const pal=[1,2,3,4].map(c=>`<button class="mkw-dot whl-${c} ${MKW.color===c?'on':''}" onclick="MKW.color=${c};renderWordMarker()" title="Маркер ${c}"></button>`).join("")+
+    `<button class="mkw-dot erase ${MKW.color===0?'on':''}" onclick="MKW.color=0;renderWordMarker()" title="Ластик">⌫</button>`+
+    `<button class="ash-chip" style="margin-left:auto" onclick="closeAyahSheet();MKW=null;ST.hlView=true;render()">Все выделения →</button>`;
+  const words=toks.map((tk,i)=>`<span class="mkw-w ${hl[i+1]?`whl whl-${hl[i+1]}`:""}" onclick="mkwTap(${i+1})">${tk.w}</span>`).join(" ");
+  openSheetShell(`Маркер слов · ${s}:${a}`,"тап по слову — выделить",
+    `<div class="mkw-pal">${pal}</div><div class="mkw-words">${words||"—"}</div>`+
+    `<div class="vp-note" style="margin:0 14px 8px">Выделения видны в ленте, мусхафе-поаятно, пословном разборе и «Изучении аята»; синхронизируются между устройствами.</div>`);
+  // закрытие листа маркера должно перерисовать ленту (см. closeAyahSheet-обёртку ниже)
+  ashEl.onCloseRender=true;
+}
+function mkwTap(pos){
+  if(!MKW)return;
+  const cur=(hlFor(MKW.s,MKW.a)||{})[pos];
+  const next=MKW.color===0?null:(cur===MKW.color?null:MKW.color);
+  setWordHl(MKW.s,MKW.a,pos,next);
+  renderWordMarker();
+}
+// Экран «Мои выделения» (ST.hlView): группировка по сурам, фильтр по цвету
+function renderHlScreen(el){
+  const all=wordHl();
+  const keys=Object.keys(all);
+  const filt=ST.hlColorF||0;
+  let bySura={};
+  keys.forEach(k=>{
+    const [s2,a2]=k.split(":").map(Number);
+    const colors=Object.values(all[k]);
+    if(filt&&!colors.includes(filt))return;
+    (bySura[s2]=bySura[s2]||[]).push({a:a2,colors});
+  });
+  const suras=Object.keys(bySura).map(Number).sort((x,y)=>x-y);
+  let html=`<div class="reading"><div style="max-width:640px;margin:0 auto">
+    <div style="display:flex;align-items:center;gap:10px;margin:6px 0 14px">
+      <button class="btn-s" onclick="ST.hlView=false;render()">← Назад</button>
+      <b style="font-size:15px">Мои выделения</b>
+      <span style="color:var(--text-muted);font-size:12px">· ${keys.length}</span>
+    </div>
+    <div class="mkw-pal" style="padding:0 0 12px">${[0,1,2,3,4].map(c=>c
+      ?`<button class="mkw-dot whl-${c} ${filt===c?'on':''}" onclick="ST.hlColorF=${filt===c?0:c};render()" title="Только маркер ${c}"></button>`
+      :`<button class="ash-chip ${!filt?'on':''}" onclick="ST.hlColorF=0;render()">все</button>`).join("")}</div>`;
+  if(!suras.length)html+=`<div class="vp-note">Пока нет выделений. Меню аята → «Маркер слов».</div>`;
+  for(const s2 of suras){
+    const su=SURAHS.find(x=>x.id===s2);
+    html+=`<div class="ash-cap" style="padding-left:2px">${s2}. ${su?esc(su.ru):""}</div>`;
+    bySura[s2].sort((x,y)=>x.a-y.a).forEach(r=>{
+      const dots=[...new Set(r.colors)].sort().map(c=>`<span class="whl-${c}"></span>`).join("");
+      html+=`<button class="hl-row" onclick="goAyah(${s2},${r.a})"><b>${s2}:${r.a}</b><span style="color:var(--text-muted);font-size:12px">слов: ${r.colors.length}</span><span class="hl-dots">${dots}</span></button>`;
+    });
+  }
+  el.innerHTML=html+`</div></div>`;
 }
 // Копировать: арабский + первый включённый перевод + адрес (+ заметка по флагу)
 async function copyAyah(aid,btn,withNote){
@@ -6438,11 +6529,11 @@ async function renderReading(el){
           if(grid){
             html+=`<td class="arabic-main wbw-col">${grid}</td>`;
           }else if(pk&&col.id==="_arabic"&&qd&&qd[String(aid)]){
-            html+=`<td class="arabic-main">${renderPackAyah(pk,qd[String(aid)])}</td>`;
+            html+=`<td class="arabic-main">${renderPackAyah(pk,qd[String(aid)],null,hlFor(ST.surah,aid))}</td>`;
           }else{
             const arText=col.data?.[String(aid)]||"";
             const tjs=arText&&col.id==="_arabic"&&loaded.__tj&&loaded.__tj[String(aid)];
-            html+=`<td class="arabic-main selectable">${tjs?tajweedHTML(arText,tjs):(arText||'—')}</td>`;
+            html+=`<td class="arabic-main selectable">${arText?(col.id==="_arabic"?arHlHTML(arText,ST.surah,aid,tjs||null):arText):'—'}</td>`;
           }
         } else if(col.isNote){
           const note=getNote(ST.surah,aid);
@@ -6568,7 +6659,7 @@ function openTopics(){
 }
 function selectTopic(id){
   ST.topicSel=id;
-  ST.selectedTag=null;ST.rootView=null;ST.warnMap=null;ST.bookIntro=false;ST.homeMode=false;ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;
+  ST.selectedTag=null;ST.rootView=null;ST.warnMap=null;ST.bookIntro=false;ST.homeMode=false;ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;ST.hlView=false;
   if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   render();
 }
@@ -6676,7 +6767,7 @@ function selectRootView(v){
   ST.rootView=v;ST.rootForm=null;ST.rootLimit=20;ST.warnMap=null;
   if(v==="*")ST.rootQ="";                      // указатель открывается чистым, без прошлого фильтра
   ST.topicSel=null;ST.selectedTag=null;ST.bookIntro=false;ST.homeMode=false;
-  ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;
+  ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;ST.hlView=false;
   hideWordCard();                              // экран открывается ИЗ карточки — она бы висела поверх
   if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   render();
@@ -6923,7 +7014,7 @@ function booksWithMuqaddima(){
   return getEnabledList().filter(t=>t.id!=="_notes"&&t.kind!=="image"&&t.muqaddima);
 }
 function openBookIntro(){
-  ST.bookIntro=true;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.scanSource=null;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;ST.homeMode=false;
+  ST.bookIntro=true;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.scanSource=null;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;ST.hlView=false;ST.homeMode=false;
   if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   render();
 }
@@ -7530,7 +7621,7 @@ function onSearchKey(e){
 function goSearchResult(surah,ayah){
   closeSidebarM();
   ST.surah=surah;
-  ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.homeMode=false;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;
+  ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.homeMode=false;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;ST.hlView=false;
   // ST.scrollToAyah обязателен: renderCenter асинхронный и при ТОЙ ЖЕ суре сам
   // возвращает скролл на прежний верхний аят (якорь) — без этого переход из
   // поиска отбрасывало назад, на аят, с которого поиск открывали.
@@ -7626,14 +7717,14 @@ function pushHomeHash(){const h="#home";if(location.hash!==h)history.pushState({
 function applyHash(initial){
   const raw=decodeURIComponent((location.hash||"").replace(/^#/,"")).trim();
   if(raw==="home"){                                  // явный «#home» (например, «назад» на Главную)
-    ST.homeMode=true;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;if(!initial)render();return true;
+    ST.homeMode=true;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;ST.hlView=false;if(!initial)render();return true;
   }
   if(raw==="warnmap"||raw.startsWith("warnmap=")){    // deep-link «Карта заблуждений»: #warnmap / #warnmap=<id>
     const wid=raw==="warnmap"?"*":raw.slice(8);
     // неизвестный/скрытый источник → общий индекс (для скрытых карта доступна только в dev-режиме)
     ST.warnMap=(wid!=="*"&&CONFIG.tafsirs&&CONFIG.tafsirs.find(t=>t.id===wid))?wid:"*";
     ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.bookIntro=false;ST.homeMode=false;
-    ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;
+    ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;ST.hlView=false;
     if(!initial)render();return true;
   }
   const m=raw.match(/^(\d+)(?::(\d+))?$/);
@@ -7645,7 +7736,7 @@ function applyHash(initial){
   const stateAyah=(st&&st.surah===sid&&st.ayah)?st.ayah:null;     // позиция, запомненная при скролле → «назад»
   pendingAyah=hashAyah;
   const changing=(ST.surah!==sid||ST.selectedTag||ST.homeMode||ST.hifzMode||ST.bmView||ST.warnMap);
-  if(changing){ST.surah=sid;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.homeMode=false;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;}
+  if(changing){ST.surah=sid;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.homeMode=false;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;ST.hlView=false;}
   if(!hashAyah&&stateAyah&&(changing||initial))ST.scrollToAyah=stateAyah;  // встанем на аят при рендере (без анимации)
   if(hashAyah&&changing&&!initial)ST.scrollToAyah=hashAyah;       // иначе якорь той же суры вернёт старый аят
   if(changing&&!initial)render();
@@ -7772,7 +7863,7 @@ function sbJumpGo(){
   if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   goAyahRef(ref);
 }
-function goSurah(id){ST.surah=id;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.bookIntro=false;ST.homeMode=false;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;{const st=qpcMeta&&qpcMeta.surahStart&&qpcMeta.surahStart[id];if(st)ST.mushafPage=st.page;}if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}pushSurahHash(id);render();}
+function goSurah(id){ST.surah=id;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.bookIntro=false;ST.homeMode=false;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;ST.hlView=false;{const st=qpcMeta&&qpcMeta.surahStart&&qpcMeta.surahStart[id];if(st)ST.mushafPage=st.page;}if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}pushSurahHash(id);render();}
 
 // --- Reading display settings (⚙ Вид): sizes AR/RU, line spacing AR/RU, margins
 const VIEW_DEFAULTS={fsAr:1,fsRu:1,fsTaf:1,lhAr:1,lhRu:1,mar:0,sbScale:1};
@@ -8259,7 +8350,7 @@ function goAyahRef(ref){
   if(!ST.pageMode)flashAyah(ref.ayah);
 }
 function goAyah(surah,ayah){
-  ST.surah=surah;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.homeMode=false;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;ST.bookIntro=false;ST.scrollToAyah=ayah||1;
+  ST.surah=surah;ST.selectedTag=null;ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.homeMode=false;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;ST.hlView=false;ST.bookIntro=false;ST.scrollToAyah=ayah||1;
   if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   pushSurahHash(surah);render();
 }
@@ -8288,7 +8379,7 @@ function setMode(mode){
   // Явный выбор режима гасит экраны-результаты: они проверяются в renderCenterBody
   // РАНЬШЕ ленты/мусхафа, и без сброса тап по «📖 Аяты» с экрана тем/тегов/корней
   // не уводил бы никуда (правило «новый экран сбрасывает конкурирующие флаги»).
-  ST.bookIntro=false;ST.bmView=false;ST.notesView=false;ST.topicSel=null;ST.selectedTag=null;ST.rootView=null;ST.warnMap=null;
+  ST.bookIntro=false;ST.bmView=false;ST.notesView=false;ST.hlView=false;ST.topicSel=null;ST.selectedTag=null;ST.rootView=null;ST.warnMap=null;
   if(mode==="hifz"){                           // 6-й режим «Хифз» (проверка заучивания)
     if(!ST.hifzMode){
       ST.hifzMode=true;ST.homeMode=false;ST.srcMode=false;ST.pageMode=false;
@@ -8550,12 +8641,13 @@ async function loadPackSurah(packId,surah){
 // Build the glyph HTML for one ayah; words stay individually selectable.
 // When loc ("surah:ayah") is given, each word carries data-loc="surah:ayah:pos"
 // so tapping it opens the corpus grammar card (positions are aligned 1:1).
-function renderPackAyah(pack,entry,loc){
+function renderPackAyah(pack,entry,loc,hl){
   if(!entry)return "";
   let html="";
   entry.w.forEach((wp,i)=>{const g=wp[0],p=wp[1];ensurePageFont(pack,p);
     const dl=loc?` data-loc="${loc}:${i+1}"`:"";
-    html+=`<span class="qpc-w"${dl} style="font-family:'${pack.fontFamily(p)}'">${g}</span> `;});
+    const hc=hl&&hl[i+1]?` whl whl-${hl[i+1]}`:"";   // маркер слов: позиции пака = корпусные
+    html+=`<span class="qpc-w${hc}"${dl} style="font-family:'${pack.fontFamily(p)}'">${g}</span> `;});
   if(entry.e){const g=entry.e[0],p=entry.e[1];ensurePageFont(pack,p);html+=`<span class="qpc-end" style="font-family:'${pack.fontFamily(p)}'">${g}</span>`;}
   return `<div class="qpc-line selectable">${html}</div>`;
 }
@@ -8810,7 +8902,7 @@ async function renderStuBody(){
   await loadChunk("_arabic",s);
   if(stale())return;
   const ar=getArabicFromCache(s,a)||"";
-  let html=ar?`<div class="stu-ar selectable">${ar}</div>`:"";
+  let html=ar?`<div class="stu-ar selectable">${arHlHTML(ar,s,a,null)}</div>`:"";
   if(tab==="taf"){
     const en=getEnabledList().filter(t=>t.id!=="_notes"&&t.kind!=="image"&&t.kind!=="quran");
     if(!en.length)html+=`<div class="vp-note">Ни один перевод или тафсир не включён — чип источников в панели чтения.</div>`;
@@ -8858,8 +8950,8 @@ async function renderStuBody(){
 // физически не отрисуется, поэтому слой обязан следовать начертанию ⚙ Вид (отдельному
 // режиму это сходило с рук — он был всегда печатным). Слова паков и морфологии сходятся
 // 1:1 по позиции — сверено на всех 6236 аятах, поэтому адрес слова общий для обоих путей.
-function wbwCellHTML(loc,arHTML,gloss){
-  return `<span class="wbw-cell" data-loc="${loc}">${arHTML}<span class="wbw-gl">${esc(gloss||"")}</span></span>`;
+function wbwCellHTML(loc,arHTML,gloss,hlc){
+  return `<span class="wbw-cell${hlc?` whl whl-${hlc}`:""}" data-loc="${loc}">${arHTML}<span class="wbw-gl">${esc(gloss||"")}</span></span>`;
 }
 // Сетка одного аята. Возвращает "" если данных нет — вызывающий тогда покажет
 // обычную арабскую строку (слой ничего не ломает, просто не появляется).
@@ -8868,6 +8960,7 @@ function wbwGridHTML(surah,aid,loaded){
   const pack=activePack();                      // null → текстовое начертание
   const wg=(loaded.__wbwW||{})[key];
   const gloss=pos=>{const w=wg&&wg[String(pos)];return (w&&(w.ru||w.en))||"";};
+  const hl=hlFor(surah,aid)||{};                // маркер слов — те же позиции
   let cells="";
   if(pack){
     const entry=(loaded.__qpc||{})[key];
@@ -8875,7 +8968,7 @@ function wbwGridHTML(surah,aid,loaded){
     entry.w.forEach((wp,i)=>{
       ensurePageFont(pack,wp[1]);
       cells+=wbwCellHTML(`${surah}:${aid}:${i+1}`,
-        `<span class="wbw-ar" style="font-family:'${pack.fontFamily(wp[1])}'">${wp[0]}</span>`,gloss(i+1));
+        `<span class="wbw-ar" style="font-family:'${pack.fontFamily(wp[1])}'">${wp[0]}</span>`,gloss(i+1),hl[i+1]);
     });
   }else{
     const ws=(loaded.__wbwM||{})[key];
@@ -8893,12 +8986,12 @@ function wbwGridHTML(surah,aid,loaded){
       posKeys.forEach((pos,i)=>{
         const t=aw[i];
         const inner=tj?tajweedSliceHTML(arFull,tj,t.off,t.off+t.w.length):t.w;
-        cells+=wbwCellHTML(`${surah}:${aid}:${pos}`,`<span class="wbw-ar wbw-ar-text">${inner}</span>`,gloss(pos));
+        cells+=wbwCellHTML(`${surah}:${aid}:${pos}`,`<span class="wbw-ar wbw-ar-text">${inner}</span>`,gloss(pos),hl[pos]);
       });
     }else{
       for(const pos of posKeys){
         const text=ws[pos].map(sg=>sg.ar||"").join("");
-        cells+=wbwCellHTML(`${surah}:${aid}:${pos}`,`<span class="wbw-ar wbw-ar-text">${esc(text)}</span>`,gloss(pos));
+        cells+=wbwCellHTML(`${surah}:${aid}:${pos}`,`<span class="wbw-ar wbw-ar-text">${esc(text)}</span>`,gloss(pos),hl[pos]);
       }
     }
   }
@@ -8910,12 +9003,49 @@ function wbwGridHTML(surah,aid,loaded){
 // Слова сплошного _arabic с их смещениями: токен считается словом, только если
 // содержит арабскую букву (знаки вакфа ۛ ۖ — не слова); в 1-х аятах сур (кроме
 // 1 и 9) отрезается басмала (в корпусе её нет). null = счёт не сошёлся.
-function arWordTokens(t,surah,aid,expectN){
+function arTokensRaw(t){
   const re=/[^ ]+/g,out=[];let m;
   while((m=re.exec(t)))if(/[ء-يٱ]/.test(m[0]))out.push({w:m[0],off:m.index});
+  return out;
+}
+function arWordTokens(t,surah,aid,expectN){
+  const out=arTokensRaw(t);
   if(out.length===expectN)return out;
   if(aid===1&&surah!==1&&surah!==9&&out.length===expectN+4)return out.slice(4);
   return null;
+}
+// Токены для МАРКЕРА СЛОВ: та же нумерация (басмала 1-х аятов срезана) —
+// якорь «номер слова» согласован с wbw-сеткой и паками
+function arHlTokens(t,surah,aid){
+  let out=arTokensRaw(t);
+  if(aid===1&&surah!==1&&surah!==9&&out.length>4)out=out.slice(4);
+  return out;
+}
+// ── МАРКЕР СЛОВ (тадаббур, фаза 2): выделение слов аята цветом ──────────────
+// Хранение: wordHl = {"s:a":{номерСлова:цвет1..4}}; в SYNCED_KEYS (синк/экспорт).
+function wordHl(){return gs("wordHl",{});}
+function hlFor(s,a){const m=wordHl()[s+":"+a];return m&&Object.keys(m).length?m:null;}
+function setWordHl(s,a,pos,color){
+  const all=wordHl(),k=s+":"+a,m=all[k]||{};
+  if(color)m[pos]=color;else delete m[pos];
+  if(Object.keys(m).length)all[k]=m;else delete all[k];
+  ss("wordHl",all);
+}
+// Сплошная арабская строка с выделениями (+таджвид внутри выделенных слов)
+function arHlHTML(text,s,aid,tjs){
+  const hl=hlFor(s,aid);
+  if(!hl)return tjs?tajweedHTML(text,tjs):text;
+  const seg=(a,b)=>tjs?tajweedSliceHTML(text,tjs,a,b):text.slice(a,b);
+  const toks=arHlTokens(text,s,aid);
+  let html="",cur=0;
+  toks.forEach((tk,i)=>{
+    const c=hl[i+1];if(!c)return;
+    if(tk.off>cur)html+=seg(cur,tk.off);
+    html+=`<span class="whl whl-${c}">${seg(tk.off,tk.off+tk.w.length)}</span>`;
+    cur=tk.off+tk.w.length;
+  });
+  html+=seg(cur,text.length);
+  return html;
 }
 // Фрагмент разметки таджвида для подстроки [a,b): глобальные спаны аята
 // клипуются пересечением и сдвигаются в координаты слова.
@@ -9137,7 +9267,7 @@ function addTag(val){
 // экраны, которые renderCenter проверяет РАНЬШЕ selectedTag (Главная, скан,
 // режим источника, введение): иначе тап по тегу оттуда молча ничего не делал.
 function selectTag(path){
-  ST.selectedTag=path;ST.bookIntro=false;ST.homeMode=false;ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;
+  ST.selectedTag=path;ST.bookIntro=false;ST.homeMode=false;ST.scanSource=null;ST.srcMode=false;ST.hifzMode=false;ST.eruditMode=false;ST.bmView=false;ST.notesView=false;ST.hlView=false;
   if(isM()){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
   render();
 }
