@@ -1463,8 +1463,9 @@ svg.svgi{width:19px;height:19px;stroke:currentColor;stroke-width:1.9;fill:none;s
 .ab-ico svg.svgi{width:16px;height:16px}
 .ab-ico.ab-bm.on{color:#c8971b}
 .ab-ico.ab-bm.on svg.svgi{fill:#c8971b;stroke:#c8971b}
-.ab-marks{margin-left:auto;display:flex;align-items:center;gap:8px;color:var(--text-muted);font-size:11px;cursor:pointer;padding:0 4px;min-height:32px}
-.ab-marks .mk{display:inline-flex;align-items:center;gap:3px}
+.ab-marks{margin-left:auto;display:flex;align-items:center;gap:2px;color:var(--text-muted);font-size:11px;padding:0 2px;min-height:32px}
+.ab-marks .mk{display:inline-flex;align-items:center;gap:3px;border:none;background:none;color:inherit;font:inherit;cursor:pointer;padding:6px 5px;border-radius:8px;min-height:30px}
+.ab-marks .mk:hover{color:var(--accent);background:var(--bg-card)}
 .ab-marks svg.svgi{width:13px;height:13px}
 /* нижний лист (лист аята / навигатор) */
 .ash-veil{position:fixed;inset:0;background:rgba(10,20,14,.45);z-index:300}
@@ -6052,11 +6053,20 @@ const IC={
   target:'<svg class="svgi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18z"/><path d="M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8z"/><path d="M12 12h.01"/></svg>',
   grad:'<svg class="svgi" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 9 12 4 2 9l10 5z"/><path d="M6 11.5V17c3.2 2.6 8.8 2.6 12 0v-5.5"/></svg>'
 };
-// Метки-состояния в панельке аята: заметка + число тегов (индикаторы, не кнопки)
+// Метки-состояния в панельке аята — ПРЯМЫЕ входы (просьба пользователя):
+// тап по ✏ открывает заметку этого аята, тап по 🏷 — попап тегов.
 function marksHTML(s,aid){
   const hn=hasNote(s,aid);const n=getATList(s,aid).length;
-  return (hn?`<span class="mk" title="Есть заметка">${IC.pen}</span>`:"")+
-         (n?`<span class="mk" title="Тегов: ${n}">${IC.tag}${n}</span>`:"");
+  return (hn?`<button class="mk" title="Открыть заметку" onclick="event.stopPropagation();openAyahNote(${aid})">${IC.pen}</button>`:"")+
+         (n?`<button class="mk" title="Тегов: ${n} — изменить" onclick="event.stopPropagation();openTagPopup(${aid},this)">${IC.tag}${n}</button>`:"");
+}
+// Открыть заметку аята: если поле уже на экране (слой «Мои заметки» или
+// развёрнутая inline-заметка) — сфокусировать его, иначе развернуть inline.
+function openAyahNote(aid){
+  const block=document.querySelector(`.ayah-block[data-aid="${aid}"]`);
+  const ta=block&&block.querySelector(".ab-note-area");
+  if(ta){ta.scrollIntoView({block:"center",behavior:"smooth"});ta.focus();return;}
+  toggleNote(aid,null);
 }
 function refreshAyahMarks(aid){
   const el=document.querySelector(`.ab-marks[data-marks="${aid}"]`);
@@ -6316,7 +6326,7 @@ async function renderReading(el){
       html+=`<div class="ayah-block" data-aid="${aid}"><div class="ab-head">
         <div class="ab-row"><button class="ab-num-btn" onclick="event.stopPropagation();openAyahSheet(${aid})" title="Все действия с аятом">${aid}</button>
           <button class="ab-ico" onclick="event.stopPropagation();mediaPlayAyah(${aid})" title="Слушать с этого аята">${IC.play}</button>
-          <span class="ab-marks" data-marks="${aid}" onclick="event.stopPropagation();openAyahSheet(${aid})">${marksHTML(ST.surah,aid)}</span>
+          <span class="ab-marks" data-marks="${aid}">${marksHTML(ST.surah,aid)}</span>
           <button class="ab-ico ab-bm ${isBookmarked(ST.surah,aid)?'on':''}" data-bm="${aid}" onclick="event.stopPropagation();toggleBookmark(${aid},null)" title="Закладка">${IC.star}</button>
           <button class="ab-ico" onclick="event.stopPropagation();openAyahSheet(${aid})" title="Ещё действия">${IC.more}</button>
         </div>
