@@ -1477,6 +1477,7 @@ svg.svgi{width:19px;height:19px;stroke:currentColor;stroke-width:1.9;fill:none;s
 .h-ctx-btn:hover{background:rgba(255,255,255,.09)}
 .h-ctx-btn:empty{display:none}
 .h-ctx-chev{opacity:.55;font-size:9px;flex-shrink:0}
+.h-ctx-btn .ctx-t{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hdr-menu{position:fixed;top:48px;right:8px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.22);padding:5px;z-index:250;min-width:215px}
 .hdr-menu button{display:flex;align-items:center;gap:12px;width:100%;border:none;background:none;text-align:left;padding:10px 12px;border-radius:9px;font-size:13.5px;font-family:inherit;color:var(--text);cursor:pointer}
 .hdr-menu button:hover{background:var(--bg-alt)}
@@ -1555,7 +1556,7 @@ svg.svgi{width:19px;height:19px;stroke:currentColor;stroke-width:1.9;fill:none;s
 .read-hint b{color:var(--accent)}
 .read-hint button{margin-left:auto;border:none;background:none;color:var(--text-sec);cursor:pointer;padding:4px;font-size:13px;flex-shrink:0}
 .rp-tabs{display:flex;gap:5px;padding:0 0 8px;position:sticky;top:0;background:var(--panel,var(--bg-alt));z-index:2}
-.rp-tabs button{flex:1;border:1px solid var(--border);background:var(--bg);border-radius:8px;padding:7px 3px;font-size:11.5px;font-weight:600;color:var(--text-sec);cursor:pointer;font-family:inherit}
+.rp-tabs button{flex:1 1 0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:1px solid var(--border);background:var(--bg);border-radius:8px;padding:7px 3px;font-size:11.5px;font-weight:600;color:var(--text-sec);cursor:pointer;font-family:inherit}
 .rp-tabs button.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .rp-presets{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 10px}
 .rp-preset{border:1px solid var(--border);background:var(--bg-card);border-radius:999px;padding:6px 11px;font-size:11.5px;color:var(--text-sec);cursor:pointer;font-family:inherit}
@@ -5186,7 +5187,7 @@ function renderCB(){
   const bar=document.getElementById("centerBar");
   const ctx=document.getElementById("hCtx");
   // hCtx — кнопка-навигатор (openNavSheet): к тексту дорисовываем стрелку ▾
-  const setCtx=h=>{if(ctx)ctx.innerHTML=h?h+'<span class="h-ctx-chev">▼</span>':"";};
+  const setCtx=h=>{if(ctx)ctx.innerHTML=h?`<span class="ctx-t">${h}</span><span class="h-ctx-chev">▼</span>`:"";};
   const su=SURAHS.find(s=>s.id===ST.surah);
   const vb=document.getElementById("hViewBtn");if(vb)vb.classList.toggle("active",ST.sidebarOpen&&ST.sbTab==="view"); // подсветка ⚙ в шапке (вкладка «Вид» открыта)
 
@@ -5254,7 +5255,9 @@ function renderCB(){
     bar.innerHTML=readBar;return;
   }
   if(ST.pageMode){
-    setCtx(pageLocation(ST.mushafPage));
+    const pf=qpcMeta&&qpcMeta.pageStart&&qpcMeta.pageStart[ST.mushafPage];
+    const psu=pf&&SURAHS.find(x=>x.id===pf.surah);
+    setCtx(`${psu?esc(psu.ru):"Мусхаф"} · стр. ${ST.mushafPage}`);
     bar.innerHTML=readBar;return;
   }
   setCtx(`${su.ru} <span class="ar">${su.name}</span>`);
@@ -7269,7 +7272,7 @@ function renderRP(){
   // фасеты — за кнопкой «Фильтры»; пресеты наборов; «Оригинал» — своя вкладка.
   const tab=ST.rpTab||"sel";
   const tb=(id,lab)=>`<button class="${tab===id?'on':''}" onclick="ST.rpTab='${id}';renderRP()">${lab}</button>`;
-  let html=`<div class="rp-tabs">${tb("sel","Выбрано")+tb("cat","Каталог")+tb("orig","Оригинал и слои")}</div>`;
+  let html=`<div class="rp-tabs">${tb("sel","Выбрано")+tb("cat","Каталог")+tb("orig","Слои")}</div>`;
 
   if(tab==="orig"){
     // Редакции арабского + таджвид + пословный слой (см. quranBlockHTML)
