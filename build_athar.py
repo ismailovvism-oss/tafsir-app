@@ -122,6 +122,11 @@ SCHOLARS = {
     # ВЕСЬ свод: ни один асар не выпадает.
     "athar_misc":{"name": "Асары прочих передатчиков", "nameAr": "آثار سائر الرواة",
                   "match": [], "exclude": [], "others": True},
+    # Костяк корпуса: НЕ передатчик, а редакционные сводки свода (разбор пяти
+    # имамов). Собирается по всему Корану, а не по аятам одного передатчика —
+    # иначе на аятах без асаров костяка бы не было.
+    "imams5":    {"name": "Тафсир 5 имамов", "nameAr": "ترجيحات أئمة التفسير الخمسة",
+                  "out": "imams5_ar", "match": [], "exclude": [], "notes": True},
 }
 
 # ── Разбор разметки ───────────────────────────────────────────────────────
@@ -169,7 +174,7 @@ def others_matcher():
 head_rx = re.compile(r'^﴿')                          # заголовок секции аята
 
 
-def filter_text(t, hit, keep_notes=False):
+def filter_text(t, hit, want=("asar",)):
     """Оставить асары ЭТОГО учёного (+ заголовки их секций).
 
     Разбор идёт ЭЛЕМЕНТАМИ, а не абзацами: абзац без номера — продолжение
@@ -177,10 +182,12 @@ def filter_text(t, hit, keep_notes=False):
     вместе с ним; заголовок секции остаётся, только если в секции что-то
     сохранилось, иначе в тексте повисали бы пустые заголовки.
 
-    `keep_notes=False` (по умолчанию): редакционные сводки НЕ включаются — с
-    2026-08-09 они вынесены в отдельный слой «Тафсир 5 имамов» (imams5_ar), и
+    `want=("asar",)` — по умолчанию только асары: редакционные сводки с
+    2026-08-09 вынесены в отдельный слой «Тафсир 5 имамов» (imams5_ar), и
     дублировать их в каждом передатчике значило бы показывать один и тот же
-    разбор столько раз, сколько слоёв включено.
+    разбор столько раз, сколько слоёв включено. `want=("note",)` — наоборот,
+    ТОЛЬКО сводки: так собирается сам костяк, причём по ВСЕМУ своду, а не по
+    аятам одного передатчика.
     """
     masks = []
     masked = foot_rx.sub(lambda m: (masks.append(m.group(0)) or f"\x00{len(masks)-1}\x00"), t)
@@ -195,15 +202,17 @@ def filter_text(t, hit, keep_notes=False):
         elif asar_head.match(s):
             n_total += 1
             keep = hit(primary_name(asar_head.sub('', s.lstrip(), count=1)))
-            n_kept += 1 if keep else 0
+            if keep and "asar" in want:
+                n_kept += 1
             secs[-1]["items"].append(["asar" if keep else "skip", [p]])
         elif note_head.match(s):
+            if "note" in want:
+                n_kept += 1
             secs[-1]["items"].append(["note", [p]])
         elif secs[-1]["items"]:
             secs[-1]["items"][-1][1].append(p)
         else:
             secs[-1]["head"].append(p)
-    want = ("asar", "note") if keep_notes else ("asar",)
     kept = []
     for sec in secs:
         items = [it for it in sec["items"] if it[0] in want]
@@ -225,13 +234,17 @@ def load_src():
 
 def build(sid, data):
     spec = SCHOLARS[sid]
-    hit = others_matcher() if spec.get("others") else matcher(spec)
+    if spec.get("notes"):                 # костяк: только редакционные сводки
+        hit, want = (lambda name: False), ("note",)
+    else:
+        hit = others_matcher() if spec.get("others") else matcher(spec)
+        want = ("asar",)
     mono = {}
     n_total = n_kept = n_ayat = 0
     for s in sorted(data):
         sd = {}
         for ay, t in data[s].items():
-            out, tot, kept = filter_text(t, hit)
+            out, tot, kept = filter_text(t, hit, want)
             n_total += tot
             n_kept += kept
             # оставляем аят, если в нём остались асары этого учёного
