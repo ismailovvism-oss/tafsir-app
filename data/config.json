@@ -952,307 +952,6 @@
       "counterpart": "qurtubi_ar"
     },
     {
-      "id": "ibn_abbas",
-      "file": "tafsirs/ibn_abbas.json",
-      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "Ибн Аббас (рус.)",
-      "nameAr": "مرويات ابن عباس في التفسير",
-      "author": "Ибн Аббас (асары из свода «аль-Мавсуа»)",
-      "authorAr": "عبد الله بن عباس",
-      "translator": "ИИ-перевод (Claude Opus 4.8; продолжение — Codex)",
-      "group": "russian",
-      "kind": "tafsir",
-      "lang": "ru",
-      "era": "classical",
-      "tags": [
-        "hadith",
-        "athar",
-        "isnad",
-        "draft"
-      ],
-      "about": true,
-      "reviewLevel": "unverified",
-      "fill": 0.5895,
-      "counterpart": "ibn_abbas_ar"
-    },
-    {
-      "id": "ibn_abbas_ar",
-      "parent": "mawsua_masur",
-      "file": "tafsirs/ibn_abbas_ar.json",
-      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "تفسير ابن عباس",
-      "nameAr": "",
-      "author": "Ибн Аббас (асары из свода «аль-Мавсуа»)",
-      "authorAr": "عبد الله بن عباس",
-      "group": "classical_ar",
-      "kind": "tafsir",
-      "lang": "ar",
-      "era": "classical",
-      "tags": [
-        "hadith",
-        "athar",
-        "isnad"
-      ],
-      "fill": 0.5895,
-      "about": true,
-      "counterpart": "ibn_abbas"
-    },
-    {
-      "id": "imams5",
-      "parent": "mawsua_masur",
-      "file": "tafsirs/imams5.json",
-      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "Тафсир 5 имамов",
-      "nameAr": "ترجيحات أئمة التفسير الخمسة",
-      "author": "Ибн Джарир, Ибн Атыйя, Ибн Таймийя, Ибн аль-Кайим, Ибн Касир — в сводках редакции «аль-Мавсуа»",
-      "authorAr": "ابن جرير، ابن عطية، ابن تيمية، ابن القيم، ابن كثير",
-      "translator": "ИИ-перевод (Claude)",
-      "group": "russian",
-      "kind": "tafsir",
-      "lang": "ru",
-      "era": "classical",
-      "tags": [
-        "tafsir",
-        "ijtihad",
-        "draft"
-      ],
-      "about": true,
-      "reviewLevel": "unverified",
-      "fill": 0.4282,
-      "counterpart": "imams5_ar"
-    },
-    {
-      "id": "imams5_ar",
-      "parent": "mawsua_masur",
-      "file": "tafsirs/imams5_ar.json",
-      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "ترجيحات أئمة التفسير الخمسة",
-      "nameAr": "",
-      "author": "Ибн Джарир, Ибн Атыйя, Ибн Таймийя, Ибн аль-Кайим, Ибн Касир — в сводках редакции «аль-Мавсуа»",
-      "authorAr": "ابن جرير، ابن عطية، ابن تيمية، ابن القيم، ابن كثير",
-      "group": "classical_ar",
-      "kind": "tafsir",
-      "lang": "ar",
-      "era": "classical",
-      "tags": [
-        "tafsir",
-        "ijtihad"
-      ],
-      "about": true,
-      "fill": 0.4323,
-      "counterpart": "imams5"
-    },
-    {
-      "id": "mujahid",
-      "parent": "mawsua_masur",
-      "file": "tafsirs/mujahid.json",
-      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "تفسير مجاهد",
-      "nameAr": "",
-      "author": "Муджахид ибн Джабр аль-Макки",
-      "authorAr": "مجاهد بن جبر المكي",
-      "group": "classical_ar",
-      "kind": "tafsir",
-      "lang": "ar",
-      "era": "classical",
-      "tags": [
-        "hadith",
-        "athar",
-        "isnad"
-      ],
-      "year": "104 х.",
-      "fill": 0.4421
-    },
-    {
-      "id": "qatada",
-      "parent": "mawsua_masur",
-      "file": "tafsirs/qatada.json",
-      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "تفسير قتادة",
-      "nameAr": "",
-      "author": "Катада ибн Диама ас-Садуси",
-      "authorAr": "قتادة بن دعامة السدوسي",
-      "group": "classical_ar",
-      "kind": "tafsir",
-      "lang": "ar",
-      "era": "classical",
-      "tags": [
-        "hadith",
-        "athar",
-        "isnad"
-      ],
-      "year": "118 х.",
-      "fill": 0.6081
-    },
-    {
-      "id": "ikrima",
-      "parent": "mawsua_masur",
-      "file": "tafsirs/ikrima.json",
-      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "تفسير عكرمة",
-      "nameAr": "",
-      "author": "Икрима, вольноотпущенник Ибн Аббаса",
-      "authorAr": "عكرمة مولى ابن عباس",
-      "group": "classical_ar",
-      "kind": "tafsir",
-      "lang": "ar",
-      "era": "classical",
-      "tags": [
-        "hadith",
-        "athar",
-        "isnad"
-      ],
-      "year": "105 х.",
-      "fill": 0.2086
-    },
-    {
-      "id": "hasan",
-      "parent": "mawsua_masur",
-      "file": "tafsirs/hasan.json",
-      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "تفسير الحسن البصري",
-      "nameAr": "",
-      "author": "аль-Хасан аль-Басри",
-      "authorAr": "الحسن البصري",
-      "group": "classical_ar",
-      "kind": "tafsir",
-      "lang": "ar",
-      "era": "classical",
-      "tags": [
-        "hadith",
-        "athar",
-        "isnad"
-      ],
-      "year": "110 х.",
-      "fill": 0.3457
-    },
-    {
-      "id": "suddi",
-      "parent": "mawsua_masur",
-      "file": "tafsirs/suddi.json",
-      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "تفسير السدي",
-      "nameAr": "",
-      "author": "Исмаил ибн Абд ар-Рахман ас-Судди аль-Кабир",
-      "authorAr": "إسماعيل بن عبد الرحمن السدي",
-      "group": "classical_ar",
-      "kind": "tafsir",
-      "lang": "ar",
-      "era": "classical",
-      "tags": [
-        "hadith",
-        "athar",
-        "isnad"
-      ],
-      "year": "127 х.",
-      "fill": 0.3379
-    },
-    {
-      "id": "saeed",
-      "parent": "mawsua_masur",
-      "file": "tafsirs/saeed.json",
-      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "تفسير سعيد بن جبير",
-      "nameAr": "",
-      "author": "Саид ибн Джубайр",
-      "authorAr": "سعيد بن جبير",
-      "group": "classical_ar",
-      "kind": "tafsir",
-      "lang": "ar",
-      "era": "classical",
-      "tags": [
-        "hadith",
-        "athar",
-        "isnad"
-      ],
-      "year": "95 х.",
-      "fill": 0.1899
-    },
-    {
-      "id": "dahhak",
-      "parent": "mawsua_masur",
-      "file": "tafsirs/dahhak.json",
-      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "تفسير الضحاك",
-      "nameAr": "",
-      "author": "ад-Даххак ибн Музахим аль-Хиляли",
-      "authorAr": "الضحاك بن مزاحم الهلالي",
-      "group": "classical_ar",
-      "kind": "tafsir",
-      "lang": "ar",
-      "era": "classical",
-      "tags": [
-        "hadith",
-        "athar",
-        "isnad"
-      ],
-      "year": "105 х.",
-      "fill": 0.2574
-    },
-    {
-      "id": "ibn_masud",
-      "parent": "mawsua_masur",
-      "file": "tafsirs/ibn_masud.json",
-      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "تفسير ابن مسعود",
-      "nameAr": "",
-      "author": "Абдуллах ибн Масуд",
-      "authorAr": "عبد الله بن مسعود",
-      "group": "classical_ar",
-      "kind": "tafsir",
-      "lang": "ar",
-      "era": "classical",
-      "tags": [
-        "hadith",
-        "athar",
-        "isnad"
-      ],
-      "year": "32 х.",
-      "fill": 0.122
-    },
-    {
-      "id": "ata",
-      "parent": "mawsua_masur",
-      "file": "tafsirs/ata.json",
-      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "تفسير عطاء",
-      "nameAr": "",
-      "author": "Ата ибн Аби Рабах",
-      "authorAr": "عطاء بن أبي رباح",
-      "group": "classical_ar",
-      "kind": "tafsir",
-      "lang": "ar",
-      "era": "classical",
-      "tags": [
-        "hadith",
-        "athar",
-        "isnad"
-      ],
-      "year": "114 х.",
-      "fill": 0.1084
-    },
-    {
-      "id": "muqatil",
-      "parent": "mawsua_masur",
-      "file": "tafsirs/muqatil.json",
-      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "تفسير مقاتل بن سليمان",
-      "nameAr": "",
-      "author": "Мукатиль ибн Сулейман аль-Балхи",
-      "authorAr": "مقاتل بن سليمان البلخي",
-      "group": "classical_ar",
-      "kind": "tafsir",
-      "lang": "ar",
-      "era": "classical",
-      "tags": [
-        "hadith",
-        "athar",
-        "isnad"
-      ],
-      "year": "150 х.",
-      "fill": 0.9881
-    },
-    {
       "id": "qurtubi_ar",
       "file": "tafsirs/qurtubi_ar.json",
       "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
@@ -1317,25 +1016,6 @@
       "fill": 0.3546
     },
     {
-      "id": "mawsua_masur",
-      "file": "tafsirs/mawsua_masur.json",
-      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
-      "name": "الموسوعة في التفسير المأثور",
-      "nameAr": "",
-      "author": "Центр тафсира (свод преданий саляфов)",
-      "authorAr": "مركز الدراسات القرآنية وتحقيق التراث",
-      "group": "classical_ar",
-      "kind": "tafsir",
-      "lang": "ar",
-      "era": "classical",
-      "tags": [
-        "hadith"
-      ],
-      "year": "",
-      "about": true,
-      "fill": 1.0
-    },
-    {
       "id": "saadi_ru",
       "file": "tafsirs/saadi_ru.json",
       "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
@@ -1372,6 +1052,348 @@
       "year": "",
       "fill": 1.0,
       "reviewLevel": "unverified"
+    },
+    {
+      "id": "imams5_ar",
+      "parent": "athar_ar",
+      "file": "tafsirs/imams5_ar.json",
+      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
+      "name": "ترجيحات أئمة التفسير الخمسة",
+      "nameAr": "",
+      "author": "Ибн Джарир, Ибн Атыйя, Ибн Таймийя, Ибн аль-Кайим, Ибн Касир — в сводках редакции «аль-Мавсуа»",
+      "authorAr": "ابن جرير، ابن عطية، ابن تيمية، ابن القيم، ابن كثير",
+      "group": "classical_ar",
+      "kind": "tafsir",
+      "lang": "ar",
+      "era": "classical",
+      "tags": [
+        "tafsir",
+        "ijtihad"
+      ],
+      "about": true,
+      "fill": 0.4323,
+      "counterpart": "imams5",
+      "core": true
+    },
+    {
+      "id": "ibn_abbas_ar",
+      "parent": "athar_ar",
+      "file": "tafsirs/ibn_abbas_ar.json",
+      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
+      "name": "تفسير ابن عباس",
+      "nameAr": "",
+      "author": "Ибн Аббас (асары из свода «аль-Мавсуа»)",
+      "authorAr": "عبد الله بن عباس",
+      "group": "classical_ar",
+      "kind": "tafsir",
+      "lang": "ar",
+      "era": "classical",
+      "tags": [
+        "hadith",
+        "athar",
+        "isnad"
+      ],
+      "fill": 0.5895,
+      "about": true,
+      "counterpart": "ibn_abbas"
+    },
+    {
+      "id": "mujahid",
+      "parent": "athar_ar",
+      "file": "tafsirs/mujahid.json",
+      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
+      "name": "تفسير مجاهد",
+      "nameAr": "",
+      "author": "Муджахид ибн Джабр аль-Макки",
+      "authorAr": "مجاهد بن جبر المكي",
+      "group": "classical_ar",
+      "kind": "tafsir",
+      "lang": "ar",
+      "era": "classical",
+      "tags": [
+        "hadith",
+        "athar",
+        "isnad"
+      ],
+      "year": "104 х.",
+      "fill": 0.4421
+    },
+    {
+      "id": "qatada",
+      "parent": "athar_ar",
+      "file": "tafsirs/qatada.json",
+      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
+      "name": "تفسير قتادة",
+      "nameAr": "",
+      "author": "Катада ибн Диама ас-Садуси",
+      "authorAr": "قتادة بن دعامة السدوسي",
+      "group": "classical_ar",
+      "kind": "tafsir",
+      "lang": "ar",
+      "era": "classical",
+      "tags": [
+        "hadith",
+        "athar",
+        "isnad"
+      ],
+      "year": "118 х.",
+      "fill": 0.6081
+    },
+    {
+      "id": "muqatil",
+      "parent": "athar_ar",
+      "file": "tafsirs/muqatil.json",
+      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
+      "name": "تفسير مقاتل بن سليمان",
+      "nameAr": "",
+      "author": "Мукатиль ибн Сулейман аль-Балхи",
+      "authorAr": "مقاتل بن سليمان البلخي",
+      "group": "classical_ar",
+      "kind": "tafsir",
+      "lang": "ar",
+      "era": "classical",
+      "tags": [
+        "hadith",
+        "athar",
+        "isnad"
+      ],
+      "year": "150 х.",
+      "fill": 0.9881
+    },
+    {
+      "id": "hasan",
+      "parent": "athar_ar",
+      "file": "tafsirs/hasan.json",
+      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
+      "name": "تفسير الحسن البصري",
+      "nameAr": "",
+      "author": "аль-Хасан аль-Басри",
+      "authorAr": "الحسن البصري",
+      "group": "classical_ar",
+      "kind": "tafsir",
+      "lang": "ar",
+      "era": "classical",
+      "tags": [
+        "hadith",
+        "athar",
+        "isnad"
+      ],
+      "year": "110 х.",
+      "fill": 0.3457
+    },
+    {
+      "id": "suddi",
+      "parent": "athar_ar",
+      "file": "tafsirs/suddi.json",
+      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
+      "name": "تفسير السدي",
+      "nameAr": "",
+      "author": "Исмаил ибн Абд ар-Рахман ас-Судди аль-Кабир",
+      "authorAr": "إسماعيل بن عبد الرحمن السدي",
+      "group": "classical_ar",
+      "kind": "tafsir",
+      "lang": "ar",
+      "era": "classical",
+      "tags": [
+        "hadith",
+        "athar",
+        "isnad"
+      ],
+      "year": "127 х.",
+      "fill": 0.3379
+    },
+    {
+      "id": "dahhak",
+      "parent": "athar_ar",
+      "file": "tafsirs/dahhak.json",
+      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
+      "name": "تفسير الضحاك",
+      "nameAr": "",
+      "author": "ад-Даххак ибн Музахим аль-Хиляли",
+      "authorAr": "الضحاك بن مزاحم الهلالي",
+      "group": "classical_ar",
+      "kind": "tafsir",
+      "lang": "ar",
+      "era": "classical",
+      "tags": [
+        "hadith",
+        "athar",
+        "isnad"
+      ],
+      "year": "105 х.",
+      "fill": 0.2574
+    },
+    {
+      "id": "ikrima",
+      "parent": "athar_ar",
+      "file": "tafsirs/ikrima.json",
+      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
+      "name": "تفسير عكرمة",
+      "nameAr": "",
+      "author": "Икрима, вольноотпущенник Ибн Аббаса",
+      "authorAr": "عكرمة مولى ابن عباس",
+      "group": "classical_ar",
+      "kind": "tafsir",
+      "lang": "ar",
+      "era": "classical",
+      "tags": [
+        "hadith",
+        "athar",
+        "isnad"
+      ],
+      "year": "105 х.",
+      "fill": 0.2086
+    },
+    {
+      "id": "saeed",
+      "parent": "athar_ar",
+      "file": "tafsirs/saeed.json",
+      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
+      "name": "تفسير سعيد بن جبير",
+      "nameAr": "",
+      "author": "Саид ибн Джубайр",
+      "authorAr": "سعيد بن جبير",
+      "group": "classical_ar",
+      "kind": "tafsir",
+      "lang": "ar",
+      "era": "classical",
+      "tags": [
+        "hadith",
+        "athar",
+        "isnad"
+      ],
+      "year": "95 х.",
+      "fill": 0.1899
+    },
+    {
+      "id": "ibn_masud",
+      "parent": "athar_ar",
+      "file": "tafsirs/ibn_masud.json",
+      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
+      "name": "تفسير ابن مسعود",
+      "nameAr": "",
+      "author": "Абдуллах ибн Масуд",
+      "authorAr": "عبد الله بن مسعود",
+      "group": "classical_ar",
+      "kind": "tafsir",
+      "lang": "ar",
+      "era": "classical",
+      "tags": [
+        "hadith",
+        "athar",
+        "isnad"
+      ],
+      "year": "32 х.",
+      "fill": 0.122
+    },
+    {
+      "id": "ata",
+      "parent": "athar_ar",
+      "file": "tafsirs/ata.json",
+      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
+      "name": "تفسير عطاء",
+      "nameAr": "",
+      "author": "Ата ибн Аби Рабах",
+      "authorAr": "عطاء بن أبي رباح",
+      "group": "classical_ar",
+      "kind": "tafsir",
+      "lang": "ar",
+      "era": "classical",
+      "tags": [
+        "hadith",
+        "athar",
+        "isnad"
+      ],
+      "year": "114 х.",
+      "fill": 0.1084
+    },
+    {
+      "id": "mawsua_masur",
+      "file": "tafsirs/mawsua_masur.json",
+      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
+      "name": "الموسوعة كاملة (كل الرواة)",
+      "nameAr": "",
+      "author": "Центр тафсира (свод преданий саляфов)",
+      "authorAr": "مركز الدراسات القرآنية وتحقيق التراث",
+      "group": "classical_ar",
+      "kind": "tafsir",
+      "lang": "ar",
+      "era": "classical",
+      "tags": [
+        "hadith"
+      ],
+      "year": "",
+      "about": true,
+      "fill": 1.0,
+      "parent": "athar_ar"
+    },
+    {
+      "id": "imams5",
+      "parent": "athar_ru",
+      "file": "tafsirs/imams5.json",
+      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
+      "name": "Тафсир 5 имамов",
+      "nameAr": "ترجيحات أئمة التفسير الخمسة",
+      "author": "Ибн Джарир, Ибн Атыйя, Ибн Таймийя, Ибн аль-Кайим, Ибн Касир — в сводках редакции «аль-Мавсуа»",
+      "authorAr": "ابن جرير، ابن عطية، ابن تيمية، ابن القيم، ابن كثير",
+      "translator": "ИИ-перевод (Claude)",
+      "group": "russian",
+      "kind": "tafsir",
+      "lang": "ru",
+      "era": "classical",
+      "tags": [
+        "tafsir",
+        "ijtihad",
+        "draft"
+      ],
+      "about": true,
+      "reviewLevel": "unverified",
+      "fill": 0.4282,
+      "counterpart": "imams5_ar",
+      "core": true
+    },
+    {
+      "id": "ibn_abbas",
+      "file": "tafsirs/ibn_abbas.json",
+      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
+      "name": "Ибн Аббас (рус.)",
+      "nameAr": "مرويات ابن عباس في التفسير",
+      "author": "Ибн Аббас (асары из свода «аль-Мавсуа»)",
+      "authorAr": "عبد الله بن عباس",
+      "translator": "ИИ-перевод (Claude Opus 4.8; продолжение — Codex)",
+      "group": "russian",
+      "kind": "tafsir",
+      "lang": "ru",
+      "era": "classical",
+      "tags": [
+        "hadith",
+        "athar",
+        "isnad",
+        "draft"
+      ],
+      "about": true,
+      "reviewLevel": "unverified",
+      "fill": 0.5895,
+      "counterpart": "ibn_abbas_ar",
+      "parent": "athar_ru"
+    }
+  ],
+  "containers": [
+    {
+      "id": "athar_ru",
+      "name": "Тафсирные асары саляфов",
+      "nameAr": "آثار السلف في التفسير",
+      "group": "russian",
+      "note": "Один корпус — свод «аль-Мавсуа». Костяк: разбор пяти имамов; передатчики включаются галочками.",
+      "about": true
+    },
+    {
+      "id": "athar_ar",
+      "name": "آثار السلف في التفسير",
+      "nameAr": "",
+      "group": "classical_ar",
+      "note": "الموسوعة في التفسير المأثور: ترجيحات الأئمة الخمسة أساسًا، ومرويات كل راوٍ طبقةً مستقلة.",
+      "about": true
     }
   ]
 }

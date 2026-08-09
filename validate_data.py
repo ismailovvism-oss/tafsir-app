@@ -95,6 +95,29 @@ def check_configs():
     return cfg
 
 
+def check_containers(cfg):
+    """Контейнеры (config.containers) — узлы-группы каталога, а не источники.
+
+    Сами не читаются и в tafsirs не лежат, поэтому проверяем только целостность
+    связей: у ребёнка parent обязан существовать (источник ИЛИ контейнер),
+    id контейнера не должен совпадать с id источника, а `about: true` — иметь
+    файл паспорта, иначе кнопка ℹ откроет пустоту.
+    """
+    conts = {c["id"]: c for c in cfg.get("containers", [])}
+    ids = {t["id"] for t in cfg["tafsirs"]}
+    for cid, c in conts.items():
+        if cid in ids:
+            err(f"[{cid}] id контейнера совпадает с id источника")
+        if c.get("about") and not os.path.exists(os.path.join(DATA, "about", f"{cid}.md")):
+            err(f"[{cid}] about: true, но нет data/about/{cid}.md")
+        if not any(t.get("parent") == cid for t in cfg["tafsirs"]):
+            warn(f"[{cid}] контейнер без единого источника внутри")
+    for t in cfg["tafsirs"]:
+        p = t.get("parent")
+        if p and p not in ids and p not in conts:
+            err(f"[{t['id']}] parent «{p}» не найден ни среди источников, ни среди контейнеров")
+
+
 def check_source(t):
     tid = t["id"]
     kind = t.get("kind", "")
@@ -260,8 +283,10 @@ def main():
     if cfg:
         for t in cfg["tafsirs"]:
             check_source(t)
+        check_containers(cfg)
         check_coverage(cfg)
-        print(f"Источников проверено: {len(cfg['tafsirs'])}")
+        print(f"Источников проверено: {len(cfg['tafsirs'])}"
+              + (f", контейнеров: {len(cfg['containers'])}" if cfg.get("containers") else ""))
     check_qpc()
     check_wbw()
 

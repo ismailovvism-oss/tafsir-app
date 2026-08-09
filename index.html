@@ -303,6 +303,7 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .t-sub{display:flex;flex-direction:column}
 .t-sub .t-item{padding:5px 8px}
 .t-parent-head{font-size:calc(10.5px*var(--sb,1));color:var(--text-muted);padding:5px 8px 2px}
+.t-cont-note{font-size:calc(10px*var(--sb,1));color:var(--text-muted);padding:0 8px 4px;line-height:1.35}
 .t-parent-note{color:var(--accent)}
 .src-child{margin-left:14px;border-left:2px solid var(--border-light);padding-left:6px}
 
@@ -4837,7 +4838,7 @@ function renderWarnSource(el){
   el.innerHTML=html+`</div>`;
 }
 async function openAbout(id){
-  const t=CONFIG.tafsirs.find(x=>x.id===id);if(!t)return;
+  const t=CONFIG.tafsirs.find(x=>x.id===id)||contById(id);if(!t)return;
   let bodyHtml;
   if(t.kind==="image"){                              // скан-источник: предисловие картинками
     let ab=aboutCache["imgabout_"+id];
@@ -5683,7 +5684,9 @@ function covPopupHTML(aid){
     if(!items.length)return"";
     const col=kindCollapsed(kind);
     const head=`<div class="cov-grp-head clickable ${col?'collapsed':''}" onclick="covToggleKind(${aid},'${kind}')" title="Свернуть/развернуть">${title} · ${items.length} <span class="grp-chev">${col?'▸':'▾'}</span></div>`;
-    const rows=srcOrderNested(items).map(({t,depth})=>{const r=covRowHTML(t,aid,has,adh);return depth?`<div class="src-child">${r}</div>`:r;}).join("");
+    const rows=srcOrderNested(items).map(n=>{
+      if(n.head)return `<div class="t-parent-head">${esc(n.cont.name)}</div>`;
+      const r=covRowHTML(n.t,aid,has,adh);return n.depth?`<div class="src-child">${r}</div>`:r;}).join("");
     return head+(col?"":rows);
   };
   const covWarn=covLoadFailed?`<div class="about-warn">⚠ Индекс покрытия не загрузился (нет сети?) — список источников неполный. Обновите страницу.</div>`:"";
@@ -5874,7 +5877,9 @@ function renderSourcePicker(el){
     const col=pickCollapsed(key);
     let h=`<div class="srcp-gname clickable ${col?'collapsed':''}" onclick="pickToggleKind('${key}')" title="Свернуть/развернуть">${icon} ${title} · ${items.length} <span class="grp-chev">${col?'▸ показать':'▾'}</span></div>`;
     if(col)return h;
-    for(const {t,depth} of srcOrderNested(items)){
+    for(const n of srcOrderNested(items)){
+      if(n.head){h+=`<div class="t-parent-head">${esc(n.cont.name)}</div>`;continue;}
+      const t=n.t,depth=n.depth;
       const src=COV.sources[t.id];const pct=Math.round(src.n*100/COV.total);
       const full=pct>=100;const cls=full?'full':(pct>=50?'mid':'low');
       h+=`<button class="srcp-item${depth?' src-child':''}" onclick="setSrcSel('${escAttr(t.id)}')">
@@ -7077,16 +7082,32 @@ function fillBar(t){
 // ВСЕХ списках выбора: каталог 📚, попап покрытия, режим источника, менеджер. ──
 function srcChildren(pid){return CONFIG.tafsirs.filter(t=>t.parent===pid);}
 function srcIsParent(id){return CONFIG.tafsirs.some(t=>t.parent===id);}
+// ── Контейнеры (config.containers): УЗЕЛ-ГРУППА, а не источник. Один корпус
+// (свод «аль-Мавсуа») даёт полтора десятка передатчиков; поодиночке в каталоге
+// они выглядят как независимые тафсиры и множат шум. Контейнер собирает их под
+// одной крышей с галочками, но САМ НЕ ЧИТАЕТСЯ и в CONFIG.tafsirs не лежит —
+// поэтому ни рендер аята, ни покрытие, ни офлайн-набор о нём не знают и
+// правок не требуют. `core:true` у ребёнка = костяк корпуса (включается первым).
+function contById(id){return (CONFIG.containers||[]).find(c=>c.id===id);}
+function contKids(cid,pool){return (pool||CONFIG.tafsirs).filter(t=>t.parent===cid);}
 // Разложить список так, чтобы дети шли СРАЗУ за родителем (плоские списки без
 // сворачивания — попап/пикер/менеджер). Ребёнок, чьего родителя нет в списке,
 // остаётся верхним уровнем. Возвращает [{t,depth}] в порядке config.
 function srcOrderNested(items){
   const byId=new Map(items.map(t=>[t.id,t]));
   const kids=new Map();
-  items.forEach(t=>{if(t.parent&&byId.has(t.parent)){(kids.get(t.parent)||kids.set(t.parent,[]).get(t.parent)).push(t);}});
-  const out=[];
+  items.forEach(t=>{if(t.parent){(kids.get(t.parent)||kids.set(t.parent,[]).get(t.parent)).push(t);}});
+  const out=[],doneCont=new Set();
   items.forEach(t=>{
     if(t.parent&&byId.has(t.parent))return;
+    const cont=t.parent&&contById(t.parent);
+    if(cont){                                   // дети контейнера: подпись + они подряд
+      if(doneCont.has(cont.id))return;
+      doneCont.add(cont.id);
+      out.push({cont,head:true,depth:0});
+      (kids.get(cont.id)||[]).forEach(k=>out.push({t:k,depth:1}));
+      return;
+    }
     out.push({t,depth:0});
     (kids.get(t.id)||[]).forEach(k=>out.push({t:k,depth:1}));
   });
@@ -7107,6 +7128,29 @@ function catNodeHTML(t,pool,q,orphan){
   if(open)h+=`<div class="t-sub">`+kids.map(k=>tItem(k,false,false)).join("")+`</div>`;
   return h+`</div></div>`;
 }
+// Узел-контейнер в каталоге 📚: заголовок корпуса + пояснение + список персон
+// с галочками. Сам контейнер включить нельзя — включаются только слои.
+function contNodeHTML(c,pool,q){
+  const kids=contKids(c.id,pool);
+  if(!kids.length)return"";
+  const onCnt=contKids(c.id).filter(t=>ST.enabled[t.id]).length;
+  const key="cont_"+c.id, open=q?true:!!collapsedG[key];
+  const core=contKids(c.id).filter(t=>t.core&&!ST.enabled[t.id]).map(t=>t.id);
+  return `<div class="t-node">
+    <div class="t-parent-head">${esc(c.name)}${c.nameAr?` <span class="t-ar" style="display:inline">${esc(c.nameAr)}</span>`:""}
+      ${onCnt?`<span class="t-parent-note">· включено ${onCnt}</span>`:""}
+      <button class="t-info-btn" onclick="event.stopPropagation();openAbout('${escAttr(c.id)}')" title="Паспорт корпуса">ℹ</button></div>
+    ${c.note?`<div class="t-cont-note">${esc(c.note)}</div>`:""}
+    <div class="t-subwrap">
+      <button class="t-sub-toggle" onclick="event.stopPropagation();collapsedG['${key}']=!collapsedG['${key}'];renderRP();">${open?'▾':'▸'} Передатчики · ${kids.length}${open?'':' — показать'}</button>
+      ${core.length?`<button class="t-sub-toggle" onclick="event.stopPropagation();contEnableCore('${escAttr(c.id)}')">＋ включить костяк</button>`:""}
+      ${open?`<div class="t-sub">`+kids.map(k=>tItem(k,false,false)).join("")+`</div>`:""}
+    </div></div>`;
+}
+function contEnableCore(cid){
+  contKids(cid).forEach(t=>{if(t.core)ST.enabled[t.id]=true;});
+  setEnabled(ST.enabled);renderRP();renderCenter();
+}
 function tItem(t,on,reorder){
   if(t.kind==="image"){ // скан-источник: открывает отдельную читалку, не вплетается
     const act=ST.scanSource===t.id;
@@ -7118,7 +7162,7 @@ function tItem(t,on,reorder){
   }
   return `<div class="t-item ${on?'checked':''}${t.approved?' approved':''}" onclick="toggleEn('${t.id}')">
     <div class="t-check">${on?'✓':''}</div>
-    <div class="t-info"><div class="t-name">${esc(t.name)}</div>${t.nameAr?`<div class="t-ar">${esc(t.nameAr)}</div>`:''}${tafsirMeta(t)}${fillBar(t)}</div>
+    <div class="t-info"><div class="t-name">${esc(t.name)}${t.core?'<span class="t-badge">основа</span>':''}</div>${t.nameAr?`<div class="t-ar">${esc(t.nameAr)}</div>`:''}${tafsirMeta(t)}${fillBar(t)}</div>
     <button class="t-info-btn" onclick="event.stopPropagation();openAbout('${t.id}')" title="Паспорт источника">ℹ</button>
     ${on&&reorder?`<div class="t-sort" onclick="event.stopPropagation()">
       <button class="sort-b" onclick="moveEnabled('${t.id}',-1)" title="Выше">▲</button>
@@ -7253,7 +7297,9 @@ function renderSourceManager(){
     const items=CONFIG.tafsirs.filter(t=>t.group===g.id&&t.kind!=="quran"&&t.kind!=="image");
     if(!items.length)return;
     secs+=`<div class="rp-sec-head" style="margin-top:6px">${g.icon||"📁"} ${esc(g.name)}</div>`+
-      srcOrderNested(items).map(({t,depth})=>_mgrRow(t.id,t.name,t.author||"",!hid.has(t.id),"srcToggleVis",depth)).join("");
+      srcOrderNested(items).map(n=>n.head
+        ? `<div class="t-parent-head">${esc(n.cont.name)}</div>`
+        : _mgrRow(n.t.id,n.t.name,n.t.author||"",!hid.has(n.t.id),"srcToggleVis",n.depth)).join("");
   });
   openIOModal(`<div class="io-h">Переводы и тафсиры в списке 📚</div>
     <div class="io-p">Снимите галочку — источник не будет мозолить глаза в каталоге панели 📚 (уже включённые в чтение остаются). Новые источники появляются сами.</div>
@@ -7323,11 +7369,16 @@ function renderRP(){
     // Дети под родителем не считаются отдельными узлами (свёрнуты по умолчанию),
     // поэтому длинный свод не раздувает список и превью «ещё…».
     const catIds=new Set(items.map(t=>t.id));
-    const orphanPids=new Set(items.filter(t=>t.parent&&!catIds.has(t.parent)).map(t=>t.parent));
-    const nodes=[];
+    const orphanPids=new Set(items.filter(t=>t.parent&&!catIds.has(t.parent)&&!contById(t.parent)).map(t=>t.parent));
+    const nodes=[],contSeen=new Set();
     CONFIG.tafsirs.forEach(t=>{
       if(t.group!==g.id)return;
-      if(catIds.has(t.id)&&!t.parent)nodes.push({t,orphan:false});
+      const cont=t.parent&&contById(t.parent);
+      if(cont&&catIds.has(t.id)){                 // весь корпус — ОДИН узел с галочками персон
+        if(contSeen.has(cont.id))return;
+        contSeen.add(cont.id);nodes.push({cont});
+      }
+      else if(catIds.has(t.id)&&!t.parent)nodes.push({t,orphan:false});
       else if(orphanPids.has(t.id))nodes.push({t,orphan:true});
     });
     // «Переводы» — длинный список: показываем превью (несколько) + «ещё…», чтобы
@@ -7338,7 +7389,7 @@ function renderRP(){
     html+=`<div class="tg ${col?'collapsed':''}"><button class="tg-head" onclick="collapsedG['rg_${g.id}']=!collapsedG['rg_${g.id}'];renderRP();">
       <span class="tg-icon">${g.icon||'📁'}</span>${g.name} (${nodes.length})<span class="tg-arrow">▼</span>
     </button><div class="tg-items">`;
-    showNodes.forEach(n=>{html+=catNodeHTML(n.t,items,q,n.orphan);});
+    showNodes.forEach(n=>{html+=n.cont?contNodeHTML(n.cont,items,q):catNodeHTML(n.t,items,q,n.orphan);});
     if(!expanded&&nodes.length>LIMIT)html+=`<button class="show-more-btn" onclick="event.stopPropagation();ST.expandedGroups['${g.id}']=true;renderRP();">ещё ${nodes.length-LIMIT}…</button>`;
     else if(expanded&&nodes.length>LIMIT)html+=`<button class="show-more-btn" onclick="event.stopPropagation();ST.expandedGroups['${g.id}']=false;renderRP();">свернуть</button>`;
     html+=`</div></div>`;
