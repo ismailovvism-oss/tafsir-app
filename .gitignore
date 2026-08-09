@@ -158,3 +158,14 @@ data/index/podrostkam.json
 # временные копии страницы для headless-проверок (см. CLAUDE.md)
 _test.html
 _swtest*.html
+
+# «Тафсир 5 имамов» — тяжёлые данные живут на R2 (см. dataBase в config.json)
+data/tafsirs/imams5.json
+data/tafsirs/imams5.js
+data/tafsirs/imams5/
+data/index/imams5.json
+data/tafsirs/imams5_ar.json
+data/tafsirs/imams5_ar.js
+data/tafsirs/imams5_ar/
+data/index/imams5_ar.json
+data/tafsirs/*.imams5.bak

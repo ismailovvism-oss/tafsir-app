@@ -957,7 +957,7 @@
       "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
       "name": "Ибн Аббас (рус.)",
       "nameAr": "مرويات ابن عباس في التفسير",
-      "author": "Ибн Аббас (асары) + редакторские сводки",
+      "author": "Ибн Аббас (асары из свода «аль-Мавсуа»)",
       "authorAr": "عبد الله بن عباس",
       "translator": "ИИ-перевод (Claude Opus 4.8; продолжение — Codex)",
       "group": "russian",
@@ -972,7 +972,7 @@
       ],
       "about": true,
       "reviewLevel": "unverified",
-      "fill": 0.59,
+      "fill": 0.5895,
       "counterpart": "ibn_abbas_ar"
     },
     {
@@ -982,7 +982,7 @@
       "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
       "name": "تفسير ابن عباس",
       "nameAr": "",
-      "author": "Ибн Аббас (асары) + редакторские сводки",
+      "author": "Ибн Аббас (асары из свода «аль-Мавсуа»)",
       "authorAr": "عبد الله بن عباس",
       "group": "classical_ar",
       "kind": "tafsir",
@@ -993,9 +993,54 @@
         "athar",
         "isnad"
       ],
-      "fill": 0.59,
+      "fill": 0.5895,
       "about": true,
       "counterpart": "ibn_abbas"
+    },
+    {
+      "id": "imams5",
+      "parent": "mawsua_masur",
+      "file": "tafsirs/imams5.json",
+      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
+      "name": "Тафсир 5 имамов",
+      "nameAr": "ترجيحات أئمة التفسير الخمسة",
+      "author": "Ибн Джарир, Ибн Атыйя, Ибн Таймийя, Ибн аль-Кайим, Ибн Касир — в сводках редакции «аль-Мавсуа»",
+      "authorAr": "ابن جرير، ابن عطية، ابن تيمية، ابن القيم، ابن كثير",
+      "translator": "ИИ-перевод (Claude)",
+      "group": "russian",
+      "kind": "tafsir",
+      "lang": "ru",
+      "era": "classical",
+      "tags": [
+        "tafsir",
+        "ijtihad",
+        "draft"
+      ],
+      "about": true,
+      "reviewLevel": "unverified",
+      "fill": 0.4282,
+      "counterpart": "imams5_ar"
+    },
+    {
+      "id": "imams5_ar",
+      "parent": "mawsua_masur",
+      "file": "tafsirs/imams5_ar.json",
+      "dataBase": "https://pub-d99a56b61d914461b5864f421a013097.r2.dev",
+      "name": "ترجيحات أئمة التفسير الخمسة",
+      "nameAr": "",
+      "author": "Ибн Джарир, Ибн Атыйя, Ибн Таймийя, Ибн аль-Кайим, Ибн Касир — в сводках редакции «аль-Мавсуа»",
+      "authorAr": "ابن جرير، ابن عطية، ابن تيمية، ابن القيم، ابن كثير",
+      "group": "classical_ar",
+      "kind": "tafsir",
+      "lang": "ar",
+      "era": "classical",
+      "tags": [
+        "tafsir",
+        "ijtihad"
+      ],
+      "about": true,
+      "fill": 0.4323,
+      "counterpart": "imams5"
     },
     {
       "id": "mujahid",
