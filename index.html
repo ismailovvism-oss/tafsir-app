@@ -417,12 +417,15 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .ab-entry{padding:8px 12px;border-bottom:1px solid var(--border-light)}
 .ab-entry:last-child{border-bottom:none}
 .ab-entry-label{font-size:10px;font-weight:600;color:var(--accent);margin-bottom:3px;display:flex;align-items:center;gap:4px}
-/* Корпус под аятом: одна карточка, слои — вложенными блоками без своих рамок,
-   с тонкой линией слева, чтобы читалось «это части одного источника». */
+/* Корпус под аятом: одна карточка, слои внутри — с ЯВНОЙ границей. Иначе
+   подпись слоя неотличима от подписи самостоятельного источника, и читатель не
+   понимает, где кончается один передатчик и начинается другой. */
 .ab-corpus-n{font-weight:400;color:var(--text-muted)}
-.ab-corpus-body{border-left:2px solid var(--border);margin-left:2px;padding-left:8px}
-.ab-corpus-body .ab-entry{padding:4px 0;border-bottom:none}
-.ab-corpus-body .ab-entry-label{color:var(--text-muted);font-weight:500}
+.ab-corpus-body{border-left:2px solid rgba(var(--accent-rgb),.35);margin-left:1px;padding-left:10px}
+.ab-corpus-body .ab-entry{padding:9px 0 5px;border-bottom:none}
+.ab-corpus-body .ab-entry+.ab-entry{border-top:1px dashed var(--border)}
+.ab-corpus-body .ab-entry-label{display:inline-flex;width:max-content;max-width:100%;
+  background:var(--bg-alt);border-radius:6px;padding:2px 8px;margin-bottom:5px;color:var(--text);font-weight:600}
 .t-item.locked{opacity:.85;cursor:default}
 .t-item.locked .t-check{border-color:transparent}
 .ab-entry-label .lbl-ar{font-family:'Amiri',serif;color:var(--text-muted);font-weight:400}
