@@ -5237,6 +5237,17 @@ function renderCB(){
     setCtx("★ Закладки");
     bar.innerHTML=`<div class="cb-read"><button class="btn-s" onclick="ST.bmView=false;ST.notesView=false;ST.hlView=false;render();">← Назад</button></div>`;return;
   }
+  // Экраны-результаты (тема/корни/карта заблуждений/заметки/выделения): бар
+  // чтения [Аяты|Мусхаф] там чужой (тап уводил с экрана — отзыв 2026-08-09);
+  // вместо него — заголовок и «✕ К чтению».
+  const resScreens=[["topicSel","📑 Тема"],["rootView","🌿 Корни слов"],["warnMap","⚠ Карта заблуждений"],["notesView","📝 Заметки"],["hlView","🖊 Мои выделения"]];
+  for(const [f,label] of resScreens){
+    if(ST[f]){
+      setCtx(label);
+      bar.innerHTML=`<div class="cb-read"><button class="btn-s" onclick="ST.topicSel=null;ST.rootView=null;ST.warnMap=null;ST.notesView=false;ST.hlView=false;render();">✕ К чтению</button></div>`;
+      return;
+    }
+  }
   if(ST.srcMode){
     // при чтении заголовок = сура (как обычно); имя источника живёт в его компактной шапке (без дубля)
     setCtx(ST.srcSel?`${su.ru} <span class="ar">${su.name}</span>`:"📖 Выбор источника");
@@ -8453,7 +8464,10 @@ function renderBottomNav(){
   const el=document.getElementById("bottomNav");if(!el)return;
   ntStopScroll();                                    // на всякий случай гасим непрерывную прокрутку
   el.className="bottom-nav";el.style.height="";       // сброс к обычному виду
-  if(ST.homeMode||ST.selectedTag||ST.hifzMode||ST.bmView){el.style.display="none";return;}
+  // Нижняя листалка — ТОЛЬКО на экранах чтения: на экранах-результатах (темы,
+  // корни, карта заблуждений, заметки, выделения, эрудит) она чужая — листала
+  // суры «под» темой и выбрасывала из неё (отзыв пользователя, 2026-08-09)
+  if(ST.homeMode||ST.selectedTag||ST.hifzMode||ST.bmView||ST.topicSel||ST.rootView||ST.warnMap||ST.notesView||ST.hlView||ST.eruditMode){el.style.display="none";return;}
   el.style.display="flex";
   if(ST.noTouch){                                     // кнопочная панель вне области текста
     el.classList.add("notouch-nav");el.style.height=(ST.ntH||60)+"px";
