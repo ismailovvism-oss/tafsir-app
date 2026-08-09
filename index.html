@@ -416,6 +416,14 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .ab-entry{padding:8px 12px;border-bottom:1px solid var(--border-light)}
 .ab-entry:last-child{border-bottom:none}
 .ab-entry-label{font-size:10px;font-weight:600;color:var(--accent);margin-bottom:3px;display:flex;align-items:center;gap:4px}
+/* Корпус под аятом: одна карточка, слои — вложенными блоками без своих рамок,
+   с тонкой линией слева, чтобы читалось «это части одного источника». */
+.ab-corpus-n{font-weight:400;color:var(--text-muted)}
+.ab-corpus-body{border-left:2px solid var(--border);margin-left:2px;padding-left:8px}
+.ab-corpus-body .ab-entry{padding:4px 0;border-bottom:none}
+.ab-corpus-body .ab-entry-label{color:var(--text-muted);font-weight:500}
+.t-item.locked{opacity:.85;cursor:default}
+.t-item.locked .t-check{border-color:transparent}
 .ab-entry-label .lbl-ar{font-family:'Amiri',serif;color:var(--text-muted);font-weight:400}
 .cp-chip{margin-left:6px;font-size:9px;font-weight:600;color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent);border-radius:10px;padding:0 6px;line-height:15px;cursor:pointer;white-space:nowrap}
 .cp-chip:hover{background:var(--accent);color:#fff}
@@ -5499,7 +5507,13 @@ function buildAyahBody(aid,enabled,loaded){
   const hasTr=realSrc.some(t=>t.kind!=="tafsir"),hasTaf=realSrc.some(t=>t.kind==="tafsir");
   const splitGroups=hasTr&&hasTaf;
   let shownTr=false,shownTaf=false;
-  for(const t of enabled){
+  for(const node of groupForRender(enabled)){
+    if(node.cont){                    // корпус — ОДНА карточка, слои внутри
+      if(splitGroups&&!shownTaf){html+=`<div class="ab-group-head">📚 Тафсиры</div>`;shownTaf=true;}
+      html+=contEntryHTML(node.cont,node.kids,aid,loaded);
+      continue;
+    }
+    const t=node.t;
     if(t.id==="_notes"){
       const note=getNote(ST.surah,aid);
       html+=`<div class="ab-entry" style="background:var(--note-bg)">
@@ -5585,6 +5599,23 @@ function isApprovedHere(t){
 }
 // HTML одной колонки источника у аята. Распознаёт блочную отсылку «см. аят Z».
 // adhoc=true → плашка «разовый показ» с кнопкой убрать. blockOf=[from,to] → текст блока.
+// Карточка КОРПУСА под аятом: шапка с именем корпуса, внутри — слои подряд.
+// Каждый слой рисуется обычным sourceEntryHTML, поэтому сохраняются все его
+// возможности: сноски, «развернуть», предупреждения, отсылки к блоку. Слои без
+// текста на этом аяте молча пропускаются — иначе карточка была бы в прочерках.
+function contEntryHTML(c,kids,aid,loaded){
+  const parts=[];
+  for(const k of kids){
+    const text=loaded[k.id]?.[String(aid)]||null;
+    if(!text)continue;
+    parts.push(sourceEntryHTML(k,text,aid));
+  }
+  const n=kids.length;
+  const head=`<div class="ab-entry-label">${esc(c.name)} ${c.nameAr?`<span class="lbl-ar">${esc(c.nameAr)}</span>`:''}<span class="ab-corpus-n">· слоёв ${n}</span></div>`;
+  if(!parts.length)
+    return `<div class="ab-entry taf ab-corpus">${head}<div class="ab-entry-text md"><span style="color:var(--text-muted)">—</span></div></div>`;
+  return `<div class="ab-entry taf ab-corpus">${head}<div class="ab-corpus-body">${parts.join("")}</div></div>`;
+}
 function sourceEntryHTML(t,text,aid,adhoc,blockOf){
   const isAr=t.lang==="ar";
   const badge=adhoc?`<button class="cov-adhoc-x" onclick="removeAdHoc(${aid},'${escAttr(t.id)}')" title="Убрать разовый показ">только здесь ✕</button>`:"";
@@ -7090,6 +7121,39 @@ function srcIsParent(id){return CONFIG.tafsirs.some(t=>t.parent===id);}
 // правок не требуют. `core:true` у ребёнка = костяк корпуса (включается первым).
 function contById(id){return (CONFIG.containers||[]).find(c=>c.id===id);}
 function contKids(cid,pool){return (pool||CONFIG.tafsirs).filter(t=>t.parent===cid);}
+// Корпус ведёт себя как ОДИН источник: отдельного флага у него нет — «включён»
+// значит «включён хотя бы один слой». Так пресеты, порядок, офлайн и поиск
+// продолжают работать с реальными id, а пользователь видит один переключатель.
+function contOn(cid){return contKids(cid).some(t=>ST.enabled[t.id]);}
+function contCore(cid){return contKids(cid).filter(t=>t.core);}
+function contOnCount(cid){return contKids(cid).filter(t=>ST.enabled[t.id]).length;}
+function toggleCont(cid){
+  if(contOn(cid))contKids(cid).forEach(t=>{ST.enabled[t.id]=false;});
+  else contCore(cid).forEach(t=>{ST.enabled[t.id]=true;});   // включаем корпус — включается костяк
+  setEnabled(ST.enabled);renderRP();renderCenter();
+}
+function toggleContKid(id){
+  const t=CONFIG.tafsirs.find(x=>x.id===id);if(!t)return;
+  if(t.core&&contOn(t.parent))return;                        // костяк не снимается, пока корпус включён
+  ST.enabled[id]=!ST.enabled[id];
+  if(ST.enabled[id])contCore(t.parent).forEach(c=>{ST.enabled[c.id]=true;});  // слой тянет за собой костяк
+  setEnabled(ST.enabled);renderRP();renderCenter();
+}
+// Свести список включённых источников к тому, что ПОКАЗЫВАЕТСЯ: слои одного
+// корпуса — одной записью на месте первого из них. getEnabledList() при этом
+// по-прежнему отдаёт реальные источники (офлайн, пресеты, порядок не трогаем).
+function groupForRender(list){
+  const out=[],seen=new Set();
+  for(const t of list){
+    const c=t.parent&&contById(t.parent);
+    if(c){
+      if(seen.has(c.id))continue;
+      seen.add(c.id);
+      out.push({cont:c,kids:list.filter(x=>x.parent===c.id)});
+    }else out.push({t});
+  }
+  return out;
+}
 // Разложить список так, чтобы дети шли СРАЗУ за родителем (плоские списки без
 // сворачивания — попап/пикер/менеджер). Ребёнок, чьего родителя нет в списке,
 // остаётся верхним уровнем. Возвращает [{t,depth}] в порядке config.
@@ -7128,28 +7192,34 @@ function catNodeHTML(t,pool,q,orphan){
   if(open)h+=`<div class="t-sub">`+kids.map(k=>tItem(k,false,false)).join("")+`</div>`;
   return h+`</div></div>`;
 }
-// Узел-контейнер в каталоге 📚: заголовок корпуса + пояснение + список персон
-// с галочками. Сам контейнер включить нельзя — включаются только слои.
-function contNodeHTML(c,pool,q){
-  const kids=contKids(c.id,pool);
+// Корпус в списках выбора (каталог 📚 и «Выбрано») — ОДИН источник с галочкой:
+// клик включает/выключает весь корпус, внутри раскрываются слои. Костяк
+// (`core:true`) при включённом корпусе показан замком и не снимается — иначе
+// у корпуса пропала бы основа, ради которой он и собран.
+function contNodeHTML(c){
+  const kids=contKids(c.id);
   if(!kids.length)return"";
-  const onCnt=contKids(c.id).filter(t=>ST.enabled[t.id]).length;
-  const key="cont_"+c.id, open=q?true:!!collapsedG[key];
-  const core=contKids(c.id).filter(t=>t.core&&!ST.enabled[t.id]).map(t=>t.id);
+  const on=contOn(c.id), key="cont_"+c.id, open=!!collapsedG[key];
   return `<div class="t-node">
-    <div class="t-parent-head">${esc(c.name)}${c.nameAr?` <span class="t-ar" style="display:inline">${esc(c.nameAr)}</span>`:""}
-      ${onCnt?`<span class="t-parent-note">· включено ${onCnt}</span>`:""}
-      <button class="t-info-btn" onclick="event.stopPropagation();openAbout('${escAttr(c.id)}')" title="Паспорт корпуса">ℹ</button></div>
-    ${c.note?`<div class="t-cont-note">${esc(c.note)}</div>`:""}
+    <div class="t-item ${on?'checked':''}" onclick="toggleCont('${escAttr(c.id)}')">
+      <div class="t-check">${on?'✓':''}</div>
+      <div class="t-info"><div class="t-name">${esc(c.name)}</div>
+        ${c.nameAr?`<div class="t-ar">${esc(c.nameAr)}</div>`:""}
+        <div class="t-cont-note">${on?`включено слоёв: ${contOnCount(c.id)} из ${kids.length}`:esc(c.note||"")}</div></div>
+      <button class="t-info-btn" onclick="event.stopPropagation();openAbout('${escAttr(c.id)}')" title="Паспорт корпуса">ℹ</button>
+    </div>
     <div class="t-subwrap">
-      <button class="t-sub-toggle" onclick="event.stopPropagation();collapsedG['${key}']=!collapsedG['${key}'];renderRP();">${open?'▾':'▸'} Передатчики · ${kids.length}${open?'':' — показать'}</button>
-      ${core.length?`<button class="t-sub-toggle" onclick="event.stopPropagation();contEnableCore('${escAttr(c.id)}')">＋ включить костяк</button>`:""}
-      ${open?`<div class="t-sub">`+kids.map(k=>tItem(k,false,false)).join("")+`</div>`:""}
+      <button class="t-sub-toggle" onclick="event.stopPropagation();collapsedG['${key}']=!collapsedG['${key}'];renderRP();">${open?'▾':'▸'} Слои корпуса · ${kids.length}${open?'':' — настроить'}</button>
+      ${open?`<div class="t-sub">`+kids.map(contKidHTML).join("")+`</div>`:""}
     </div></div>`;
 }
-function contEnableCore(cid){
-  contKids(cid).forEach(t=>{if(t.core)ST.enabled[t.id]=true;});
-  setEnabled(ST.enabled);renderRP();renderCenter();
+function contKidHTML(k){
+  const on=!!ST.enabled[k.id], locked=k.core&&contOn(k.parent);
+  return `<div class="t-item ${on?'checked':''}${locked?' locked':''}" onclick="toggleContKid('${escAttr(k.id)}')"${locked?' title="Основа корпуса — не отключается"':''}>
+    <div class="t-check">${locked?'🔒':(on?'✓':'')}</div>
+    <div class="t-info"><div class="t-name">${esc(k.name)}${k.core?'<span class="t-badge">основа</span>':''}</div>${k.nameAr?`<div class="t-ar">${esc(k.nameAr)}</div>`:''}${tafsirMeta(k)}${fillBar(k)}</div>
+    <button class="t-info-btn" onclick="event.stopPropagation();openAbout('${escAttr(k.id)}')" title="Паспорт источника">ℹ</button>
+  </div>`;
 }
 function tItem(t,on,reorder){
   if(t.kind==="image"){ // скан-источник: открывает отдельную читалку, не вплетается
@@ -7337,8 +7407,11 @@ function renderRP(){
     const enAll=getEnabledList().filter(t=>t.id!=="_notes");
     if(enAll.length){
       // ▲▼ порядка — только в явном режиме «упорядочить» (этап 1: меньше микро-кнопок)
-      html+=`<div class="rp-sec-head" style="display:flex;align-items:center;gap:8px">✓ Включено · ${enAll.length}${enAll.length>1?`<button class="rp-reorder-btn ${ST.rpReorder?'on':''}" onclick="event.stopPropagation();ST.rpReorder=!ST.rpReorder;renderRP()" title="Изменить порядок источников">⇅ порядок</button>`:''}</div>`;
-      enAll.forEach(t=>{html+=tItem(t,true,!!ST.rpReorder);});
+      // Слои корпуса показываем ОДНОЙ строкой-источником (внутри — свои галочки),
+      // иначе «Выбрано» превращается в список из десятков передатчиков.
+      const shown=groupForRender(enAll);
+      html+=`<div class="rp-sec-head" style="display:flex;align-items:center;gap:8px">✓ Включено · ${shown.length}${shown.length>1?`<button class="rp-reorder-btn ${ST.rpReorder?'on':''}" onclick="event.stopPropagation();ST.rpReorder=!ST.rpReorder;renderRP()" title="Изменить порядок источников">⇅ порядок</button>`:''}</div>`;
+      shown.forEach(n=>{html+=n.cont?contNodeHTML(n.cont):tItem(n.t,true,!!ST.rpReorder);});
     }else{
       html+=`<div class="vp-note">Ни один перевод или тафсир не включён — показывается только арабский текст. Добавьте из каталога.</div>`;
     }
@@ -7389,7 +7462,7 @@ function renderRP(){
     html+=`<div class="tg ${col?'collapsed':''}"><button class="tg-head" onclick="collapsedG['rg_${g.id}']=!collapsedG['rg_${g.id}'];renderRP();">
       <span class="tg-icon">${g.icon||'📁'}</span>${g.name} (${nodes.length})<span class="tg-arrow">▼</span>
     </button><div class="tg-items">`;
-    showNodes.forEach(n=>{html+=n.cont?contNodeHTML(n.cont,items,q):catNodeHTML(n.t,items,q,n.orphan);});
+    showNodes.forEach(n=>{html+=n.cont?contNodeHTML(n.cont):catNodeHTML(n.t,items,q,n.orphan);});
     if(!expanded&&nodes.length>LIMIT)html+=`<button class="show-more-btn" onclick="event.stopPropagation();ST.expandedGroups['${g.id}']=true;renderRP();">ещё ${nodes.length-LIMIT}…</button>`;
     else if(expanded&&nodes.length>LIMIT)html+=`<button class="show-more-btn" onclick="event.stopPropagation();ST.expandedGroups['${g.id}']=false;renderRP();">свернуть</button>`;
     html+=`</div></div>`;
