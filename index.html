@@ -4220,6 +4220,26 @@ function ayahsForTag(path){
 // корпуса стоят сразу после двух «Ясных тафсиров».
 const DEFAULT_ENABLED={_arabic:true,kuliev:true,podrostkam:true,detyam:true,imams5:true,ibn_abbas:true};
 function getEnabled(){return gs("enabled",DEFAULT_ENABLED);}
+// Разовая миграция набора «из коробки». Обычно набор пользователя НЕ трогаем
+// (правило UI_REDESIGN: молча не перезаписывать), но появление корпуса асаров
+// меняет сам состав источников — иначе старые читатели остались бы без него и
+// со старым порядком. Поднимать SET_VER только когда набор должен приехать всем;
+// прежний выбор кладётся в «Мой набор», чтобы вернуть его одной кнопкой.
+const SET_VER=2;
+function migrateDefaultSet(){
+  try{
+    if(gs("setVer",0)>=SET_VER){return false;}
+    const prev=gs("enabled",null);
+    if(prev&&!gs("myPreset",null)){
+      const ids=Object.keys(prev).filter(id=>prev[id]);
+      if(ids.length)ss("myPreset",{ids,wbw:!!gs("wbwLayer",false),tj:!!gs("tajweed",false)});
+    }
+    ss("enabled",Object.assign({},DEFAULT_ENABLED));
+    setUserOrder([]);                       // порядок — заново из config.tafsirs
+    ss("setVer",SET_VER);
+    return !!prev;                          // true — у человека был свой набор, скажем об этом
+  }catch(e){return false;}
+}
 function setEnabled(e){ss("enabled",e);}
 
 // ============================================================
@@ -4343,6 +4363,7 @@ async function loadConfig(){
   if(!_showHidden&&Array.isArray(CONFIG.tafsirs))CONFIG.tafsirs=CONFIG.tafsirs.filter(t=>!t.hidden);
   await loadCoverage();
   await loadWarnings();                               // предупреждения об ошибках (лёгкий файл)
+  ST.setMigrated=migrateDefaultSet();                 // разовое обновление набора «из коробки»
   ST.enabled=getEnabled();
   if(ST.enabled._arabic===undefined)ST.enabled._arabic=true;
   if(!applyHash(true)){                              // нет deep-link/«#home» → Главная (ST.surah из lastPos для «Продолжить»)
@@ -7424,6 +7445,8 @@ function renderRP(){
       `<button class="rp-preset" onclick="applyPreset('study')" title="Перевод + пословный разбор и таджвид">Учёба</button>`+
       (gs("myPreset",null)?`<button class="rp-preset" onclick="applyPreset('mine')" title="Вернуть вашу сохранённую подборку">Мой набор</button>`:"")+
       `</div>`;
+    // Набор обновился сам — говорим об этом прямо и показываем, как вернуть своё.
+    if(ST.setMigrated)html+=`<div class="vp-note">Набор источников обновлён: добавлен корпус «Тафсирные асары саляфов» и новый порядок. Прежний выбор сохранён — кнопка «Мой набор» выше. <button class="rp-preset" onclick="ST.setMigrated=false;renderRP()">Понятно</button></div>`;
     const enAll=getEnabledList().filter(t=>t.id!=="_notes");
     if(enAll.length){
       // ▲▼ порядка — только в явном режиме «упорядочить» (этап 1: меньше микро-кнопок)
