@@ -304,6 +304,7 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .t-sub .t-item{padding:5px 8px}
 .t-parent-head{font-size:calc(10.5px*var(--sb,1));color:var(--text-muted);padding:5px 8px 2px}
 .t-cont-note{font-size:calc(10px*var(--sb,1));color:var(--text-muted);padding:0 8px 4px;line-height:1.35}
+.t-cont-warn{font-size:calc(10px*var(--sb,1));color:var(--text-muted);background:var(--bg-alt);border-radius:6px;padding:6px 8px;margin:2px 6px 4px;line-height:1.4}
 .t-parent-note{color:var(--accent)}
 .src-child{margin-left:14px;border-left:2px solid var(--border-light);padding-left:6px}
 
@@ -2176,7 +2177,7 @@ function getAnyTranslation(surahId,ayahId){
 // ============================================================
 let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,apanelOpen:false,diafilm:false,immersive:false,
   layout:"h",
-  enabled:{_arabic:true,kuliev:true},
+  enabled:{_arabic:true,kuliev:true,podrostkam:true,detyam:true,imams5:true,ibn_abbas:true},
   selectedTag:null,bookIntro:false,topicSel:null,
   // Конкорданс, ОДНО поле на два экрана — чтобы сброс был одним токеном там же,
   // где гасятся topicSel/selectedTag: null — выключен, "*" — указатель корней,
@@ -4213,7 +4214,12 @@ function ayahsForTag(path){
   return res;
 }
 
-function getEnabled(){return gs("enabled",{_arabic:true,kuliev:true});}
+// Набор «из коробки»: арабский текст, перевод смыслов, «Ясный тафсир» и его
+// детская версия, третьим — корпус асаров саляфов целиком (все слои сразу).
+// Порядок задаётся порядком в config.tafsirs (группа «russian»), где слои
+// корпуса стоят сразу после двух «Ясных тафсиров».
+const DEFAULT_ENABLED={_arabic:true,kuliev:true,podrostkam:true,detyam:true,imams5:true,ibn_abbas:true};
+function getEnabled(){return gs("enabled",DEFAULT_ENABLED);}
 function setEnabled(e){ss("enabled",e);}
 
 // ============================================================
@@ -7127,11 +7133,15 @@ function contKids(cid,pool){return (pool||CONFIG.tafsirs).filter(t=>t.parent===c
 function contOn(cid){return contKids(cid).some(t=>ST.enabled[t.id]);}
 function contCore(cid){return contKids(cid).filter(t=>t.core);}
 function contOnCount(cid){return contKids(cid).filter(t=>ST.enabled[t.id]).length;}
+// Включаем корпус — включаются ВСЕ его слои: он задуман как один источник, а
+// слои под аятом и так разделены подписями передатчиков. Выборочное отключение —
+// тонкая настройка за кнопкой ⚙ (см. contNodeHTML), обычному читателю она не нужна.
 function toggleCont(cid){
-  if(contOn(cid))contKids(cid).forEach(t=>{ST.enabled[t.id]=false;});
-  else contCore(cid).forEach(t=>{ST.enabled[t.id]=true;});   // включаем корпус — включается костяк
+  const on=contOn(cid);
+  contKids(cid).forEach(t=>{ST.enabled[t.id]=!on;});
   setEnabled(ST.enabled);renderRP();renderCenter();
 }
+function contAllOn(cid){contKids(cid).forEach(t=>{ST.enabled[t.id]=true;});setEnabled(ST.enabled);renderRP();renderCenter();}
 function toggleContKid(id){
   const t=CONFIG.tafsirs.find(x=>x.id===id);if(!t)return;
   if(t.core&&contOn(t.parent))return;                        // костяк не снимается, пока корпус включён
@@ -7196,22 +7206,32 @@ function catNodeHTML(t,pool,q,orphan){
 // клик включает/выключает весь корпус, внутри раскрываются слои. Костяк
 // (`core:true`) при включённом корпусе показан замком и не снимается — иначе
 // у корпуса пропала бы основа, ради которой он и собран.
-function contNodeHTML(c){
+function contNodeHTML(c,reorder){
   const kids=contKids(c.id);
   if(!kids.length)return"";
   const on=contOn(c.id), key="cont_"+c.id, open=!!collapsedG[key];
+  const n=contOnCount(c.id), all=n===kids.length;
+  // Состояние корпуса словами. Пока включено всё — про слои даже не заикаемся,
+  // чтобы читатель не пугался: для него это один тафсир.
+  const note=on?(all?`все передатчики · ${kids.length}`:`включено передатчиков: ${n} из ${kids.length}`):esc(c.note||"");
   return `<div class="t-node">
     <div class="t-item ${on?'checked':''}" onclick="toggleCont('${escAttr(c.id)}')">
       <div class="t-check">${on?'✓':''}</div>
       <div class="t-info"><div class="t-name">${esc(c.name)}</div>
         ${c.nameAr?`<div class="t-ar">${esc(c.nameAr)}</div>`:""}
-        <div class="t-cont-note">${on?`включено слоёв: ${contOnCount(c.id)} из ${kids.length}`:esc(c.note||"")}</div></div>
+        <div class="t-cont-note">${note}</div></div>
       <button class="t-info-btn" onclick="event.stopPropagation();openAbout('${escAttr(c.id)}')" title="Паспорт корпуса">ℹ</button>
+      ${on?`<button class="t-info-btn" onclick="event.stopPropagation();collapsedG['${key}']=!collapsedG['${key}'];renderRP();" title="Тонкая настройка: отключить отдельных передатчиков">⚙</button>`:""}
+      ${on&&reorder?`<div class="t-sort" onclick="event.stopPropagation()">
+        <button class="sort-b" onclick="moveUnit('${escAttr(c.id)}',-1)" title="Выше">▲</button>
+        <button class="sort-b" onclick="moveUnit('${escAttr(c.id)}',1)" title="Ниже">▼</button>
+      </div>`:''}
     </div>
-    <div class="t-subwrap">
-      <button class="t-sub-toggle" onclick="event.stopPropagation();collapsedG['${key}']=!collapsedG['${key}'];renderRP();">${open?'▾':'▸'} Слои корпуса · ${kids.length}${open?'':' — настроить'}</button>
-      ${open?`<div class="t-sub">`+kids.map(contKidHTML).join("")+`</div>`:""}
-    </div></div>`;
+    ${on&&open?`<div class="t-subwrap">
+      <div class="t-cont-warn">Это слои ОДНОГО свода. Снятая галочка убирает асары этого передатчика из-под аята. Вернуть всё — кнопкой ниже.
+        ${all?"":`<button class="t-sub-toggle" onclick="event.stopPropagation();contAllOn('${escAttr(c.id)}')">↺ включить всех передатчиков</button>`}</div>
+      <div class="t-sub">`+kids.map(contKidHTML).join("")+`</div>
+    </div>`:""}</div>`;
 }
 function contKidHTML(k){
   const on=!!ST.enabled[k.id], locked=k.core&&contOn(k.parent);
@@ -7411,7 +7431,7 @@ function renderRP(){
       // иначе «Выбрано» превращается в список из десятков передатчиков.
       const shown=groupForRender(enAll);
       html+=`<div class="rp-sec-head" style="display:flex;align-items:center;gap:8px">✓ Включено · ${shown.length}${shown.length>1?`<button class="rp-reorder-btn ${ST.rpReorder?'on':''}" onclick="event.stopPropagation();ST.rpReorder=!ST.rpReorder;renderRP()" title="Изменить порядок источников">⇅ порядок</button>`:''}</div>`;
-      shown.forEach(n=>{html+=n.cont?contNodeHTML(n.cont):tItem(n.t,true,!!ST.rpReorder);});
+      shown.forEach(n=>{html+=n.cont?contNodeHTML(n.cont,!!ST.rpReorder):tItem(n.t,true,!!ST.rpReorder);});
     }else{
       html+=`<div class="vp-note">Ни один перевод или тафсир не включён — показывается только арабский текст. Добавьте из каталога.</div>`;
     }
@@ -7529,17 +7549,22 @@ function getEnabledList(){
   return allTafsirs;
 }
 
-function moveEnabled(id,dir){
-  const list=getEnabledList().map(t=>t.id);
-  const idx=list.indexOf(id);
-  if(idx<0)return;
+// Перестановка работает по ТОМУ, ЧТО ВИДНО: обычный источник — одна единица,
+// корпус — тоже одна (все его слои переезжают вместе, порядок внутри сохраняется).
+// key — id источника ИЛИ id корпуса.
+function moveUnit(key,dir){
+  const units=groupForRender(getEnabledList());
+  const idx=units.findIndex(u=>u.cont?u.cont.id===key:u.t.id===key);
   const newIdx=idx+dir;
-  if(newIdx<0||newIdx>=list.length)return;
-  [list[idx],list[newIdx]]=[list[newIdx],list[idx]];
-  setUserOrder(list);
+  if(idx<0||newIdx<0||newIdx>=units.length)return;
+  [units[idx],units[newIdx]]=[units[newIdx],units[idx]];
+  const ids=[];
+  units.forEach(u=>u.cont?u.kids.forEach(k=>ids.push(k.id)):ids.push(u.t.id));
+  setUserOrder(ids);
   renderRP();
   renderCenter();
 }
+function moveEnabled(id,dir){return moveUnit(id,dir);}   // старое имя — из inline-обработчиков
 
 // ============================================================
 // SEARCH ENGINE
