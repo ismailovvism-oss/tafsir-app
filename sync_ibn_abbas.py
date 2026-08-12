@@ -18,7 +18,7 @@ import tempfile
 
 
 ROOT = Path(__file__).resolve().parent
-SOURCE_ID = "ibn_abbas"
+SOURCE_ID = os.environ.get("ATHAR_DST", "ibn_abbas")   # тот же конвейер обслуживает костяк (imams5) и другие слои
 
 
 def backup_once(source: Path, backup: Path) -> None:
