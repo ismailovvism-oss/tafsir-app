@@ -279,3 +279,10 @@ data/tafsirs/athar_misc.json
 data/tafsirs/athar_misc.js
 data/tafsirs/athar_misc/
 data/index/athar_misc.json
+
+# Тафсир ат-Табари: арабский оригинал (61 МБ) — на R2 (dataBase). Русский
+# «Краткий тафсир ат-Табари» (tabari_ru) — НАШ текст, он В РЕПОЗИТОРИИ.
+data/tafsirs/tabari_ar.json
+data/tafsirs/tabari_ar.js
+data/tafsirs/tabari_ar/
+data/index/tabari_ar.json
