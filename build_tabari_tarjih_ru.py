@@ -1,20 +1,24 @@
 #!/usr/bin/env python3
 """
-«Краткий тафсир ат-Табари» по-русски (tabari_ru) — сборка монолита из переводов.
+«Ат-Табари: толкования и предпочтения» по-русски (tabari_tarjih_ru) — сборка монолита.
 
 Что это: перевод НЕ всего «Джами' аль-баяна», а того, что говорит сам Табари, —
 его перифразы аята и его тарджиха (сырьё готовит build_tabari_skeleton.py).
 Из этого источника затем выводится наш собственный перевод Корана.
 
+ВНИМАНИЕ к именам: `tabari_ru` ЗАРЕЗЕРВИРОВАН за переводом ПОЛНОГО тафсира
+(отдельная будущая работа) — этот источник называется `tabari_tarjih_ru`, а его
+арабский спутник (тот же извлечённый текст, но в оригинале) — `tabari_tarjih_ar`.
+
 Конвейер:
   build_tabari_ar.py        → data/_sources/tabari_ar/<s>/<a>.json   (кеш арабского)
-  build_tabari_skeleton.py  → data/_sources/tabari_ru/skeleton/<s>.json
-  ПЕРЕВОД (агенты/руками)   → data/translation/tabari_ru/<s>.json = {"<ayah>": "md"}
-  build_tabari_ru.py        → data/tafsirs/tabari_ru.json
+  build_tabari_skeleton.py  → data/_sources/tabari_tarjih_ru/skeleton/<s>.json
+  ПЕРЕВОД (агенты/руками)   → data/translation/tabari_tarjih_ru/<s>.json = {"<ayah>": "md"}
+  build_tabari_tarjih_ru.py        → data/tafsirs/tabari_tarjih_ru.json
 
 Переводы лежат ПО СУРАМ в data/translation/ — НЕ в data/_sources/ (тот gitignored):
 это наш собственный текст, и его история правок обязана быть в git. Монолит
-data/tafsirs/tabari_ru.json — производный, собирается отсюда.
+data/tafsirs/tabari_tarjih_ru.json — производный, собирается отсюда.
 
 Оформление (согласовано с мейнтейнером):
   **«фрагмент аята»** — перифраза Табари;
@@ -24,17 +28,17 @@ data/tafsirs/tabari_ru.json — производный, собирается о�
   (в тексте перевода всегда следуем Хафсу — он же набран в мусхафе).
 
 Использование:
-  python3 build_tabari_ru.py            # ru/*.json → монолит
-  python3 build_tabari_ru.py --status   # что переведено, а что нет
-Дальше: split.py tabari_ru && build_index.py tabari_ru && compute_fill.py
+  python3 build_tabari_tarjih_ru.py            # ru/*.json → монолит
+  python3 build_tabari_tarjih_ru.py --status   # что переведено, а что нет
+Дальше: split.py tabari_tarjih_ru && build_index.py tabari_tarjih_ru && compute_fill.py
         && build_coverage.py && sync_config.py
 """
 import os, sys, json, glob
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 ARABIC_DIR = os.path.join(ROOT, "data", "tafsirs", "_arabic")
-RU = os.path.join(ROOT, "data", "translation", "tabari_ru")
-OUT = os.path.join(ROOT, "data", "tafsirs", "tabari_ru.json")
+RU = os.path.join(ROOT, "data", "translation", "tabari_tarjih_ru")
+OUT = os.path.join(ROOT, "data", "tafsirs", "tabari_tarjih_ru.json")
 
 
 def ayah_counts():
@@ -80,14 +84,14 @@ def main():
         status(out)
         return
     if not out:
-        print("нет переводов в data/translation/tabari_ru/ — нечего собирать")
+        print("нет переводов в data/translation/tabari_tarjih_ru/ — нечего собирать")
         return
     with open(OUT, "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
     ayat = sum(len(v) for v in out.values())
     print(f"  ✓ монолит: {len(out)} сур, {ayat} аятов, "
           f"{os.path.getsize(OUT) / 1e6:.2f} МБ → {OUT}")
-    print("Дальше: python3 split.py tabari_ru && python3 build_index.py tabari_ru "
+    print("Дальше: python3 split.py tabari_tarjih_ru && python3 build_index.py tabari_tarjih_ru "
           "&& python3 compute_fill.py && python3 build_coverage.py && python3 sync_config.py")
 
 
