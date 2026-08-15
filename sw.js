@@ -37,6 +37,7 @@ const PRECACHE = [
   "./icons/app-icon.svg", "./icons/app-icon-192.png", "./icons/app-icon-512.png",
   "./data/config.json", "./data/coverage.json",
   "./data/warnings.json", "./data/surah-classifications.json",
+  "./data/news.json",
 ];
 
 // «Загрузочные» данные: без них приложение офлайн открывается пустым, поэтому
@@ -44,6 +45,7 @@ const PRECACHE = [
 const BOOT_DATA = new Set([
   "data/config.json", "data/coverage.json",
   "data/warnings.json", "data/surah-classifications.json",
+  "data/news.json",
 ]);
 
 self.addEventListener("install", e => {

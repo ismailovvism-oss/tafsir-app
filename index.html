@@ -992,6 +992,19 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
 .home-nav-link .hnl-main{flex:1;font-size:16px;font-weight:600;color:var(--text)}
 .home-nav-link .hnl-sub{font-size:12px;color:var(--text-muted);font-weight:400}
 .home-nav-link .hnl-arrow{color:var(--accent);font-size:18px;font-weight:700}
+.home-nav-link .hnl-badge{background:var(--accent);color:#fff;font-size:10px;font-weight:700;
+  border-radius:9px;padding:1px 7px;margin-left:auto}
+/* «Что нового в библиотеке» (data/news.json) */
+.news-item{padding:10px 0;border-bottom:1px solid var(--border)}
+.news-item:last-child{border-bottom:none}
+.news-date{font-size:10.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.3px}
+.news-dot{background:var(--accent);color:#fff;border-radius:8px;padding:0 6px;margin-left:6px;letter-spacing:0}
+.news-title{font-size:14px;font-weight:600;margin:3px 0 5px}
+.news-text{font-size:12.5px;line-height:1.55;color:var(--text)}
+.news-text p{margin:0 0 6px}
+.news-srcs{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.news-src{background:var(--accent-bg);color:var(--accent);border:1px solid var(--accent);
+  border-radius:8px;padding:3px 9px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit}
 .home-edit-btn{margin-left:auto;background:none;border:none;cursor:pointer;font-size:14px;padding:2px 6px;border-radius:6px;color:var(--text-muted)}
 .home-edit-btn:hover{background:var(--border)}
 .home-recent{display:flex;flex-direction:column;gap:2px}
@@ -1736,6 +1749,8 @@ const SOURCES={
   // — предупреждения о критических ошибках в переводах/тафсирах (редакторские,
   //   текст источника не трогают; на аят или на весь источник, ключ "*") —
   warnings:        {baseUrl:"data",  pathTemplate:"{baseUrl}/warnings.json"},
+  // — «Что нового в библиотеке»: какие источники появились/пополнились/убраны —
+  news:            {baseUrl:"data",  pathTemplate:"{baseUrl}/news.json"},
   // — текст Корана по аятам (огласовки/без/расм) —
   quran_text:      {baseUrl:"data",  pathTemplate:"{baseUrl}/tafsirs/{source}/{sura}.json"},
   // — тафсиры/переводы по аятам: чанк по суре, монолит (поиск), инвертированный индекс —
@@ -4279,6 +4294,61 @@ async function loadWarnings(){
   const r=await fetchJson(resolveUrl("warnings"));
   if(r.data&&typeof r.data==="object")WARN=r.data;
 }
+
+// ── «Что нового в библиотеке» ──────────────────────────────────────────────
+// Источники добавляются и убираются, а узнать об этом читателю было неоткуда:
+// каталог показывает, что есть СЕЙЧАС, но не то, что появилось. Записи ведёт
+// мейнтейнер в data/news.json — {date,title,text(markdown),ids?} — без правок кода.
+let NEWS=[];
+async function loadNews(){
+  if(window.TL_NEWS){NEWS=window.TL_NEWS;return;}
+  const r=await fetchJson(resolveUrl("news"));
+  if(Array.isArray(r.data))NEWS=r.data.filter(n=>n&&n.date&&n.title)
+    .sort((a,b)=>(a.date<b.date?1:a.date>b.date?-1:0));
+}
+// Непрочитанное = записи новее отметки последнего просмотра (ISO-дата, локально).
+function newsUnseen(){
+  const seen=gs("newsSeen","");
+  return NEWS.filter(n=>n.date>seen).length;
+}
+function newsDateLabel(d){
+  const m=["января","февраля","марта","апреля","мая","июня","июля","августа",
+           "сентября","октября","ноября","декабря"];
+  const p=String(d).split("-");
+  return p.length===3?`${+p[2]} ${m[+p[1]-1]||""} ${p[0]}`:String(d);
+}
+function openNews(){
+  if(!NEWS.length){
+    openIOModal(`<div class="io-h">Что нового в библиотеке</div>
+      <div class="io-p">Пока записей нет.</div>
+      <div class="io-acts"><button class="home-btn prim" onclick="closeIOModal()">Готово</button></div>`);
+    return;
+  }
+  const seen=gs("newsSeen","");
+  const body=NEWS.map(n=>{
+    const fresh=n.date>seen;
+    // Источники записи — кнопкой прямо в паспорт: иначе «появился X» остаётся
+    // словами, и человеку опять искать его в каталоге руками.
+    const srcs=(Array.isArray(n.ids)?n.ids:[]).filter(id=>CONFIG.tafsirs.some(t=>t.id===id)||contById(id))
+      .map(id=>{
+        const t=CONFIG.tafsirs.find(x=>x.id===id)||contById(id);
+        return `<button class="news-src" onclick="closeIOModal();openAbout('${escAttr(id)}')">${esc(t.name)} ℹ</button>`;
+      }).join("");
+    return `<div class="news-item${fresh?" fresh":""}">
+      <div class="news-date">${esc(newsDateLabel(n.date))}${fresh?' <span class="news-dot">новое</span>':""}</div>
+      <div class="news-title">${esc(n.title)}</div>
+      <div class="news-text">${mdRender(n.text||"")}</div>
+      ${srcs?`<div class="news-srcs">${srcs}</div>`:""}</div>`;
+  }).join("");
+  openIOModal(`<div class="io-h">Что нового в библиотеке</div>
+    <div class="io-p">Какие переводы и тафсиры появились, пополнились или были убраны.</div>
+    <div style="max-height:60vh;overflow:auto;text-align:left">${body}</div>
+    <div class="io-acts"><button class="home-btn prim" onclick="closeIOModal()">Готово</button></div>`);
+  // Отметку ставим по факту показа: список прочитан целиком, он короткий.
+  if(NEWS[0])ss("newsSeen",NEWS[0].date);
+  renderHomeIfOpen();renderRP();
+}
+function renderHomeIfOpen(){if(ST.homeMode)renderCenter();}
 // Список предупреждений для источника у аята: сначала на весь источник ("*"),
 // затем на конкретный аят. Уровень нормализуем (дефолт — "moderate").
 function warnFor(id,aid){
@@ -4368,6 +4438,7 @@ async function loadConfig(){
   if(!_showHidden&&Array.isArray(CONFIG.tafsirs))CONFIG.tafsirs=CONFIG.tafsirs.filter(t=>!t.hidden);
   await loadCoverage();
   await loadWarnings();                               // предупреждения об ошибках (лёгкий файл)
+  await loadNews();                                   // «что нового в библиотеке» (лёгкий файл)
   ST.setMigrated=migrateDefaultSet();                 // разовое обновление набора «из коробки»
   ST.enabled=getEnabled();
   if(ST.enabled._arabic===undefined)ST.enabled._arabic=true;
@@ -5436,6 +5507,13 @@ function renderHome(el){
     html+=`</div>`;
   }
   html+=`</div>`;
+  // — Что нового в библиотеке: только когда есть непрочитанное, иначе Главная
+  //   обрастает ссылками, которые каждый день говорят одно и то же —
+  const nUn=newsUnseen();
+  if(nUn)html+=`<div class="home-sec"><div class="home-nav-link" onclick="openNews()" title="Какие переводы и тафсиры появились или пополнились">
+    <span class="hnl-ic">✨</span>
+    <span class="hnl-main">Что нового в библиотеке <span class="hnl-sub">— появились новые тафсиры и переводы</span></span>
+    <span class="hnl-badge">${nUn}</span><span class="hnl-arrow">›</span></div></div>`;
   // — Коранические темы (тематический указатель) —
   html+=`<div class="home-sec"><div class="home-nav-link" onclick="openTopics()" title="Открыть тематический указатель Корана">
     <span class="hnl-ic">📑</span>
@@ -7522,6 +7600,9 @@ function renderRP(){
   // Состав САМОГО каталога (srcHidden) правился только через ⚙ Вид → Данные —
   // догадаться, что «убрать из каталога» живёт там, было нельзя. Ссылка стоит
   // там, где о ней думают: под каталогом.
+  const nUnseen=newsUnseen();
+  html+=`<button class="rp-add-cat" onclick="openNews()" title="Какие источники появились, пополнились или убраны">`+
+        `✨ Что нового в библиотеке${nUnseen?` · ${nUnseen}`:""}</button>`;
   html+=`<button class="rp-add-cat" onclick="openSourceManager()" title="Что показывать в этом каталоге">`+
         `⚙ Что показывать в каталоге${sh.size?` · скрыто ${sh.size}`:""}</button>`;
 
