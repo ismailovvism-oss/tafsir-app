@@ -295,7 +295,9 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .tg-items .t-meta{gap:2px}
 .tg-items .show-more-btn{grid-column:1/-1}
 /* Подтафсиры (parent → дети): узел на всю ширину строки сетки; дети — колонкой с отступом */
-.t-node{grid-column:1/-1;display:flex;flex-direction:column;background:var(--bg-card)}
+.t-node{grid-column:1/-1;display:flex;flex-direction:column;background:var(--accent-bg);
+        border-left:3px solid var(--accent)}   /* на всю строку сетки — без канта читался
+                                                  как разделитель, а не как источник */
 .t-node>.t-item{background:transparent}
 .t-subwrap{margin:0 0 2px 10px;border-left:2px solid var(--accent);padding-left:4px}
 .t-sub-toggle{display:block;width:100%;text-align:left;background:none;border:none;color:var(--text-muted);font-size:calc(10px*var(--sb,1));padding:4px 4px;cursor:pointer;font-family:inherit}
@@ -7237,7 +7239,10 @@ function contNodeHTML(c,reorder){
   const n=contOnCount(c.id), all=n===kids.length;
   // Состояние корпуса словами. Пока включено всё — про слои даже не заикаемся,
   // чтобы читатель не пугался: для него это один тафсир.
-  const note=on?(all?`все передатчики · ${kids.length}`:`включено передатчиков: ${n} из ${kids.length}`):esc(c.note||"");
+  // Выключенный корпус стоит в каталоге среди обычных карточек — без слова «свод»
+  // и числа слоёв он выглядит как ещё один тафсир, хотя внутри их много.
+  const note=on?(all?`все передатчики · ${kids.length}`:`включено передатчиков: ${n} из ${kids.length}`)
+               :`свод · ${kids.length} слоёв${c.note?" · "+esc(c.note):""}`;
   return `<div class="t-node">
     <div class="t-item ${on?'checked':''}" onclick="toggleCont('${escAttr(c.id)}')">
       <div class="t-check">${on?'✓':''}</div>
@@ -7514,6 +7519,11 @@ function renderRP(){
     html+=`</div></div>`;
   });
   if(!anyShown)html+=`<div style="padding:16px 12px;text-align:center;color:var(--text-muted);font-size:11px">${anyFacetActive()||q?'Ничего не найдено по фильтрам':'Всё включено'}</div>`;
+  // Состав САМОГО каталога (srcHidden) правился только через ⚙ Вид → Данные —
+  // догадаться, что «убрать из каталога» живёт там, было нельзя. Ссылка стоит
+  // там, где о ней думают: под каталогом.
+  html+=`<button class="rp-add-cat" onclick="openSourceManager()" title="Что показывать в этом каталоге">`+
+        `⚙ Что показывать в каталоге${sh.size?` · скрыто ${sh.size}`:""}</button>`;
 
   el.innerHTML=html;
 }
