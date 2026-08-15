@@ -296,8 +296,9 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .tg-items .show-more-btn{grid-column:1/-1}
 /* Подтафсиры (parent → дети): узел на всю ширину строки сетки; дети — колонкой с отступом */
 .t-node{grid-column:1/-1;display:flex;flex-direction:column;background:var(--accent-bg);
-        border-left:3px solid var(--accent)}   /* на всю строку сетки — без канта читался
-                                                  как разделитель, а не как источник */
+        border-left:3px solid var(--accent)}   /* на всю строку сетки — там, где внутри
+                                                  раскрываются слои («Выбрано») */
+.t-node.compact{grid-column:auto}              /* в каталоге раскрывать нечего — обычная карточка */
 .t-node>.t-item{background:transparent}
 .t-subwrap{margin:0 0 2px 10px;border-left:2px solid var(--accent);padding-left:4px}
 .t-sub-toggle{display:block;width:100%;text-align:left;background:none;border:none;color:var(--text-muted);font-size:calc(10px*var(--sb,1));padding:4px 4px;cursor:pointer;font-family:inherit}
@@ -7310,10 +7311,15 @@ function catNodeHTML(t,pool,q,orphan){
 // клик включает/выключает весь корпус, внутри раскрываются слои. Костяк
 // (`core:true`) при включённом корпусе показан замком и не снимается — иначе
 // у корпуса пропала бы основа, ради которой он и собран.
-function contNodeHTML(c,reorder){
+// `compact` — вид ячейки сетки, как у обычных карточек (каталог). На всю ширину
+// узел растянут только там, где внутри РАСКРЫВАЕТСЯ список слоёв («Выбрано»):
+// полтора десятка передатчиков в половину ширины не читаются. В каталоге корпус
+// ещё не включён, разворачивать нечего — и полоса во всю ширину лишь терялась
+// среди карточек. Тонкая настройка слоёв остаётся во вкладке «Выбрано».
+function contNodeHTML(c,reorder,compact){
   const kids=contKids(c.id);
   if(!kids.length)return"";
-  const on=contOn(c.id), key="cont_"+c.id, open=!!collapsedG[key];
+  const on=contOn(c.id), key="cont_"+c.id, open=!compact&&!!collapsedG[key];
   const n=contOnCount(c.id), all=n===kids.length;
   // Состояние корпуса словами. Пока включено всё — про слои даже не заикаемся,
   // чтобы читатель не пугался: для него это один тафсир.
@@ -7321,14 +7327,14 @@ function contNodeHTML(c,reorder){
   // и числа слоёв он выглядит как ещё один тафсир, хотя внутри их много.
   const note=on?(all?`все передатчики · ${kids.length}`:`включено передатчиков: ${n} из ${kids.length}`)
                :`свод · ${kids.length} слоёв${c.note?" · "+esc(c.note):""}`;
-  return `<div class="t-node">
+  return `<div class="t-node${compact?" compact":""}">
     <div class="t-item ${on?'checked':''}" onclick="toggleCont('${escAttr(c.id)}')">
       <div class="t-check">${on?'✓':''}</div>
       <div class="t-info"><div class="t-name">${esc(c.name)}</div>
         ${c.nameAr?`<div class="t-ar">${esc(c.nameAr)}</div>`:""}
         <div class="t-cont-note">${note}</div></div>
       <button class="t-info-btn" onclick="event.stopPropagation();openAbout('${escAttr(c.id)}')" title="Паспорт корпуса">ℹ</button>
-      ${on?`<button class="t-info-btn" onclick="event.stopPropagation();collapsedG['${key}']=!collapsedG['${key}'];renderRP();" title="Тонкая настройка: отключить отдельных передатчиков">⚙</button>`:""}
+      ${on&&!compact?`<button class="t-info-btn" onclick="event.stopPropagation();collapsedG['${key}']=!collapsedG['${key}'];renderRP();" title="Тонкая настройка: отключить отдельных передатчиков">⚙</button>`:""}
       ${on&&reorder?`<div class="t-sort" onclick="event.stopPropagation()">
         <button class="sort-b" onclick="moveUnit('${escAttr(c.id)}',-1)" title="Выше">▲</button>
         <button class="sort-b" onclick="moveUnit('${escAttr(c.id)}',1)" title="Ниже">▼</button>
@@ -7591,7 +7597,7 @@ function renderRP(){
     html+=`<div class="tg ${col?'collapsed':''}"><button class="tg-head" onclick="collapsedG['rg_${g.id}']=!collapsedG['rg_${g.id}'];renderRP();">
       <span class="tg-icon">${g.icon||'📁'}</span>${g.name} (${nodes.length})<span class="tg-arrow">▼</span>
     </button><div class="tg-items">`;
-    showNodes.forEach(n=>{html+=n.cont?contNodeHTML(n.cont):catNodeHTML(n.t,items,q,n.orphan);});
+    showNodes.forEach(n=>{html+=n.cont?contNodeHTML(n.cont,false,true):catNodeHTML(n.t,items,q,n.orphan);});
     if(!expanded&&nodes.length>LIMIT)html+=`<button class="show-more-btn" onclick="event.stopPropagation();ST.expandedGroups['${g.id}']=true;renderRP();">ещё ${nodes.length-LIMIT}…</button>`;
     else if(expanded&&nodes.length>LIMIT)html+=`<button class="show-more-btn" onclick="event.stopPropagation();ST.expandedGroups['${g.id}']=false;renderRP();">свернуть</button>`;
     html+=`</div></div>`;
