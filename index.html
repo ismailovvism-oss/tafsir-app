@@ -741,9 +741,14 @@ body.sb-resizing{cursor:col-resize;user-select:none}
    к АЯТУ: на печати страница может начаться и посреди аята, здесь полоса стоит
    перед тем аятом, с которого страница начинается. */
 .read-page-sep{margin:12px 0;padding:6px 12px;text-align:center;font-size:11.5px;
-  color:var(--text-muted);background:rgba(var(--accent-rgb),.07);
-  border-top:1px solid var(--border-light);border-bottom:1px solid var(--border-light);
-  letter-spacing:.3px;user-select:none}
+  color:var(--text-sec);letter-spacing:.3px;user-select:none;
+  /* Тон акцента ПОВЕРХ поверхности темы (--bg-alt), а не поверх пустоты: одна
+     полупрозрачная заливка на тёмной теме давала отличие от фона всего 13 из
+     255 — полоса пропадала. --bg-alt и --accent-rgb переопределяются и темой,
+     и скином ленты (parchment/sepia/тёмный манускрипт) внутри .reading,
+     поэтому полоса подхватывает оба слоя сама. */
+  background:linear-gradient(rgba(var(--accent-rgb),.10),rgba(var(--accent-rgb),.10)),var(--bg-alt);
+  border-top:1px solid var(--border-light);border-bottom:1px solid var(--border-light)}
 .cov-gap-strip{margin:6px 0;padding:8px 12px;border:1px dashed var(--border);border-radius:7px;background:var(--bg-alt);color:var(--text-muted);font-size:12px;cursor:pointer;display:flex;align-items:center;gap:8px}
 .cov-gap-strip:hover{border-color:var(--accent)}
 .cov-gap-strip.open{border-style:solid}
