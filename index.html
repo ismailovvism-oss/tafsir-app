@@ -735,6 +735,15 @@ body.sb-resizing{cursor:col-resize;user-select:none}
 .src-gap-b.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 .src-nav{background:var(--bg-card);border:1px solid var(--border);border-radius:5px;padding:1px 8px;cursor:pointer;font-size:12px;line-height:1.4;color:var(--text);font-family:inherit;font-weight:600;flex-shrink:0}
 .src-nav:hover{border-color:var(--accent);color:var(--accent)}
+/* Граница страницы мусхафа в ленте «Аяты»: видно, где на печатной странице
+   кончается одна и начинается следующая — удобно сверяться с бумажным мусхафом
+   и заучивать «до конца страницы». Берётся из меты пака (pageStart) и привязана
+   к АЯТУ: на печати страница может начаться и посреди аята, здесь полоса стоит
+   перед тем аятом, с которого страница начинается. */
+.read-page-sep{margin:12px 0;padding:6px 12px;text-align:center;font-size:11.5px;
+  color:var(--text-muted);background:rgba(var(--accent-rgb),.07);
+  border-top:1px solid var(--border-light);border-bottom:1px solid var(--border-light);
+  letter-spacing:.3px;user-select:none}
 .cov-gap-strip{margin:6px 0;padding:8px 12px;border:1px dashed var(--border);border-radius:7px;background:var(--bg-alt);color:var(--text-muted);font-size:12px;cursor:pointer;display:flex;align-items:center;gap:8px}
 .cov-gap-strip:hover{border-color:var(--accent)}
 .cov-gap-strip.open{border-style:solid}
@@ -2437,6 +2446,7 @@ let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,apan
   wbwLayer:false,
   noTouch:false,     // «Режим без касания»: чтение/листание без касания текста (кнопочная панель)
   swipeNav:true,     // свайп влево/вправо листает суру (можно выключить в ⚙ Вид)
+  pageSep:true,      // полосы «Страница N» в ленте «Аяты» (можно выключить в ⚙ Вид)
   ntH:60,            // высота нижней панели режима без касания (px)
   mushafPage:1,      // current page in mushaf page mode (1..604)
   facets:{lang:[],kind:[],era:[],tags:[]}, // active facet filters in the right panel
@@ -7176,6 +7186,9 @@ async function renderReading(el){
   if(activePack())loaded["__qpc"]=await loadPackSurah(ST.arFont,ST.surah);
   if(tajweedActive())loaded["__tj"]=await loadTajweed(ST.surah); // спаны раскраски таджвида
   await loadWbwLayer(ST.surah,loaded);          // слой «Со словами»: глоссы + (морфология | глифы)
+  // Границы печатных страниц: нужна ТОЛЬКО мета пака (31 КБ, кэш _qpcMetaCache),
+  // сами страницы мусхафа здесь не грузятся.
+  if(ST.pageSep&&ST.layout==="h")await loadQpcMeta();
 
   const area=document.getElementById("readingArea");
   if(!area)return;
@@ -7209,7 +7222,11 @@ async function renderReading(el){
     const peekBtn=(peekKind&&!ST.noTouch)
       ?aid=>`<button class="ab-peek-btn${peekKind==="ar"?" ar":""}" data-peek="${peekKind}" onclick="event.stopPropagation();togglePeek(${aid},this)" title="${escAttr(peekTip)}">${peekLbl}</button>`
       :()=>"";
+    // Где начинается новая печатная страница: {аят: номер}. Считаем один раз на
+    // отрисовку, а не на каждый аят.
+    const pageAt=ST.pageSep?pageStartsInSurah(ST.surah):{};
     for(const aid of ayahIds){
+      if(pageAt[aid])html+=`<div class="read-page-sep">Страница ${pageAt[aid]}</div>`;
       html+=`<div class="ayah-block" data-aid="${aid}"><div class="ab-head">
         <div class="ab-row"><button class="ab-num-btn" onclick="event.stopPropagation();openAyahSheet(${aid})" title="Все действия с аятом">${aid}</button>
           <button class="ab-ico" onclick="event.stopPropagation();mediaPlayAyah(${aid})" title="Слушать с этого аята">${IC.play}</button>
@@ -8892,7 +8909,9 @@ function viewPanelHTML(){
   const layoutGroup=`<div class="vp-group"><div class="vp-label">Раскладка переводов (Аяты)</div><div class="vp-fonts">`+
     `<button class="vp-font ${ST.layout==="h"?"on":""}" onclick="setLayout('h')">▤ Список</button>`+
     `<button class="vp-font ${ST.layout==="v"?"on":""}" onclick="setLayout('v')">▥ Колонки</button></div>`+
-    `<div class="vp-note">«Колонки» ставят источники рядом по вертикали (горизонтальная прокрутка); свайп листания там отключён.</div></div>`;
+    `<div class="vp-note">«Колонки» ставят источники рядом по вертикали (горизонтальная прокрутка); свайп листания там отключён.</div>`+
+    `<label class="vp-check" style="margin-top:6px"><input type="checkbox" ${ST.pageSep?"checked":""} onchange="togglePageSep()"> Показывать границы страниц мусхафа</label>`+
+    `<div class="vp-note">Полоса «Страница N» встаёт там, где на печатной странице начинается новый лист — удобно сверяться с бумажным мусхафом. Только в раскладке «Список».</div></div>`;
   if(ST.pageMode){
     // page mode = printed vowelled glyphs at a fixed column fit: only line spacing
     // is meaningful (size/margins are absorbed by the fit; font is fixed)
@@ -9407,6 +9426,8 @@ function setupSwipe(){
   },{passive:true});
 }
 function toggleSwipeNav(){ST.swipeNav=!ST.swipeNav;ss("swipeNav",ST.swipeNav);} // обработчик живёт постоянно, читает флаг
+// Границы страниц: перерисовываем ленту — полосы вставляются на этапе сборки.
+function togglePageSep(){ST.pageSep=!ST.pageSep;ss("pageSep",ST.pageSep);renderCenter();}
 
 // Arabic typeface (chosen in the ⚙ Вид panel; persisted). Names are russified.
 function applyArFont(){document.body.setAttribute("data-arfont",ST.arFont);}
@@ -9707,6 +9728,20 @@ function mtrOnPage(pg){
   if(MEDIA&&!mtrSubbed){mtrSubbed=true;MEDIA.onAyahChange((s,a)=>{if(ST.pageMode&&ST.mushafTr){MTR={s,a};renderMtrBox();}});}
 }
 // Страница аята (линейно по pageStart — как pageOfAyah в media.js)
+// Аяты СУРЫ, с которых начинается печатная страница: {аят: номер страницы}.
+// Читаем меты пака один раз на отрисовку — перебирать 604 страницы на каждый
+// аят незачем. Пака может не быть (мета не загрузилась) — тогда просто пусто.
+function pageStartsInSurah(surah){
+  const out={};
+  if(!qpcMeta||!qpcMeta.pageStart)return out;
+  const total=qpcMeta.pages||604;
+  for(let p=1;p<=total;p++){
+    const st=qpcMeta.pageStart[p];if(!st)continue;
+    if(st.surah===surah)out[st.ayah]=p;
+    else if(st.surah>surah)break;
+  }
+  return out;
+}
 function pageOfAyahIdx(s,a){
   if(!qpcMeta||!qpcMeta.pageStart)return null;
   const total=qpcMeta.pages||604,k=s*1000+a;
@@ -10948,6 +10983,7 @@ ST.wbwLayer=gs("wbwLayer",gs("wbwMode",false)); // слой «Со словам�
 ST.mushafTr=gs("mushafTr",false); // мусхаф: бокс перевода текущего аята (этап 3, tanzil)
 ST.noTouch=gs("noTouch",false); ST.ntH=gs("ntH",60); // «Режим без касания»
 ST.swipeNav=gs("swipeNav",true); // свайп смены суры (вкл. по умолчанию)
+ST.pageSep=gs("pageSep",true);   // границы страниц мусхафа в ленте (вкл. по умолчанию)
 applyNoTouch();
 loadQpcMeta(); // preload mushaf page index (surah → page) for page-mode jumps
 setupSwipe();  // свайп смены суры (если включён в настройках); слушатель ставится один раз
