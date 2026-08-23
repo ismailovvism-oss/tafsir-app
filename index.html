@@ -337,7 +337,13 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .ab-tag-dot{width:6px;height:6px;border-radius:50%;background:var(--tag-color)}
 .ab-note-dot{width:6px;height:6px;border-radius:50%;background:var(--note-color)}
 /* Разовый показ перевода/оригинала одного аята */
-.ab-peek-btn{background:var(--bg-card);border:1px solid var(--border);border-radius:4px;padding:1px 7px;cursor:pointer;font-size:11px;font-family:inherit;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px}
+/* «Подсмотреть» на панели аята: читаешь перевод — заглянуть в оригинал там, где
+   запнулся, и наоборот. Метрики те же, что у .ab-ico/.ab-num-btn, иначе кнопка
+   выбьется из ряда. Подпись буквой, а не глазком: глазок не говорит, ЧТО
+   покажет, а на телефоне подсказки-title нет. */
+.ab-peek-btn{display:inline-flex;align-items:center;justify-content:center;min-width:38px;height:32px;padding:0 9px;border:1px solid var(--border);border-radius:999px;background:var(--bg-card);color:var(--text-sec);font-size:11px;font-family:inherit;font-weight:700;cursor:pointer;letter-spacing:.4px}
+.ab-peek-btn:hover{border-color:var(--accent);color:var(--accent)}
+.ab-peek-btn.ar{font-family:'Noto Naskh Arabic','Amiri',serif;font-size:15px;letter-spacing:0}
 .ab-peek-btn.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 .ab-peek{margin:0 12px 10px;padding:7px 10px;border-left:3px solid var(--accent);background:var(--bg-alt);border-radius:0 6px 6px 0}
 .ab-peek-lbl{display:block;font-size:9px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
@@ -1434,6 +1440,10 @@ body.hr-open{overflow:hidden}
 .erd-tr{font-size:13px;line-height:1.55;color:var(--text-sec);margin-top:7px}
 .erd-tr.big{font-size:16px;line-height:1.5;color:var(--text);margin-top:10px}
 .erd-addr{font-size:11px;color:var(--text-muted);margin-top:6px}
+/* Разбор муташабихат: адрес приглушён, а СЛОВА-ОТЛИЧИЯ крупные и обычным
+   цветом — ради них разбор и открывают, мельчить их бессмысленно */
+.erd-diff{font-size:11px;color:var(--text-muted);margin-top:6px}
+.erd-diff .erd-ar{font-size:1.7em;color:var(--text)}
 .erd-gap{display:inline-block;min-width:3.2em;text-align:center;color:var(--accent);
   border-bottom:2px solid var(--accent);letter-spacing:.06em}
 .erd-hl{background:rgba(var(--accent-rgb),.18);border-bottom:2px solid var(--accent);border-radius:3px;padding:0 2px}
@@ -1937,7 +1947,7 @@ function scanDirOf(t){return t.imgdir||("img/"+t.id);}
 // первом обращении (▶ у аята или блок «🎧 Аудио» в панели 📚). Пока аудио не
 // трогали: ни байта кода, ни <audio>-элементов. media.js — ES-модуль, наши
 // let-глобалы (ST/CONFIG/qpcMeta) ему не видны — передаём контекст геттерами.
-const MEDIA_VER="19";   // поднять при правке media.js (сброс кеша браузера/CDN)
+const MEDIA_VER="20";   // поднять при правке media.js (сброс кеша браузера/CDN)
 let MEDIA=null;        // загруженный модуль (null = ещё не загружался)
 function mediaCtx(){
   return {
@@ -1970,7 +1980,7 @@ async function mediaMod(){
 // Код упражнений в index.html не входит: подсистема будет расти (аяты, темы,
 // тартиб, «Лестница знания» с банком вопросов), а страница и так велика. Пока
 // человек не открыл режим — модуль не грузится.
-const ERUDIT_VER="6";  // поднять при правке erudit.js (сброс кеша браузера/CDN)
+const ERUDIT_VER="7";  // поднять при правке erudit.js (сброс кеша браузера/CDN)
 let ERUDIT=null;
 async function eruditMod(){
   if(ERUDIT)return ERUDIT;
@@ -6403,14 +6413,23 @@ async function togglePeek(aid,btn,kindArg){
   // btn может быть null — вызов из листа аята; тогда kind приходит аргументом
   const block=(btn&&btn.closest(".ayah-block"))||document.querySelector(`.ayah-block[data-aid="${aid}"]`);
   if(!block)return;
+  // Вход из листа аята приходит без кнопки. Подсвечивать всё равно надо ту, что
+  // стоит на панели: иначе врезка открыта, а кнопка выглядит выключенной — и
+  // повторный тап по ней «не закрывает», а как будто открывает второй раз.
+  if(!btn)btn=block.querySelector(".ab-peek-btn");
   const ex=block.querySelector(".ab-peek");
   if(ex){ex.remove();if(btn)btn.classList.remove("on");return;}
   if(btn)btn.classList.add("on");
-  const kind=btn?btn.dataset.peek:kindArg;
+  const kind=kindArg||(btn&&btn.dataset.peek);
   const lbl=kind==="ru"?"Перевод":"Оригинал";
   const div=document.createElement("div");div.className="ab-peek";
   div.innerHTML=`<span class="ab-peek-lbl">${lbl}</span><span style="color:var(--text-muted)">…</span>`;
-  block.appendChild(div);
+  // ПОД ПАНЕЛЬЮ, а не в конец блока. Смысл кнопки — «запнулся, глянул, читаю
+  // дальше»: в конце блока врезка оказывается под всеми переводами и тафсирами
+  // (замер: 526px даже у «Алиф. Лам. Мим.», у длинного аята — экраны), то есть
+  // ради взгляда пришлось бы прокручивать туда и обратно.
+  const body=block.querySelector(".ab-body");
+  if(body)block.insertBefore(div,body);else block.appendChild(div);
   let text="";
   if(kind==="ru"){
     const tid=(CONFIG.tafsirs.find(t=>t.lang!=="ar"&&t.group==="translations")||{}).id||"kuliev";
@@ -6855,14 +6874,26 @@ async function renderReading(el){
     let html=buildSuraIntro(enabled,loaded);
     // Одноразовая подсказка после редизайна (этап 2, гасится навсегда крестиком)
     if(!gs("tip45",false))html+=`<div class="read-hint"><span>Новое: <b>тап по номеру аята</b> — все действия (теги, заметка, диафильм…). Хифз и Эрудит — на <b>Главной</b> и в меню <b>⋯</b>.</span><button onclick="ss('tip45',true);this.parentElement.remove()" title="Больше не показывать">✕</button></div>`;
-    // Панелька аята (этап 1 редизайна): номер · ▶ · метки-состояния · ☆ · ⋯.
+    // Панелька аята (этап 1 редизайна): номер · ▶ · [подсмотреть] · метки · ☆ · ⋯.
     // Теги/заметка/диафильм/запись/копия/счётчик покрытия — в листе аята
     // (openAyahSheet, вход — номер или ⋯); метки — индикаторы, но тап по ним
-    // тоже открывает лист. Peek ru/ar — там же.
+    // тоже открывает лист.
+    // «Подсмотреть» вернули на панель (2026-08-23): запнулся на слове — глянуть
+    // оригинал и читать дальше; через лист это три действия вместо одного.
+    // Редизайн убирал её вместе с семью другими кнопками по 20px — здесь она
+    // одна, метрики общие с ▶/☆, и на большинстве наборов её вообще нет.
+    const peekLbl=peekKind==="ru"?"RU":"ع";
+    const peekTip=peekKind==="ru"?"Подсмотреть перевод этого аята":"Подсмотреть оригинал этого аята";
+    // В «режиме без касания» тапать по тексту нельзя — и togglePeek там молчит:
+    // рисовать кнопку, которая заведомо ничего не сделает, незачем.
+    const peekBtn=(peekKind&&!ST.noTouch)
+      ?aid=>`<button class="ab-peek-btn${peekKind==="ar"?" ar":""}" data-peek="${peekKind}" onclick="event.stopPropagation();togglePeek(${aid},this)" title="${escAttr(peekTip)}">${peekLbl}</button>`
+      :()=>"";
     for(const aid of ayahIds){
       html+=`<div class="ayah-block" data-aid="${aid}"><div class="ab-head">
         <div class="ab-row"><button class="ab-num-btn" onclick="event.stopPropagation();openAyahSheet(${aid})" title="Все действия с аятом">${aid}</button>
           <button class="ab-ico" onclick="event.stopPropagation();mediaPlayAyah(${aid})" title="Слушать с этого аята">${IC.play}</button>
+          ${peekBtn(aid)}
           <span class="ab-marks" data-marks="${aid}">${marksHTML(ST.surah,aid)}</span>
           <button class="ab-ico ab-bm ${isBookmarked(ST.surah,aid)?'on':''}" data-bm="${aid}" onclick="event.stopPropagation();toggleBookmark(${aid},null)" title="Закладка">${IC.star}</button>
           <button class="ab-ico" onclick="event.stopPropagation();openAyahSheet(${aid})" title="Ещё действия">${IC.more}</button>

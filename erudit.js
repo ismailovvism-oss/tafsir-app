@@ -10,8 +10,8 @@
 //     Генератор АСИНХРОННЫЙ: задания по аятам требуют догрузки чанков суры.
 //   • УПРАЖНЕНИЕ = запись в EXERCISES: {id, заголовок, виды заданий, defCfg,
 //     genQ(cfg,pool,sess)} → задание {kind, ask, sub, opts[], correct, explain}.
-//     Чтобы добавить следующее (темы, тартиб, «Лестница знания»), дописывается
-//     одна запись — движок, статистика и экраны не трогаются.
+//     Чтобы добавить следующее, дописывается одна запись — движок, статистика
+//     и экраны не трогаются.
 //   • НАСТРОЙКИ У КАЖДОГО УПРАЖНЕНИЯ СВОИ (DB.cfg[exId]): охват «весь Коран»
 //     разумен для названий сур и бессмыслен для аятов.
 //   • ПУЛ ВЗВЕШЕН: сура, где чаще ошибались, выпадает чаще (items[id].wrong/seen).
@@ -85,6 +85,7 @@ const DEF_CFG={
   ayahs:{scope:"j30",custom:"78-114",len:10,lang:"mix",kinds:{sura:true,cont:true,next:true,word:true}},
   scholar:{cats:"all",draft:false},
   tartib:{scope:"j30",custom:"78-114",len:10,kinds:{chain:true,spread:true,words:true}},
+  suraFind:{scope:"all",custom:"78-114",len:10,kinds:{uniq:true,topic:true,mut:true,phrase:true,same:true}},
   words:{tier:"300",len:10,kinds:{w2m:true,m2w:true,root:true,same:true}},
   tajweed:{scope:"j30",custom:"78-114",len:10,kinds:{name:true,find:true}},
 };
@@ -187,6 +188,7 @@ const SURA_KINDS=[
   {id:"count",ic:"📏",label:"Число аятов",hint:"«Сколько аятов в Аль-Кахф?»"},
   {id:"order",ic:"↕️",label:"Соседи и порядок",hint:"«Что после Ан-Наср?», расстановка"},
 ];
+const suraName=id=>`${id}. ${esc(SU(id).ru)} ${arSpan(SU(id).name)}`;
 function suraFact(id){
   const su=SU(id);
   return `${id}. ${esc(su.ru)} ${arSpan(su.name)} — ${su.n} ${plural(su.n,"аят","аята","аятов")}`;
@@ -269,16 +271,18 @@ const LANGS=[{id:"ar",label:"Арабский"},{id:"ru",label:"Перевод"}
 // вариантов, отличимых по смыслу, для них не построить.
 const CONTENT_POS=new Set(["N","PN","V","ADJ","ACT_PCPL","PASS_PCPL","VN","ADV","T","LOC"]);
 
-let AMBIG=null;                                   // аяты, дословно повторяющиеся в разных сурах
-async function loadAmbig(){
-  if(AMBIG)return AMBIG;
+let POOL=null,AMBIG=null;                         // pool.json: дословные межсурные повторы
+async function loadPool(){
+  if(POOL)return POOL;
   try{
     const r=await fetch(ctx.resolveUrl("erudit_pool",{file:"pool.json"}));
-    const d=r.ok?await r.json():null;
-    AMBIG=new Set((d&&d.ambiguous)||[]);
-  }catch(e){AMBIG=new Set();}                     // без списка упражнение работает, просто менее строго
-  return AMBIG;
+    POOL=(r.ok?await r.json():null)||{};
+  }catch(e){POOL={};}                             // без списка упражнение работает, просто менее строго
+  if(!POOL.groups)POOL.groups=[];
+  AMBIG=new Set(POOL.ambiguous||[]);              // плоский список — «из какой суры» такое не спрашивает
+  return POOL;
 }
+async function loadAmbig(){if(!AMBIG)await loadPool();return AMBIG;}
 // Данные одной суры. Перевод тянем ВСЕГДА (если он включён): даже когда вопрос
 // по оригиналу, разбор после ответа обязан показать аят с переводом.
 // Морфология и конкорданс — только под «пропущенное слово» (это ~1 МБ корней).
@@ -360,9 +364,16 @@ async function genAyahQ(c,pool,sess){
   }
   return null;
 }
-function ayahFull(s,a,tid){                        // разбор: канонический аят целиком + перевод + адрес
+// У первого аята суры басмала приклеена к тексту. В вопросе «из какой это суры»
+// она и лишняя, и ПОДСКАЗКА: аят сразу опознаётся как первый, а первых всего 114.
+// Басмала — ровно четыре слова, знаков вакфа внутри неё нет.
+function noBasmala(t){
+  if(!startsWithBasmala(t))return t;
+  return String(t).split(/\s+/).filter(Boolean).slice(4).join(" ");
+}
+function ayahFull(s,a,tid,strip){                  // разбор: канонический аят целиком + перевод + адрес
   const t=ru(tid,s,a);
-  return `<div class="erd-ayah">${esc(ar(s,a))}</div>`
+  return `<div class="erd-ayah">${esc(strip?noBasmala(ar(s,a)):ar(s,a))}</div>`
     +(t?`<div class="erd-tr">${esc(t)}</div>`:"")
     +`<div class="erd-addr">${s}:${a} · ${esc(SU(s).ru)}</div>`;
 }
@@ -1027,6 +1038,198 @@ function exportMarks(){
 }
 
 // ---------- реестр упражнений ----------
+// ============================================================
+// УПРАЖНЕНИЕ 6 — «Узнать суру»
+// ============================================================
+// Не по аяту (это умеет «Аяты»), а по ПРИМЕТАМ суры: слово, которого больше
+// нигде нет; тема, раскрытая только здесь; и муташабихат — почти одинаковые
+// аяты разных сур, на которых и сбивается заучивший.
+// Всё три вида требуют взгляда на ВЕСЬ Коран разом (а модуль грузит суры
+// чанками), поэтому считаются заранее: build_erudit_pool.py → suras.json.
+const FIND_KINDS=[
+  {id:"uniq",ic:"🔑",label:"Слово только этой суры",hint:"Корень, все вхождения которого — в одной суре"},
+  {id:"topic",ic:"📑",label:"Сура по теме",hint:"Тема указателя, раскрытая в одной суре"},
+  {id:"mut",ic:"🧿",label:"Муташабихат",hint:"Похожие аяты разных сур — из какой этот"},
+  {id:"phrase",ic:"🧵",label:"Повторяющийся оборот",hint:"وَمَآ أَدْرَىٰكَ مَا … — чем кончается в этом месте"},
+  {id:"same",ic:"👯",label:"Дословный повтор",hint:"Тот же аят стоит ещё в одной суре — в какой"},
+];
+let FIND=null;
+async function loadFind(){
+  if(FIND)return FIND;
+  try{
+    const r=await fetch(ctx.resolveUrl("erudit_pool",{file:"suras.json"}));
+    FIND=(r.ok?await r.json():null)||{};
+  }catch(e){FIND={};}
+  for(const k of ["uniq","topics","mut","phrases"])if(!FIND[k])FIND[k]=[];
+  return FIND;
+}
+// Взвешенный выбор по своей мере. У сур мера — слабое место (weightOf), а у
+// слова к ней добавляется частота: слово, встреченное шесть раз, приметнее
+// того, что мелькнуло однажды, и спрашивать его стоит чаще.
+function pickBy(arr,w){
+  let sum=0;const ws=arr.map(x=>{const v=Math.max(.001,w(x));sum+=v;return v;});
+  let r=Math.random()*sum;
+  for(let i=0;i<arr.length;i++){r-=ws[i];if(r<=0)return arr[i];}
+  return arr[arr.length-1];
+}
+const suraOpts=ids=>ids.map(x=>({html:`${x}. ${esc(SU(x).ru)}`}));
+// Дистракторы-суры, из которых ВЫЧЕРКНУТЫ запрещённые. Для повторов это не
+// придирка, а условие честности: если аят стоит и в 29-й, и в 30-й, а обе
+// попали в варианты, верных ответов два.
+function distractorsBut(correct,pool,n,banned){
+  const ban=new Set(banned||[]);
+  const out=distractors(correct,pool,n+ban.size).filter(x=>!ban.has(x)).slice(0,n);
+  for(let x=1;x<=114&&out.length<n;x++)
+    if(x!==correct&&!ban.has(x)&&!out.includes(x))out.push(x);
+  return out.slice(0,n);
+}
+async function genFindQ(c,pool,sess){
+  const D=await loadFind(),P=await loadPool();
+  const inScope=new Set(pool);
+  const kinds=FIND_KINDS.filter(k=>c.kinds[k.id]).map(k=>k.id);
+  // Виды перебираем ВПЕРЕМЕШКУ и до первого удавшегося: при узком охвате
+  // (скажем, джуз 30) у одного вида может не найтись ни одной приметы, и
+  // молчаливый отказ оставил бы человека без задания.
+  for(const kind of shuffle(kinds.length?kinds:["uniq"])){
+    const q=await buildFindQ(kind,c,pool,inScope,D,P);
+    if(q)return q;
+  }
+  return null;
+}
+async function buildFindQ(kind,c,pool,inScope,D,P){
+  if(kind==="uniq"){
+    const list=D.uniq.filter(x=>inScope.has(x.s));
+    if(!list.length)return null;
+    const it=pickBy(list,x=>weightOf(x.s)*(1+x.n));
+    const ids=shuffle([it.s].concat(distractors(it.s,pool,3)));
+    const one=it.n<=1;
+    return {kind,sub:one?"Слово, которое во всём Коране одно":
+        `Все ${it.n} ${plural(it.n,"вхождение","вхождения","вхождений")} — в одной суре`,
+      ask:`В какой суре стоит слово ${arSpan(it.f)}?`,
+      body:`<div class="erd-tr big">«${esc(it.g)}» · корень ${arSpan(it.r)}</div>`,
+      sura:it.s,ayah:it.a,root:it.r,
+      opts:suraOpts(ids),correct:ids.indexOf(it.s),
+      explain:`Корень ${arSpan(it.r)} — «${esc(it.g)}». ${one?"Единственное место во всём Коране":
+        `Все ${it.n} ${plural(it.n,"вхождение","вхождения","вхождений")}`} — в суре ${suraName(it.s)},
+        ${one?"это":"первое —"} ${it.s}:${it.a}.`};
+  }
+  if(kind==="topic"){
+    const list=D.topics.filter(x=>inScope.has(x.s));
+    if(!list.length)return null;
+    const it=pickBy(list,x=>weightOf(x.s));
+    const ids=shuffle([it.s].concat(distractors(it.s,pool,3)));
+    return {kind,sub:"Тематический указатель",
+      ask:"В какой суре раскрыта эта тема?",
+      body:`<div class="erd-tr big">${esc(it.t)}</div>`,
+      sura:it.s,ayah:it.a,
+      opts:suraOpts(ids),correct:ids.indexOf(it.s),
+      explain:`«${esc(it.t)}» — ${it.n} ${plural(it.n,"аят","аята","аятов")} в суре ${suraName(it.s)},
+        начало — ${it.s}:${it.a}.`};
+  }
+  if(kind==="mut"){
+    const groups=D.mut.filter(g=>g.some(m=>inScope.has(m.s)));
+    if(!groups.length)return null;
+    const g=pick(groups);
+    const it=pickBy(g.filter(m=>inScope.has(m.s)),m=>weightOf(m.s));
+    const tid=ctx.transId();
+    await Promise.all([ctx.ensureText("_arabic",it.s),tid?ctx.ensureText(tid,it.s):null]
+      .map(x=>Promise.resolve(x).catch(()=>null)));
+    const text=noBasmala(ar(it.s,it.a));
+    if(!text)return null;
+    // Соперники — СЁСТРЫ ПО ГРУППЕ: путают именно они, а случайная сура
+    // отсеивается по смыслу и ничему не учит.
+    const sis=[...new Set(g.map(m=>m.s))].filter(x=>x!==it.s);
+    const d=shuffle(sis).slice(0,3);
+    const ids=shuffle([it.s].concat(d.length<3?d.concat(distractorsBut(it.s,pool,3-d.length,sis)):d));
+    const rows=g.map(m=>`<div class="erd-diff">${m.s}:${m.a} · ${esc(SU(m.s).ru)}${
+      m.d&&m.d.length?` — ${m.d.map(arSpan).join(" ")}`:""}</div>`).join("");
+    return {kind,sub:"Похожие аяты разных сур",
+      ask:"Из какой суры именно этот аят?",
+      body:`<div class="erd-ayah">${esc(text)}</div>`,
+      sura:it.s,ayah:it.a,audio:true,
+      opts:suraOpts(ids),correct:ids.indexOf(it.s),
+      wkeys:g.map(m=>String(m.s)),
+      explain:ayahFull(it.s,it.a,tid,true)
+        +`<div class="erd-note">Различаются они вот чем:</div>${rows}`};
+  }
+  // Оборот. Спрашивать «из какой суры» про него можно, но заучивший помнит сам
+  // оборот — путается он в КОНЦОВКЕ. Поэтому основное направление обратное:
+  // место названо, назвать окончание. Второе направление даётся реже — иначе
+  // упражнение сведётся к одному приёму.
+  if(kind==="phrase"){
+    const list=D.phrases.filter(p=>p.a.some(m=>inScope.has(m.s)));
+    if(!list.length)return null;
+    const ph=pick(list);
+    const it=pickBy(ph.a.filter(m=>inScope.has(m.s)),m=>weightOf(m.s));
+    const tid=ctx.transId();
+    if(tid)await Promise.resolve(ctx.ensureText(tid,it.s)).catch(()=>null);
+    // Текст собираем из самих данных (оборот + хвост), а не из чанка: у первого
+    // аята суры в чанке приклеена басмала, и она выдала бы, что аят первый.
+    const full=`${ph.p} ${it.t}`;
+    const tr=ru(tid,it.s,it.a);
+    const rows=ph.a.map(m=>`<div class="erd-diff">${m.s}:${m.a} · ${esc(SU(m.s).ru)} — ${arSpan(m.t)}</div>`).join("");
+    const explain=`<div class="erd-ayah">${esc(full)}</div>`
+      +(tr?`<div class="erd-tr">${esc(tr)}</div>`:"")
+      +`<div class="erd-addr">${it.s}:${it.a} · ${esc(SU(it.s).ru)}</div>`
+      +`<div class="erd-note">Оборот ${arSpan(ph.p)} стоит в ${ph.a.length} ${plural(ph.a.length,"месте","местах","местах")} — вот все:</div>${rows}`;
+    // Соперники — концовки ДРУГИХ мест того же оборота. Одинаковые хвосты
+    // (оборот может дважды кончаться одинаково) схлопываем: два неотличимых
+    // варианта — это два верных ответа.
+    const other=[];const seen=new Set([it.t]);
+    for(const m of shuffle(ph.a)){if(seen.has(m.t))continue;seen.add(m.t);other.push(m.t);}
+    // Спрашивать про оборот «из какой суры» незачем: это ровно то, что делает
+    // 🧿 Муташабихат. Своя польза оборота в обратном — место названо, назвать
+    // концовку. Ветка ниже — запасная, на случай если концовок меньше трёх.
+    if(other.length>=2){
+      const opts=shuffle([it.t].concat(other.slice(0,3)));
+      return {kind,sub:"Повторяющийся оборот",
+        ask:`Чем кончается этот оборот в аяте <b>${it.s}:${it.a}</b> («${esc(SU(it.s).ru)}»)?`,
+        body:`<div class="erd-ayah">${esc(ph.p)} …</div>`,
+        sura:it.s,ayah:it.a,audio:true,
+        opts:opts.map(t=>({html:arSpan(t)})),correct:opts.indexOf(it.t),
+        wkeys:ph.a.map(m=>String(m.s)),explain};
+    }
+    const sis=[...new Set(ph.a.map(m=>m.s))].filter(x=>x!==it.s);
+    const d=shuffle(sis).slice(0,3);
+    const ids=shuffle([it.s].concat(d.length<3?d.concat(distractorsBut(it.s,pool,3-d.length,sis)):d));
+    return {kind,sub:"Повторяющийся оборот",
+      ask:"Из какой суры это место оборота?",
+      body:`<div class="erd-ayah">${esc(full)}</div>`,
+      sura:it.s,ayah:it.a,audio:true,
+      opts:suraOpts(ids),correct:ids.indexOf(it.s),
+      wkeys:ph.a.map(m=>String(m.s)),explain};
+  }
+  if(kind==="same"){
+    const groups=(P.groups||[]).filter(g=>{
+      const su=new Set(g.map(k=>+k.split(":")[0]));
+      return su.size>1&&[...su].some(x=>inScope.has(x));
+    });
+    if(!groups.length)return null;
+    const g=pick(groups);
+    const su=[...new Set(g.map(k=>+k.split(":")[0]))];
+    const ans=pickWeighted(su.filter(x=>inScope.has(x)));
+    const given=pick(su.filter(x=>x!==ans));
+    const key=g.find(k=>+k.split(":")[0]===given);
+    const [gs,ga]=key.split(":").map(Number);
+    const tid=ctx.transId();
+    await Promise.all([ctx.ensureText("_arabic",gs),tid?ctx.ensureText(tid,gs):null]
+      .map(x=>Promise.resolve(x).catch(()=>null)));
+    const text=noBasmala(ar(gs,ga));
+    if(!text)return null;
+    const ids=shuffle([ans].concat(distractorsBut(ans,pool,3,su)));
+    return {kind,sub:"Дословный повтор",
+      ask:`Этот аят стоит в суре «${esc(SU(given).ru)}». В какой ещё он есть <b>слово в слово</b>?`,
+      body:`<div class="erd-ayah">${esc(text)}</div><div class="erd-addr">${gs}:${ga}</div>`,
+      sura:ans,ayah:+g.find(k=>+k.split(":")[0]===ans).split(":")[1],audio:true,
+      opts:suraOpts(ids),correct:ids.indexOf(ans),
+      wkeys:su.map(String),
+      explain:`Этот аят повторяется дословно ${su.length>2?`в ${su.length} ${plural(su.length,"суре","сурах","сурах")}`:"в двух сурах"}: `
+        +g.map(k=>{const[a,b]=k.split(":");return `${a}:${b} ${esc(SU(+a).ru)}`;}).join(", ")
+        +`.<div class="erd-note">Поэтому «из какой это суры?» про него не спрашивают — верного ответа было бы несколько.</div>`};
+  }
+  return null;
+}
+
 const EXERCISES=[
   {id:"suraNames",ic:"🔢",title:"Названия сур",
    about:"Номера, арабские и русские имена, число аятов и порядок сур в мусхафе.",
@@ -1034,6 +1237,9 @@ const EXERCISES=[
   {id:"ayahs",ic:"📖",title:"Аяты",
    about:"Узнать суру по аяту, продолжить аят, назвать следующий, вспомнить пропущенное слово.",
    kinds:AYAH_KINDS,lang:true,suraPool:12,genQ:genAyahQ},
+  {id:"suraFind",ic:"🔎",title:"Узнать суру",
+   about:"По примете: слово, которого больше нигде нет; тема, раскрытая только здесь; муташабихат и повторяющиеся обороты — места, на которых сбивается заучивший.",
+   kinds:FIND_KINDS,genQ:genFindQ},
   {id:"words",ic:"🔤",title:"Слова Корана",
    about:"Частотный словарь по корням: топ-100 корней — это 61% всех слов Корана, топ-300 — 83%.",
    kinds:WORD_KINDS,tiers:true,noScope:true,genQ:genWordQ},
@@ -1169,7 +1375,7 @@ function hubHTML(){
       <div class="erd-card-m">${st.plays?`рекорд ${st.best} · ${acc} · ${st.plays} ${plural(st.plays,"подход","подхода","подходов")}`:"новое упражнение"}</div>
     </div>`;
   }
-  h+=`<div class="erd-soon"><b>Скоро:</b> аят по теме · «Лестница знания» (вопросы по Корану и тафсиру).</div>`;
+  h+=`<div class="erd-soon"><b>Скоро:</b> статистика по видам заданий · повторение только ошибок · ежедневная разминка из слабых мест.</div>`;
   return h;
 }
 

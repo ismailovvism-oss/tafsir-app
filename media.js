@@ -175,6 +175,8 @@ const P={
   range:null,               // повтор диапазона {a:{sura,ayah}, b:{sura,ayah}}
   rangeArm:null,            // первый тап A–B: помечено начало, ждём конец
   err:"",
+  endedAt:null,             // "s:a", у которого уже отработан конец (посурный чтец):
+                            // граница ловится по таймингам в timeupdate, а он частит
   objUrl:null,              // текущий object URL записи (revoke при смене)
   token:0,                  // защита от гонок async-загрузки (быстрые ⏮/⏭)
 };
@@ -197,6 +199,7 @@ function setSrc(au,m){
 }
 async function playCur(){
   const t=++P.token;
+  P.endedAt=null;                          // новая позиция — конец аята ещё не отработан
   const m=await SRC.getMediaFor(POS.sura,POS.ayah).catch(()=>null);
   if(t!==P.token)return;                   // пока грузили — ушли на другой аят
   if(!m){
@@ -240,7 +243,10 @@ async function playCur(){
 // Следующий аят с учётом диапазона A–B; для наборов записей — скип пустых
 // аятов (иначе набор с пропусками останавливался бы на каждом «дыре»)
 async function nextPlayable(s,a){
-  if(SRC&&SRC.type==="audio_surah"){
+  // Посурный чтец БЕЗ таймингов — «одна сура = один трек», шагать можно только
+  // сурами. С таймингами аят внутри файла адресуем, и правило общее со всеми:
+  // иначе диапазон 2:2–2:3 сравнивался бы с границами СУР и не срабатывал.
+  if(SRC&&SRC.type==="audio_surah"&&!(timingsFor(SRC.id,s)||await loadTimings(SRC.id,s))){
     let nx=s<114?{sura:s+1,ayah:1}:null;
     if(P.range&&(!nx||key(nx.sura,nx.ayah)>key(P.range.b.sura,P.range.b.ayah)))
       nx={sura:P.range.a.sura,ayah:P.range.a.ayah};
@@ -271,8 +277,49 @@ function onTimeUpdate(){
   if(!P.playing||!SRC||SRC.type!=="audio_surah")return;
   const t=timingsFor(SRC.id,POS.sura);
   if(!t)return;                                  // таймингов суры нет — не двигаем
-  const a=ayahAtTime(t,P.audio.currentTime);
+  const ct=P.audio.currentTime,seg=t[POS.ayah],mine=sa(POS.sura,POS.ayah);
+  // КОНЕЦ АЯТА. У поаятного чтеца его даёт событие ended (кончился файл), а тут
+  // один mp3 на всю суру: ended придёт только на 286-м аяте. Поэтому повтор,
+  // пауза и диапазон у посурного чтеца не срабатывали НИКОГДА — их граница
+  // ловится здесь, по таймингам. timeupdate частит (~4 раза в секунду), отсюда
+  // страж endedAt: на каждый аят конец отрабатываем один раз.
+  // Снимаем страж НЕ по факту команды на перемотку, а когда указатель реально
+  // вернулся внутрь аята: у потокового mp3 перемотка не мгновенна, и timeupdate
+  // успевает прийти со старым временем — тогда конец аята отработал бы дважды
+  // (повтор сбился бы на один проход).
+  if(P.endedAt===mine&&seg&&ct<seg[1]-0.05)P.endedAt=null;
+  if(seg&&ct>=seg[1]-0.05&&P.endedAt!==mine){
+    P.endedAt=mine;
+    if(onSurahAyahEnd())return;                  // управление взято (перемотка/пауза)
+  }
+  const a=ayahAtTime(t,ct);
   if(a&&a!==POS.ayah)setPos(POS.sura,a);
+}
+// Конец аята у посурного чтеца. true — управление взято, false — играем дальше
+// как играли (следующий аят идёт в том же файле, догонять не надо).
+function onSurahAyahEnd(){
+  const t=timingsFor(SRC.id,POS.sura),seg=t&&t[POS.ayah];
+  const hold=()=>{if(P.gap>0)P.audio.pause();};  // «успеть повторить за чтецом»
+  const go=()=>{if(P.gap>0)P.audio.play().catch(()=>{});};
+  P.played++;
+  if(P.repeat&&P.played<P.repeat&&seg){          // повтор аята: назад на его начало
+    hold();
+    gapThen(()=>{P.audio.currentTime=seg[0];go();});
+    return true;
+  }
+  P.played=0;
+  if(P.range&&key(POS.sura,POS.ayah)>=key(P.range.b.sura,P.range.b.ayah)){
+    const a0=P.range.a;                          // конец диапазона → к его началу
+    hold();
+    gapThen(()=>{setPos(a0.sura,a0.ayah);playCur();});
+    return true;
+  }
+  if(P.gap>0){                                   // пауза перед следующим аятом
+    hold();
+    gapThen(go);                                 // страж снимет сам следующий аят
+    return true;
+  }
+  return false;
 }
 // Пауза после аята (P.gap): и перед повтором, и перед следующим аятом — приём
 // хифза «повторить за чтецом». Пауза срывается паузой/стопом/перемоткой.
@@ -292,6 +339,8 @@ async function onEnded(){
 async function prefetchNext(){
   let nx=null;
   if(SRC&&SRC.type==="audio_surah"){
+    // Весь файл — это сура целиком: пока идём внутри неё, качать нечего.
+    if(POS.ayah<ayahCount(POS.sura))return;
     nx=POS.sura<114?{sura:POS.sura+1,ayah:1}:null;
   }else{
     nx=nextAyah(POS.sura,POS.ayah);
@@ -309,9 +358,14 @@ function togglePlay(){
     au.play().catch(()=>{});P.playing=true;renderBar();
   }else playCur();                       // остановились на конце — заново текущий аят
 }
-function navStep(dir){
+// ⏮/⏭ — шаг ПО АЯТУ. У посурного чтеца аят адресуется таймингами (playCur
+// перемотает файл суры на его начало); сурами шагаем только когда таймингов
+// нет — иначе кнопка «следующий аят» листала бы суры.
+// Тайминги ждём: до первого воспроизведения кэш пуст, и синхронная проверка
+// увела бы на соседнюю суру ровно в том случае, на который жалуются.
+async function navStep(dir){
   let t=null;
-  if(SRC&&SRC.type==="audio_surah"){
+  if(SRC&&SRC.type==="audio_surah"&&!(timingsFor(SRC.id,POS.sura)||await loadTimings(SRC.id,POS.sura))){
     if(dir>0){
       t=POS.sura<114?{sura:POS.sura+1,ayah:1}:null;
     }else{
@@ -321,11 +375,11 @@ function navStep(dir){
     t=dir>0?nextAyah(POS.sura,POS.ayah):prevAyah(POS.sura,POS.ayah);
   }
   if(!t)return;
-  P.played=0;clearTimeout(P.gapT);setPos(t.sura,t.ayah);playCur();
+  P.played=0;P.endedAt=null;clearTimeout(P.gapT);setPos(t.sura,t.ayah);playCur();
 }
 function stopAll(){
   closeMenu();
-  P.playing=false;P.active=false;P.range=null;P.rangeArm=null;P.played=0;P.err="";P.token++;
+  P.playing=false;P.active=false;P.range=null;P.rangeArm=null;P.played=0;P.err="";P.token++;P.endedAt=null;
   clearTimeout(P.gapT);
   if(P.audio){P.audio.pause();P.audio.removeAttribute("src");P.audio.load();}
   if(P.pre)P.pre.removeAttribute("src");
