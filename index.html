@@ -143,7 +143,14 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .app-body{display:flex;flex:1;overflow:hidden;position:relative}
 
 /* SIDEBAR — surah list */
-.sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--bg-alt);border-right:1px solid var(--border);display:flex;flex-direction:row;transition:margin-left .25s;z-index:5}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--bg-alt);border-right:1px solid var(--border);display:flex;flex-direction:row;transition:margin-left .25s;z-index:5;position:relative}
+/* Ручка ширины (десктоп): узкая полоса по правому краю панели. Ширина живёт в
+   --sidebar-w и запоминается; двойной тап возвращает 240px. */
+.sb-grip{position:absolute;top:0;right:-3px;width:7px;height:100%;cursor:col-resize;z-index:6;touch-action:none}
+.sb-grip::after{content:"";position:absolute;top:0;left:2px;width:3px;height:100%;background:transparent;transition:background .12s}
+.sb-grip:hover::after,.sb-grip.dragging::after{background:var(--accent)}
+body.sb-resizing{cursor:col-resize;user-select:none}
+@media(max-width:768px){.sb-grip{display:none}}
 /* Рельс вкладок: колонка значков с подписью; растёт вниз, а не жмётся вширь */
 .sb-rail{flex-shrink:0;width:46px;display:flex;flex-direction:column;background:var(--bg);border-right:1px solid var(--border);overflow-y:auto}
 .sb-rail-b{flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
@@ -166,8 +173,13 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .sb-jump-go:hover{border-color:var(--accent)}
 .sb-content{flex:1;overflow-y:auto;padding:4px 5px 10px}
 /* Под-табы панели ⚙ Вид */
-.vp-tabs{display:flex;gap:4px;position:sticky;top:0;z-index:2;background:var(--panel);padding:2px 0 6px;margin-bottom:4px;border-bottom:1px solid var(--border)}
-.vp-tabs button{flex:1;padding:6px 3px;border:1px solid var(--border);background:var(--bg);color:var(--text-sec);border-radius:7px;font-family:inherit;font-size:11px;font-weight:500;cursor:pointer}
+/* Липкая полоса под-вкладок ⚙ Вид. Фон обязателен и обязан быть НЕПРОЗРАЧНЫМ:
+   переменной --panel в проекте нет, и полоса просвечивала — при прокрутке
+   вкладки сливались с текстом и выглядели пропавшими. Сетка вместо строки:
+   на узкой панели «Данные» не влезало в четверть ширины и обрезалось. */
+.vp-tabs{display:grid;grid-template-columns:repeat(auto-fit,minmax(62px,1fr));gap:4px;position:sticky;top:0;z-index:2;
+  background:var(--bg-alt);padding:4px 0 6px;margin-bottom:4px;border-bottom:1px solid var(--border)}
+.vp-tabs button{padding:6px 2px;border:1px solid var(--border);background:var(--bg);color:var(--text-sec);border-radius:7px;font-family:inherit;font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .vp-tabs button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 
 /* Группировка списка сур по джузам */
@@ -401,6 +413,19 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .hl-card:hover{border-color:var(--accent)}
 .hl-card-top{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-sec)}
 .hl-ar{direction:rtl;text-align:right;margin-top:4px;font-family:'Scheherazade New','Amiri Quran','Noto Naskh Arabic',serif;font-size:calc(21px*var(--rs-ar,1));line-height:calc(1.9*var(--lh-ar,1));color:var(--text)}
+/* Экран «Мои заметки»: фильтры вида/типа/сборника и дневник по датам */
+.nt-filters{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:0 0 12px}
+.nt-sep{width:1px;height:18px;background:var(--border);margin:0 2px}
+.nt-day{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin:14px 2px 6px}
+.nt-rec-tags{margin-top:6px;display:flex;gap:5px;flex-wrap:wrap}
+/* Несколько записей заметки под аятом — только чтение, правка в верстаке */
+.ab-notes-multi{display:flex;flex-direction:column;gap:8px}
+.ab-rec{background:var(--bg-card);border:1px solid var(--border-light);border-radius:8px;padding:7px 9px}
+.ab-rec-h{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--note-color,var(--accent));margin-bottom:4px}
+.ab-rec .md{font-size:calc(12.5px*var(--rs-ru,1));line-height:1.55}
+.hl-wb{margin-left:8px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-sec);border-radius:7px;padding:2px 7px;font-size:12px;cursor:pointer;font-family:inherit;line-height:1.3}
+.hl-wb:hover{border-color:var(--accent);color:var(--accent)}
+.tr-ayah-ref .hl-wb{float:right}
 .hl-note{display:flex;align-items:flex-start;gap:6px;margin-top:6px;font-size:11.5px;color:var(--text-muted)}
 .hl-note svg{flex:none;width:13px;height:13px;margin-top:1px}
 .hl-legend{display:flex;flex-direction:column;gap:6px;margin:0 0 14px;padding:10px 12px;background:var(--bg-alt);border:1px solid var(--border-light);border-radius:10px}
@@ -502,6 +527,13 @@ body{font-family:'IBM Plex Sans',-apple-system,'Amiri','Amiri Quran',sans-serif;
 .md .md-h{font-weight:600;margin:.45em 0 .2em;color:var(--text)}
 .md .md-h1{font-size:1.2em}.md .md-h2{font-size:1.1em}.md .md-h3,.md .md-h4{font-size:1.03em}
 .md .md-q{border-inline-start:3px solid var(--accent);padding-inline-start:9px;margin:.35em 0;color:var(--text-muted)}
+/* врезка «смысл аята» — перифраза всего аята, открывающая разбор (tabari_bayan_ru) */
+.md .md-para{background:var(--accent-bg);border-inline-start:4px solid var(--accent);border-radius:0 6px 6px 0;padding:11px 13px;margin:.2em 0 .8em}
+.md .md-para-lbl{font-family:'IBM Plex Sans',-apple-system,sans-serif;font-size:10.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+.md .md-para p{margin:0}
+.md .md-para-sum{background:transparent;border-inline-start:2px dashed var(--text-muted);padding-inline-start:11px}
+.md .md-para-sum .md-para-lbl{color:var(--text-muted)}
+.md .md-para-sum p{color:var(--text-sec)}
 .md .md-ul,.md .md-ol{margin:.3em 0;padding-inline-start:1.3em}
 .md .md-ul li,.md .md-ol li{margin:.1em 0}
 .md .md-tbl{border-collapse:collapse;margin:.45em 0;width:auto;max-width:100%}
@@ -1672,13 +1704,85 @@ svg.svgi{width:19px;height:19px;stroke:currentColor;stroke-width:1.9;fill:none;s
 .wb-chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .wb-stream{padding:12px 16px 40px;max-width:760px;margin:0 auto}
 .wb-src{scroll-margin-top:96px}
+/* Сравнение: страница не скроллится — прокрутка своя у каждой колонки, поэтому
+   короткий перевод остаётся перед глазами, пока листается длинный тафсир. */
+.wb-read.cmp-mode{overflow:hidden;display:flex;flex-direction:column}
+.wb-read.cmp-mode .wb-stream,.wb-read.cmp-mode .wb-cmp{flex:1;min-height:0}
+.wb-cmp{display:grid;gap:16px;padding:10px 16px 16px;align-items:stretch;overflow-x:auto;overflow-y:hidden}
+.wb-cmp.strip{grid-auto-flow:column;grid-auto-columns:minmax(300px,1fr)}
+.wb-cmp-col{min-width:0;overflow-y:auto;padding-bottom:20px}
+.wb-cmp-head{position:sticky;top:0;z-index:1;display:flex;align-items:center;gap:6px;margin-bottom:8px;padding:2px 0 6px;
+  background:var(--bg);border-bottom:1px solid var(--border-light)}
+.wb-cmp-head b{flex:1;min-width:0;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Выбор источников — ОДНА строка с прокруткой: их бывает три десятка, и
+   развёрнутый список съедал пятую часть экрана у самого сравнения. */
+.wb-cmp-bar{display:flex;align-items:center;gap:6px;padding:8px 16px;background:var(--bg-alt);border-bottom:1px solid var(--border)}
+.wb-cmp-bar>*{flex:none}
+/* Выбранные прокручиваются, органы управления закреплены справа — иначе
+   «шире» и «обычный вид» уезжали за край вместе со списком. */
+.wb-cmp-sel{flex:1 1 auto;min-width:0;display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin;padding-bottom:2px}
+.wb-cmp-sel>*{flex:none}
+.wb-cmp-acts{display:flex;gap:6px;flex:none}
+/* Вертикальная панель выбора источников для сравнения */
+.wb-cmp-panel{display:none;width:250px;flex:none;overflow-y:auto;background:var(--bg-alt);border-right:1px solid var(--border);padding:0 0 24px}
+.wb-ovl[data-cmppanel="1"] .wb-cmp-panel{display:block}
+.wb-cmp-panel-head{position:sticky;top:0;z-index:1;display:flex;gap:6px;align-items:center;padding:8px;background:var(--bg-alt);border-bottom:1px solid var(--border)}
+.wb-cmp-q{flex:1;min-width:0;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:6px 9px;font:inherit;font-size:12px;color:var(--text)}
+/* Разделы источников (общие для панели верстака и панели сравнения):
+   заголовок сворачивает, счётчик справа включает раздел целиком (в сравнении),
+   «ещё N» раскрывает список — по умолчанию видно только начало. */
+.wb-grp{padding:2px 0 6px;border-bottom:1px solid var(--border-light)}
+.wb-grp:last-child{border-bottom:none}
+.wb-grp-h{display:flex;align-items:center;gap:6px;padding:6px 4px 4px}
+.wb-grp-fold{flex:1;min-width:0;display:flex;align-items:center;gap:5px;border:none;background:none;cursor:pointer;font-family:inherit;
+  font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-muted);padding:0;text-align:left}
+.wb-grp-fold:hover{color:var(--accent)}
+.wb-grp-fold .ar{flex:none;width:10px;color:var(--text-muted)}
+.wb-grp-h .n{font-size:10px;color:var(--text-muted);flex:none}
+.wb-grp-all{border:1px solid var(--border);background:var(--bg-card);border-radius:999px;padding:2px 8px;font-family:inherit;
+  font-size:10px;color:var(--text-sec);cursor:pointer;flex:none}
+.wb-grp-all:hover{border-color:var(--accent);color:var(--accent)}
+.wb-grp-more{width:100%;border:none;background:none;cursor:pointer;font-family:inherit;font-size:11px;color:var(--accent);
+  padding:5px 4px;text-align:left}
+.wb-grp-more:hover{text-decoration:underline}
+.wb-cmp-cont{display:flex;align-items:center;gap:6px;width:100%;border:none;background:none;cursor:pointer;font-family:inherit;
+  font-size:12px;color:var(--text-sec);padding:5px 6px;text-align:left}
+.wb-cmp-cont:hover{color:var(--accent)}
+.wb-cmp-cont .ar{width:10px;flex:none;color:var(--text-muted)}
+.wb-cmp-cont .n{margin-left:auto;font-size:10px;color:var(--text-muted)}
+.wb-cmp-kids{padding-left:12px;border-left:1px solid var(--border-light);margin-left:10px}
+.wb-cmp-veil{display:none}
+@media(max-width:899px){
+  /* на телефоне панель выплывает поверх чтения */
+  .wb-cmp-panel{position:absolute;left:0;top:0;bottom:50px;width:min(300px,86%);z-index:6;box-shadow:4px 0 18px rgba(0,0,0,.18)}
+  .wb-ovl[data-cmppanel="1"] .wb-cmp-veil{display:block;position:absolute;inset:0 0 50px 0;background:rgba(10,20,14,.35);z-index:5}
+}
+/* В сравнении колонка листается сама — свёртка длинных текстов здесь только мешает */
+.wb-cmp .clamped{max-height:none;-webkit-mask-image:none;mask-image:none}
+.wb-cmp .more-btn{display:none}
+.wb-cmp-lbl{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text-muted)}
+.wb-ovl[data-cmp="1"] .wb-srcs,.wb-ovl[data-cmp="1"] .wb-chips{display:none}
+.wb-ovl[data-cmpwide="1"] .wb-work{display:none}
+@media(max-width:899px){.wb-cmp{padding:8px 10px 10px}.wb-cmp.strip{grid-auto-columns:88%}}
 /* — работа (десктоп: колонка; телефон: нижний лист) — */
 .wb-work{width:352px;flex:none;overflow-y:auto;background:var(--bg-alt);border-left:1px solid var(--border);display:flex;flex-direction:column}
 .wb-w-head{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--border);background:var(--bg-card);flex-shrink:0}
 .wb-w-head b{font-size:13px}
 .wb-w-head .sub{font-size:11px;color:var(--text-muted);margin-left:auto}
 .wb-w-body{padding:11px 12px 26px;flex:1;overflow-y:auto}
-.wb-note-ta{width:100%;box-sizing:border-box;min-height:180px;border:1px solid var(--border);border-radius:10px;background:var(--bg-card);color:var(--text);font-family:inherit;font-size:calc(13.5px*var(--rs-ru,1));line-height:1.6;padding:10px 12px;resize:vertical}
+.wb-note-ta{width:100%;box-sizing:border-box;min-height:110px;border:1px solid var(--border);border-radius:10px;background:var(--bg-card);color:var(--text);font-family:inherit;font-size:calc(13.5px*var(--rs-ru,1));line-height:1.6;padding:10px 12px;resize:vertical}
+/* Записи заметки (фаза 3): тип · дата · текст · теги записи */
+.wb-rec{margin-bottom:12px}
+.wb-rec.draft .wb-note-ta{min-height:86px;border-style:dashed}
+.wb-rec-head{display:flex;align-items:center;gap:3px;flex-wrap:wrap;margin-bottom:5px}
+.wb-rec-head .d{margin-left:auto;font-size:10.5px;color:var(--text-muted);font-variant-numeric:tabular-nums}
+.wb-tchip{display:flex;align-items:center;gap:3px;border:1px solid var(--border);background:var(--bg-card);border-radius:999px;padding:2px 7px;font-size:10.5px;color:var(--text-sec);cursor:pointer;font-family:inherit}
+.wb-tchip span{display:none}
+.wb-tchip.on{background:var(--accent-bg);border-color:var(--accent);color:var(--accent);font-weight:700}
+.wb-tchip.on span{display:inline}
+.wb-x{border:none;background:none;color:var(--text-muted);font-size:12px;cursor:pointer;padding:2px 5px;border-radius:6px;font-family:inherit}
+.wb-x:hover{background:var(--bg-alt);color:var(--warn-c,#b4483c)}
+.wb-rec-foot{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:5px}
 .wb-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .wb-btn{border:1px solid var(--border);background:var(--bg-card);border-radius:8px;padding:5px 10px;font-size:11.5px;color:var(--text-sec);cursor:pointer;font-family:inherit}
 .wb-btn:hover{border-color:var(--accent);color:var(--accent)}
@@ -1756,6 +1860,7 @@ button:focus-visible,[onclick]:focus-visible{outline:2px solid var(--accent);out
 
 <div class="app-body">
   <aside class="sidebar collapsed" id="sidebar">
+    <div class="sb-grip" id="sbGrip" title="Потяните — ширина панели; двойной клик — вернуть 240px"></div>
     <!-- Вкладки — ВЕРТИКАЛЬНЫМ РЕЛЬСОМ слева: их число растёт (за неделю прибавились
          Темы и Корни), а горизонтальный бар с каждым новым пунктом жмётся; у рельса
          запас по вертикали, и добавление седьмого пункта ничего не ломает. -->
@@ -2373,7 +2478,7 @@ function setUserOrder(o){ss("userOrder",o);}
 const SYNC_ENDPOINT="https://tafsir-sync.qaadiy-tafsir.workers.dev";
 // Ключи ЛИЧНЫХ данных, участвующих в облачной синхронизации (совпадают с
 // personalDataObj); настройки вида (шрифты/тема/раскладка) НЕ синхронизируются.
-const SYNCED_KEYS=new Set(["notes","bookmarks","ayahTags","tagTree","progress","wordHl","hlNames"]);
+const SYNCED_KEYS=new Set(["notes","noteRecs","bookmarks","ayahTags","tagTree","progress","wordHl","hlNames"]);
 let _syncDirty=false;      // менялись ли синк-ключи с последней отправки
 let _syncStatusMsg="";     // последнее сообщение статуса для строки в ⚙ Вид
 function gs(k,d){try{const v=localStorage.getItem("tl_"+k);return v?JSON.parse(v):d;}catch(e){return d;}}
@@ -4067,6 +4172,104 @@ function stampSync(key){const m=getSyncMeta();m[key]=Date.now();ss("syncMeta",m)
 function setNote(s,a,t){const n=getNotes();const k=s+":"+a;if(t.trim()){n[k]=t;stampSync("notes:"+k);}else delete n[k];ss("notes",n);}
 function hasNote(s,a){return!!getNotes()[s+":"+a];}
 
+// ═══ ЗАПИСИ ЗАМЕТКИ (тадаббур, фаза 3) ══════════════════════════════════════
+// Одна заметка на аят — это блокнот; размышление же копится порциями и разного
+// рода: сегодня вопрос, через неделю вывод. Поэтому у аята теперь МАССИВ
+// записей: noteRecs = {"с:а":[{id,t:тип,x:текст,ts:создана,m:изменена,g:[теги]}]}.
+//
+// СОВМЕСТИМОСТЬ — ключевое решение: старый `notes` НЕ отменён, он остаётся
+// ПРОЕКЦИЕЙ записей (склейка текстов) и переписывается при каждой правке.
+// Поэтому поиск по заметкам, слой «_notes» в ленте, backlinks, счётчики,
+// экспорт и — главное — другое устройство со старой версией продолжают
+// работать без единой правки, а миграция не нужна: записи создаются лениво из
+// notes при первом обращении (`noteRecs(s,a)`).
+// Обратная сторона: если notes правили В ОБХОД записей (старое устройство,
+// импорт чужого бэкапа), проекция разойдётся — тогда побеждает notes, а записи
+// схлопываются в одну. Текст не теряется никогда, разбивка — может.
+const NOTE_TYPES=[
+  {id:"thought",   lab:"Мысль",  ic:"💭"},
+  {id:"question",  lab:"Вопрос", ic:"❓"},
+  {id:"conclusion",lab:"Вывод",  ic:"✔"},
+  {id:"dua",       lab:"Дуа",    ic:"🤲"},
+  {id:"link",      lab:"Связь",  ic:"🔗"},
+];
+function noteTypeMeta(t){return NOTE_TYPES.find(x=>x.id===t)||NOTE_TYPES[0];}
+function getNoteRecsAll(){return gs("noteRecs",{});}
+function newRecId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+// Проекция записей в плоский текст заметки. Одна запись типа «мысль» — просто её
+// текст (самый частый случай, совместимость идеальная); иначе — с подзаголовками.
+function noteProject(recs){
+  const live=(recs||[]).filter(r=>r&&String(r.x||"").trim());
+  if(!live.length)return "";
+  if(live.length===1&&live[0].t==="thought")return live[0].x.trim();
+  return live.map(r=>{
+    const m=noteTypeMeta(r.t);
+    const d=r.ts?new Date(r.ts).toLocaleDateString("ru-RU"):"";
+    return `### ${m.ic} ${m.lab}${d?" · "+d:""}\n\n${String(r.x).trim()}`;
+  }).join("\n\n");
+}
+// Записи аята. Лениво создаёт первую из старой заметки и чинит расхождение,
+// если notes правили в обход (см. комментарий выше).
+function noteRecs(s,a){
+  const k=s+":"+a;
+  const all=getNoteRecsAll();
+  const recs=Array.isArray(all[k])?all[k]:[];
+  const flat=(getNotes()[k]||"").trim();
+  const proj=noteProject(recs).trim();
+  if(proj===flat)return recs;
+  if(!flat)return [];                               // заметку стёрли снаружи — записей тоже нет
+  return [{id:newRecId(),t:"thought",x:flat,ts:Date.now(),m:Date.now()}];
+}
+function setNoteRecs(s,a,recs){
+  const k=s+":"+a;
+  const all=getNoteRecsAll();
+  const live=(recs||[]).filter(r=>r&&String(r.x||"").trim());
+  if(live.length)all[k]=live;else delete all[k];
+  ss("noteRecs",all);
+  stampSync("noteRecs:"+k);
+  setNote(s,a,noteProject(live));                   // проекция — тем же путём, что и раньше
+}
+// Пустая запись в хранилище не заводится: черновик новой держит интерфейс и
+// сохраняет её при первом введённом символе.
+function noteRecAdd(s,a,type,text){
+  const t=String(text||"").trim();
+  if(!t)return null;
+  const recs=noteRecs(s,a).slice();
+  const r={id:newRecId(),t:type||"thought",x:text,ts:Date.now(),m:Date.now()};
+  recs.push(r);
+  setNoteRecs(s,a,recs);
+  return r.id;
+}
+function noteRecSet(s,a,id,text){
+  const recs=noteRecs(s,a).map(r=>r.id===id?{...r,x:text,m:Date.now()}:r);
+  setNoteRecs(s,a,recs);
+}
+function noteRecType(s,a,id,type){
+  const recs=noteRecs(s,a).map(r=>r.id===id?{...r,t:type,m:Date.now()}:r);
+  setNoteRecs(s,a,recs);
+}
+function noteRecDel(s,a,id){setNoteRecs(s,a,noteRecs(s,a).filter(r=>r.id!==id));}
+// Теги на ЗАПИСИ (сборники): те же пути, что у тегов аята — дерево одно.
+function noteRecTag(s,a,id,path){
+  const recs=noteRecs(s,a).map(r=>{
+    if(r.id!==id)return r;
+    const g=new Set(r.g||[]);
+    if(g.has(path))g.delete(path);else g.add(path);
+    return {...r,g:[...g],m:Date.now()};
+  });
+  setNoteRecs(s,a,recs);
+}
+// Все записи всех аятов одним списком (дневник, сборники, экспорт)
+function noteRecsFlat(){
+  const all=getNoteRecsAll(),out=[];
+  for(const k in all){
+    if(!AYKEY.test(k)||!Array.isArray(all[k]))continue;
+    const [s,a]=k.split(":").map(Number);
+    all[k].forEach(r=>{if(r&&String(r.x||"").trim())out.push({...r,s,a,k});});
+  }
+  return out;
+}
+
 function getTagTree(){return gs("tagTree",[{name:"Акыда",children:[{name:"Таухид",children:[]},{name:"Имена и Атрибуты",children:[]}]},{name:"Фикх",children:[{name:"Намаз",children:[]},{name:"Закят",children:[]}]},{name:"Ахлак",children:[]}]);}
 function setTagTree(t){ss("tagTree",t);}
 function getAyahTags(){return gs("ayahTags",{});}
@@ -4100,6 +4303,7 @@ function personalDataObj(){
   return {app:"tafsir-library",kind:"personal-data",version:1,
     exportedAt:new Date().toISOString(),
     notes:getNotes(),bookmarks:getBookmarks(),ayahTags:getAyahTags(),tagTree:getTagTree(),
+    noteRecs:getNoteRecsAll(),                 // записи заметок (тадаббур, фаза 3); notes — их проекция
     wordHl:wordHl(),hlNames:gs("hlNames",{}),   // выделения слов и имена маркеров (тадаббур, фаза 2)
     progress:Progress.exportState(),    // ХУК #4: прогресс в тот же единый бэкап, не параллельный файл
     _meta:getSyncMeta()};               // LWW-метки правок (для сведения правок между устройствами)
@@ -4153,6 +4357,30 @@ function applyImport(data,strategy){
   }
   ss("notes",cur);
   if(lww)ss("syncMeta",lmeta);
+  // — записи заметок: аддитивно по id (при совпадении id побеждает более свежая
+  //   правка). ВАЖНО: после слияния проекция `notes` пересобирается из записей —
+  //   иначе объединённый набор разошёлся бы с плоским текстом, и ленивое
+  //   разрешение расхождения схлопнуло бы записи обеих сторон в одну.
+  const recsAll=getNoteRecsAll(),irecs=data.noteRecs||{};
+  let recAdd=0;const touched=new Set();
+  for(const k in irecs){
+    if(!AYKEY.test(k)||!Array.isArray(irecs[k]))continue;
+    const mine=(Array.isArray(recsAll[k])?recsAll[k]:[]).slice();
+    const byId=new Map(mine.map(r=>[r.id,r]));
+    irecs[k].forEach(r=>{
+      if(!r||!r.id||!String(r.x||"").trim())return;
+      const has=byId.get(r.id);
+      if(!has){mine.push(r);byId.set(r.id,r);recAdd++;}
+      else if((r.m||0)>(has.m||0))Object.assign(has,r);
+    });
+    if(mine.length){mine.sort((x,y)=>(x.ts||0)-(y.ts||0));recsAll[k]=mine;touched.add(k);}
+  }
+  if(touched.size){
+    ss("noteRecs",recsAll);
+    const nn=getNotes();
+    touched.forEach(k=>{const p=noteProject(recsAll[k]);if(p)nn[k]=p;else delete nn[k];});
+    ss("notes",nn);
+  }
   // — закладки: добавляем недостающие, существующие не трогаем —
   const bm=getBookmarks(),ibm=data.bookmarks||{};let bmAdd=0;
   for(const k in ibm){if(AYKEY.test(k)&&!(k in bm)&&typeof ibm[k]==="string"){bm[k]=ibm[k];bmAdd++;}}
@@ -4188,10 +4416,10 @@ function applyImport(data,strategy){
   }
   // — прогресс чтения (ХУК #4): слияние по датам внутри самого store —
   const progAdd=data.progress?Progress.importState(data.progress):0;
-  return {added,changed,bmAdd,tagAdd,progAdd,hlAdd};
+  return {added,changed,bmAdd,tagAdd,progAdd,hlAdd,recAdd};
 }
 function showImportSummary(data){
-  const ok=data&&typeof data==="object"&&(data.notes||data.bookmarks||data.ayahTags||data.tagTree||data.progress||data.wordHl);
+  const ok=data&&typeof data==="object"&&(data.notes||data.noteRecs||data.bookmarks||data.ayahTags||data.tagTree||data.progress||data.wordHl);
   if(!ok){openIOModal(`<div class="io-h">Импорт</div><div class="io-p">Не удалось распознать файл резервной копии. Нужен .json, созданный кнопкой «Экспорт».</div><div class="io-acts"><button class="home-btn prim" onclick="closeIOModal()">Закрыть</button></div>`);return;}
   _pendingImport=data;
   const cur=getNotes(),imp=data.notes||{};
@@ -4218,7 +4446,7 @@ function doImport(strategy){
   if(!_pendingImport){closeIOModal();return;}
   const r=applyImport(_pendingImport,strategy);_pendingImport=null;
   openIOModal(`<div class="io-h">Готово</div>
-    <div class="io-sum">Заметок добавлено: <b>${r.added}</b>${r.changed?` · обновлено: <b>${r.changed}</b>`:""}${r.bmAdd?`<br>Закладок добавлено: ${r.bmAdd}`:""}${r.tagAdd?` · тегов добавлено: ${r.tagAdd}`:""}${r.hlAdd?`<br>Выделенных слов добавлено: ${r.hlAdd}`:""}${r.progAdd?`<br>Дней прогресса объединено: ${r.progAdd}`:""}</div>
+    <div class="io-sum">Заметок добавлено: <b>${r.added}</b>${r.changed?` · обновлено: <b>${r.changed}</b>`:""}${r.bmAdd?`<br>Закладок добавлено: ${r.bmAdd}`:""}${r.tagAdd?` · тегов добавлено: ${r.tagAdd}`:""}${r.recAdd?`<br>Записей заметок добавлено: ${r.recAdd}`:""}${r.hlAdd?`<br>Выделенных слов добавлено: ${r.hlAdd}`:""}${r.progAdd?`<br>Дней прогресса объединено: ${r.progAdd}`:""}</div>
     <div class="io-acts"><button class="home-btn prim" onclick="closeIOModal();render();">ОК</button></div>`);
 }
 function openIOModal(html){
@@ -5120,7 +5348,14 @@ function mdRender(src){
       while(i<L.length&&!/^\s*$/.test(L[i])&&L[i].includes("|")){body+="<tr>"+row(L[i]).map(c=>`<td>${mdInline(c)}</td>`).join("")+"</tr>";i++;}
       out.push(`<table class="md-tbl"><thead><tr>${head.map(c=>`<th>${mdInline(c)}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table>`);continue;
     }
-    if(/^\s*&gt;\s?/.test(ln)){const q=[];while(i<L.length&&/^\s*&gt;\s?/.test(L[i])){q.push(L[i].replace(/^\s*&gt;\s?/,""));i++;}out.push(`<blockquote class="md-q">${mdInline(q.join("<br>"))}</blockquote>`);continue;}
+    if(/^\s*&gt;\s?/.test(ln)){const q=[];while(i<L.length&&/^\s*&gt;\s?/.test(L[i])){q.push(L[i].replace(/^\s*&gt;\s?/,""));i++;}
+      /* врезка «смысл аята» (источник tabari_bayan_ru): цитата, начатая подписью
+         «**Смысл аята…:**», рисуется плитой, а не обычной цитатой — иначе перифраза
+         сливается с цитатами внутри самого разбора. Вид сводки (когда своей перифразы
+         у имама нет) отличается пунктиром без заливки. */
+      const qraw=q.join("<br>"),qm=qraw.match(/^\*\*(Смысл аята[^*]*?):\*\*\s*([\s\S]*)$/);
+      if(qm){out.push(`<div class="md-para${/сведённ/i.test(qm[1])?" md-para-sum":""}"><div class="md-para-lbl">${qm[1]}</div><p>${mdInline(qm[2])}</p></div>`);continue;}
+      out.push(`<blockquote class="md-q">${mdInline(qraw)}</blockquote>`);continue;}
     if(/^\s*[-*]\s+/.test(ln)){const it=[];while(i<L.length&&/^\s*[-*]\s+/.test(L[i])){it.push(L[i].replace(/^\s*[-*]\s+/,""));i++;}out.push("<ul class='md-ul'>"+it.map(x=>`<li>${mdInline(x)}</li>`).join("")+"</ul>");continue;}
     if(/^\s*\d+\.\s+/.test(ln)){const it=[];while(i<L.length&&/^\s*\d+\.\s+/.test(L[i])){it.push(L[i].replace(/^\s*\d+\.\s+/,""));i++;}out.push("<ol class='md-ol'>"+it.map(x=>`<li>${mdInline(x)}</li>`).join("")+"</ol>");continue;}
     const para=[];while(i<L.length&&!mdBlockStart(L,i)){para.push(L[i]);i++;}
@@ -5363,21 +5598,68 @@ async function renderNotesScreen(el){
     return ps;
   }));
   if(!ST.notesView)return;                            // пока грузили, ушли с экрана
-  let html=`<div class="tag-results"><div class="tr-header" style="display:flex;align-items:center;gap:10px">📝 Мои заметки — ${keys.length}
-    <button class="ash-chip" style="margin-left:auto" onclick="event.stopPropagation();notesExportMd()" title="Скачать все заметки вместе с аятами файлом markdown (для Obsidian и т.п.)">⬇ .md</button></div>`;
+  el.innerHTML=`<div class="tag-results">${notesScreenHead(keys.length)}
+    ${ST.notesDiary?notesDiaryHTML():notesByAyahHTML(keys,notes)}</div>`;
+}
+// Шапка экрана: вид (по аятам · дневник), фильтр по типу записи и по тегу-сборнику.
+function notesScreenHead(n){
+  const recs=noteRecsFlat();
+  const tags=[...new Set(recs.flatMap(r=>r.g||[]))].sort();
+  const tf=ST.notesTag||"";
+  const chip=(on,onclick,label,title)=>`<button class="ash-chip ${on?"on":""}" onclick="${onclick}" title="${escAttr(title||label)}">${label}</button>`;
+  return `<div class="tr-header" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">📝 Мои заметки — ${n}
+      <button class="ash-chip" style="margin-left:auto" onclick="event.stopPropagation();notesExportMd()" title="Скачать все заметки вместе с аятами файлом markdown (для Obsidian и т.п.)">⬇ .md</button></div>
+    <div class="nt-filters">
+      ${chip(!ST.notesDiary,"ST.notesDiary=false;render()","по аятам","Заметки в порядке аятов")}
+      ${chip(!!ST.notesDiary,"ST.notesDiary=true;render()","дневник","Записи по датам, новые сверху")}
+      ${ST.notesDiary?`<span class="nt-sep"></span>`+
+        chip(!ST.notesType,"ST.notesType=null;render()","все типы")+
+        NOTE_TYPES.map(t=>chip(ST.notesType===t.id,`ST.notesType='${t.id}';render()`,`${t.ic} ${t.lab}`)).join(""):""}
+      ${tags.length?`<span class="nt-sep"></span>`+chip(!tf,"ST.notesTag=null;render()","все сборники")+
+        tags.map(p=>chip(tf===p,`ST.notesTag='${escAttr(p)}';render()`,esc(p.split("/").pop()),p)).join(""):""}
+    </div>`;
+}
+function notesByAyahHTML(keys,notes){
+  let html="";
   for(const k of keys){
     const[s,a]=k.split(":");
     const su=SURAHS.find(x=>x.id==+s);
     const arText=getArabicFromCache(+s,+a);
     const trText=getAnyTranslation(+s,+a);
+    const recs=noteRecs(+s,+a);
+    if(ST.notesTag&&!recs.some(r=>(r.g||[]).includes(ST.notesTag)))continue;
     html+=`<div class="tr-ayah" onclick="goNoteAyah(${+s},${+a})">
-      <div class="tr-ayah-ref">${su?esc(su.ru):s} : ${a}</div>
+      <div class="tr-ayah-ref">${su?esc(su.ru):s} : ${a}
+        <button class="hl-wb" onclick="event.stopPropagation();wbOpenAt(${+s},${+a})" title="Открыть работу над аятом">⚒</button></div>
       ${arText?`<div class="tr-ayah-ar">${arText}</div>`:""}
       ${trText?`<div class="tr-ayah-tr">${trText}</div>`:""}
       <div class="nt-body md">${ayahLinkify(mdRender(notes[k]))}</div>
     </div>`;
   }
-  el.innerHTML=html+`</div>`;
+  return html||`<div style="color:var(--text-muted);padding:20px;text-align:center">В этом сборнике пока пусто.</div>`;
+}
+// Дневник: все записи по датам, новые сверху — видно, как шло размышление
+function notesDiaryHTML(){
+  let recs=noteRecsFlat();
+  if(ST.notesType)recs=recs.filter(r=>r.t===ST.notesType);
+  if(ST.notesTag)recs=recs.filter(r=>(r.g||[]).includes(ST.notesTag));
+  recs.sort((x,y)=>(y.m||y.ts||0)-(x.m||x.ts||0));
+  if(!recs.length)return `<div style="color:var(--text-muted);padding:20px;text-align:center">Записей с такими условиями нет.</div>`;
+  let html="",curDay="";
+  for(const r of recs){
+    const d=new Date(r.ts||r.m||Date.now());
+    const day=d.toLocaleDateString("ru-RU",{day:"numeric",month:"long",year:"numeric"});
+    if(day!==curDay){curDay=day;html+=`<div class="nt-day">${esc(day)}</div>`;}
+    const su=SURAHS.find(x=>x.id===r.s);
+    const m=noteTypeMeta(r.t);
+    html+=`<div class="tr-ayah" onclick="goNoteAyah(${r.s},${r.a})">
+      <div class="tr-ayah-ref">${m.ic} ${esc(m.lab)} · ${su?esc(su.ru):r.s} ${r.s}:${r.a}
+        <button class="hl-wb" onclick="event.stopPropagation();wbOpenAt(${r.s},${r.a})" title="Открыть работу над аятом">⚒</button></div>
+      <div class="nt-body md">${ayahLinkify(mdRender(r.x))}</div>
+      ${(r.g||[]).length?`<div class="nt-rec-tags">${r.g.map(p=>`<span class="wb-tag" style="font-size:10.5px;padding:2px 8px">${esc(p.split("/").pop())}</span>`).join(" ")}</div>`:""}
+    </div>`;
+  }
+  return html;
 }
 // Экспорт ВСЕЙ подборки заметок: аят + перевод + размышление (Obsidian-совместимо).
 // Тексты догружаем сами: полагаться на кеш экрана нельзя — при фильтре/переходах
@@ -5776,7 +6058,7 @@ function buildAyahBody(aid,enabled,loaded){
       html+=`<div class="ab-entry" style="background:var(--note-bg)">
         <div class="ab-entry-label" style="color:var(--note-color);display:flex;align-items:center">📝 Мои заметки
           <button class="ab-note-expand" style="margin-left:auto" onclick="openNoteEditor(${ST.surah},${aid})" title="Полноэкранный редактор размышления: аят перед глазами, каркас вопросов, markdown">⤢ Развернуть</button></div>
-        <textarea class="ab-note-area" placeholder="Ваши мысли..." oninput="saveNote(${ST.surah},${aid},this.value)">${esc(note)}</textarea>
+        ${noteFieldHTML(ST.surah,aid,`saveNote(${ST.surah},${aid},this.value);refreshAyahMarks(${aid})`)}
       </div>`;
     } else {
       if(splitGroups){
@@ -6189,8 +6471,26 @@ function renderSourcePicker(el){
 }
 
 // Virtualization: hydrate ayah bodies near the viewport, empty those far away (cap DOM size)
-function setupHydration(area,enabled,loaded){
+// startAid — аят, с которого начнётся показ (цель перехода или прежний верхний).
+// ПЕРВЫЙ ЭКРАН НАПОЛНЯЕТСЯ СИНХРОННО: иначе заглушки в 48px вырастают уже после
+// показа страницы, и первые секунды лента дёргается — замерено layout-shift ≈0.4
+// при открытии суры (порог «незаметно» — 0.1). Остальное по-прежнему лениво.
+function setupHydration(area,enabled,loaded,startAid){
   if(hydrationObserver){hydrationObserver.disconnect();hydrationObserver=null;}
+  const bodies=[...area.querySelectorAll(".ab-body")];
+  const vh=area.clientHeight||window.innerHeight||600;
+  let from=0;
+  if(startAid!=null){
+    const i=bodies.findIndex(b=>+b.dataset.aid===+startAid);
+    if(i>=0)from=Math.max(0,i-1);          // на один выше цели: прокрутка вверх тоже без прыжка
+  }
+  let filled=0;
+  for(let i=from;i<bodies.length&&filled<vh*1.6;i++){
+    const b=bodies[i];
+    b.innerHTML=buildAyahBody(+b.dataset.aid,enabled,loaded);
+    b.dataset.hyd="1";b.style.minHeight="";
+    filled+=b.offsetHeight||0;
+  }
   const obs=new IntersectionObserver(entries=>{
     for(const e of entries){
       const el=e.target;
@@ -6203,7 +6503,7 @@ function setupHydration(area,enabled,loaded){
       }
     }
   },{root:area,rootMargin:"1200px 0px"});
-  area.querySelectorAll(".ab-body").forEach(b=>obs.observe(b));
+  bodies.forEach(b=>obs.observe(b));
   hydrationObserver=obs;
 }
 
@@ -6219,11 +6519,27 @@ function toggleNote(aid,btn){
   if(btn)btn.classList.add("on");
   const div=document.createElement("div");div.className="ab-note-inline";
   div.innerHTML=`<div class="ab-note-bar"><button class="ab-note-expand" onclick="openNoteEditor(${ST.surah},${aid})" title="Развернуть на весь экран с форматированием">⤢ Развернуть</button></div>`+
-    `<textarea class="ab-note-area" placeholder="Заметка к аяту ${aid}…" oninput="noteInput(this,${aid})">${esc(getNote(ST.surah,aid))}</textarea>`;
+    noteFieldHTML(ST.surah,aid,`noteInput(this,${aid})`);
   block.appendChild(div);
   const ta=div.querySelector("textarea");if(ta){ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);}
 }
 // Сохранение + живое обновление индикатора заметки (точка + подсветка кнопки).
+// Поле заметки под аятом. Пока запись одна (обычный случай) — привычная
+// textarea. Когда записей несколько, плоское поле показывать НЕЛЬЗЯ: правка
+// схлопнула бы их в одну, — вместо него список записей и вход в верстак.
+function noteFieldHTML(s,a,oninput,cls){
+  const recs=noteRecs(s,a);
+  if(recs.length>1){
+    return `<div class="ab-notes-multi">`+recs.map(r=>{
+      const m=noteTypeMeta(r.t);
+      const d=r.ts?new Date(r.ts).toLocaleDateString("ru-RU"):"";
+      return `<div class="ab-rec"><div class="ab-rec-h">${m.ic} ${esc(m.lab)}${d?" · "+d:""}</div>
+        <div class="md">${ayahLinkify(mdRender(r.x))}</div></div>`;
+    }).join("")+
+    `<button class="ab-note-expand" onclick="wbOpenAt(${s},${a})" title="Открыть работу над аятом">⚒ Записей: ${recs.length} — открыть верстак</button></div>`;
+  }
+  return `<textarea class="${cls||"ab-note-area"}" placeholder="Заметка к аяту ${a}…" oninput="${oninput}">${esc(getNote(s,a))}</textarea>`;
+}
 function noteInput(ta,aid){
   saveNote(ST.surah,aid,ta.value);
   const block=ta.closest(".ayah-block");if(!block)return;
@@ -6238,16 +6554,18 @@ function noteInput(ta,aid){
 // Хранилище — то же (getNote/setNote), исходник остаётся markdown. Предпросмотр
 // рендерит тем же движком mdRender, что и тафсиры/паспорт (HTML экранируется внутри).
 let noteEd=null; // {s,a} — какой аят редактируем
-function openNoteEditor(s,a){
+// rec — id записи (фаза 3): редактор правит ЕЁ. Без rec правится плоская
+// заметка аята (через saveNote, который сам решит, куда писать).
+function openNoteEditor(s,a,rec){
   if(ST.noTouch)return;
-  noteEd={s,a};
+  noteEd={s,a,rec:rec||null};
   let ov=document.getElementById("neOvl");
   if(!ov){ov=document.createElement("div");ov.id="neOvl";ov.className="ne-ovl";
     ov.onclick=e=>{if(e.target===ov)closeNoteEditor();};document.body.appendChild(ov);}
   const tb=(t,title,inner)=>`<button class="ne-btn" onclick="neFmt('${t}')" title="${title}">${inner}</button>`;
   ov.innerHTML=`<div class="ne-box" data-m="edit" role="dialog" aria-modal="true">
     <div class="ne-head">
-      <span class="ne-title">📝 Размышление · ${s}:${a}</span>
+      <span class="ne-title">${rec?esc(noteTypeMeta((noteRecs(s,a).find(r=>r.id===rec)||{}).t).lab):"📝 Размышление"} · ${s}:${a}</span>
       <span class="ne-modes">
         <button class="ne-mode on" data-m="edit" onclick="neMode('edit')">✏ Правка</button>
         <button class="ne-mode" data-m="preview" onclick="neMode('preview')">👁 Просмотр</button>
@@ -6266,7 +6584,7 @@ function openNoteEditor(s,a){
       ${tb('tmpl','Каркас размышления: 4 вопроса тадаббура','☰ Каркас')}
     </div>
     <div class="ne-body">
-      <div class="ne-pane edit"><textarea id="neArea" class="ne-area" placeholder="Пишите заметку… поддерживается markdown: **жирный**, *курсив*, &gt; цитата, # заголовок, списки, | таблицы |" oninput="neInput()">${esc(getNote(s,a))}</textarea></div>
+      <div class="ne-pane edit"><textarea id="neArea" class="ne-area" placeholder="Пишите заметку… поддерживается markdown: **жирный**, *курсив*, &gt; цитата, # заголовок, списки, | таблицы |" oninput="neInput()">${esc(rec?((noteRecs(s,a).find(r=>r.id===rec)||{}).x||""):getNote(s,a))}</textarea></div>
       <div class="ne-pane preview"><div id="nePreview" class="ne-preview md"></div></div>
     </div>
   </div>`;
@@ -6316,7 +6634,8 @@ function neMode(m){
 function neInput(){
   if(!noteEd)return;
   const ta=document.getElementById("neArea");if(!ta)return;
-  saveNote(noteEd.s,noteEd.a,ta.value);
+  if(noteEd.rec)noteRecSet(noteEd.s,noteEd.a,noteEd.rec,ta.value);
+  else saveNote(noteEd.s,noteEd.a,ta.value);
   const pv=document.getElementById("nePreview");
   if(pv)pv.innerHTML=ta.value.trim()?ayahLinkify(mdRender(ta.value)):'<span style="color:var(--text-muted)">Здесь появится предпросмотр…</span>';
 }
@@ -6392,13 +6711,13 @@ function closeNoteEditor(){
   if(noteEd){                         // синхронизируем индикаторы и инлайн-поле под аятом
     const a=noteEd.a,has=hasNote(noteEd.s,a);
     const block=document.querySelector(`.ayah-block[data-aid="${a}"]`);
-    const stuTa=document.querySelector(".wb-note-ta");
-    if(stuTa)stuTa.value=getNote(noteEd.s,noteEd.a);
+    const multi=noteRecs(noteEd.s,a).length>1;        // при нескольких записях плоского поля нет — подставлять нечего
+    if(STU)wbRenderWork();                            // верстак перерисует список записей сам
     refreshAyahMarks(a);
     if(block){
       const btn=block.querySelector(".ab-note-btn");if(btn){btn.classList.toggle("has",has);btn.classList.remove("on");}
-      const inlineTa=block.querySelector(".ab-note-inline textarea");if(inlineTa)inlineTa.value=getNote(noteEd.s,a);
-      const layerTa=block.querySelector(".ab-note-area");if(layerTa)layerTa.value=getNote(noteEd.s,a);
+      const inlineTa=multi?null:block.querySelector(".ab-note-inline textarea");if(inlineTa)inlineTa.value=getNote(noteEd.s,a);
+      const layerTa=multi?null:block.querySelector(".ab-note-area");if(layerTa)layerTa.value=getNote(noteEd.s,a);
       const dots=block.querySelector(".ab-tag-dots");if(dots)dots.innerHTML=has?'<span class="ab-note-dot"></span>':'';
     }
   }
@@ -6643,7 +6962,8 @@ async function renderHlScreen(el){
     const note=notes[k]?noteSnippet(notes[k],90):"";
     html+=`<div class="hl-card" onclick="goNoteAyah(${s2},${a2})">
       <div class="hl-card-top"><b>${s2}:${a2}</b>
-        <span class="hl-dots">${[...new Set(ph.map(p=>p.c))].sort().map(c=>`<span class="whl-${c}"></span>`).join("")}</span></div>
+        <span class="hl-dots">${[...new Set(ph.map(p=>p.c))].sort().map(c=>`<span class="whl-${c}"></span>`).join("")}</span>
+        <button class="hl-wb" onclick="event.stopPropagation();wbOpenAt(${s2},${a2})" title="Открыть работу над аятом">⚒</button></div>
       <div class="hl-ar arabic-main">${words||"—"}</div>
       ${note?`<div class="hl-note">${IC.pen}${esc(note)}</div>`:""}
     </div>`;
@@ -6902,7 +7222,7 @@ async function renderReading(el){
     }
     if(ST.wbwLayer)html+=wbwAttrHTML();          // лицензии глосса/разбора — там же, где глосс
     area.innerHTML=html;
-    setupHydration(area,enabled,loaded);
+    setupHydration(area,enabled,loaded,ST.scrollToAyah!=null?ST.scrollToAyah:anchorAid);
     // a pending jump (📑 Переход) wins over scroll-anchor preservation
     if(ST.scrollToAyah!=null){
       const aid=ST.scrollToAyah;ST.scrollToAyah=null;
@@ -8411,6 +8731,45 @@ function applyView(){
   s.setProperty("--mar",ST.mar+"px");
   s.setProperty("--sb",ST.sbScale);
 }
+// ── Ширина боковой панели тянется мышью (десктоп) ───────────────────────────
+// Раньше ширина была зашита в 240px, а масштаб содержимого («--sb») её не
+// менял — на длинных именах источников и путях тегов было тесно. Значение
+// живёт в --sidebar-w и запоминается; двойной клик по ручке возвращает 240.
+const SB_W_MIN=190,SB_W_MAX=560,SB_W_DEF=240;
+function applySidebarW(){
+  const w=Math.min(SB_W_MAX,Math.max(SB_W_MIN,+gs("sbW",SB_W_DEF)||SB_W_DEF));
+  document.body.style.setProperty("--sidebar-w",w+"px");
+}
+function setSidebarW(w){
+  ss("sbW",Math.min(SB_W_MAX,Math.max(SB_W_MIN,Math.round(w))));
+  applySidebarW();
+}
+function initSidebarGrip(){
+  const grip=document.getElementById("sbGrip"),sb=document.getElementById("sidebar");
+  if(!grip||!sb)return;
+  applySidebarW();
+  let startX=0,startW=0,on=false;
+  const move=e=>{
+    if(!on)return;
+    const x=(e.touches?e.touches[0].clientX:e.clientX);
+    setSidebarW(startW+(x-startX));
+    e.preventDefault();
+  };
+  const up=()=>{
+    if(!on)return;
+    on=false;grip.classList.remove("dragging");document.body.classList.remove("sb-resizing");
+    sb.style.transition="";
+    window.removeEventListener("pointermove",move);window.removeEventListener("pointerup",up);
+  };
+  grip.addEventListener("pointerdown",e=>{
+    on=true;startX=e.clientX;startW=sb.getBoundingClientRect().width;
+    grip.classList.add("dragging");document.body.classList.add("sb-resizing");
+    sb.style.transition="none";                       // иначе ручка «догоняет» палец
+    window.addEventListener("pointermove",move);window.addEventListener("pointerup",up);
+    e.preventDefault();
+  });
+  grip.addEventListener("dblclick",()=>setSidebarW(SB_W_DEF));
+}
 function refitIfPage(){if(ST.pageMode){const host=document.getElementById("mushafPage");if(host)fitMushafLines(host);}}
 // Скин чтения («манускрипт») и старинный русский шрифт — ⚙ Вид → Оформление.
 function applySkin(){
@@ -8551,7 +8910,8 @@ function viewPanelHTML(){
     AR_UI_FONTS.map(f=>{const on=f==="qpc1"?isPrintedFont():ST.arFont===f;
       return `<button class="vp-font ${on?"on":""}" title="${AR_FONT_TITLES[f]}" onclick="setArFontUI('${f}')">${AR_FONT_NAMES[f]}</button>`;}).join("")+
     `</div>${ST.tajweed?`<div class="vp-note">Включены цвета таджвида (галочка — в 📚 Источниках).</div>`:""}</div>`;
-  const sizeGroup=`<div class="vp-group"><div class="vp-label">Размер шрифта</div>${step("Арабский","fsAr",pct("fsAr"))}${step("Русский","fsRu",pct("fsRu"))}${step("Тафсиры","fsTaf",pct("fsTaf"))}</div>`+
+  const sizeGroup=`<div class="vp-group"><div class="vp-label">Размер шрифта</div>${step("Арабский","fsAr",pct("fsAr"))}${step("Русский","fsRu",pct("fsRu"))}${step("Тафсиры","fsTaf",pct("fsTaf"))}
+    <div class="vp-note">«Тафсиры» действуют везде, где показан тафсир, — в ленте и в колонках сравнения «Работы над аятом». Заметки, переводы и подписи следуют «Русскому».</div></div>`+
     `<div class="vp-group"><div class="vp-label">Межстрочный интервал</div>${step("Арабский","lhAr",pct("lhAr"))}${step("Русский","lhRu",pct("lhRu"))}</div>`+
     `<div class="vp-group"><div class="vp-label">Поля</div>${step("Отступы по краям","mar",ST.mar+"px")}</div>`+
     `<div class="vp-group"><div class="vp-label">Боковая панель (суры, теги)</div>${step("Размер","sbScale",pct("sbScale"))}</div>`;
@@ -8579,7 +8939,12 @@ function viewPanelHTML(){
   else body=quranHint+fontGroup+sizeGroup+layoutGroup;   // «Текст» (по умолчанию)
   return bar+body;
 }
-function setVpTab(t){ST.vpTab=t;ss("vpTab",t);renderViewPanel();}
+function setVpTab(t){
+  ST.vpTab=t;ss("vpTab",t);renderViewPanel();
+  // Прокрутку — в начало: после длинной вкладки («Данные») короткая открывалась
+  // с середины, и было похоже, будто вкладок нет.
+  const c=document.getElementById("sbContent");if(c)c.scrollTop=0;
+}
 function setLayout(v){ST.layout=v;render();}
 // Выбор визуального набора (картинки диафильма). Сохраняем сразу (мгновенная
 // подсветка), затем перезагружаем карту набора в media.js и перерисовываем.
@@ -9411,6 +9776,13 @@ const WB_TOOLS=[
 // Ширина, с которой помещаются все четыре зоны. matchMedia, а не innerWidth:
 // innerWidth врёт в headless-проверках (см. CLAUDE.md).
 function wbWide(){return window.matchMedia("(min-width:900px)").matches;}
+// Ширины колонок сравнения заданы в процентах, но границы 260/640px привязаны к
+// пикселям — после изменения окна их надо пересчитать (только стиль, без DOM).
+let _wbResizeT=null;
+window.addEventListener("resize",()=>{
+  if(!STU||!STU.cmp)return;
+  clearTimeout(_wbResizeT);_wbResizeT=setTimeout(wbCmpLayout,120);
+});
 function openStudy(aid){
   if(ST.noTouch)return;
   closeAyahSheet();
@@ -9459,6 +9831,12 @@ function renderStudy(){
   let ov=document.getElementById("studyOvl");
   if(!ov){ov=document.createElement("div");ov.id="studyOvl";ov.className="wb-ovl";document.body.appendChild(ov);}
   ov.dataset.sheet=String(wbWide()?0:(STU.sheet||0));
+  // В сравнении колонка источников не нужна — её работу делает ряд чипов над
+  // колонками, а ширина там дороже. «⤢ шире» убирает и рабочую колонку.
+  ov.dataset.cmp=STU.cmp&&STU.cmp.length?"1":"";
+  ov.dataset.cmpwide=STU.cmp&&STU.cmpWide?"1":"";
+  if(STU.cmp&&STU.cmpPanel===undefined)STU.cmpPanel=wbWide();   // на десктопе панель открыта, на телефоне выплывает
+  ov.dataset.cmppanel=STU.cmp&&STU.cmpPanel?"1":"";
   const su=SURAHS.find(x=>x.id===STU.s);
   const rail=WB_TOOLS.map(t=>{
     const on=STU.tool===t.id&&(wbWide()||STU.sheet);
@@ -9474,13 +9852,47 @@ function renderStudy(){
     </div>
     <div class="wb-main">
       <aside class="wb-srcs" id="wbSrcs"></aside>
+      <aside class="wb-cmp-panel" id="wbCmpPanel"></aside>
+      <div class="wb-cmp-veil" onclick="wbCmpPanelToggle()"></div>
       <div class="wb-read" id="wbRead"><div class="wb-empty" style="padding:24px;text-align:center">Загрузка…</div></div>
       <section class="wb-work" id="wbWork"></section>
       <nav class="wb-rail">${rail}</nav>
     </div>`;
   wbRenderSrcs();
+  wbCmpRenderPanelInto();
   wbRenderRead();
   wbRenderWork();
+  wbBindSwipe(document.getElementById("wbRead"));
+}
+// Свайп по колонке чтения листает АЯТ (в ленте тот же жест листает суру).
+// Слушатели вешаются на свежий узел при каждой перерисовке — старый уже удалён
+// вместе с innerHTML, поэтому накопления обработчиков нет. Уважает ту же
+// настройку ⚙ Вид, что и свайп ленты: кто их отключил, не хочет их нигде.
+function wbBindSwipe(el){
+  if(!el)return;
+  let x0=0,y0=0,ok=false,vscroll=false;
+  el.addEventListener("touchstart",e=>{
+    if(e.touches.length>1){ok=false;return;}
+    const t=e.changedTouches[0];x0=t.clientX;y0=t.clientY;vscroll=false;
+    ok=ST.swipeNav&&!ST.noTouch;
+  },{passive:true});
+  el.addEventListener("touchmove",e=>{
+    if(!ok||e.touches.length>1)return;
+    if(Math.abs(e.changedTouches[0].clientY-y0)>40)vscroll=true;   // это прокрутка, не свайп
+  },{passive:true});
+  el.addEventListener("touchend",e=>{
+    if(!ok||vscroll||!STU)return;
+    if(STU.cmp&&STU.cmp.length)return;      // в сравнении горизонталь занята прокруткой колонок
+    const t=e.changedTouches[0],dx=t.clientX-x0,dy=t.clientY-y0;
+    if(Math.abs(dx)>64&&Math.abs(dx)>Math.abs(dy)*2)stuStep(dx<0?1:-1);   // влево → следующий
+  },{passive:true});
+}
+// Вход в верстак с любого экрана (выделения, заметки, будущие списки):
+// сначала честный переход к аяту, затем оверлей поверх него — тогда ✕ вернёт
+// в ленту на это же место.
+function wbOpenAt(s,a){
+  goAyah(s,a);
+  openStudy(a);
 }
 
 // ── Источники ───────────────────────────────────────────────────────────────
@@ -9495,7 +9907,11 @@ function wbSrcsHTML(){
   const en=wbEnabledSrcs();
   const cov=new Set(covSourcesForAyah(s,a));
   const hid=srcHiddenSet();
-  let h=`<div class="wb-cap">Включено · ${en.length}</div>`;
+  // Сравнение доступно и на телефоне: там колонки встают лентой и листаются вбок
+  let h=`<div class="wb-acts" style="margin:0 0 10px">
+      <button class="wb-btn ${STU.cmp?"on":""}" onclick="${STU.cmp?"wbCmpOff()":"wbCmpOn()"}" title="Несколько источников бок о бок — видно, чем расходятся">⇹ Сравнить</button>
+    </div>
+    <div class="wb-cap">Включено · ${en.length}</div>`;
   const units=wbUnits(en);
   if(!units.length)h+=`<div class="wb-empty">Ничего не включено — выберите ниже.</div>`;
   for(const n of units){
@@ -9507,18 +9923,68 @@ function wbSrcsHTML(){
       <span class="st">${n.cont?"слоёв "+n.kids.length:(has?"":"нет текста")}</span></div>`;
   }
   // выключённые, у кого на ЭТОМ аяте текст есть — главный смысл колонки:
-  // видно, чем ещё можно дополнить разбор, не уходя в каталог
+  // видно, чем ещё можно дополнить разбор, не уходя в каталог. Разбиты по
+  // разделам каталога и показаны частично: одних переводов уже 11, а тафсиров
+  // со временем будут сотни — плоский список станет непроходимым.
   const off=CONFIG.tafsirs.filter(t=>!ST.enabled[t.id]&&t.kind!=="image"&&!isQuranText(t.id)&&!hid.has(t.id)&&cov.has(t.id));
   if(off.length){
     h+=`<div class="wb-cap">Есть у этого аята · ${off.length}</div>`;
-    for(const n of wbUnits(off)){
+    h+=wbGroupedHTML("src",off,n=>{
       const id=wbUnitId(n);
-      h+=`<div class="wb-srow" onclick="wbToggleUnit('${escAttr(id)}',${n.cont?1:0})" title="Включить">
+      return `<div class="wb-srow" onclick="wbToggleUnit('${escAttr(id)}',${n.cont?1:0})" title="Включить">
         <span class="box"></span><span class="nm">${esc(wbUnitName(n))}</span>
         <span class="st">${n.cont?"слоёв "+n.kids.length:""}</span></div>`;
-    }
+    });
   }
   return h;
+}
+// ── Разделы источников: группировка + «показать ещё» ────────────────────────
+// Общий механизм для панели верстака и панели сравнения. По умолчанию раздел
+// ПОЛУСВЁРНУТ: видно первые WB_GRP_SHOW и сколько осталось. Три состояния —
+// свёрнут (только заголовок) · частично · целиком; выбор запоминается.
+const WB_GRP_SHOW=4;
+function wbGrpState(key,gid){return (gs("wbGrpOpen",{})||{})[key+":"+gid]||"part";}
+function wbGrpSet(key,gid,v){
+  const m=gs("wbGrpOpen",{})||{};
+  if(v==="part")delete m[key+":"+gid];else m[key+":"+gid]=v;
+  ss("wbGrpOpen",m);
+}
+function wbGrpFold(key,gid){
+  wbGrpSet(key,gid,wbGrpState(key,gid)==="hide"?"part":"hide");
+  wbRefreshSrcPanels();
+}
+function wbGrpMore(key,gid){
+  wbGrpSet(key,gid,wbGrpState(key,gid)==="full"?"part":"full");
+  wbRefreshSrcPanels();
+}
+function wbRefreshSrcPanels(){wbRenderSrcs();wbCmpRenderPanelInto();if(STU&&STU.tool==="srcs")wbRenderWork();}
+// items — источники; rowHTML(unit) рисует строку. head — доп. кнопка справа
+// в заголовке раздела (в сравнении ею включают раздел целиком).
+function wbGroupedHTML(key,items,rowHTML,head,forceFull){
+  const groups=(CONFIG.groups||[]).filter(g=>g.id!=="quran");
+  const known=new Set(groups.map(g=>g.id));
+  const buckets=groups.map(g=>({g,list:items.filter(t=>t.group===g.id)}));
+  const rest=items.filter(t=>!known.has(t.group));
+  if(rest.length)buckets.push({g:{id:"_other",name:"Прочее"},list:rest});
+  let h="";
+  for(const {g,list} of buckets){
+    if(!list.length)continue;
+    const units=wbUnits(list);
+    const st=forceFull?"full":wbGrpState(key,g.id);
+    const shown=st==="hide"?[]:(st==="full"?units:units.slice(0,WB_GRP_SHOW));
+    const more=units.length-shown.length;
+    h+=`<div class="wb-grp">
+      <div class="wb-grp-h">
+        <button class="wb-grp-fold" onclick="wbGrpFold('${key}','${escAttr(g.id)}')" title="Свернуть/развернуть раздел">
+          <span class="ar">${st==="hide"?"▸":"▾"}</span>${esc(g.name)}</button>
+        ${head?head(list,g):`<span class="n">${units.length}</span>`}
+      </div>
+      ${shown.map(rowHTML).join("")}
+      ${more>0?`<button class="wb-grp-more" onclick="wbGrpMore('${key}','${escAttr(g.id)}')">ещё ${more} ↓</button>`
+        :(st==="full"&&units.length>WB_GRP_SHOW?`<button class="wb-grp-more" onclick="wbGrpMore('${key}','${escAttr(g.id)}')">свернуть ↑</button>`:"")}
+    </div>`;
+  }
+  return h||`<div class="wb-empty">Ничего не найдено.</div>`;
 }
 function wbToggleUnit(id,isCont){
   if(isCont)toggleCont(id);else toggleEn(id);
@@ -9552,9 +10018,12 @@ async function wbRenderRead(){
       ${trOn?`<div class="wb-tr" id="wbTrLine">…</div>`:""}
     </div>
     <div class="wb-chips">${wbChipsHTML(en)}</div>
+    <div id="wbCmpBar"></div>
     <div class="wb-stream" id="wbStream"><div class="wb-empty">Загрузка источников…</div></div>`;
   const loaded={};
-  await Promise.all(en.map(t=>loadChunk(t.id,s).then(()=>{loaded[t.id]=getChunk(t.id,s);}).catch(()=>{})));
+  const need=en.map(t=>t.id);
+  if(STU.cmp)STU.cmp.forEach(id=>{if(id&&!need.includes(id))need.push(id);});   // сравниваемый может быть выключен
+  await Promise.all(need.map(id=>loadChunk(id,s).then(()=>{loaded[id]=getChunk(id,s);}).catch(()=>{})));
   if(stale())return;
   const trLine=document.getElementById("wbTrLine");
   if(trLine){
@@ -9562,6 +10031,17 @@ async function wbRenderRead(){
     trLine.textContent=(t0&&loaded[t0.id]?.[String(a)])||getAnyTranslation(s,a)||"—";
   }
   const stream=document.getElementById("wbStream");if(!stream)return;
+  if(STU.cmp&&STU.cmp.length){                        // сравнение источников бок о бок
+    el.classList.add("cmp-mode");                     // колонки скроллятся сами, страница — нет
+    const bar=document.getElementById("wbCmpBar");
+    if(bar)bar.innerHTML=wbCmpBarHTML(a);
+    stream.className="wb-cmp";
+    stream.innerHTML=wbCmpHTML(a,loaded);
+    wbCmpLayout();
+    return;
+  }
+  el.classList.remove("cmp-mode");
+  stream.className="wb-stream";
   if(!en.length){stream.innerHTML=`<div class="wb-empty">Ни один перевод или тафсир не включён — выберите источники.</div>`;return;}
   let html="";
   for(const node of wbUnits(en)){
@@ -9584,6 +10064,181 @@ function wbPaintAyah(){
   const ar=getArabicFromCache(STU.s,STU.a)||"";
   el.innerHTML=ar?arHlHTML(ar,STU.s,STU.a,null):"—";
 }
+// ── Сравнение двух источников бок о бок (только там, где есть ширина) ───────
+// Поток «источник за источником» отвечает на вопрос «что говорят об аяте»;
+// сравнение — на другой: «чем именно эти двое расходятся». Поэтому не режим
+// чтения, а состояние ленты: STU.cmp=[idA,idB], аят и чипы остаются на месте.
+function wbCmpSources(a){
+  const cov=new Set(covSourcesForAyah(STU.s,a));
+  const hid=srcHiddenSet();
+  return CONFIG.tafsirs.filter(t=>t.kind!=="image"&&!isQuranText(t.id)&&!hid.has(t.id)&&cov.has(t.id));
+}
+// Колонок столько, сколько источников выбрано (не пара): набор — чипами над
+// колонками. Ширина считается по ОБЪЁМУ текста: вес = √(длина/медиана), зажатый
+// в 0.75…2 и в 260…640px. Корень обязателен — без него ат-Табари, который
+// вдесятеро длиннее перевода, забрал бы весь экран; верхняя граница 640px —
+// потому что строка длиннее ~75 знаков уже плохо читается. Когда минимумы
+// перестают помещаться, полоса едет вбок (та же раскладка и на телефоне).
+const WB_CMP_MIN=260,WB_CMP_MAX=640;
+function wbCmpHTML(a,loaded){
+  const {s}=STU;
+  const ids=STU.cmp.filter(id=>CONFIG.tafsirs.some(t=>t.id===id));
+  return ids.map(id=>{
+    const t=CONFIG.tafsirs.find(x=>x.id===id);
+    const text=loaded[id]?.[String(a)]||null;
+    return `<div class="wb-cmp-col" data-len="${text?String(text).length:0}">
+      <div class="wb-cmp-head"><b>${esc(t.name)}</b>
+        <button class="wb-x" onclick="wbCmpToggle('${escAttr(id)}')" title="Убрать из сравнения">✕</button></div>
+      ${text?sourceEntryHTML(t,text,a):`<div class="wb-empty">У этого источника нет текста на ${s}:${a}.</div>`}</div>`;
+  }).join("");
+}
+// Полоса режима сравнения. Здесь ТОЛЬКО выбранные источники (их единицы) и
+// органы управления, закреплённые справа: список всех источников в одну строку
+// не помещался, а кнопки «шире»/«обычный вид» уезжали за край прокрутки.
+function wbCmpBarHTML(a){
+  const sel=STU.cmp.map(id=>CONFIG.tafsirs.find(t=>t.id===id)).filter(Boolean);
+  return `<div class="wb-cmp-bar">
+    <button class="wb-btn ${STU.cmpPanel?"on":""}" onclick="wbCmpPanelToggle()" title="Выбрать источники для сравнения">☰ Источники</button>
+    <span class="wb-cmp-lbl">· ${STU.cmp.length}</span>
+    <span class="wb-cmp-sel">${sel.map(t=>`<button class="wb-chip on" onclick="wbCmpToggle('${escAttr(t.id)}')" title="Убрать из сравнения">${esc(t.name)} ✕</button>`).join("")}</span>
+    <span class="wb-cmp-acts">
+      ${wbWide()?`<button class="wb-btn ${STU.cmpWide?"on":""}" onclick="wbCmpWide()" title="Отдать сравнению всю ширину (спрятать рабочую колонку)">⤢ шире</button>`:""}
+      <button class="wb-btn" onclick="wbCmpOff()" title="Вернуться к обычному чтению">✕ обычный вид</button></span>
+  </div>`;
+}
+// Вертикальная панель выбора: группы из config.groups (переводы · русские
+// тафсиры · современные и классические арабские), внутри — корпус отдельным
+// раскрывающимся узлом. Источников со временем станет больше, поэтому сверху
+// поиск, а заголовок группы включает/выключает её целиком.
+function wbCmpPanelHTML(){
+  const {a}=STU;
+  const opts=wbCmpSources(a);
+  const q=(STU.cmpQ||"").trim().toLowerCase();
+  const match=t=>!q||t.name.toLowerCase().includes(q)||(t.author||"").toLowerCase().includes(q);
+  const groups=(CONFIG.groups||[]).filter(g=>g.id!=="quran");
+  let h=`<div class="wb-cmp-panel-head">
+      <input class="wb-cmp-q" placeholder="Найти источник…" value="${escAttr(STU.cmpQ||"")}"
+        oninput="wbCmpQ(this.value)">
+      <button class="wb-x" onclick="wbCmpPanelToggle()" title="Свернуть панель">✕</button>
+    </div>`;
+  const list=opts.filter(match);
+  if(!list.length)return h+`<div class="wb-empty">Ничего не найдено${q?" по запросу «"+esc(q)+"»":""}.</div>`;
+  // Тот же механизм разделов, что и в панели верстака: полусвёрнуто, «ещё N».
+  // Поиск раскрывает найденное целиком — иначе результат прятался бы под «ещё».
+  h+=wbGroupedHTML("cmp",list,
+    n=>{
+      if(n.cont){                       // корпус — узел со слоями внутри
+        const open=!collapsedG["wbcmp_"+n.cont.id];
+        const onN=n.kids.filter(t=>STU.cmp.includes(t.id)).length;
+        return `<button class="wb-cmp-cont" onclick="collapsedG['wbcmp_${escAttr(n.cont.id)}']=${open?1:0};wbRenderCmpPanel()">
+            <span class="ar">${open?"▾":"▸"}</span>${esc(n.cont.name)} <span class="n">${onN?onN+" / ":""}${n.kids.length}</span></button>`
+          +(open?`<div class="wb-cmp-kids">${n.kids.map(t=>wbCmpRow(t)).join("")}</div>`:"");
+      }
+      return wbCmpRow(n.t);
+    },
+    (glist,g)=>{
+      const on=glist.filter(t=>STU.cmp.includes(t.id)).length;
+      return `<button class="wb-grp-all" onclick="wbCmpGroupToggle('${escAttr(g.id)}')" title="Включить или выключить весь раздел">${on?on+" / ":""}${glist.length}</button>`;
+    },!!q);                              // при поиске разделы раскрыты: иначе найденное пряталось бы под «ещё»
+  return h;
+}
+function wbCmpRow(t){
+  const on=STU.cmp.includes(t.id);
+  return `<div class="wb-srow ${on?"on":""}" onclick="wbCmpToggle('${escAttr(t.id)}')" title="${escAttr(t.name)}">
+    <span class="box">${on?"✓":""}</span><span class="nm">${esc(t.name)}</span></div>`;
+}
+function wbCmpRenderPanelInto(){const el=document.getElementById("wbCmpPanel");if(el&&STU&&STU.cmp)el.innerHTML=wbCmpPanelHTML();}
+function wbRenderCmpPanel(){wbCmpRenderPanelInto();}
+function wbCmpPanelToggle(){if(!STU)return;STU.cmpPanel=!STU.cmpPanel;renderStudy();}
+function wbCmpQ(v){
+  if(!STU)return;
+  STU.cmpQ=v;
+  const el=document.getElementById("wbCmpPanel");if(!el)return;
+  el.innerHTML=wbCmpPanelHTML();
+  const inp=el.querySelector(".wb-cmp-q");
+  if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);}   // иначе теряется фокус
+}
+function wbCmpGroupToggle(gid){
+  if(!STU)return;
+  const known=new Set((CONFIG.groups||[]).map(g=>g.id));
+  const list=wbCmpSources(STU.a).filter(t=>gid==="_other"?!known.has(t.group):t.group===gid);
+  const allOn=list.every(t=>STU.cmp.includes(t.id));
+  list.forEach(t=>{
+    const i=STU.cmp.indexOf(t.id);
+    if(allOn){if(i>=0)STU.cmp.splice(i,1);}
+    else if(i<0)STU.cmp.push(t.id);
+  });
+  if(!STU.cmp.length){wbCmpOff();return;}
+  ss("wbCmp",STU.cmp);
+  wbRenderRead();wbCmpRenderPanelInto();
+}
+function wbCmpToggle(id){
+  if(!STU||!STU.cmp)return;
+  const i=STU.cmp.indexOf(id);
+  if(i>=0)STU.cmp.splice(i,1);else STU.cmp.push(id);
+  if(!STU.cmp.length){wbCmpOff();return;}
+  ss("wbCmp",STU.cmp);
+  wbRenderRead();wbCmpRenderPanelInto();
+}
+// Ширины колонок. Считаем в процентах (переживают resize), с оглядкой на
+// минимум и максимум; что не влезло в границы — перераспределяем остальным.
+function wbCmpLayout(){
+  const box=document.getElementById("wbStream");
+  if(!box||!box.classList.contains("wb-cmp"))return;
+  const cols=[...box.querySelectorAll(".wb-cmp-col")];
+  if(!cols.length)return;
+  const cs=getComputedStyle(box);
+  const gap=parseFloat(cs.columnGap)||16;
+  // База — content-box: clientWidth включает паддинги, а проценты в grid
+  // считаются от содержимого, иначе колонки выходят уже заданных.
+  const inner=box.clientWidth-(parseFloat(cs.paddingLeft)||0)-(parseFloat(cs.paddingRight)||0);
+  const avail=inner-gap*(cols.length-1);
+  if(avail<=0)return;
+  if(cols.length*WB_CMP_MIN>avail){            // не помещаются — горизонтальная лента
+    box.classList.add("strip");
+    box.style.gridTemplateColumns="";           // ширину задаёт CSS: 300px, на телефоне 88%
+    return;
+  }
+  box.classList.remove("strip");
+  const lens=cols.map(c=>Math.max(1,+c.dataset.len||1));
+  const sorted=[...lens].sort((x,y)=>x-y);
+  const med=sorted[Math.floor(sorted.length/2)]||1;
+  const w=lens.map(l=>Math.min(2,Math.max(.75,Math.sqrt(l/med))));
+  // Вес → пиксели. Колонка, упёршаяся в MIN или MAX, фиксируется, а остаток
+  // делится между остальными по их весам; хватает трёх-четырёх проходов.
+  const px=w.map(()=>0),locked=w.map(()=>false);
+  for(let pass=0;pass<4;pass++){
+    const taken=px.reduce((acc,p,i)=>locked[i]?acc+p:acc,0);
+    const openW=w.reduce((acc,wi,i)=>locked[i]?acc:acc+wi,0);
+    if(!openW)break;
+    const free=avail-taken;
+    let changed=false;
+    w.forEach((wi,i)=>{
+      if(locked[i])return;
+      const v=free*wi/openW;
+      if(v<WB_CMP_MIN){px[i]=WB_CMP_MIN;locked[i]=true;changed=true;}
+      else if(v>WB_CMP_MAX){px[i]=WB_CMP_MAX;locked[i]=true;changed=true;}
+      else px[i]=v;
+    });
+    if(!changed)break;
+  }
+  // Проценты — от ПОЛНОЙ ширины сетки (а px посчитаны от ширины без зазоров),
+  // поэтому их сумма меньше 100% ровно на зазоры: колонки получают заданные
+  // пиксели, и ничего не вылезает за край.
+  box.style.gridTemplateColumns=px.map(p=>(p/inner*100).toFixed(3)+"%").join(" ");
+}
+function wbCmpOn(){
+  if(!STU)return;
+  const opts=wbCmpSources(STU.a);
+  if(opts.length<2)return;                     // сравнивать не с чем
+  const saved=(gs("wbCmp",null)||[]).filter(id=>opts.some(o=>o.id===id));
+  const en=wbEnabledSrcs().filter(t=>opts.some(o=>o.id===t.id)).map(t=>t.id);
+  STU.cmp=saved.length>=2?saved:(en.length>=2?en.slice(0,3):opts.slice(0,2).map(o=>o.id));
+  ss("wbCmp",STU.cmp);
+  renderStudy();
+}
+function wbCmpOff(){if(!STU)return;STU.cmp=null;STU.cmpWide=false;renderStudy();}
+function wbCmpWide(){if(!STU)return;STU.cmpWide=!STU.cmpWide;renderStudy();}
 function wbChipsHTML(en){
   const chips=wbUnits(en).map(n=>{
     const id=wbUnitId(n);
@@ -9597,41 +10252,105 @@ async function wbRenderWork(){
   if(!STU)return;
   const el=document.getElementById("wbWork");if(!el)return;
   const {s,a,tool}=STU;
+  STU.draftId=null;                    // после перерисовки поле новой записи пустое — и ссылка на неё тоже
   const meta=WB_TOOLS.find(x=>x.id===tool)||WB_TOOLS[1];
   el.innerHTML=`<div class="wb-grab" onclick="wbSheetToggle()" title="Во весь экран / половина"><span class="bar"></span></div>
     <div class="wb-w-head"><b>${esc(meta.lab)}</b><span class="sub">${s}:${a}</span>
       ${wbWide()?"":`<button class="wb-btn" onclick="wbSheet(0)" title="Свернуть">✕</button>`}</div>
     <div class="wb-w-body" id="wbWorkBody"></div>`;
   const body=document.getElementById("wbWorkBody");if(!body)return;
+  body.addEventListener("focusin",e=>{if(e.target.classList&&e.target.classList.contains("wb-note-ta"))WB_TA=e.target;});
   if(tool==="srcs")body.innerHTML=wbSrcsHTML();
   else if(tool==="note")body.innerHTML=wbNoteHTML();
   else if(tool==="tags")body.innerHTML=wbTagsHTML();
-  else if(tool==="links")body.innerHTML=wbLinksHTML();
+  else if(tool==="links")await wbLinksInto(body);
   else if(tool==="words")await wbWordsInto(body);
   else if(tool==="roots")await wbRootsInto(body);
 }
 // Каркас тадаббура — общий текст для редактора заметки и верстака
 const NOTE_TMPL="\n\n### Почему именно эти слова?\n\n\n\n### Что аят говорит обо мне?\n\n\n\n### С какими аятами связан?\n\n\n\n### Какое действие следует?\n\n";
+// Заметка аята = НЕСКОЛЬКО записей (фаза 3): у каждой свой тип и дата, снизу —
+// поле новой. Черновик не заводит пустую запись в хранилище: она создаётся на
+// первом введённом символе, и дальше ввод идёт уже в неё (STU.draftId).
 function wbNoteHTML(){
   const {s,a}=STU;
+  const recs=noteRecs(s,a);
   const bl=noteBacklinks(s,a);
-  return `<textarea class="wb-note-ta" id="wbNoteTa" placeholder="Мысль об аяте ${s}:${a}…"
-      oninput="saveNote(${s},${a},this.value);refreshAyahMarks(${a})">${esc(getNote(s,a))}</textarea>
+  const typeRow=(cur,onpick)=>NOTE_TYPES.map(t=>
+    `<button class="wb-tchip ${cur===t.id?"on":""}" onclick="${onpick(t.id)}" title="${escAttr(t.lab)}">${t.ic}<span>${esc(t.lab)}</span></button>`).join("");
+  const rows=recs.map(r=>{
+    const d=r.ts?new Date(r.ts).toLocaleDateString("ru-RU"):"";
+    const tags=(r.g||[]).map(p=>`<span class="wb-tag" style="font-size:10.5px;padding:2px 8px">${esc(p.split("/").pop())}</span>`).join(" ");
+    return `<div class="wb-rec">
+      <div class="wb-rec-head">${typeRow(r.t,t=>`noteRecType(${s},${a},'${r.id}','${t}');wbRenderWork()`)}
+        <span class="d">${d}</span>
+        <button class="wb-x" onclick="wbRecDel('${r.id}')" title="Удалить запись">✕</button></div>
+      <textarea class="wb-note-ta" data-rec="${r.id}" placeholder="Текст записи…"
+        oninput="noteRecSet(${s},${a},'${r.id}',this.value);refreshAyahMarks(${a})">${esc(r.x)}</textarea>
+      <div class="wb-rec-foot">${tags}
+        <button class="wb-btn" onclick="wbRecTagPick('${r.id}',this)" title="Тег на эту запись — так собираются сборники">🏷 тег</button>
+        <button class="wb-btn" onclick="openNoteEditor(${s},${a},'${r.id}')" title="Полноэкранный редактор этой записи">⤢</button></div>
+    </div>`;
+  }).join("");
+  const dt=STU.draftType||"thought";
+  return `${rows||`<div class="wb-empty">Записей пока нет. Первая мысль — ниже.</div>`}
+    <div class="wb-sect">Новая запись</div>
+    <div class="wb-rec draft">
+      <div class="wb-rec-head">${typeRow(dt,t=>`wbDraftType('${t}')`)}
+        <button class="wb-btn" style="margin-left:auto" onclick="wbRenderWork()" title="Отложить эту запись и начать следующую">＋ ещё запись</button></div>
+      <textarea class="wb-note-ta" id="wbNoteTa" data-draft="1" placeholder="Мысль об аяте ${s}:${a}…"
+        oninput="wbDraftInput(this)"></textarea>
+    </div>
     <div class="wb-acts">
       <button class="wb-btn" onclick="wbNoteTmpl()" title="Четыре вопроса тадаббура">☰ Каркас</button>
       <button class="wb-btn" onclick="wbQuoteAyah()" title="Вставить аят цитатой">❝ Аят</button>
-      <button class="wb-btn" onclick="openNoteEditor(${s},${a})" title="Полноэкранный редактор">⤢ Редактор</button>
       <button class="wb-btn" onclick="wbExportNote()" title="Скачать аят с размышлением">⬇ .md</button>
     </div>
     ${bl.length?`<div class="wb-sect">Упоминания этого аята · ${bl.length}</div>${wbBacklinkRows(bl)}`:""}`;
 }
+function wbDraftType(t){if(!STU)return;STU.draftType=t;if(STU.draftId){noteRecType(STU.s,STU.a,STU.draftId,t);}wbRenderWork();}
+function wbDraftInput(el){
+  if(!STU)return;
+  const {s,a}=STU;
+  if(!STU.draftId){
+    const id=noteRecAdd(s,a,STU.draftType||"thought",el.value);
+    if(id){STU.draftId=id;el.dataset.rec=id;}
+  }else noteRecSet(s,a,STU.draftId,el.value);
+  refreshAyahMarks(a);
+}
+function wbRecDel(id){
+  if(!STU)return;
+  if(!confirm("Удалить эту запись?"))return;
+  noteRecDel(STU.s,STU.a,id);
+  if(STU.draftId===id)STU.draftId=null;
+  refreshAyahMarks(STU.a);wbRenderWork();
+}
+// Тег на ЗАПИСЬ: переиспользуем дерево тегов аята — оно одно на приложение
+function wbRecTagPick(id,btn){
+  if(!STU)return;
+  const tree=getTagTree();
+  const paths=[];
+  (function walk(nodes,anc){for(const n of nodes){const p=[...anc,n.name].join("/");paths.push(p);if(n.children&&n.children.length)walk(n.children,[...anc,n.name]);}})(tree,[]);
+  if(!paths.length){alert("Создайте теги в боковой панели (☰ → Теги)");return;}
+  const cur=new Set(((noteRecs(STU.s,STU.a).find(r=>r.id===id)||{}).g)||[]);
+  openSheetShell("Тег на запись","сборник собирается по тегам записей",
+    paths.map(p=>`<button class="ash-row" onclick="noteRecTag(${STU.s},${STU.a},'${id}','${escAttr(p)}');closeAyahSheet();wbRenderWork()">
+      <span class="tp-check">${cur.has(p)?"☑":"☐"}</span>${esc(p)}</button>`).join(""));
+}
+// Вставка (каркас, цитата) — в поле, где стоял курсор; по умолчанию в черновик
+let WB_TA=null;
 function wbInsertNote(txt){
-  const ta=document.getElementById("wbNoteTa");if(!ta||!STU)return;
+  if(!STU)return;
+  const {s,a}=STU;
+  const ta=(WB_TA&&document.body.contains(WB_TA))?WB_TA:document.getElementById("wbNoteTa");
+  if(!ta)return;
   const p=ta.selectionStart!=null?ta.selectionStart:ta.value.length;
   const e=ta.selectionEnd!=null?ta.selectionEnd:p;
   ta.value=ta.value.slice(0,p)+txt+ta.value.slice(e);
   ta.focus();ta.selectionStart=ta.selectionEnd=p+txt.length;
-  saveNote(STU.s,STU.a,ta.value);refreshAyahMarks(STU.a);
+  if(ta.dataset.rec)noteRecSet(s,a,ta.dataset.rec,ta.value);
+  else wbDraftInput(ta);
+  refreshAyahMarks(a);
 }
 function wbNoteTmpl(){wbInsertNote(NOTE_TMPL);}
 function wbQuoteAyah(){if(!STU)return;const ar=getArabicFromCache(STU.s,STU.a)||"";if(ar)wbInsertNote(`\n\n> ${ar}\n\n`);}
@@ -9672,6 +10391,37 @@ function wbTagsHTML(){
       `<button class="wb-row" onclick="wbOpenTag('${escAttr(p)}')">${esc(p)}<span class="r-sub">→</span></button>`).join(""):""}`;
 }
 function wbOpenTag(p){closeStudy();selectTag(p);}
+// Обратная карта «аят → темы фихриста» (data/topics/byAyah.json, build_topics.py).
+// Собрана давно, но до верстака ей не было места: в панели тем ходят ОТ темы к
+// аятам, а здесь нужен обратный ход — в какие темы входит этот аят.
+let TOPICS_BY_AYAH=null,_tbaLoading=null;
+function loadTopicsByAyah(){
+  if(TOPICS_BY_AYAH)return Promise.resolve(TOPICS_BY_AYAH);
+  if(!_tbaLoading)_tbaLoading=fetch(resolveUrl("topics",{file:"byAyah.json"}))
+    .then(r=>r.ok?r.json():null).then(d=>TOPICS_BY_AYAH=d||{})
+    .catch(()=>{_tbaLoading=null;return{};});
+  return _tbaLoading;
+}
+async function wbLinksInto(body){
+  const {s,a}=STU;
+  body.innerHTML=wbLinksHTML();
+  const [by]=await Promise.all([loadTopicsByAyah(),loadTopics().catch(()=>null)]);
+  if(!STU||STU.s!==s||STU.a!==a||STU.tool!=="links")return;
+  const box=document.getElementById("wbTopics");if(!box)return;
+  const ids=(by&&by[s+":"+a])||[];
+  if(!ids.length){box.innerHTML=`<div class="wb-empty">Этот аят не отмечен ни в одной теме указателя.</div>`;return;}
+  box.innerHTML=ids.map(id=>{
+    const node=TOPICS&&TOPICS.byId[id];
+    if(!node)return "";
+    const chain=topicCrumbs(id).map(n=>n.name).join(" · ");
+    const n=(TOPICS.verses[id]||[]).length;
+    return `<button class="wb-row" onclick="wbOpenTopic(${id})" title="Открыть тему">
+      <span style="min-width:0"><b>${esc(node.name)}</b>
+      ${chain?`<br><span style="font-size:11px;color:var(--text-muted)">${esc(chain)}</span>`:""}</span>
+      <span class="r-sub">${n} аятов →</span></button>`;
+  }).join("")||`<div class="wb-empty">Темы не загрузились.</div>`;
+}
+function wbOpenTopic(id){closeStudy();selectTopic(id);}
 function wbLinksHTML(){
   const {s,a}=STU;
   const c=covCountByKind(s,a);
@@ -9681,6 +10431,8 @@ function wbLinksHTML(){
   return `<button class="wb-row" onclick="wbTool('srcs')">Источники к аяту<span class="r-sub">🌐 ${c.tr} · 📚 ${c.taf} →</span></button>
     <button class="wb-row" onclick="wbTool('words')">Выделенных слов<span class="r-sub">${hlN} →</span></button>
     <button class="wb-row" onclick="wbTool('roots')">Корни слов аята<span class="r-sub">→</span></button>
+    <div class="wb-sect">Темы указателя</div>
+    <div id="wbTopics"><div class="wb-empty">Загрузка тем…</div></div>
     <div class="wb-sect">Упоминания этого аята в заметках</div>
     ${bl.length?wbBacklinkRows(bl):`<div class="wb-empty">Пока ни одна ваша заметка не ссылается на ${s}:${a}. Адрес в тексте заметки становится ссылкой сам.</div>`}`;
 }
@@ -9903,7 +10655,16 @@ function toggleWbwLayer(){
 
 function toggleEn(id){ST.enabled[id]=!ST.enabled[id];setEnabled(ST.enabled);renderRP();renderCenter();}
 
-function saveNote(s,a,text){setNote(s,a,text);}
+// Плоское поле заметки (лента, «Изучение», редактор без выбранной записи).
+// Одна запись — правим ЕЁ (сохраняются дата, тип и теги записи); несколько —
+// плоское поле их не трогает: интерфейс в этом случае показывает список
+// записей, а не textarea (см. ab-notes-multi), поэтому сюда попасть нечем.
+function saveNote(s,a,text){
+  const recs=noteRecs(s,a);
+  if(recs.length===1){noteRecSet(s,a,recs[0].id,text);return;}
+  if(recs.length>1)return;
+  setNote(s,a,text);
+}
 
 let openPopupAyah=null;
 
@@ -10163,6 +10924,7 @@ ST.mar=_vnum(gs("mar",0),0);
 ST.sbScale=_vnum(gs("sbScale",1),1);
 ST.mushafFull=gs("mushafFull",false); // «Мусхаф на всю ширину» (off by default)
 applyView();
+initSidebarGrip();                 // ручка ширины панели + восстановление сохранённой
 applyMushafFull();
 ST.arFont=gs("arFont","qpc1"); // default: печатный мусхаф
 // «Цвета таджвида» — отдельный флаг (фаза B): в печатном начертании — пак qpc4t,
