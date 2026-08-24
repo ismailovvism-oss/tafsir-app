@@ -880,11 +880,19 @@ async function dfRenderText(s,a){
   if(D.textMode==="none"||D.textHidden){el.classList.add("hidden");return;}
   el.classList.remove("hidden");
   const tok=++D.token, mode=D.textMode;
-  let ar="",tr="",trId=null;
-  if(mode==="ar"||mode==="artr"){await ctx.ensureText("_arabic",s).catch(()=>{});ar=ctx.getArabic(s,a)||"";}
+  let ar="",bas="",tr="",trId=null;
+  if(mode==="ar"||mode==="artr"){
+    await ctx.ensureText("_arabic",s).catch(()=>{});
+    // Басмала — своей строкой над аятом, а не первым словом его текста: в
+    // поаятной записи чтец её не читает (замер: аят 1 короче самой басмалы),
+    // так что раньше кадр показывал то, что не звучит.
+    const sp=ctx.splitBasmala?ctx.splitBasmala(s,a):null;
+    if(sp){bas=sp.bas;ar=sp.text;}else ar=ctx.getArabic(s,a)||"";
+  }
   if(mode==="tr"||mode==="artr"){trId=ctx.primaryTransId();if(trId){await ctx.ensureText(trId,s).catch(()=>{});tr=ctx.getText(trId,s,a)||"";}}
   if(tok!==D.token||!D.on)return;                       // устарело (сменился аят/режим/закрылось)
   let html=`<div class="df-key">${s}:${a}</div>`;
+  if(bas)html+=`<div class="df-bas arabic-main">${ctx.esc(dfCleanArabic(bas))}</div>`;
   if(ar)html+=`<div class="df-ar arabic-main">${ctx.esc(dfCleanArabic(ar))}</div>`;
   if(tr)html+=`<div class="df-tr">${ctx.esc(tr)}</div>`;
   el.innerHTML=html;
