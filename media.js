@@ -404,7 +404,10 @@ function followText(s,a){
   markCur(a);
 }
 function markCur(a){
-  const el=document.querySelector(`.ayah-block[data-aid="${a}"]`);
+  let el=document.querySelector(`.ayah-block[data-aid="${a}"]`);
+  // Раскладка «Колонки» — таблица, карточек аята в ней нет, и подсветка играющего
+  // аята там не появлялась вовсе. Якорь есть: номер аята в первой колонке.
+  if(!el){const td=document.querySelector(`td.col-num[data-aid="${a}"]`);el=td&&td.parentElement;}
   if(el){el.classList.add("media-cur");el.scrollIntoView({behavior:"smooth",block:"center"});}
 }
 // Страница мусхафа, содержащая аят (по qpcMeta.pageStart; линейно по 604 — дёшево)

@@ -1367,7 +1367,22 @@ body.df-open{overflow:hidden}
   .df-scrim{height:78%}
   .df-nav{height:56px}
 }
-.ayah-block.media-cur{box-shadow:0 0 0 2px var(--accent);border-radius:8px}
+/* ИГРАЮЩИЙ АЯТ. Было — рамка 2px, и при любом оформлении ленты подсветка
+   ПРОПАДАЛА совсем: тень скина `body[data-skin] .reading .ayah-block` (0,3,1)
+   специфичнее правила `.ayah-block.media-cur` (0,2,0) и перебивала его целиком.
+   Поэтому здесь и заливка (её видно всегда), и второй селектор — со скином.
+   Тон акцента кладём ПОВЕРХ --bg-card: одна полупрозрачная плёнка на тёмной
+   теме почти не видна (та же грабля, что с полосой «Страница N»). */
+.ayah-block.media-cur{border-radius:8px;border-color:var(--accent);
+  background:linear-gradient(rgba(var(--accent-rgb),.14),rgba(var(--accent-rgb),.14)),var(--bg-card);
+  box-shadow:0 0 0 2px var(--accent)}
+body[data-skin] .reading .ayah-block.media-cur{
+  box-shadow:0 0 0 2px var(--accent),0 1px 6px rgba(50,34,10,.16)}
+/* Шапка аята внутри играющей карточки — тоже в тон, иначе поперёк заливки
+   идёт нейтральная полоса и подсветка выглядит недокрашенной. */
+.ayah-block.media-cur .ab-head{background:rgba(var(--accent-rgb),.10)}
+/* «Колонки» — таблица, карточек аята там нет: подсвечиваем СТРОКУ. */
+.col-table tr.media-cur>td{background:rgba(var(--accent-rgb),.14)}
 .ab-play-btn,.ab-rec-btn{background:var(--bg-card);border:1px solid var(--border);border-radius:4px;padding:1px 7px;cursor:pointer;font-size:11px;color:var(--text-muted)}
 .ab-play-btn:hover,.ab-rec-btn:hover{color:var(--accent);border-color:var(--accent)}
 .ab-rec-btn.has{color:var(--accent);border-color:var(--accent)}
@@ -2076,7 +2091,7 @@ function scanDirOf(t){return t.imgdir||("img/"+t.id);}
 // первом обращении (▶ у аята или блок «🎧 Аудио» в панели 📚). Пока аудио не
 // трогали: ни байта кода, ни <audio>-элементов. media.js — ES-модуль, наши
 // let-глобалы (ST/CONFIG/qpcMeta) ему не видны — передаём контекст геттерами.
-const MEDIA_VER="21";   // поднять при правке media.js (сброс кеша браузера/CDN)
+const MEDIA_VER="22";   // поднять при правке media.js (сброс кеша браузера/CDN)
 let MEDIA=null;        // загруженный модуль (null = ещё не загружался)
 function mediaCtx(){
   return {
