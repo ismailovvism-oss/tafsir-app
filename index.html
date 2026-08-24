@@ -740,6 +740,11 @@ body.sb-resizing{cursor:col-resize;user-select:none}
    и заучивать «до конца страницы». Берётся из меты пака (pageStart) и привязана
    к АЯТУ: на печати страница может начаться и посреди аята, здесь полоса стоит
    перед тем аятом, с которого страница начинается. */
+/* Басмала над первым аятом суры: отдельной строкой, как в печатном мусхафе.
+   Не «часть аята», поэтому и не в карточке текста — своя центрованная строка. */
+.ab-basmala{text-align:center;margin:2px 0 12px;padding:0 8px;
+  font-size:calc(20px*var(--rs-ar,1));line-height:calc(2*var(--lh-ar,1));
+  color:var(--text);direction:rtl;user-select:text}
 .read-page-sep{margin:12px 0;padding:6px 12px;text-align:center;font-size:11.5px;
   color:var(--text-sec);letter-spacing:.3px;user-select:none;
   /* Тон акцента ПОВЕРХ поверхности темы (--bg-alt), а не поверх пустоты: одна
@@ -2452,6 +2457,7 @@ let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,apan
   noTouch:false,     // «Режим без касания»: чтение/листание без касания текста (кнопочная панель)
   swipeNav:true,     // свайп влево/вправо листает суру (можно выключить в ⚙ Вид)
   pageSep:true,      // полосы «Страница N» в ленте «Аяты» (можно выключить в ⚙ Вид)
+  basmalaSep:true,   // басмала отдельной строкой над аятом 1, а не внутри его текста
   ntH:60,            // высота нижней панели режима без касания (px)
   mushafPage:1,      // current page in mushaf page mode (1..604)
   facets:{lang:[],kind:[],era:[],tags:[]}, // active facet filters in the right panel
@@ -6036,6 +6042,15 @@ function buildAyahBody(aid,enabled,loaded){
   const qts=getEnabledQuranTexts();
   const multiQ=qts.length>1;
   const pack=activePack();const qpcData=loaded["__qpc"];
+  // Басмала — ОДНОЙ строкой над аятом, а не внутри него и не по разу на каждую
+  // включённую редакцию. Берём из огласованной (в расме/без огласовок она та же
+  // молитва, показывать её трижды незачем). В печатном начертании её в паке нет
+  // вовсе — до этой правки она там просто пропадала.
+  if(ST.basmalaSep&&gluedBasmala(ST.surah,aid)){
+    const src=loaded["_arabic"]?.[String(aid)]||loaded[qts[0]?.id]?.[String(aid)];
+    const c=cutBasmala(src,ST.surah,aid);
+    if(c&&c.bas)html+=`<div class="ab-basmala arabic-main">${esc(c.bas)}</div>`;
+  }
   for(const qt of qts){
     const lbl=multiQ?`<div class="ab-entry-label">${esc(qt.name)} <span class="lbl-ar">${qt.nameAr||''}</span></div>`:"";
     // Слой «Со словами»: огласованную редакцию показываем сеткой слов с глоссом.
@@ -6049,12 +6064,21 @@ function buildAyahBody(aid,enabled,loaded){
       html+=`<div class="ab-entry">${lbl}${renderPackAyah(pack,qpcData[String(aid)],null,hlFor(ST.surah,aid))}</div>`;
       continue;
     }
-    const at=loaded[qt.id]?.[String(aid)];
+    let at=loaded[qt.id]?.[String(aid)];
     if(!at)continue;
     // раскраска таджвида (фаза B) — только огласованная редакция, текстовые шрифты
-    const tjs=qt.id==="_arabic"&&loaded.__tj&&loaded.__tj[String(aid)];
+    let tjs=qt.id==="_arabic"&&loaded.__tj&&loaded.__tj[String(aid)];
+    // Отрезали басмалу — спаны таджвида надо сдвинуть: они заданы смещениями по
+    // кодпоинтам ПОЛНОГО текста. Проверено на всех 114 сурах: ни один спан не
+    // пересекает границу басмалы, поэтому сдвиг чисто механический.
+    let noBas=false;
+    const cb=ST.basmalaSep?cutBasmala(at,ST.surah,aid):null;
+    if(cb){
+      at=cb.rest;noBas=true;
+      if(tjs)tjs=tjs.map(sp=>[sp[0]-cb.cut,sp[1]-cb.cut,sp[2]]).filter(sp=>sp[0]>=0);
+    }
     // маркер слов — тоже только на огласованной (якоря слов считаны по ней)
-    html+=`<div class="ab-entry">${lbl}<div class="ab-entry-text arabic-main selectable">${qt.id==="_arabic"?arHlHTML(at,ST.surah,aid,tjs||null):at}</div></div>`;
+    html+=`<div class="ab-entry">${lbl}<div class="ab-entry-text arabic-main selectable">${qt.id==="_arabic"?arHlHTML(at,ST.surah,aid,tjs||null,noBas):at}</div></div>`;
   }
   // Заголовки групп «Переводы»/«Тафсиры» под аятом — только если включены оба вида сразу.
   const realSrc=enabled.filter(t=>t.id!=="_notes");
@@ -6769,7 +6793,8 @@ async function togglePeek(aid,btn,kindArg){
     const tid=(CONFIG.tafsirs.find(t=>t.lang!=="ar"&&t.group==="translations")||{}).id||"kuliev";
     await loadChunk(tid,ST.surah);text=getChunk(tid,ST.surah)?.[String(aid)]||getAnyTranslation(ST.surah,aid);
   }else{
-    await loadChunk("_arabic",ST.surah);text=getArabicFromCache(ST.surah,aid);
+    await loadChunk("_arabic",ST.surah);
+    text=ayahTextOnly(getArabicFromCache(ST.surah,aid),ST.surah,aid);   // «подсмотреть» — тоже аят без басмалы
   }
   if(!block.contains(div))return;
   div.innerHTML=`<span class="ab-peek-lbl">${lbl}</span>`+
@@ -7013,7 +7038,7 @@ async function copyAyah(aid,btn,withNote){
   const sub=btn?btn.querySelector(".sub"):null;
   try{
     await loadChunk("_arabic",ST.surah);
-    const ar=getArabicFromCache(ST.surah,aid)||"";
+    const ar=ayahTextOnly(getArabicFromCache(ST.surah,aid)||"",ST.surah,aid);
     let tr="";
     const t=getEnabledList().find(x=>x.kind!=="image"&&x.kind!=="quran"&&x.id!=="_notes"&&x.lang!=="ar");
     if(t){await loadChunk(t.id,ST.surah);tr=getChunk(t.id,ST.surah)?.[String(aid)]||"";}
@@ -7280,9 +7305,18 @@ async function renderReading(el){
           }else if(pk&&col.id==="_arabic"&&qd&&qd[String(aid)]){
             html+=`<td class="arabic-main">${renderPackAyah(pk,qd[String(aid)],null,hlFor(ST.surah,aid))}</td>`;
           }else{
-            const arText=col.data?.[String(aid)]||"";
-            const tjs=arText&&col.id==="_arabic"&&loaded.__tj&&loaded.__tj[String(aid)];
-            html+=`<td class="arabic-main selectable">${arText?(col.id==="_arabic"?arHlHTML(arText,ST.surah,aid,tjs||null):arText):'—'}</td>`;
+            let arText=col.data?.[String(aid)]||"";
+            let tjs=arText&&col.id==="_arabic"&&loaded.__tj&&loaded.__tj[String(aid)];
+            // Басмала и в колонках отдельной строкой — но ВНУТРИ той же ячейки:
+            // ряд таблицы = аят, отдельной строки над ним тут просто нет.
+            let basHTML="",noBas=false;
+            const cb=ST.basmalaSep&&arText?cutBasmala(arText,ST.surah,aid):null;
+            if(cb){
+              basHTML=`<div class="ab-basmala">${esc(cb.bas)}</div>`;
+              arText=cb.rest;noBas=true;
+              if(tjs)tjs=tjs.map(sp=>[sp[0]-cb.cut,sp[1]-cb.cut,sp[2]]).filter(sp=>sp[0]>=0);
+            }
+            html+=`<td class="arabic-main selectable">${basHTML}${arText?(col.id==="_arabic"?arHlHTML(arText,ST.surah,aid,tjs||null,noBas):arText):'—'}</td>`;
           }
         } else if(col.isNote){
           const note=getNote(ST.surah,aid);
@@ -8916,7 +8950,9 @@ function viewPanelHTML(){
     `<button class="vp-font ${ST.layout==="v"?"on":""}" onclick="setLayout('v')">▥ Колонки</button></div>`+
     `<div class="vp-note">«Колонки» ставят источники рядом по вертикали (горизонтальная прокрутка); свайп листания там отключён.</div>`+
     `<label class="vp-check" style="margin-top:6px"><input type="checkbox" ${ST.pageSep?"checked":""} onchange="togglePageSep()"> Показывать границы страниц мусхафа</label>`+
-    `<div class="vp-note">Полоса «Страница N» встаёт там, где на печатной странице начинается новый лист — удобно сверяться с бумажным мусхафом. Только в раскладке «Список».</div></div>`;
+    `<div class="vp-note">Полоса «Страница N» встаёт там, где на печатной странице начинается новый лист — удобно сверяться с бумажным мусхафом. Только в раскладке «Список».</div>`+
+    `<label class="vp-check" style="margin-top:6px"><input type="checkbox" ${ST.basmalaSep?"checked":""} onchange="toggleBasmalaSep()"> Басмала отдельной строкой</label>`+
+    `<div class="vp-note">«Бисми-Лляхи…» выносится над первым аятом суры, а не идёт внутри его текста, — как в печатном мусхафе. Копируется аят тоже без неё. В аль-Фатихе басмала остаётся на месте: там это настоящий первый аят; в ат-Тауба её нет вовсе.</div></div>`;
   if(ST.pageMode){
     // page mode = printed vowelled glyphs at a fixed column fit: only line spacing
     // is meaningful (size/margins are absorbed by the fit; font is fixed)
@@ -9433,6 +9469,7 @@ function setupSwipe(){
 function toggleSwipeNav(){ST.swipeNav=!ST.swipeNav;ss("swipeNav",ST.swipeNav);} // обработчик живёт постоянно, читает флаг
 // Границы страниц: перерисовываем ленту — полосы вставляются на этапе сборки.
 function togglePageSep(){ST.pageSep=!ST.pageSep;ss("pageSep",ST.pageSep);renderCenter();}
+function toggleBasmalaSep(){ST.basmalaSep=!ST.basmalaSep;ss("basmalaSep",ST.basmalaSep);renderCenter();}
 
 // Arabic typeface (chosen in the ⚙ Вид panel; persisted). Names are russified.
 function applyArFont(){document.body.setAttribute("data-arfont",ST.arFont);}
@@ -10615,6 +10652,28 @@ function arTokensRaw(t){
   while((m=re.exec(t)))if(/[ء-يٱ]/.test(m[0]))out.push({w:m[0],off:m.index});
   return out;
 }
+// ── БАСМАЛА ────────────────────────────────────────────────────────────────
+// В данных она ПРИКЛЕЕНА к тексту аята 1 (все три редакции), хотя остальные
+// слои её частью аята не считают: перевод 2:1 — «Алиф. Лам. Мим.», пословный
+// корпус даёт одно слово, печатный пак — один глиф, спанов таджвида внутри
+// басмалы нет ни одного. Здесь выравниваем последний слой — показ.
+// Узнаём по СЧЁТУ СЛОВ, а не по написанию: в расме она без точек (ٮسم الله
+// الرحمں الرحىم), и поиск по строке её не опознает.
+// Сура 1 — там басмала НАСТОЯЩИЙ аят 1 (счёт Хафса), сура 9 — её нет вовсе.
+function gluedBasmala(surah,aid){return aid===1&&surah!==1&&surah!==9;}
+function cutBasmala(text,surah,aid){
+  if(!text||!gluedBasmala(surah,aid))return null;
+  const t=arTokensRaw(text);
+  if(t.length<5)return null;                    // отрезать нечего — оставляем как есть
+  const cut=t[4].off;
+  return {bas:text.slice(0,cut).trim(),rest:text.slice(cut),cut};
+}
+// Текст аята для показа/копирования: без приклеенной басмалы, если так выбрано.
+function ayahTextOnly(text,surah,aid){
+  if(!ST.basmalaSep)return text;
+  const c=cutBasmala(text,surah,aid);
+  return c?c.rest:text;
+}
 function arWordTokens(t,surah,aid,expectN){
   const out=arTokensRaw(t);
   if(out.length===expectN)return out;
@@ -10623,9 +10682,11 @@ function arWordTokens(t,surah,aid,expectN){
 }
 // Токены для МАРКЕРА СЛОВ: та же нумерация (басмала 1-х аятов срезана) —
 // якорь «номер слова» согласован с wbw-сеткой и паками
-function arHlTokens(t,surah,aid){
+// noBas — басмала УЖЕ отрезана вызывающим: второй раз резать нельзя, иначе
+// уедут четыре настоящих слова аята (и вместе с ними выделения пользователя).
+function arHlTokens(t,surah,aid,noBas){
   let out=arTokensRaw(t);
-  if(aid===1&&surah!==1&&surah!==9&&out.length>4)out=out.slice(4);
+  if(!noBas&&aid===1&&surah!==1&&surah!==9&&out.length>4)out=out.slice(4);
   return out;
 }
 // ── МАРКЕР СЛОВ (тадаббур, фаза 2): выделение слов аята цветом ──────────────
@@ -10649,11 +10710,11 @@ function setHlName(c,v){
   ss("hlNames",n);
 }
 // Сплошная арабская строка с выделениями (+таджвид внутри выделенных слов)
-function arHlHTML(text,s,aid,tjs){
+function arHlHTML(text,s,aid,tjs,noBas){
   const hl=hlFor(s,aid);
   if(!hl)return tjs?tajweedHTML(text,tjs):text;
   const seg=(a,b)=>tjs?tajweedSliceHTML(text,tjs,a,b):text.slice(a,b);
-  const toks=arHlTokens(text,s,aid);
+  const toks=arHlTokens(text,s,aid,noBas);
   let html="",cur=0;
   toks.forEach((tk,i)=>{
     const c=hl[i+1];if(!c)return;
@@ -10989,6 +11050,7 @@ ST.mushafTr=gs("mushafTr",false); // мусхаф: бокс перевода т�
 ST.noTouch=gs("noTouch",false); ST.ntH=gs("ntH",60); // «Режим без касания»
 ST.swipeNav=gs("swipeNav",true); // свайп смены суры (вкл. по умолчанию)
 ST.pageSep=gs("pageSep",true);   // границы страниц мусхафа в ленте (вкл. по умолчанию)
+ST.basmalaSep=gs("basmalaSep",true); // басмала отдельной строкой (вкл. по умолчанию)
 applyNoTouch();
 loadQpcMeta(); // preload mushaf page index (surah → page) for page-mode jumps
 setupSwipe();  // свайп смены суры (если включён в настройках); слушатель ставится один раз
