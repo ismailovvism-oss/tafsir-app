@@ -887,17 +887,31 @@ body.immersive .immersive-exit:hover{opacity:1;background:rgba(0,0,0,.32)}
 [data-arfont="kufi"] .arabic-main,
 [data-arfont="kufi"] .wbw-ar-text,
 [data-arfont="kufi"] .ab-entry-text.rtl,
+[data-arfont="kufi"] .erd-ayah,
 [data-arfont="kufi"] .col-table td.rtl{font-family:'Reem Kufi','Noto Naskh Arabic','Amiri',serif}
 /* Мусхаф Мадани — почерк Усмана Таха (KFGQPC Uthmanic Hafs) */
 [data-arfont="hafs"] .arabic-main,
 [data-arfont="hafs"] .wbw-ar-text,
 [data-arfont="hafs"] .ab-entry-text.rtl,
+[data-arfont="hafs"] .erd-ayah,
 [data-arfont="hafs"] .col-table td.rtl{font-family:'Scheherazade New','Amiri Quran','Noto Naskh Arabic',serif;line-height:2.3}
 /* Мусхафный насх (Amiri Quran) */
 [data-arfont="amiri"] .arabic-main,
 [data-arfont="amiri"] .wbw-ar-text,
 [data-arfont="amiri"] .ab-entry-text.rtl,
+[data-arfont="amiri"] .erd-ayah,
 [data-arfont="amiri"] .col-table td.rtl{font-family:'Amiri Quran','Noto Naskh Arabic',serif;line-height:2.1}
+/* Эрудит слушает тот же выбор гарнитуры, что лента и хифз (жалоба 2026-08-24:
+   «шрифт арабского не меняется в режиме Эрудит» — там были жёстко прописаны
+   Amiri Quran). Инлайн-арабскому (имена сур, корни, слова в вариантах ответа)
+   задаём ТОЛЬКО гарнитуру: межстрочный от крупных начертаний раздул бы кнопки. */
+[data-arfont="kufi"] .erd-ar{font-family:'Reem Kufi','Noto Naskh Arabic','Amiri',serif}
+[data-arfont="hafs"] .erd-ar{font-family:'Scheherazade New','Amiri Quran','Noto Naskh Arabic',serif}
+[data-arfont="amiri"] .erd-ar{font-family:'Amiri Quran','Noto Naskh Arabic',serif}
+/* «Печатный» — это глифы страниц мусхафа; в Эрудите страниц нет, поэтому берём
+   ближайшее мусхафное начертание текстом, а не оставляем насх. */
+[data-arfont="qpc1"] .erd-ayah,[data-arfont="qpc4t"] .erd-ayah,
+[data-arfont="qpc1"] .erd-ar,[data-arfont="qpc4t"] .erd-ar{font-family:'Amiri Quran','Noto Naskh Arabic',serif}
 /* QPC v1 — постраничные глифы печатного мусхафа Мадани (per-page fonts, lazy) */
 .qpc-line{direction:rtl;text-align:justify;text-align-last:center;line-height:calc(2.3*var(--lh-ar,1));font-size:calc(30px*var(--rs-ar,1));color:var(--text)}
 .qpc-w{display:inline-block}
@@ -1506,7 +1520,7 @@ body.hr-open{overflow:hidden}
 .erd-q-sub{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:6px}
 .erd-q-ask{font-size:18px;line-height:1.45;color:var(--text);font-weight:500}
 /* Аят в вопросе и в разборе: оригинал — RTL, шрифт и размер как в ленте чтения */
-.erd-ayah{font-family:'Amiri Quran','Amiri',serif;direction:rtl;text-align:right;
+.erd-ayah{font-family:'Noto Naskh Arabic','Amiri',serif;direction:rtl;text-align:right;
   font-size:calc(22px*var(--rs-ar,1));line-height:calc(1.95*var(--lh-ar,1));color:var(--text);margin-top:10px}
 .erd-tr{font-size:13px;line-height:1.55;color:var(--text-sec);margin-top:7px}
 .erd-tr.big{font-size:16px;line-height:1.5;color:var(--text);margin-top:10px}
@@ -1544,7 +1558,7 @@ body.hr-open{overflow:hidden}
 .erd-mk.bad{background:#e05252;border-color:#e05252;color:#fff}
 .erd-fb-acts{display:flex;gap:12px;flex-wrap:wrap;margin-top:7px}
 .erd-fb-acts .erd-link{margin-top:0}
-.erd-ar{font-family:'Amiri Quran','Amiri',serif;direction:rtl;unicode-bidi:isolate;font-size:1.15em}
+.erd-ar{font-family:'Noto Naskh Arabic','Amiri',serif;direction:rtl;unicode-bidi:isolate;font-size:1.15em}
 .erd-opt .erd-ar{font-size:1.45em}   /* в варианте ответа арабское имя часто единственный текст — мельчить нельзя */
 .erd-opts{display:flex;flex-direction:column;gap:8px}
 .erd-opt{display:flex;align-items:center;gap:9px;text-align:left;width:100%;padding:12px 13px;border:1px solid var(--border);border-radius:10px;background:var(--bg-card);color:var(--text);font-family:inherit;font-size:15px;cursor:pointer;line-height:1.35}
