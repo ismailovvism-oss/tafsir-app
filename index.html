@@ -9369,6 +9369,15 @@ function setMode(mode){
   ST.bookIntro=false;ST.bmView=false;ST.notesView=false;ST.hlView=false;ST.topicSel=null;ST.selectedTag=null;ST.rootView=null;ST.warnMap=null;
   if(mode==="hifz"){                           // 6-й режим «Хифз» (проверка заучивания)
     if(!ST.hifzMode){
+      // Гасим Эрудит. Раньше этого не было, и после Хифз → Эрудит → Хифз ОБА
+      // флага оставались взведёнными: обе вкладки подсвечены, модуль упражнений
+      // не получал leave() и продолжал слушать цифры, а следующий выход звал
+      // consumeOverlay() ДВАЖДЫ — history.back() асинхронен, второй вызов видел
+      // ту же запись `ov` и шагал назад лишний раз, выбрасывая из приложения.
+      // Запись «Назад» при этом НЕ снимаем: соседний режим тут же поставил бы
+      // свою, а consumeOverlay+pushOverlay подряд из-за той же асинхронности
+      // оставляли экран вообще без записи (аппаратная «Назад» не работала).
+      if(ST.eruditMode){ST.eruditMode=false;if(ERUDIT)ERUDIT.leave();}
       ST.hifzMode=true;ST.homeMode=false;ST.srcMode=false;ST.pageMode=false;
       hifzEnterMode();                         // асинхронная инициализация + рендер
     }
@@ -9376,7 +9385,7 @@ function setMode(mode){
   }
   if(mode==="erudit"){                         // 7-й режим «🎓 Эрудит» (упражнения)
     if(!ST.eruditMode){
-      if(ST.hifzMode){ST.hifzMode=false;consumeOverlay();}
+      if(ST.hifzMode)ST.hifzMode=false;      // запись «Назад» остаётся — см. ветку «хифз»
       ST.eruditMode=true;ST.homeMode=false;ST.srcMode=false;ST.pageMode=false;
       eruditEnterMode();
     }
