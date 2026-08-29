@@ -38,6 +38,7 @@ const PRECACHE = [
   "./data/config.json", "./data/coverage.json",
   "./data/warnings.json", "./data/surah-classifications.json",
   "./data/news.json",
+  "./HELP.md",                // справка внутри приложения — экран ❓ читает этот файл
 ];
 
 // «Загрузочные» данные: без них приложение офлайн открывается пустым, поэтому
@@ -83,6 +84,7 @@ function isShell(url) {
   if (!url.href.startsWith(BASE)) return false;
   const p = url.href.slice(BASE.length).split("?")[0];
   if (p === "" || p === "index.html" || p === "manifest.webmanifest") return true;
+  if (p === "HELP.md") return true;   // справка: сеть вперёд (правки видны сразу), кеш — запасной
   if (BOOT_DATA.has(p)) return true;
   if (p.startsWith("icons/")) return true;
   if (p.startsWith("fonts/") && !p.startsWith("fonts/qpc-")) return true;

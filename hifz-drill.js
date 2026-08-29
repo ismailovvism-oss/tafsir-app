@@ -376,7 +376,11 @@ function build(vks,cfg,seed){
   const w0=warm.length?Math.max(...warm.map(a=>a.step))+1:0;
   const fx=fix.map(a=>Object.assign({},a,{step:a.step+w0}));
   const shift=w0+(fix.length?Math.max(...fix.map(a=>a.step))+1:0);
-  return warm.concat(fx,main.map(a=>Object.assign({},a,{step:a.step+shift})));
+  // Ось role: пресет может задать роль всем ОСНОВНЫМ атомам («синхронно с
+  // чтецом»). Разогрев и ремонт швов свои роли уже несут — их не перебиваем.
+  const stamp=cfg.role?a=>Object.assign({},a,{step:a.step+shift,role:cfg.role})
+                      :a=>Object.assign({},a,{step:a.step+shift});
+  return warm.concat(fx,main.map(stamp));
 }
 
 // ============================================================
@@ -436,16 +440,17 @@ const PRESETS=[
   cfg:{reps:{pattern:["text","text","blind","blind"]},link:{kind:"snowball",every:4,reps:3},stop:{kind:"criterion",maxExtra:4}},chan:"letters"},
  {grp:"Научные",id:"hard",name:"Полезная трудность",sub:"Разнесённый повтор + перемешанный порядок + минимум чтения. Самый неудобный и самый стойкий.",
   cfg:{stop:{kind:"criterion",maxExtra:6},order:{kind:"shuffle"},reps:{pattern:["text","blind","blind","blind","blind"]},spacing:{kind:"expanding",gaps:[1,2,4,8,16]}}},
+ {grp:"Научные",id:"shadow",name:"Синхронно с чтецом",sub:"Читать ВМЕСТЕ с чтецом, не после него: голос ведёт темп, протяжки и таджвид. Пауз нет, поэтому проходит быстро — берут для разгона перед повторами. Требует звука, он включится сам.",
+  cfg:{role:"shadow",reps:{n:5,show:"text"},link:{kind:"snowball",every:4,reps:3}},needsAudio:true},
  {grp:"Научные",id:"reverse",name:"С конца блока",sub:"Аяты в обратном порядке: лечит «начало помню, конец плаваю».",
   cfg:{order:{kind:"reverse"},reps:{n:7,show:"text"},link:{kind:"snowball",every:4,reps:3}}},
 
- {grp:"Пока недоступны",id:"shadow",name:"Синхронно с чтецом",sub:"Читать вместе с записью, с отставанием в полсекунды.",cfg:{},need:"audio"},
  {grp:"Пока недоступны",id:"ottoman",name:"Концы джузов",sub:"Османский метод: последние страницы каждого джуза.",cfg:{},need:"page"},
  {grp:"Пока недоступны",id:"bottomup",name:"Снизу вверх",sub:"Строки страницы с последней к первой.",cfg:{},need:"page"},
  {grp:"Пока недоступны",id:"wholepage",name:"Страница целиком",sub:"Пятнадцать прочтений всей страницы.",cfg:{},need:"page"},
 
 ];
-const NEED_WHY={audio:"нужен звук — следующий этап",page:"нужны данные страниц мусхафа",write:"нужен слой рукописи"};
+const NEED_WHY={page:"нужны данные страниц мусхафа",write:"нужен слой рукописи"};
 const presetById=id=>PRESETS.find(p=>p.id===id);
 function cfgOf(p){return Object.assign({},BASE,p.cfg||{});}
 
@@ -515,6 +520,8 @@ async function runAudio(){
   // Оценка длительности для паузы ДО чтения: заранее её взять неоткуда — файл
   // ещё не загружен. ~0.45 с на слово, та же прикидка, что на экране плана.
   const est=Math.max(1200,chunkLen(at.chunk)*450);
+  // shadow — шэдоуинг: читаешь ОДНОВРЕМЕННО с чтецом. Тишины нет ни до, ни
+  // после: пауза превратила бы синхронное чтение в обычное «повтори следом».
   if(role==="anticipate"){                     // сперва говоришь ты, потом сверка
     await sleep(est,my);
     if(my!==D.aud||!D.open)return;
@@ -671,7 +678,8 @@ function rukuRowHTML(){
 // специфичность кодирования — заученное под один голос под другим вспоминается
 // хуже, и менять его посреди блока значит частично учить заново.
 function paceNote(){
-  if(D.pace!=="audio")return "листаешь сам";
+  const pm=presetById(D.method);
+  if(D.pace!=="audio")return pm&&pm.needsAudio?"без звука шэдоуинга не выйдет — включи «звук + пауза»":"листаешь сам";
   const r=ctx.reciter&&ctx.reciter();
   if(!r)return "со звуком станок ведёт сам";
   return "читает "+r.name+" (общий с 🎧) · станок ведёт сам";
@@ -774,7 +782,9 @@ function runHTML(){
     ${lawhOn()?lawhHTML():""}
     <div class="hfd-bottom">${D.playing
       ? `<span class="hfd-live">${roleOf(at)==="anticipate"?"Читай по памяти — чтец проверит следом"
-          :roleOf(at)==="listen"?"Слушай и веди пальцем":"Слушай, потом повтори в тишину"}</span>`
+          :roleOf(at)==="listen"?"Слушай и веди пальцем"
+          :roleOf(at)==="shadow"?"Читай ВМЕСТЕ с чтецом, не после него"
+          :"Слушай, потом повтори в тишину"}</span>`
       : gateOn()
       ? `<span class="hfd-ask">Вспомнил?</span>
          <button class="hfd-g g0" data-act="grade" data-g="0">не помню</button>
@@ -882,7 +892,14 @@ function declare(){
 }
 
 async function onAct(act,el){
-  if(act==="method"){D.method=el.dataset.id;render();return;}
+  if(act==="method"){
+    D.method=el.dataset.id;
+    // Шэдоуинг без звука — просто чтение глазами: включаем темп сам, молча,
+    // чтобы человек не гадал, почему «синхронно с чтецом» ничего не читает.
+    const pm=presetById(D.method);
+    if(pm&&pm.needsAudio)D.pace="audio";
+    render();return;
+  }
   if(act==="veil"){D.veil=el.dataset.v;D.revealed=false;render();return;}
   if(act==="ruku"){rukuTake(+el.dataset.d||0);return;}
   if(act==="grade"){gate(+el.dataset.g);return;}
