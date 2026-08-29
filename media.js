@@ -1003,6 +1003,110 @@ export function init(c){
   if(rid)loadRecKeys(rid).then(ks=>{if(ks.size)ctx.renderCenter();});
 }
 // Старт (или перескок) воспроизведения с аята s:a активным источником
+// ============================================================
+// ОТРЕЗОК ДЛЯ СТАНКА ЗАУЧИВАНИЯ (📿 hifz-drill.js)
+// ============================================================
+// Станку нужно не «играть дальше», а «проиграть РОВНО этот кусок и сказать,
+// когда кончил». Поэтому здесь СВОЙ <audio>, а не P.audio: у ленточного плеера
+// своя машина состояний (repeat/range/gap/endedAt/префетч), и вклиниваться в
+// неё ради отрезка — верный способ поломать оба. Станок и лента звучат по
+// очереди: старт отрезка глушит ленту.
+const DR={au:null,token:0,timer:null};
+function drAudio(){
+  if(DR.au)return DR.au;
+  const au=new Audio();au.preload="auto";DR.au=au;return au;
+}
+// Вес символа при нарезке ВНУТРИ аята. Тайминги у нас поаятные, пословных нет;
+// делить длительность поровну по числу слову нельзя — чтение растягивается на
+// маддах и долгих гласных, а не на количестве букв. Веса ниже — эвристика:
+// они заметно ближе к правде, чем равномерное деление, но это ВСЁ РАВНО
+// приближение. Отрезок внутри аята помечается как неточный (см. exact).
+const W_MADDA=2.5, W_DAGGER=1.5, W_LONG=1.6, W_SHADDA=1.2, W_HARAKA=.35, W_SUKUN=.15;
+function charWeight(c){
+  if(c==="\u0653")return W_MADDA;                       // ٓ мадда
+  if(c==="\u0670")return W_DAGGER;                      // ٰ малый алиф
+  if(c==="\u0651")return W_SHADDA;                      // ّ ташдид
+  if(c==="\u0652")return W_SUKUN;                       // ْ сукун
+  if(c>="\u064B"&&c<="\u0650")return W_HARAKA;          // огласовки и танвин
+  if("اأإآىيوٱ".indexOf(c)>=0)return W_LONG;             // долгие гласные и их носители
+  if(c>="\u0621"&&c<="\u064A")return 1;                 // прочие буквы
+  return 0;                                             // знаки вакфа, пробелы, номера
+}
+function wordsWeight(words){
+  let sum=0;const per=[];
+  for(const w of words){let x=0;for(const c of w)x+=charWeight(c);per.push(x);sum+=x;}
+  return {per,sum};
+}
+export function stopSegment(){
+  DR.token++;
+  if(DR.timer){clearTimeout(DR.timer);DR.timer=null;}
+  if(DR.au){try{DR.au.pause();}catch(e){}}
+}
+// Проиграть отрезок. Возвращает {ok, exact, ms} — сколько звучало и был ли
+// отрезок точным (границы аята) или интерполированным (часть аята).
+//   seg: {s, a, w0, w1, words}  — words[] нужен только для частичного отрезка
+//   opts: {rate, silenceAfter, silenceBefore}  — доли от длительности отрезка
+export async function playSegment(seg,opts){
+  const o=opts||{};
+  const my=++DR.token;
+  if(P.playing)stopAll();                               // лента и станок звучат по очереди
+  const src=SRC&&SRC.id===activeSourceId()?SRC:makeSourceById(activeSourceId());
+  if(!src)return {ok:false,exact:false,ms:0};
+  let m=null;
+  try{m=await src.getMediaFor(seg.s,seg.a);}catch(e){}
+  if(!m||my!==DR.token)return {ok:false,exact:false,ms:0};
+  let t0=m.start!=null?m.start:0;
+  let t1=m.end!=null?m.end:null;                         // null = до конца файла (файл-на-аят)
+  let exact=true;
+  const ws=seg.words;
+  const partial=ws&&ws.length&&!(seg.w0===0&&seg.w1===ws.length-1);
+  if(partial&&t1!=null){
+    const {per,sum}=wordsWeight(ws);
+    if(sum>0){
+      const dur=t1-t0;
+      let acc=0;const cum=per.map(x=>(acc+=x));
+      const before=seg.w0>0?cum[seg.w0-1]:0;
+      t1=t0+dur*cum[seg.w1]/sum;
+      t0=t0+dur*before/sum;
+      t0=Math.max(0,t0-0.15);t1=t1+0.15;                 // буфер, чтобы не срезать хвост звука
+      exact=false;
+    }
+  }
+  const au=drAudio();
+  au.playbackRate=au.defaultPlaybackRate=o.rate||1;
+  const url=m.blob?URL.createObjectURL(m.blob):m.url;
+  if(au.src!==url){au.src=url;}
+  const wait=ms=>new Promise(r=>{DR.timer=setTimeout(r,ms);});
+  // Метаданные ждём ДО пауз: у чтеца с файлом-на-аят таймингов нет вовсе
+  // (t1===null), и длительность отрезка известна только из самого файла. Без
+  // этого «тишина той же длины» молча превращалась бы в ноль — то есть пауза
+  // на твой повтор пропадала бы у половины чтецов.
+  if(au.readyState<1)await new Promise(r=>{
+    const ok=()=>{au.removeEventListener("loadedmetadata",ok);r();};
+    au.addEventListener("loadedmetadata",ok);setTimeout(ok,4000);
+  });
+  if(my!==DR.token){if(m.blob)URL.revokeObjectURL(url);return {ok:false,exact,ms:0};}
+  if(t1==null&&isFinite(au.duration)&&au.duration>0)t1=au.duration;
+  const dur=(t1!=null?t1-t0:0);
+  if(o.silenceBefore&&dur)await wait(dur*o.silenceBefore*1000);  // «скажи ДО чтеца»
+  if(my!==DR.token){if(m.blob)URL.revokeObjectURL(url);return {ok:false,exact,ms:0};}
+  const t=Date.now();
+  await new Promise(res=>{
+    let done=false;
+    const fin=()=>{if(done)return;done=true;au.removeEventListener("timeupdate",tick);
+      au.removeEventListener("ended",fin);try{au.pause();}catch(e){}res();};
+    const tick=()=>{if(my!==DR.token||(t1!=null&&au.currentTime>=t1))fin();};
+    au.addEventListener("timeupdate",tick);au.addEventListener("ended",fin);
+    const go=()=>{try{au.currentTime=t0;}catch(e){}au.play().catch(fin);};
+    go();                                                // метаданные уже дождались выше
+    setTimeout(fin,Math.max(4000,(dur||30)*1500));       // страховка: не зависнуть на битом файле
+  });
+  if(m.blob)URL.revokeObjectURL(url);
+  if(my!==DR.token)return {ok:false,exact,ms:0};
+  if(o.silenceAfter&&dur)await wait(dur*o.silenceAfter*1000);    // «повтори за чтецом»
+  return {ok:my===DR.token,exact,ms:Date.now()-t};
+}
+
 export function playFrom(s,a){
   if(!SRC){
     SRC=makeSourceById(activeSourceId());

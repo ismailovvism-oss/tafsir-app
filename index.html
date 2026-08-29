@@ -754,6 +754,15 @@ body.sb-resizing{cursor:col-resize;user-select:none}
      поэтому полоса подхватывает оба слоя сама. */
   background:linear-gradient(rgba(var(--accent-rgb),.10),rgba(var(--accent-rgb),.10)),var(--bg-alt);
   border-top:1px solid var(--border-light);border-bottom:1px solid var(--border-light)}
+/* Граница СМЫСЛОВОГО отрезка (рукуʿ) — сознательно НЕ похожа на «Страница N»:
+   та говорит про бумагу, эта — про содержание. Поэтому не полоса-плашка, а
+   тонкая линия с ع посередине, как значок на полях мусхафа. */
+.read-ruku-sep{margin:20px 0 14px;display:flex;align-items:center;gap:10px;
+  user-select:none;color:var(--text-muted)}
+.read-ruku-sep::before,.read-ruku-sep::after{content:"";flex:1;height:1px;background:var(--border)}
+.read-ruku-sep .rk-mark{font-size:15px;color:var(--accent);opacity:.75;line-height:1}
+.read-ruku-sep .rk-lab{font-size:11px;letter-spacing:.3px;white-space:nowrap;max-width:60%;
+  overflow:hidden;text-overflow:ellipsis}
 .cov-gap-strip{margin:6px 0;padding:8px 12px;border:1px dashed var(--border);border-radius:7px;background:var(--bg-alt);color:var(--text-muted);font-size:12px;cursor:pointer;display:flex;align-items:center;gap:8px}
 .cov-gap-strip:hover{border-color:var(--accent)}
 .cov-gap-strip.open{border-style:solid}
@@ -1475,6 +1484,107 @@ body.hr-open{overflow:hidden}
 .spd-zone{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;border:1px solid var(--border);color:var(--text-sec)}
 .spd-zone.in{border-color:var(--accent);color:var(--accent)}
 
+/* ── 📿 Станок заучивания (разметку рисует ленивый hifz-drill.js) ── */
+/* Полноэкранный оверлей, как hifz-ридер: в режиме прогона тап по ЛЮБОМУ месту
+   экрана = следующий повтор, поэтому кнопки собраны в ВЕРХНЮЮ полосу. */
+.hfd{position:fixed;inset:0;z-index:70;background:var(--bg);display:flex;flex-direction:column;
+  overflow-y:auto;-webkit-overflow-scrolling:touch;-webkit-tap-highlight-color:transparent}
+.hfd.running{overflow:hidden;cursor:pointer;user-select:none;-webkit-user-select:none}
+.hfd .hfd-box{flex:1;display:flex;flex-direction:column;min-height:0}
+.hfd .hfd-h{font-size:19px;font-weight:700;color:var(--text);margin-bottom:5px}
+.hfd .hfd-sub{font-size:12px;color:var(--text-muted);line-height:1.5;margin-bottom:14px}
+/* — экран настройки — */
+.hfd-setup,.hfd-plan,.hfd-done{max-width:640px;width:100%;margin:0 auto;padding:18px 14px 40px}
+.hfd-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.hfd-row>label{font-size:12px;color:var(--text-muted);min-width:52px}
+.hfd-in{background:var(--bg-card);color:var(--text);border:1px solid var(--border);border-radius:7px;
+  padding:6px 9px;font-family:inherit;font-size:13px}
+.hfd-in.hfd-n{width:74px}
+.hfd-note{font-size:11px;color:var(--text-muted)}
+.hfd-chip{background:var(--bg-card);color:var(--text-sec);border:1px solid var(--border);border-radius:999px;
+  padding:5px 12px;font-family:inherit;font-size:12px;cursor:pointer}
+.hfd-chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.hfd-methods{margin-top:14px}
+.hfd-grp{font-size:11px;color:var(--text-muted);letter-spacing:.06em;text-transform:uppercase;
+  margin:16px 0 7px;padding-bottom:5px;border-bottom:1px solid var(--border)}
+.hfd-m{display:block;width:100%;text-align:left;background:var(--bg-card);color:var(--text);
+  border:1px solid var(--border);border-radius:9px;padding:9px 11px;margin-bottom:7px;
+  font-family:inherit;cursor:pointer}
+.hfd-m b{display:block;font-size:13px;font-weight:600;margin-bottom:2px}
+.hfd-m i{display:block;font-size:11px;font-style:normal;color:var(--text-muted);line-height:1.45}
+.hfd-m.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.hfd-m.off{opacity:.45;cursor:default}
+.hfd-warn{font-size:10px;font-weight:400;color:var(--text-muted);border:1px solid var(--border);
+  border-radius:999px;padding:1px 7px;margin-left:5px}
+.hfd-go{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.hfd-start{background:var(--accent);color:#fff;border:none;border-radius:9px;padding:11px 20px;
+  font-family:inherit;font-size:14px;font-weight:600;cursor:pointer}
+.hfd-start:disabled{opacity:.55;cursor:default}
+.hfd-back{background:var(--bg-card);color:var(--text-sec);border:1px solid var(--border);border-radius:9px;
+  padding:11px 16px;font-family:inherit;font-size:13px;cursor:pointer}
+/* — сводка по программе — */
+.hfd-nums{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
+.hfd-nums>div{flex:1;min-width:96px;background:var(--bg-card);border:1px solid var(--border);
+  border-radius:9px;padding:11px;text-align:center}
+.hfd-nums b{display:block;font-size:19px;color:var(--text)}
+.hfd-nums i{display:block;font-size:11px;font-style:normal;color:var(--text-muted);margin-top:2px}
+.hfd-note2{font-size:12px;color:var(--text-muted);line-height:1.5}
+/* — экран прогона — */
+.hfd-run{flex:1;display:flex;flex-direction:column;min-height:0}
+.hfd-top{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px 6px;gap:10px}
+.hfd-key{font-size:13px;color:var(--text-muted);letter-spacing:.04em}
+.hfd-tools{display:flex;align-items:center;gap:7px}
+.hfd-b{background:var(--bg-card);color:var(--text-muted);border:1px solid var(--border);border-radius:7px;
+  padding:5px 10px;font-family:inherit;font-size:12px;cursor:pointer}
+.hfd-b.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.hfd-x{background:var(--bg-card);color:var(--text-muted);border:1px solid var(--border);border-radius:7px;
+  padding:5px 10px;font-size:16px;line-height:1;cursor:pointer}
+.hfd-bar{flex:0 0 auto;height:3px;background:var(--border);margin:0 14px;border-radius:2px;overflow:hidden}
+.hfd-fill{height:100%;background:var(--accent);transition:width .18s ease}
+.hfd-count{flex:0 0 auto;font-size:11px;color:var(--text-muted);text-align:center;padding:7px 14px 0}
+.hfd-main{flex:1;display:flex;overflow-y:auto;padding:10px 20px;min-height:0}
+.hfd-body{margin:auto;max-width:860px;width:100%}
+.hfd-bas{font-size:calc(17px*var(--rs-ar,1));line-height:1.9;direction:rtl;text-align:center;
+  color:var(--text-muted);opacity:.6;margin-bottom:10px}
+.hfd-ar{font-size:calc(30px*var(--rs-ar,1));line-height:2.1;direction:rtl;text-align:center;color:var(--text)}
+/* Скрытое слово занимает РОВНО свою ширину: если заменить его на прочерк
+   фиксированной длины, строка переверстается на каждом повторе и зрительная
+   память о месте слова на странице ломается — а она у хафизов рабочая. Поэтому
+   слово остаётся в потоке, но красится прозрачным и подчёркивается пунктиром. */
+.hfd-gap{color:transparent;border-bottom:1.5px dashed var(--text-muted);
+  opacity:.55;border-radius:1px}
+.hfd-sep{color:var(--text-muted);opacity:.5;font-size:.7em;padding:0 .2em}
+.hfd-bottom{flex:0 0 auto;text-align:center;font-size:11px;color:var(--text-muted);padding:10px 14px 16px}
+/* Ворота самооценки: занятие кончается не на N-м повторе, а на успешном
+   воспроизведении без подсказки. Кнопки крупные — жать не глядя. */
+.hfd-ask{display:block;margin-bottom:8px;font-size:12px;color:var(--text-sec)}
+.hfd-g{background:var(--bg-card);color:var(--text-sec);border:1px solid var(--border);
+  border-radius:9px;padding:10px 16px;margin:0 4px;font-family:inherit;font-size:13px;cursor:pointer}
+.hfd-g.g0:hover{border-color:#c0392b;color:#c0392b}
+.hfd-g.g1:hover{border-color:var(--text-sec);color:var(--text)}
+.hfd-g.g2:hover{border-color:var(--accent);color:var(--accent)}
+/* Подпись роли во время звучания: что делать ИМЕННО СЕЙЧАС — слушать, повторять
+   в тишину или читать по памяти до чтеца. */
+.hfd-live{display:inline-block;color:var(--accent);font-size:12px}
+.hfd-live::before{content:"♪ ";opacity:.7}
+.hfd-rec{font-style:normal;opacity:.75}
+/* Цифровой лоух: экранная арабская клавиатура. Системная арабская есть не у
+   всех, а на телефоне её ещё и переключать — поэтому своя. */
+.hfd-lawh{flex:0 0 auto;padding:6px 10px 0;max-width:640px;width:100%;margin:0 auto}
+.hfd-lw-hint{text-align:center;font-size:11px;color:var(--text-muted);margin-bottom:7px}
+.hfd-lw-bad{color:#c0392b;font-weight:600}
+.hfd-keys{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;direction:rtl}
+.hfd-k{background:var(--bg-card);color:var(--text);border:1px solid var(--border);
+  border-radius:7px;padding:9px 0;font-size:17px;line-height:1;cursor:pointer;
+  font-family:inherit;-webkit-tap-highlight-color:transparent}
+.hfd-k:active{background:var(--accent);border-color:var(--accent);color:#fff}
+.hfd-k.bad{border-color:#c0392b;color:#c0392b}
+/* Слово, которое сейчас набирают: пунктир ярче остальных заглушек. */
+.hfd-gap.hfd-next{border-bottom-color:var(--accent);opacity:.9}
+@media(max-width:420px){.hfd-keys{grid-template-columns:repeat(6,1fr)}.hfd-k{padding:8px 0;font-size:16px}}
+@media(max-width:680px){.hfd-ar{font-size:calc(25px*var(--rs-ar,1))}}
+
 /* ── Единая система режимов/панелей ── */
 /* переключатель режимов: иконка+подпись; на узких экранах — только иконки */
 .seg-modes .ml{margin-left:4px}
@@ -2036,6 +2146,11 @@ const SOURCES={
   // — статичные классификации сур (Мекка/Медина, периоды, мукатта'ат, пары…) —
   //   оверлей-фильтры карты хифза; чистая справка, не связана с состоянием —
   surah_meta:      {baseUrl:"data",  pathTemplate:"{baseUrl}/surah-classifications.json"},
+  // — деление на рукуʿ (ركوع): смысловые отрезки, значок ع на полях индо-пакистанских
+  //   мусхафов. Единственное КАНОНИЧЕСКОЕ тематическое деление с машиночитаемыми
+  //   данными (build_ruku.py из метаданных Tanzil, CC-BY). 556 отрезков, 6 КБ —
+  //   ОДИН файл на весь Коран, чанковать нечего —
+  ruku:            {baseUrl:"data",  pathTemplate:"{baseUrl}/ruku.json"},
   // Тематический указатель (фихрист): дерево тем + карта тема→аяты (build_topics.py).
   topics:          {baseUrl:"data",  pathTemplate:"{baseUrl}/topics/{file}"},
   // — печатный мусхаф (глифы QPC, лёгкий JSON) и его шрифты; структуру внутри
@@ -2111,7 +2226,7 @@ function scanDirOf(t){return t.imgdir||("img/"+t.id);}
 // первом обращении (▶ у аята или блок «🎧 Аудио» в панели 📚). Пока аудио не
 // трогали: ни байта кода, ни <audio>-элементов. media.js — ES-модуль, наши
 // let-глобалы (ST/CONFIG/qpcMeta) ему не видны — передаём контекст геттерами.
-const MEDIA_VER="22";   // поднять при правке media.js (сброс кеша браузера/CDN)
+const MEDIA_VER="23";   // поднять при правке media.js (сброс кеша браузера/CDN)
 let MEDIA=null;        // загруженный модуль (null = ещё не загружался)
 function mediaCtx(){
   return {
@@ -2197,6 +2312,68 @@ function eruditEnterMode(){
 function renderEruditScreen(el){
   el.innerHTML=`<div class="erd-screen"><div id="erdBody"></div></div>`;
   if(ERUDIT)ERUDIT.render();else eruditMod().then(m=>m&&m.enterMode());
+}
+
+// ============================================================
+// «📿 Станок заучивания» (hifz-drill.js — ленивый ES-модуль)
+// ============================================================
+// Не режим, а ПОЛНОЭКРАННЫЙ ОВЕРЛЕЙ поверх 🧠 Хифза — как 🤲 «Чтение наизусть».
+// Оверлеем, а не восьмым режимом, СОЗНАТЕЛЬНО: флаги режимов уже дважды взводились
+// парами (hifzMode+eruditMode), и цена ошибки там — вылет из приложения на «Назад».
+// У оверлея одна запись истории и один владелец — сам модуль.
+const HIFZDRILL_VER="1";  // поднять при правке hifz-drill.js (сброс кеша браузера/CDN)
+let DRILL=null;
+async function drillMod(){
+  if(DRILL)return DRILL;
+  try{
+    const m=await import("./hifz-drill.js?v="+HIFZDRILL_VER);
+    m.init({
+      SURAHS,esc,escAttr,
+      // Текст — те же чанки и кеш, что у ленты чтения: станок не заводит своей копии Корана.
+      ensureText:(id,s)=>loadChunk(id,s),
+      getArabic:(s,a)=>getArabicFromCache(s,a),
+      cutBasmala:(t,s,a)=>cutBasmala(t,s,a),          // басмала 1-х аятов приклеена — режем ЕЁ ЖЕ функцией
+      // Слой заучивания: пройденный блок объявляется знаемым и попадает на карту 🗺 и в очередь 🎯.
+      declareRange:(s,f,t2,lv)=>Progress.hifzDeclareRange(s,f,t2,lv),
+      // Рукуʿ — смысловые отрезки: станок берёт охват целой темой, а не «аяты 1–5»
+      // на глаз. Данные общие с полосами в ленте чтения, грузятся один раз.
+      // Слабые швы: {"2:5>2:6": {last:0|1|2, log:[…]}} — станок читает их, чтобы
+      // подставить лечение стыков в начало программы (диагностика).
+      junctions:()=>Progress.hifzJunctions(),
+      noteJunction:(a,b,g)=>Progress.hifzNoteJunction(a,b,g),
+      // Звук отрезка. Ленточный плеер и станок звучат ПО ОЧЕРЕДИ: playSegment
+      // сам глушит ленту (у него свой <audio>, чужую машину состояний не трогает).
+      playSegment:(seg,o)=>mediaMod().then(m=>m?m.playSegment(seg,o):{ok:false}),
+      stopSegment:()=>mediaMod().then(m=>m&&m.stopSegment()),
+      // Чтец у станка ОБЩИЙ с лентой (🎧) — специфичность кодирования: менять
+      // голос посреди блока значит учить заново. Здесь только показываем, кто он.
+      reciter:()=>{
+        const rs=(CONFIG.audio&&CONFIG.audio.reciters)||[];
+        const id=gs("mediaReciter",(CONFIG.audio&&CONFIG.audio.default)||(rs[0]&&rs[0].id)||"");
+        const r=rs.find(x=>x.id===id)||rs[0];
+        return r?{id:r.id,name:r.name,exact:r.type==="audio_surah"}:null;
+      },
+      loadRuku:()=>loadRuku(),
+      rukuSegs:s=>(RUKU&&RUKU.by[s])||null,          // [[от, до, номер в Коране], …]
+      rukuTitle:i=>rukuTitle(i),
+      getSettings:()=>Progress.hifzSettings(),
+      setSettings:p=>Progress.hifzSetSettings(p),
+      consumeOverlay:()=>consumeOverlay(),
+    });
+    DRILL=m;return m;
+  }catch(e){
+    console.error("hifz-drill.js не загрузился:",e);
+    alert("Не удалось загрузить станок заучивания (при первом запуске нужна сеть).");
+    return null;
+  }
+}
+function drillOpen(){return !!(DRILL&&DRILL.isOpen());}
+// Вход из 🧠 Хифза. Стартовая позиция — как у 🤲: от последнего места чтения.
+function drillStart(){
+  const lp=gs("lastPos",null);
+  const start=(lp&&lp.surah)?{surah:lp.surah,ayah:lp.ayah||1}:{surah:ST.surah,ayah:1};
+  pushOverlay();                                    // запись «Назад» ставим ДО открытия
+  drillMod().then(m=>{if(m)m.open(start);else consumeOverlay();});
 }
 function openErudit(){setMode("erudit");}
 
@@ -2505,6 +2682,7 @@ let ST={surah:1,search:"",sbTab:"surahs",sidebarOpen:false,rpanelOpen:false,apan
   noTouch:false,     // «Режим без касания»: чтение/листание без касания текста (кнопочная панель)
   swipeNav:true,     // свайп влево/вправо листает суру (можно выключить в ⚙ Вид)
   pageSep:true,      // полосы «Страница N» в ленте «Аяты» (можно выключить в ⚙ Вид)
+  rukuSep:true,      // границы смысловых отрезков (рукуʿ) в ленте «Аяты»
   basmalaSep:true,   // басмала отдельной строкой над аятом 1, а не внутри его текста
   ntH:60,            // высота нижней панели режима без касания (px)
   mushafPage:1,      // current page in mushaf page mode (1..604)
@@ -2914,6 +3092,21 @@ const Progress=(()=>{
   }
   // Читающий hifz-контракт: живые ссылки — ТОЛЬКО чтение (писать — declare/review выше).
   function hifzAyahs(){return state.hifz.ayahs;}
+  // Швы копились с 2026-07 и никем не читались («задел под движок швов»).
+  // Первый потребитель — диагностика станка: слабый шов лечится ДО урока.
+  function hifzJunctions(){return state.hifz.junctions;}
+  // Наблюдение станка за швом. НАМЕРЕННО пишет в ОТДЕЛЬНОЕ поле j.drill, а не
+  // в j.last: 🎯 — экзамен, станок — тренировка, и смешивать их свидетельства
+  // нельзя (тот же принцип, по которому проверка не идёт в серию/цель). SRS и
+  // verified отсюда не трогаются вовсе — самооценка на уроке не подтверждение.
+  function hifzNoteJunction(aVk,bVk,grade){
+    const H=state.hifz,t=today();
+    const jk=progVerseOrdinal(bVk)<progVerseOrdinal(aVk)?bVk+">"+aVk:aVk+">"+bVk;
+    const j=H.junctions[jk]||(H.junctions[jk]={log:[]});
+    j.drill={last:grade,up:t};
+    (j.dlog=j.dlog||[]).push({t,g:grade});if(j.dlog.length>20)j.dlog=j.dlog.slice(-20);
+    save();
+  }
   function hifzSuraDecl(){return state.hifz.suraDecl;}
   function hifzGetAyah(vk){const r=state.hifz.ayahs[vk];return r?JSON.parse(JSON.stringify(r)):null;}
   function hifzSettings(){return JSON.parse(JSON.stringify(state.hifz.settings));}
@@ -2995,7 +3188,7 @@ const Progress=(()=>{
     wipe(){state=def();save();}
   };
   return {recordActivity,updateResume,setGoal,getSummary,getResume,getCoverage,getPageStatus,getHifzStatus,
-    hifzDeclareSurah,hifzDeclareRange,hifzRecordReview,hifzAmendReview,hifzStage,hifzAyahs,hifzSuraDecl,hifzGetAyah,hifzSettings,hifzSetSettings,
+    hifzDeclareSurah,hifzDeclareRange,hifzRecordReview,hifzAmendReview,hifzStage,hifzAyahs,hifzJunctions,hifzNoteJunction,hifzSuraDecl,hifzGetAyah,hifzSettings,hifzSetSettings,
     startPageRun,finishPageRun,cancelPageRun,runInfo,getPageBest,getSpeedTrend,speedRuns,speedSettings,speedSetSettings,speedClearAll,speedClearPage,
     todayISO:today,HIFZ_MASTER,
     exportState,importState,verseToPage,ensureInit,markAction,debug,TOTAL_PAGES};
@@ -3381,7 +3574,8 @@ function renderHifz(){
       <button class="${HF.tab==="map"?"on":""}" onclick="hifzTab('map')">🗺 Карта</button>
       <button class="${HF.tab==="quiz"?"on":""}" onclick="hifzTab('quiz')">🎯 Проверка</button>
     </div>
-    <button class="cov-map-open" onclick="hrStart()" title="Полноэкранный показ: один аят, тап по экрану — следующий">🤲 Чтение наизусть — аят на весь экран, тап = дальше</button>`
+    <button class="cov-map-open" onclick="hrStart()" title="Полноэкранный показ: один аят, тап по экрану — следующий">🤲 Чтение наизусть — аят на весь экран, тап = дальше</button>
+    <button class="cov-map-open" onclick="drillStart()" title="Заучивание по программе: порция, число повторов и способ показа выбираются методом">📿 Станок заучивания — учить по программе, метод на выбор</button>`
     +(HF.tab==="map"?hifzMapHTML():hifzQuizHTML());
 }
 function hifzTab(t){HF.tab=t;if(t==="quiz"&&!HF.sess)hifzBeginSession();else renderHifz();}
@@ -7282,6 +7476,7 @@ async function renderReading(el){
   // Границы печатных страниц: нужна ТОЛЬКО мета пака (31 КБ, кэш _qpcMetaCache),
   // сами страницы мусхафа здесь не грузятся.
   if(ST.pageSep&&ST.layout==="h")await loadQpcMeta();
+  if(ST.rukuSep&&ST.layout==="h")await loadRuku();
 
   const area=document.getElementById("readingArea");
   if(!area)return;
@@ -7318,7 +7513,15 @@ async function renderReading(el){
     // Где начинается новая печатная страница: {аят: номер}. Считаем один раз на
     // отрисовку, а не на каждый аят.
     const pageAt=ST.pageSep?pageStartsInSurah(ST.surah):{};
+    // Начала смысловых отрезков. Первый аят суры пропускаем: там и так заголовок
+    // суры, а черта под ним читается как «конец темы», хотя тема только началась.
+    const rukuAt=ST.rukuSep?rukuStartsInSurah(ST.surah):{};
     for(const aid of ayahIds){
+      if(rukuAt[aid]&&aid!==1){
+        const [idx,nth,tot]=rukuAt[aid],ti=rukuTitle(idx);
+        html+=`<div class="read-ruku-sep" title="${escAttr("Смысловой отрезок (рукуʿ) "+nth+" из "+tot+" в этой суре · "+idx+"-й в Коране")}">`+
+          `<span class="rk-mark">ع</span>${ti?`<span class="rk-lab">${esc(ti)}</span>`:""}</div>`;
+      }
       if(pageAt[aid])html+=`<div class="read-page-sep">Страница ${pageAt[aid]}</div>`;
       html+=`<div class="ayah-block" data-aid="${aid}"><div class="ab-head">
         <div class="ab-row"><button class="ab-num-btn" onclick="event.stopPropagation();openAyahSheet(${aid})" title="Все действия с аятом">${aid}</button>
@@ -8640,6 +8843,7 @@ function jumpToAyahEl(aid,flash){
 
 // Close search on Escape, open on Ctrl+F, block Ctrl+S/U
 document.addEventListener("keydown",function(e){
+  if(drillOpen()&&DRILL.onKey(e))return;       // станок заучивания поверх всего: свои клавиши
   if(hrOpen){                                  // hifz-ридер поверх всего: свои клавиши
     if(e.key==="Escape")hrStop();
     else if(e.key==="ArrowLeft"||e.key===" "||e.key==="Enter"){e.preventDefault();hrStep(1);}
@@ -8665,7 +8869,7 @@ document.addEventListener("keydown",function(e){
 // ============================================================
 let pendingAyah=null;
 // Which open panels should the Back button / backdrop close (overlays only; the desktop sidebar is docked)
-function anyOverlayOpen(){return ST.rpanelOpen||ST.apanelOpen||ST.diafilm||hrOpen||ST.immersive||appAboutOpen()||progressOpen||spdOpen||!!STU||(isM()&&ST.sidebarOpen);}
+function anyOverlayOpen(){return ST.rpanelOpen||ST.apanelOpen||ST.diafilm||hrOpen||drillOpen()||ST.immersive||appAboutOpen()||progressOpen||spdOpen||!!STU||(isM()&&ST.sidebarOpen);}
 let navBack=false; // true while we programmatically history.back() to consume our own overlay entry
 function pushOverlay(){if(!(history.state&&history.state.ov))history.pushState({ov:1},"");}
 function consumeOverlay(){if(history.state&&history.state.ov){navBack=true;history.back();}}
@@ -8678,6 +8882,7 @@ function closeAllPanelsUI(){
   if(ST.apanelOpen){ST.apanelOpen=false;document.getElementById("apanel").classList.add("collapsed");}
   if(ST.diafilm)exitDiafilm(true);       // «Назад» выходит из диафильма (запись уже снята)
   if(hrOpen)hrStop(true);                // «Назад» выходит из hifz-ридера (запись уже снята)
+  if(drillOpen())DRILL.close(true);      // «Назад» выходит из станка заучивания (запись уже снята)
   if(STU)closeStudy(true);               // «Назад» закрывает фокус-экран аята (запись уже снята)
   if(ST.immersive)exitImmersive(true);   // Back button leaves immersive (entry already popped)
   if(isM()&&ST.sidebarOpen){ST.sidebarOpen=false;document.getElementById("sidebar").classList.add("collapsed");}
@@ -9014,6 +9219,8 @@ function viewPanelHTML(){
     `<div class="vp-note">«Колонки» ставят источники рядом по вертикали (горизонтальная прокрутка); свайп листания там отключён.</div>`+
     `<label class="vp-check" style="margin-top:6px"><input type="checkbox" ${ST.pageSep?"checked":""} onchange="togglePageSep()"> Показывать границы страниц мусхафа</label>`+
     `<div class="vp-note">Полоса «Страница N» встаёт там, где на печатной странице начинается новый лист — удобно сверяться с бумажным мусхафом. Только в раскладке «Список».</div>`+
+    `<label class="vp-check" style="margin-top:6px"><input type="checkbox" ${ST.rukuSep?"checked":""} onchange="toggleRukuSep()"> Показывать границы смысловых отрезков</label>`+
+    `<div class="vp-note">Тонкая черта с ع там, где кончается одна тема и начинается следующая. Это рукуʿ (ركوع) — деление, проведённое ПО СМЫСЛУ, а не по объёму; значок ع стоит на полях индо-пакистанских мусхафов. Всего 556 отрезков, в среднем по 11 аятов (самый короткий — один аят 73:20, самый длинный — 53 аята в ас-Саффат). Только в раскладке «Список». Разметка — проект Tanzil.net, лицензия CC-BY.</div>`+
     `<label class="vp-check" style="margin-top:6px"><input type="checkbox" ${ST.basmalaSep?"checked":""} onchange="toggleBasmalaSep()"> Басмала отдельной строкой</label>`+
     `<div class="vp-note">«Бисми-Лляхи…» выносится над первым аятом суры, а не идёт внутри его текста, — как в печатном мусхафе. Копируется аят тоже без неё. В аль-Фатихе басмала остаётся на месте: там это настоящий первый аят; в ат-Тауба её нет вовсе.</div></div>`;
   if(ST.pageMode){
@@ -9116,7 +9323,7 @@ async function offlineWarm(){
   if(!swOk()||!offlineOn())return;
   try{
     const c=await caches.open(SW_SHELL_CACHE);
-    const list=["media.js?v="+MEDIA_VER,"erudit.js?v="+ERUDIT_VER];
+    const list=["media.js?v="+MEDIA_VER,"erudit.js?v="+ERUDIT_VER,"hifz-drill.js?v="+HIFZDRILL_VER];
     const gf=document.querySelector('link[rel="stylesheet"][href*="fonts.googleapis.com"]');
     if(gf){
       const r=await fetch(gf.href,{mode:"cors"});
@@ -9541,6 +9748,7 @@ function setupSwipe(){
 function toggleSwipeNav(){ST.swipeNav=!ST.swipeNav;ss("swipeNav",ST.swipeNav);} // обработчик живёт постоянно, читает флаг
 // Границы страниц: перерисовываем ленту — полосы вставляются на этапе сборки.
 function togglePageSep(){ST.pageSep=!ST.pageSep;ss("pageSep",ST.pageSep);renderCenter();}
+function toggleRukuSep(){ST.rukuSep=!ST.rukuSep;ss("rukuSep",ST.rukuSep);if(ST.rukuSep)loadRuku().then(()=>renderCenter());else renderCenter();}
 function toggleBasmalaSep(){ST.basmalaSep=!ST.basmalaSep;ss("basmalaSep",ST.basmalaSep);renderCenter();}
 
 // Arabic typeface (chosen in the ⚙ Вид panel; persisted). Names are russified.
@@ -9845,6 +10053,39 @@ function mtrOnPage(pg){
 // Аяты СУРЫ, с которых начинается печатная страница: {аят: номер страницы}.
 // Читаем меты пака один раз на отрисовку — перебирать 604 страницы на каждый
 // аят незачем. Пака может не быть (мета не загрузилась) — тогда просто пусто.
+// ═══ РУКУʿ — смысловые отрезки ═══
+// Единственное каноническое деление Корана ПО СМЫСЛУ (а не по объёму): 556
+// отрезков, в среднем по 11 аятов. Используется в двух местах: полосой в ленте
+// чтения и охватом «взять смысловой отрезок» в станке заучивания.
+// Грузится лениво один раз, кэш в памяти (файл 6 КБ, чанковать нечего).
+let RUKU=null,_rukuLoading=null;
+function loadRuku(){
+  if(RUKU)return Promise.resolve(RUKU);
+  if(_rukuLoading)return _rukuLoading;
+  _rukuLoading=fetch(resolveUrl("ruku")).then(r=>r.ok?r.json():null).then(d=>{
+    if(d&&Array.isArray(d.rukus)){
+      RUKU={list:d.rukus,titles:d.titles||{},by:{}};
+      d.rukus.forEach((r,i)=>{(RUKU.by[r[0]]=RUKU.by[r[0]]||[]).push([r[1],r[2],i+1]);});
+    }
+    _rukuLoading=null;return RUKU;
+  }).catch(()=>{_rukuLoading=null;return null;});
+  return _rukuLoading;
+}
+// Начала отрезков внутри суры: {аят: [номер рукуʿ, номер в суре, всего в суре]}.
+function rukuStartsInSurah(surah){
+  const out={};
+  if(!RUKU||!RUKU.by[surah])return out;
+  const segs=RUKU.by[surah];
+  segs.forEach((sg,i)=>{out[sg[0]]=[sg[2],i+1,segs.length];});
+  return out;
+}
+// Отрезок, в который попадает аят: [сура, от, до, номер] или null.
+function rukuOf(s,a){
+  if(!RUKU||!RUKU.by[s])return null;
+  for(const sg of RUKU.by[s])if(a>=sg[0]&&a<=sg[1])return [s,sg[0],sg[1],sg[2]];
+  return null;
+}
+function rukuTitle(idx){return (RUKU&&RUKU.titles&&RUKU.titles[idx])||"";}
 function pageStartsInSurah(surah){
   const out={};
   if(!qpcMeta||!qpcMeta.pageStart)return out;
@@ -11122,6 +11363,7 @@ ST.mushafTr=gs("mushafTr",false); // мусхаф: бокс перевода т�
 ST.noTouch=gs("noTouch",false); ST.ntH=gs("ntH",60); // «Режим без касания»
 ST.swipeNav=gs("swipeNav",true); // свайп смены суры (вкл. по умолчанию)
 ST.pageSep=gs("pageSep",true);   // границы страниц мусхафа в ленте (вкл. по умолчанию)
+ST.rukuSep=gs("rukuSep",true);   // границы смысловых отрезков (рукуʿ) в ленте
 ST.basmalaSep=gs("basmalaSep",true); // басмала отдельной строкой (вкл. по умолчанию)
 applyNoTouch();
 loadQpcMeta(); // preload mushaf page index (surah → page) for page-mode jumps
