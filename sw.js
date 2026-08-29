@@ -38,6 +38,7 @@ const PRECACHE = [
   "./data/config.json", "./data/coverage.json",
   "./data/warnings.json", "./data/surah-classifications.json",
   "./data/news.json",
+  "./data/ruku.json",
   "./HELP.md",                // справка внутри приложения — экран ❓ читает этот файл
 ];
 
@@ -47,6 +48,7 @@ const BOOT_DATA = new Set([
   "data/config.json", "data/coverage.json",
   "data/warnings.json", "data/surah-classifications.json",
   "data/news.json",
+  "data/ruku.json",          // границы смысловых отрезков включены по умолчанию
 ]);
 
 self.addEventListener("install", e => {
