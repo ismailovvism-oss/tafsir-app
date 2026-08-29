@@ -282,7 +282,11 @@ function applyLink(steps,link){
 // секундах: секунды в станке не измеряются, темп задаёт человек).
 function expand(steps,spacing){
   const atoms=[];
-  const mkAtom=(st,j,id)=>({chunk:st.chunk,show:st.shows[j],i:j,of:st.shows.length,link:!!st.link,step:id});
+  // Поля ШАГА переносим в атом поимённо. Раньше здесь терялся fix («ремонт шва»
+  // не подписывался на экране, хотя стадия работала); на нём же споткнулась и
+  // пара муташабихат. Добавляешь поле шагу — добавь его и сюда.
+  const mkAtom=(st,j,id)=>({chunk:st.chunk,show:st.shows[j],i:j,of:st.shows.length,
+    link:!!st.link,step:id,fix:!!st.fix,tw:st.tw||null});
   if(!spacing||spacing.kind!=="expanding"){
     steps.forEach((st,id)=>{for(let j=0;j<st.shows.length;j++)atoms.push(mkAtom(st,j,id));});
     return atoms;
@@ -341,6 +345,65 @@ function diagnosticSteps(vks,cfg){
   return expand(steps,{kind:"massed"});
 }
 
+// ── МУТАШАБИХАТ: ПАРНЫЙ ШАГ ──────────────────────────────────────────────
+// Место, на котором сбивается заучивший, — не сам аят, а РАЗВИЛКА между ним и
+// его двойником из другой суры. Поэтому близнецов ставим рядом и заставляем
+// назвать различие вслух, а не перечитывать аят ещё раз.
+// Данные общие с 🎓 Эрудитом (build_erudit_pool.py, 72 группы).
+
+// Сравнивать надо по костяку: у близнецов расходятся слова, а не огласовки,
+// и лишний фатх не должен подсвечиваться как различие.
+const DIAC=/[\u064B-\u0652\u0670\u0640\u0656-\u065F\u06D6-\u06ED\u08F0-\u08FF]/g;
+const normW=w=>String(w).replace(DIAC,"");
+// Наибольшая общая подпоследовательность: помечаем ТОЛЬКО то, что не совпало.
+// Позиционного сравнения мало — у близнецов бывает вставлено или выпало слово,
+// и дальше всё поехало бы, подсветив аят целиком.
+function diffFlags(a,b){
+  const A=a.map(normW),B=b.map(normW),n=A.length,m=B.length;
+  const dp=[];for(let i=0;i<=n;i++)dp.push(new Uint16Array(m+1));
+  for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)
+    dp[i][j]=A[i]===B[j]?dp[i+1][j+1]+1:Math.max(dp[i+1][j],dp[i][j+1]);
+  const fa=new Array(n).fill(true),fb=new Array(m).fill(true);
+  let i=0,j=0;
+  while(i<n&&j<m){
+    if(A[i]===B[j]){fa[i]=false;fb[j]=false;i++;j++;}
+    else if(dp[i+1][j]>=dp[i][j+1])i++;else j++;
+  }
+  return [fa,fb];
+}
+// Пары «твой аят + двойник». За каждой парой сразу идёт заход ПО ПАМЯТИ:
+// инвариант 2 — последовательность не имеет права кончиться на подсказке.
+// Двойник из ДРУГОЙ суры ценнее: путают именно «из какой суры этот аят».
+// Внутри одной суры («وَيْلٌ يَوْمَئِذٍ لِّلْمُكَذِّبِينَ» в 77-й десять раз) развилка
+// не в словах, а в месте — такую пару берём только если другой нет.
+const prevVk=vk=>{const [sn,an]=vk.split(":").map(Number);return an>1?sn+":"+(an-1):null;};
+function twinOrder(vk){
+  const sn=+vk.split(":")[0];
+  let tw=[];try{tw=ctx.mutTwins(vk)||[];}catch(e){}
+  return tw.slice().sort((a,b)=>(+a.split(":")[0]===sn?1:0)-(+b.split(":")[0]===sn?1:0));
+}
+function twinSteps(vks,cfg){
+  const t=cfg.twins;
+  if(!t||!ctx.mutTwins)return [];
+  const steps=[];
+  for(const vk of vks){
+    const other=twinOrder(vk).find(x=>wordsOf(x));
+    const w=wordsOf(vk);
+    if(!other||!w)continue;
+    const [sn,an]=vk.split(":").map(Number);
+    const chunk=[seg(sn,an,0,w.words.length-1)];
+    steps.push({chunk,shows:["text"],link:false,tw:other});
+    steps.push({chunk,shows:["blind"],link:false});
+    if(steps.length>=2*(t.max||4))break;
+  }
+  return expand(steps,{kind:"massed"});
+}
+function hasTwins(vks){
+  if(!ctx.mutTwins)return false;
+  for(const vk of vks){try{if((ctx.mutTwins(vk)||[]).length)return true;}catch(e){}}
+  return false;
+}
+
 // ============================================================
 // СБОРКА
 // ============================================================
@@ -367,7 +430,8 @@ function build(vks,cfg,seed){
   const warm=warmupSteps(vks,cfg);
   const fix=diagnosticSteps(vks,cfg);            // стадия 0 — ремонт слабых швов
   let main;
-  if(cfg.passes&&cfg.passes.length){
+  if(cfg.twins&&cfg.twins.only)main=[];          // пресет «Близнецы»: только пары
+  else if(cfg.passes&&cfg.passes.length){
     main=[];
     for(const p of cfg.passes)main.push(...buildPass(vks,Object.assign({},cfg,p),rnd));
   }else main=buildPass(vks,cfg,rnd);
@@ -380,7 +444,12 @@ function build(vks,cfg,seed){
   // чтецом»). Разогрев и ремонт швов свои роли уже несут — их не перебиваем.
   const stamp=cfg.role?a=>Object.assign({},a,{step:a.step+shift,role:cfg.role})
                       :a=>Object.assign({},a,{step:a.step+shift});
-  return warm.concat(fx,main.map(stamp));
+  const body=main.map(stamp);
+  // Пары муташабихат — В КОНЦЕ: развилка имеет смысл, когда аят уже сидит.
+  const tw=twinSteps(vks,cfg);
+  if(!tw.length)return warm.concat(fx,body);
+  const shift2=shift+(main.length?Math.max(...main.map(a=>a.step))+1:0);
+  return warm.concat(fx,body,tw.map(a=>Object.assign({},a,{step:a.step+shift2})));
 }
 
 // ============================================================
@@ -427,6 +496,8 @@ const PRESETS=[
   cfg:{seam:{kind:"only",k:3},reps:{pattern:["text","text","blind","blind"]}}},
  {grp:"Швы между аятами",id:"weave",name:"Возвратное плетение",sub:"К каждому шву возвращаются несколько раз вперемешку с соседними — стык не успевает остыть.",
   cfg:{seam:{kind:"only",k:4},reps:{n:2,show:"text"},link:{kind:"weave",reps:2}}},
+ {grp:"Швы между аятами",id:"twins",name:"Близнецы",sub:"Аяты, которые почти дословно повторяются в других сурах, ставятся рядом с двойником: надо назвать развилку. Сбиваются не на аяте, а на различии между ним и близнецом.",
+  cfg:{twins:{only:true,max:4}}},
  {grp:"Швы между аятами",id:"backward",name:"Сборка с конца",sub:"Учится последний аят, потом предпоследний вместе с ним, и так до начала. Хвост блока перестаёт быть слабым. Читается всегда по порядку.",
   cfg:{reps:{pattern:["text","text","text","blind"]},link:{kind:"backward",reps:3},stop:{kind:"criterion",maxExtra:6}}},
 
@@ -734,6 +805,19 @@ function setupHTML(){
 
 function planHTML(){
   const n=D.prog.length;
+  // Пресет «Близнецы» на блоке без муташабихат собрал бы пустую программу.
+  // Честнее сказать это прямо, чем показать «0 повторов».
+  if(!n){
+    const p0=presetById(D.method);
+    return `<div class="hfd-plan">
+      <div class="hfd-h">${esc(p0?p0.name:"")}</div>
+      <div class="hfd-sub">${esc(D.s)}:${D.from}–${D.to}</div>
+      <div class="hfd-note2">В этом отрезке нет аятов, которые почти дословно
+      повторяются в других сурах, — паре не из чего собраться. Возьми охват шире
+      или выбери другой метод.</div>
+      <div class="hfd-go"><button class="hfd-back" data-act="setup">← К настройке</button></div>
+    </div>`;
+  }
   const sec=D.prog.reduce((t,a)=>t+chunkLen(a.chunk)*0.45+1.2,0);
   const p=presetById(D.method);
   const links=D.prog.filter(a=>a.link).length;
@@ -749,6 +833,44 @@ function planHTML(){
       <button class="hfd-start" data-act="run">Начать</button>
       <button class="hfd-back" data-act="setup">← Изменить</button>
     </div>
+  </div>`;
+}
+
+// Пара близнецов на экране. Сперва — только твой аят и АДРЕС двойника: развилку
+// надо назвать по памяти, а не узнать в готовом виде. Тап открывает двойника с
+// подсвеченным различием.
+function twinHTML(at){
+  const vk=vkOf(at.chunk[0]),other=at.tw;
+  const w1=wordsOf(vk),w2=wordsOf(other);
+  const [s1,a1]=vk.split(":").map(Number),[s2,a2]=other.split(":").map(Number);
+  const n1=SU(s1)||{ru:""},n2=SU(s2)||{ru:""};
+  if(!w1||!w2)return `<div class="hfd-ar arabic-main">${arabicHTML(at,false,null)}</div>`;
+  const [f1,f2]=diffFlags(w1.words,w2.words);
+  const same=!f1.some(Boolean)&&!f2.some(Boolean);   // дословный повтор
+  const rev=D.revealed;
+  const line=(ws,fl)=>ws.map((x,i)=>rev&&fl[i]?`<span class="hfd-dif">${esc(x)}</span>`:esc(x)).join(" ");
+  // Хвост предыдущего аята — приглушённой строкой сверху: у дословных близнецов
+  // это единственное, чем они различаются, и держаться надо именно за него.
+  const lead=vkk=>{
+    const pv=prevVk(vkk),w=pv&&wordsOf(pv);
+    if(!w||!w.words.length)return `<div class="hfd-tw-lead none">начало суры</div>`;
+    const tail=w.words.slice(-4).join(" ");
+    return `<div class="hfd-tw-lead"><span class="hfd-tw-adr2">${esc(pv)}</span>
+      <span class="arabic-main">…${esc(tail)}</span></div>`;
+  };
+  const one=(sn,an,ru,ws,fl,mine,vkk)=>`<div class="hfd-tw-one${mine?" mine":""}">
+      <div class="hfd-tw-adr">${sn}:${an} · ${esc(ru)}${mine?" · твой":""}</div>
+      ${same?lead(vkk):""}
+      <div class="hfd-ar arabic-main">${line(ws,fl)}</div>
+    </div>`;
+  return `<div class="hfd-tw">
+    ${one(s1,a1,n1.ru,w1.words,f1,true,vk)}
+    ${rev?one(s2,a2,n2.ru,w2.words,f2,false,other)
+        :`<div class="hfd-tw-ask">Двойник — <b>${s2}:${a2}</b>, ${esc(n2.ru)}.<br>${
+            same?"Слово в слово. Развилка здесь не в тексте: чем отличается МЕСТО — что стоит до и после?"
+                :"Чем он отличается? Назови вслух, потом тап."}</div>`}
+    ${rev&&same?`<div class="hfd-tw-ask">Слово в слово — в самом аяте различий нет.
+      Развилка выше, в приглушённой строке: за неё и держись, а не за сам аят.</div>`:""}
   </div>`;
 }
 
@@ -772,11 +894,12 @@ function runHTML(){
     </div>
     <div class="hfd-bar"><div class="hfd-fill" style="width:${Math.round(D.i*100/D.prog.length)}%"></div></div>
     <div class="hfd-count">${D.i+1} из ${D.prog.length} · повтор ${at.i+1}/${at.of} · ${mode}${
-      at.warm?" · разогрев":at.fix?" · ремонт шва":""}</div>
+      at.warm?" · разогрев":at.fix?" · ремонт шва":at.tw?" · развилка":""}</div>
     <div class="hfd-main">
       <div class="hfd-body">
-        ${bas?`<div class="hfd-bas arabic-main">${esc(bas)}</div>`:""}
-        <div class="hfd-ar arabic-main">${arabicHTML(at,D.revealed&&veiled,lawhOn()?D.lw:null)}</div>
+        ${at.tw?twinHTML(at):
+          (bas?`<div class="hfd-bas arabic-main">${esc(bas)}</div>`:"")+
+          `<div class="hfd-ar arabic-main">${arabicHTML(at,D.revealed&&veiled,lawhOn()?D.lw:null)}</div>`}
       </div>
     </div>
     ${lawhOn()?lawhHTML():""}
@@ -790,6 +913,9 @@ function runHTML(){
          <button class="hfd-g g0" data-act="grade" data-g="0">не помню</button>
          <button class="hfd-g g1" data-act="grade" data-g="1">с трудом</button>
          <button class="hfd-g g2" data-act="grade" data-g="2">уверенно</button>`
+      : at.tw
+      ? (D.revealed?`Развилка перед глазами — запомни её. Тап — дальше.`
+                   :`Назови вслух, чем отличается двойник. Тап — проверить.`)
       : veiled&&!D.revealed
       ? `Прочитай вслух по памяти. Тап — показать, ещё тап — дальше.`
       : `Прочитай вслух. Тап в любом месте — дальше.`}</div>
@@ -870,10 +996,29 @@ async function assemble(){
   if(a>b){const t=a;a=b;b=t;}
   D.from=a;D.to=b;
   D.vks=[];for(let i=a;i<=b;i++)D.vks.push(D.s+":"+i);
-  await loadWords(D.vks);
   const p=presetById(D.method)||PRESETS[0];
   D.seed=(D.s*1000+a*31+b)>>>0;
   const cfg=cfgOf(p);
+  await loadWords(D.vks);
+  // Близнецы живут в ДРУГИХ сурах — их текст надо подтянуть отдельно, иначе
+  // пара соберётся из аята и пустоты.
+  if(cfg.twins&&ctx.loadMut){
+    try{
+      await ctx.loadMut();
+      const extra=[];
+      for(const vk of D.vks){
+        const o=twinOrder(vk)[0];
+        if(!o)continue;
+        extra.push(o);
+        // У дословных близнецов (а в этих данных они ВСЕ дословные) развилка —
+        // не в аяте, а в том, что стоит перед ним. Значит нужен и сосед слева.
+        const p1=prevVk(vk),p2=prevVk(o);
+        if(p1)extra.push(p1);
+        if(p2)extra.push(p2);
+      }
+      if(extra.length)await loadWords([...new Set(extra)]);
+    }catch(e){}
+  }
   if(p.chan)D.channel=p.chan;                  // пресет может задать отклик (лоух)
   D.stop=cfg.stop||{kind:"fixed"};
   D.prog=build(D.vks,cfg,D.seed);
@@ -961,7 +1106,9 @@ export function open(start){
     if(D.view!=="run")return;
     if(D.playing){stopAudio();render();return;}             // тап во время звука — оборвать
     if(lawhOn())return;                                     // лоух: листаем набором, не тапом
-    const {p}=showOf(D.prog[D.i]||{show:"text",i:0,of:1});
+    const cur=D.prog[D.i];
+    if(cur&&cur.tw&&!D.revealed){D.revealed=true;render();return;}  // пара: тап открывает двойника
+    const {p}=showOf(cur||{show:"text",i:0,of:1});
     if(p>0&&!D.revealed){D.revealed=true;render();return;}  // вуаль: первый тап раскрывает
     if(gateOn())return;                                     // ворота: листаем только ответом
     step(1);
@@ -994,7 +1141,9 @@ export function onKey(e){
   }
   if(e.key===" "||e.key==="Enter"||e.key==="ArrowLeft"){
     e.preventDefault();
-    const {p}=showOf(D.prog[D.i]||{show:"text",i:0,of:1});
+    const cur=D.prog[D.i];
+    if(cur&&cur.tw&&!D.revealed){D.revealed=true;render();return true;}
+    const {p}=showOf(cur||{show:"text",i:0,of:1});
     if(p>0&&!D.revealed){D.revealed=true;render();return true;}
     if(gateOn())return true;
     step(1);

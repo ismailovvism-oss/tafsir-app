@@ -1574,6 +1574,23 @@ body.hr-open{overflow:hidden}
 .hfd-note2{font-size:12px;color:var(--text-muted);line-height:1.5}
 /* — экран прогона — */
 .hfd-run{flex:1;display:flex;flex-direction:column;min-height:0}
+/* Пара муташабихат: твой аят сверху, двойник снизу, различие подсвечено.
+   Различие — accent-фоном, а не цветом букв: цвет текста в ленте уже занят
+   таджвидом, и ещё один смысл в ту же краску не влезает. */
+.hfd-tw{display:flex;flex-direction:column;gap:14px;width:100%}
+.hfd-tw-one{border:1px solid var(--border-light);border-radius:10px;padding:10px 14px 14px;background:var(--bg-card)}
+.hfd-tw-one.mine{border-color:var(--accent)}
+.hfd-tw-adr{font-size:11px;color:var(--text-muted);letter-spacing:.04em;margin-bottom:6px;text-align:left}
+.hfd-tw-ask{border:1px dashed var(--border);border-radius:10px;padding:14px;
+  font-size:13px;line-height:1.6;color:var(--text-sec);text-align:center}
+.hfd-tw-ask b{color:var(--text)}
+.hfd-tw-lead{font-size:12px;color:var(--text-muted);margin-bottom:8px;padding-bottom:8px;
+  border-bottom:1px dashed var(--border);display:flex;align-items:baseline;gap:8px;justify-content:flex-end}
+.hfd-tw-lead.none{justify-content:flex-start;font-style:italic}
+.hfd-tw-lead .arabic-main{font-size:17px;opacity:.8}
+.hfd-tw-adr2{font-size:10px;letter-spacing:.04em;opacity:.75;flex-shrink:0}
+.hfd-dif{background:rgba(var(--accent-rgb),.22);border-radius:5px;padding:0 3px;
+  box-shadow:0 1px 0 var(--accent) inset,0 -2px 0 var(--accent) inset}
 .hfd-top{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;
   padding:10px 14px 6px;gap:10px}
 .hfd-key{font-size:13px;color:var(--text-muted);letter-spacing:.04em}
@@ -2364,7 +2381,7 @@ function renderEruditScreen(el){
 // Оверлеем, а не восьмым режимом, СОЗНАТЕЛЬНО: флаги режимов уже дважды взводились
 // парами (hifzMode+eruditMode), и цена ошибки там — вылет из приложения на «Назад».
 // У оверлея одна запись истории и один владелец — сам модуль.
-const HIFZDRILL_VER="2";  // поднять при правке hifz-drill.js (сброс кеша браузера/CDN)
+const HIFZDRILL_VER="5";  // поднять при правке hifz-drill.js (сброс кеша браузера/CDN)
 let DRILL=null;
 async function drillMod(){
   if(DRILL)return DRILL;
@@ -2397,6 +2414,9 @@ async function drillMod(){
         return r?{id:r.id,name:r.name,exact:r.type==="audio_surah"}:null;
       },
       loadRuku:()=>loadRuku(),
+      // Муташабихат из данных 🎓: пара «твой аят — его двойник» для шага-развилки.
+      loadMut:()=>loadMut(),
+      mutTwins:vk=>mutTwins(vk),
       rukuSegs:s=>(RUKU&&RUKU.by[s])||null,          // [[от, до, номер в Коране], …]
       rukuTitle:i=>rukuTitle(i),
       getSettings:()=>Progress.hifzSettings(),
@@ -10218,6 +10238,27 @@ function rukuOf(s,a){
 const RK_HUES=[205,150,38,278,340,95];
 function rukuHue(idx){return RK_HUES[(idx-1)%RK_HUES.length];}
 function rukuTitle(idx){return (RUKU&&RUKU.titles&&RUKU.titles[idx])||"";}
+
+// ── Муташабихат: почти одинаковые аяты из РАЗНЫХ сур ───────────────────────
+// Данные общие с 🎓 Эрудитом (build_erudit_pool.py, 72 группы). Станок читает
+// их, чтобы поставить близнецов рядом: место, на котором сбивается заучивший,
+// — не сам аят, а развилка между ним и его двойником.
+let MUT=null,_mutLoading=null;
+function loadMut(){
+  if(MUT)return Promise.resolve(MUT);
+  if(_mutLoading)return _mutLoading;
+  _mutLoading=fetch(resolveUrl("erudit_pool",{file:"pool.json"})).then(r=>r.ok?r.json():null).then(d=>{
+    const by={};
+    if(d&&Array.isArray(d.groups))for(const g of d.groups)for(const vk of g)by[vk]=g;
+    MUT={by};_mutLoading=null;return MUT;
+  }).catch(()=>{_mutLoading=null;return null;});
+  return _mutLoading;
+}
+// Близнецы аята: та же группа без него самого. [] — если их нет.
+function mutTwins(vk){
+  const g=MUT&&MUT.by[vk];
+  return g?g.filter(x=>x!==vk):[];
+}
 function pageStartsInSurah(surah){
   const out={};
   if(!qpcMeta||!qpcMeta.pageStart)return out;
