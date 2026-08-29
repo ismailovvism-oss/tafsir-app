@@ -786,12 +786,26 @@ body.sb-resizing{cursor:col-resize;user-select:none}
 /* Граница СМЫСЛОВОГО отрезка (рукуʿ) — сознательно НЕ похожа на «Страница N»:
    та говорит про бумагу, эта — про содержание. Поэтому не полоса-плашка, а
    тонкая линия с ع посередине, как значок на полях мусхафа. */
-.read-ruku-sep{margin:20px 0 14px;display:flex;align-items:center;gap:10px;
+/* Своя краска у каждой темы: переход между отрезками должен быть ВИДЕН, а не
+   угадываться по волосяной черте. Тон (--rk-h) ставится инлайном по номеру
+   рукуʿ, а насыщенность и светлота берутся у ТЕМЫ: на пергаменте те же
+   значения кричат, а на тёмном фоне уходят в грязь. */
+:root{--rk-h:205;--rk-s:52%;--rk-l:34%}
+[data-theme="dark"],body[data-skin="dark"]{--rk-s:46%;--rk-l:70%}
+.read-ruku-sep{margin:26px 0 14px;display:flex;align-items:center;gap:10px;
   user-select:none;color:var(--text-muted)}
-.read-ruku-sep::before,.read-ruku-sep::after{content:"";flex:1;height:1px;background:var(--border)}
-.read-ruku-sep .rk-mark{font-size:15px;color:var(--accent);opacity:.75;line-height:1}
-.read-ruku-sep .rk-lab{font-size:11px;letter-spacing:.3px;white-space:nowrap;max-width:60%;
-  overflow:hidden;text-overflow:ellipsis}
+/* Линии подкрашены к центру: у края обычная граница, у ярлыка — тон темы. */
+.read-ruku-sep::before,.read-ruku-sep::after{content:"";flex:1;height:1px;
+  background:linear-gradient(90deg,var(--border),hsl(var(--rk-h) var(--rk-s) var(--rk-l)/.55))}
+.read-ruku-sep::after{background:linear-gradient(90deg,hsl(var(--rk-h) var(--rk-s) var(--rk-l)/.55),var(--border))}
+.read-ruku-sep .rk-mark{font-size:16px;line-height:1;color:hsl(var(--rk-h) var(--rk-s) var(--rk-l))}
+.read-ruku-sep .rk-lab{font-size:12px;font-weight:600;letter-spacing:.2px;white-space:nowrap;
+  max-width:60%;overflow:hidden;text-overflow:ellipsis;
+  color:hsl(var(--rk-h) var(--rk-s) var(--rk-l));
+  background:hsl(var(--rk-h) var(--rk-s) var(--rk-l)/.11);
+  border-radius:999px;padding:3px 11px}
+/* Полоса вдоль аятов отрезка — по ней видно, докуда тянется тема. */
+.ayah-block.rk-seg{border-left:3px solid hsl(var(--rk-h) var(--rk-s) var(--rk-l)/.5)}
 .cov-gap-strip{margin:6px 0;padding:8px 12px;border:1px dashed var(--border);border-radius:7px;background:var(--bg-alt);color:var(--text-muted);font-size:12px;cursor:pointer;display:flex;align-items:center;gap:8px}
 .cov-gap-strip:hover{border-color:var(--accent)}
 .cov-gap-strip.open{border-style:solid}
@@ -7626,14 +7640,16 @@ async function renderReading(el){
     // Начала смысловых отрезков. Первый аят суры пропускаем: там и так заголовок
     // суры, а черта под ним читается как «конец темы», хотя тема только началась.
     const rukuAt=ST.rukuSep?rukuStartsInSurah(ST.surah):{};
+    let rkH=null;                                  // тон текущего отрезка (null = деление выключено)
     for(const aid of ayahIds){
+      if(rukuAt[aid])rkH=rukuHue(rukuAt[aid][0]);  // тон меняем и на ПЕРВОМ отрезке, хотя черты там нет
       if(rukuAt[aid]&&aid!==1){
         const [idx,nth,tot]=rukuAt[aid],ti=rukuTitle(idx);
-        html+=`<div class="read-ruku-sep" title="${escAttr("Смысловой отрезок (рукуʿ) "+nth+" из "+tot+" в этой суре · "+idx+"-й в Коране")}">`+
+        html+=`<div class="read-ruku-sep" style="--rk-h:${rkH}" title="${escAttr("Смысловой отрезок (рукуʿ) "+nth+" из "+tot+" в этой суре · "+idx+"-й в Коране")}">`+
           `<span class="rk-mark">ع</span>${ti?`<span class="rk-lab">${esc(ti)}</span>`:""}</div>`;
       }
       if(pageAt[aid])html+=`<div class="read-page-sep">Страница ${pageAt[aid]}</div>`;
-      html+=`<div class="ayah-block" data-aid="${aid}"><div class="ab-head">
+      html+=`<div class="ayah-block${rkH!==null?" rk-seg":""}" data-aid="${aid}"${rkH!==null?` style="--rk-h:${rkH}"`:""}><div class="ab-head">
         <div class="ab-row"><button class="ab-num-btn" onclick="event.stopPropagation();openAyahSheet(${aid})" title="Все действия с аятом">${aid}</button>
           <button class="ab-ico" onclick="event.stopPropagation();mediaPlayAyah(${aid})" title="Слушать с этого аята">${IC.play}</button>
           ${peekBtn(aid)}
@@ -10197,6 +10213,10 @@ function rukuOf(s,a){
   for(const sg of RUKU.by[s])if(a>=sg[0]&&a<=sg[1])return [s,sg[0],sg[1],sg[2]];
   return null;
 }
+// Шесть приглушённых тонов по кругу: соседние отрезки всегда разного цвета,
+// а всего цветов мало — лента остаётся книгой, а не светофором.
+const RK_HUES=[205,150,38,278,340,95];
+function rukuHue(idx){return RK_HUES[(idx-1)%RK_HUES.length];}
 function rukuTitle(idx){return (RUKU&&RUKU.titles&&RUKU.titles[idx])||"";}
 function pageStartsInSurah(surah){
   const out={};
