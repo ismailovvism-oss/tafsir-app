@@ -585,10 +585,11 @@ const PRESETS=[
  {grp:"Научные",id:"reverse",name:"С конца блока",sub:"Аяты в обратном порядке: лечит «начало помню, конец плаваю».",
   cfg:{order:{kind:"reverse"},reps:{n:7,show:"text"},link:{kind:"snowball",every:4,reps:3}}},
 
- {grp:"Пока недоступны",id:"ottoman",name:"Концы джузов",sub:"Османский метод: последние страницы каждого джуза, по спирали.",cfg:{},need:"juz"},
+ {grp:"Пока недоступны",id:"ottoman",name:"Концы джузов",sub:"Османский метод: последние страницы каждого джуза, по спирали. Это не заучивание, а обход для повторения — такому место в слое удержания (🎯), не в станке.",cfg:{},need:"juz"},
 
 ];
-const NEED_WHY={juz:"нужен охват по джузам, а не по сурам",write:"нужен слой рукописи"};
+const NEED_WHY={juz:"это схема повторения — её место в 🎯, а не в станке",
+  write:"нужен слой рукописи"};
 const presetById=id=>PRESETS.find(p=>p.id===id);
 function cfgOf(p){return Object.assign({},BASE,p.cfg||{});}
 
@@ -1268,11 +1269,33 @@ export function onKey(e){
 }
 
 // Только для отладки в консоли: собрать программу и посмотреть её списком.
-export function debugBuild(s,from,to,methodId){
+export async function debugBuild(s,from,to,methodId){
   const vks=[];for(let i=from;i<=to;i++)vks.push(s+":"+i);
-  return loadWords(vks).then(()=>{
-    const p=presetById(methodId)||PRESETS[0];
-    const prog=build(vks,cfgOf(p),1);
-    return prog.map((a,i)=>i+" "+chunkLabel(a.chunk)+" ["+a.show+"] "+(a.link?"связка":""));
-  });
+  const p=presetById(methodId)||PRESETS[0];
+  const cfg=cfgOf(p);
+  await loadWords(vks);
+  // Подготовку повторяем ЗА assemble: без неё «Близнецы» отсюда собирались
+  // пустыми (двойники живут в других сурах, их текст не загружен), и отладка
+  // врала бы на ровном месте. Меняешь подготовку в assemble — поправь и здесь.
+  if(cfg.twins&&ctx.loadMut){
+    try{
+      await ctx.loadMut();
+      const extra=[];
+      for(const vk of vks){
+        const o=twinOrder(vk)[0];
+        if(!o)continue;
+        extra.push(o);
+        const p1=prevVk(vk),p2=prevVk(o);
+        if(p1)extra.push(p1);
+        if(p2)extra.push(p2);
+      }
+      if(extra.length)await loadWords([...new Set(extra)]);
+    }catch(e){}
+  }
+  if(cfg.unit&&["page","line","halfpage"].includes(cfg.unit.kind)){
+    if(ctx.loadPages){try{await ctx.loadPages();}catch(e){}}
+    if(ctx.loadLines&&cfg.unit.kind!=="page"){try{await ctx.loadLines();}catch(e){}}
+  }
+  const prog=build(vks,cfg,1);
+  return prog.map((a,i)=>i+" "+chunkLabel(a.chunk)+" ["+a.show+"] "+(a.link?"связка":"")+(a.tw?" пара↔"+a.tw:""));
 }
