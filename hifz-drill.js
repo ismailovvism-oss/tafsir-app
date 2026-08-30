@@ -528,19 +528,19 @@ const BASE={unit:{kind:"ayah"},seam:{kind:"none",k:3},order:{kind:"forward"},
   diagnostics:{inject:true,max:3}};             // слабые швы лечим перед уроком
 
 const PRESETS=[
- {grp:"Традиционные",id:"talqin",name:"Повторяй за чтецом",sub:"Аят три раза, спокойный темп. С чего начать. Включи «звук + пауза» — и станок поведёт сам.",
+ {grp:"Традиционные",id:"talqin",task:"new",name:"Повторяй за чтецом",sub:"Аят три раза, спокойный темп. С чего начать. Включи «звук + пауза» — и станок поведёт сам.",
   cfg:{reps:{pattern:["text","text","text","blind"]}}},
- {grp:"Традиционные",id:"takrar_madina",name:"Сперва послушать",sub:"Программа «Такрар» Медины: сначала блок целиком три раза на слух, водя пальцем, и только потом повторы.",
+ {grp:"Традиционные",id:"takrar_madina",task:"new",name:"Сперва послушать",sub:"Программа «Такрар» Медины: сначала блок целиком три раза на слух, водя пальцем, и только потом повторы.",
   cfg:{warmup:{n:3},reps:{pattern:["text","text","text","text","text","blind","blind"]},link:{kind:"snowball",every:4,reps:3}}},
  {grp:"Традиционные",id:"takrar20",name:"Повтор двадцать",sub:"Классика: один аят двадцать раз подряд.",
   cfg:{reps:{n:20,show:"text"}}},
- {grp:"Традиционные",id:"jam",name:"Связка по четыре",sub:"20 раз аят, после каждых четырёх — все четыре вместе. Самая ходовая схема у хафизов.",
+ {grp:"Традиционные",id:"jam",task:"new",name:"Связка по четыре",sub:"20 раз аят, после каждых четырёх — все четыре вместе. Самая ходовая схема у хафизов.",
   cfg:{reps:{n:20,show:"text"},link:{kind:"snowball",every:4,reps:3}}},
  {grp:"Традиционные",id:"khamsan",name:"По пять",sub:"То же, но связка каждые пять аятов.",
   cfg:{reps:{n:20,show:"text"},link:{kind:"snowball",every:5,reps:3}}},
  {grp:"Традиционные",id:"t33",name:"Три на три",sub:"Каждый аят три раза, потом с соседом три раза.",
   cfg:{reps:{n:3,show:"text"},link:{kind:"krama",reps:3}}},
- {grp:"Традиционные",id:"t73",name:"Семь и три",sub:"Семь раз с текстом, три по памяти, потом связка.",
+ {grp:"Традиционные",id:"t73",task:"new",name:"Семь и три",sub:"Семь раз с текстом, три по памяти, потом связка.",
   cfg:{reps:{pattern:["text","text","text","text","text","text","text","blind","blind","blind"]},link:{kind:"snowball",every:4,reps:3}}},
  {grp:"Традиционные",id:"t1010",name:"Десять и десять",sub:"Десять раз аят, десять раз пара. Для коротких рифмующихся сур.",
   cfg:{reps:{n:10,show:"text"},link:{kind:"snowball",every:2,reps:10}}},
@@ -550,44 +550,68 @@ const PRESETS=[
  {grp:"Традиционные",id:"t6446",name:"Шесть-четыре-четыре-шесть",sub:"6 с текстом, 4 по памяти, 4 с текстом, 6 по памяти. Схема для детей.",
   cfg:{reps:{pattern:["text","text","text","text","text","text","blind","blind","blind","blind","text","text","text","text","blind","blind","blind","blind","blind","blind"]}}},
 
- {grp:"Швы между аятами",id:"overlap",name:"Внахлёст",sub:"Аят плюс первые три слова следующего: шов попадает в середину порции, а не на её край.",
+ {grp:"Швы между аятами",id:"overlap",task:"link",name:"Внахлёст",sub:"Аят плюс первые три слова следующего: шов попадает в середину порции, а не на её край.",
   cfg:{seam:{kind:"fwd",k:3},reps:{n:7,show:"text"},link:{kind:"snowball",every:4,reps:3}}},
- {grp:"Швы между аятами",id:"overlap2",name:"Внахлёст в обе стороны",sub:"Хвост предыдущего + аят + голова следующего. Помогает и начинать с середины.",
+ {grp:"Швы между аятами",id:"overlap2",task:"link",name:"Внахлёст в обе стороны",sub:"Хвост предыдущего + аят + голова следующего. Помогает и начинать с середины.",
   cfg:{seam:{kind:"both",k:3},reps:{n:7,show:"text"}}},
- {grp:"Швы между аятами",id:"seams",name:"Только швы",sub:"Голые стыки: конец аята и начало следующего. Для выученного, которое сыпется на переходах.",
+ {grp:"Швы между аятами",id:"seams",task:"link mix",name:"Только швы",sub:"Голые стыки: конец аята и начало следующего. Для выученного, которое сыпется на переходах.",
   cfg:{seam:{kind:"only",k:3},reps:{pattern:["text","text","blind","blind"]}}},
- {grp:"Швы между аятами",id:"weave",name:"Возвратное плетение",sub:"К каждому шву возвращаются несколько раз вперемешку с соседними — стык не успевает остыть.",
+ {grp:"Швы между аятами",id:"weave",task:"link",name:"Возвратное плетение",sub:"К каждому шву возвращаются несколько раз вперемешку с соседними — стык не успевает остыть.",
   cfg:{seam:{kind:"only",k:4},reps:{n:2,show:"text"},link:{kind:"weave",reps:2}}},
- {grp:"Швы между аятами",id:"twins",name:"Близнецы",sub:"Аяты, которые почти дословно повторяются в других сурах, ставятся рядом с двойником: надо назвать развилку. Сбиваются не на аяте, а на различии между ним и близнецом.",
+ {grp:"Швы между аятами",id:"twins",task:"mix",name:"Близнецы",sub:"Аяты, которые почти дословно повторяются в других сурах, ставятся рядом с двойником: надо назвать развилку. Сбиваются не на аяте, а на различии между ним и близнецом.",
   cfg:{twins:{only:true,max:4}}},
- {grp:"Швы между аятами",id:"backward",name:"Сборка с конца",sub:"Учится последний аят, потом предпоследний вместе с ним, и так до начала. Хвост блока перестаёт быть слабым. Читается всегда по порядку.",
+ {grp:"Швы между аятами",id:"backward",task:"link",name:"Сборка с конца",sub:"Учится последний аят, потом предпоследний вместе с ним, и так до начала. Хвост блока перестаёт быть слабым. Читается всегда по порядку.",
   cfg:{reps:{pattern:["text","text","text","blind"]},link:{kind:"backward",reps:3},stop:{kind:"criterion",maxExtra:6}}},
 
- {grp:"Научные",id:"vanishing",name:"Гаснущая подсказка",sub:"Текст пропадает по словам от повтора к повтору, последний — по памяти.",
+ {grp:"Научные",id:"vanishing",task:"new",name:"Гаснущая подсказка",sub:"Текст пропадает по словам от повтора к повтору, последний — по памяти.",
   cfg:{stop:{kind:"criterion",maxExtra:6},reps:{n:6,show:"fade"},link:{kind:"snowball",every:4,reps:3}}},
- {grp:"Научные",id:"retrieval",name:"Через вспоминание",sub:"Один раз прочитал — пять раз вспомнил. Меньше чтения, больше усилия.",
+ {grp:"Научные",id:"retrieval",task:"fix",name:"Через вспоминание",sub:"Один раз прочитал — пять раз вспомнил. Меньше чтения, больше усилия.",
   cfg:{stop:{kind:"criterion",maxExtra:6},reps:{pattern:["text","blind","blind","blind","blind","blind"]},link:{kind:"snowball",every:4,reps:3}}},
- {grp:"Научные",id:"spaced",name:"Разнесённый повтор",sub:"Повторы одного аята не идут подряд: между ними вклиниваются другие. Тяжелее, держится дольше.",
+ {grp:"Научные",id:"spaced",task:"fix",name:"Разнесённый повтор",sub:"Повторы одного аята не идут подряд: между ними вклиниваются другие. Тяжелее, держится дольше.",
   cfg:{stop:{kind:"criterion",maxExtra:6},reps:{n:6,show:"fade"},spacing:{kind:"expanding",gaps:[1,2,4,8,16]}}},
  {grp:"Научные",id:"lawh",name:"Цифровой лоух",sub:"На повторах по памяти набираешь первую букву каждого слова — верная проявляет слово. Рука участвует в извлечении, как на суданской доске, но без каллиграфии.",
   cfg:{reps:{pattern:["text","text","blind","blind"]},link:{kind:"snowball",every:4,reps:3},stop:{kind:"criterion",maxExtra:4}},chan:"letters"},
- {grp:"Научные",id:"hard",name:"Полезная трудность",sub:"Разнесённый повтор + перемешанный порядок + минимум чтения. Самый неудобный и самый стойкий.",
+ {grp:"Научные",id:"hard",task:"fix",name:"Полезная трудность",sub:"Разнесённый повтор + перемешанный порядок + минимум чтения. Самый неудобный и самый стойкий.",
   cfg:{stop:{kind:"criterion",maxExtra:6},order:{kind:"shuffle"},reps:{pattern:["text","blind","blind","blind","blind"]},spacing:{kind:"expanding",gaps:[1,2,4,8,16]}}},
- {grp:"Научные",id:"wholepage",name:"Страница целиком",sub:"Порция — не аят, а страница мусхафа целиком: двенадцать прочтений, последние по памяти. Так учат там, где счёт идёт страницами, а не аятами.",
+ {grp:"Научные",id:"wholepage",task:"new",name:"Страница целиком",sub:"Порция — не аят, а страница мусхафа целиком: двенадцать прочтений, последние по памяти. Так учат там, где счёт идёт страницами, а не аятами.",
   cfg:{unit:{kind:"page"},reps:{pattern:["text","text","text","text","text","text","text","text","text","blind","blind","blind"]},stop:{kind:"criterion",maxExtra:4}}},
  {grp:"Научные",id:"shadow",name:"Синхронно с чтецом",sub:"Читать ВМЕСТЕ с чтецом, не после него: голос ведёт темп, протяжки и таджвид. Пауз нет, поэтому проходит быстро — берут для разгона перед повторами. Требует звука, он включится сам.",
   cfg:{role:"shadow",reps:{n:5,show:"text"},link:{kind:"snowball",every:4,reps:3}},needsAudio:true},
- {grp:"Научные",id:"bottomup",name:"Снизу вверх",sub:"Строки страницы мусхафа с ПОСЛЕДНЕЙ к первой, потом страница целиком. Порядок ломает опору на «что было выше» — держит только сам текст.",
+ {grp:"Научные",id:"bottomup",task:"fix",name:"Снизу вверх",sub:"Строки страницы мусхафа с ПОСЛЕДНЕЙ к первой, потом страница целиком. Порядок ломает опору на «что было выше» — держит только сам текст.",
   cfg:{unit:{kind:"line"},order:{kind:"reverse"},reps:{pattern:["text","text","blind"]},
        passes:[{unit:{kind:"line"},order:{kind:"reverse"}},{unit:{kind:"page"},order:{kind:"forward"},reps:{pattern:["text","text","blind","blind"]}}]}},
  {grp:"Научные",id:"halfpage",name:"Полстраницы",sub:"Порция — половина страницы мусхафа: строки делятся пополам. Середина между аятом и целой страницей.",
   cfg:{unit:{kind:"halfpage"},reps:{n:10,show:"text"},stop:{kind:"criterion",maxExtra:4}}},
- {grp:"Научные",id:"reverse",name:"С конца блока",sub:"Аяты в обратном порядке: лечит «начало помню, конец плаваю».",
+ {grp:"Научные",id:"reverse",task:"fix",name:"С конца блока",sub:"Аяты в обратном порядке: лечит «начало помню, конец плаваю».",
   cfg:{order:{kind:"reverse"},reps:{n:7,show:"text"},link:{kind:"snowball",every:4,reps:3}}},
 
  {grp:"Пока недоступны",id:"ottoman",name:"Концы джузов",sub:"Османский метод: последние страницы каждого джуза, по спирали. Это не заучивание, а обход для повторения — такому место в слое удержания (🎯), не в станке.",cfg:{},need:"juz"},
 
 ];
+// ── ЗАДАЧИ ────────────────────────────────────────────────────────────────
+// Каталог сгруппирован по ПРОИСХОЖДЕНИЮ («традиционные», «научные») — это
+// полезно тому, кто разбирается в поле методов, и бесполезно тому, кто просто
+// сел учить: он не знает, традиционное ему сейчас нужно или научное. Поэтому
+// выбор идёт по ЗАДАЧЕ, а весь каталог — под кнопкой «все».
+const TASKS=[
+  {id:"new", label:"Учу с нуля",     hint:"Первое знакомство с аятами: показать, повторить, довести до памяти."},
+  {id:"link",label:"Не склеиваются", hint:"Аяты по одному помнишь, а вместе рассыпаются — лечим стыки."},
+  {id:"fix", label:"Закрепляю",      hint:"Текст уже сидит: делаем так, чтобы держался долго."},
+  {id:"mix", label:"Путаю похожие",  hint:"Похожие аяты путаются между собой."},
+  {id:"all", label:"Все методы",     hint:"Весь каталог, как он собран, — по происхождению методов."},
+];
+// С чего начинать в каждой задаче. Один метод, а не «вот вам пять на выбор»:
+// человеку, который спрашивает «что выбрать», нельзя отвечать списком.
+const TASK_REC={new:"talqin",link:"overlap",fix:"retrieval",mix:"twins"};
+const inTask=(p,t)=>t==="all"||(" "+(p.task||"")+" ").includes(" "+t+" ");
+// Задача, на которой открыть экран. Метод без задачи живёт только в полном
+// каталоге — на него и открываем, иначе выбранный метод не был бы виден.
+function taskOf(methodId){
+  const p=presetById(methodId);
+  if(!p||!p.task)return "all";
+  const t=p.task.split(" ")[0];
+  return TASKS.some(x=>x.id===t)?t:"all";
+}
 const NEED_WHY={juz:"это схема повторения — её место в 🎯, а не в станке",
   write:"нужен слой рукописи"};
 const presetById=id=>PRESETS.find(p=>p.id===id);
@@ -597,7 +621,7 @@ function cfgOf(p){return Object.assign({},BASE,p.cfg||{});}
 // СОСТОЯНИЕ
 // ============================================================
 const D={open:false,view:"setup",el:null,
-  s:78,from:1,to:5,method:"talqin",
+  s:78,from:1,to:5,method:"talqin",task:"new",
   veil:"none",                                 // none | fade | hide  — переключатель поверх
   prog:null,i:0,revealed:false,seed:1,vks:[],
   stop:null,extra:{},grades:{},graded:false,   // ворота самооценки (см. gateOn)
@@ -864,14 +888,30 @@ function paceNote(){
 
 function setupHTML(){
   const su=SU(D.s)||{n:1,ru:""};
-  const grps=[...new Set(PRESETS.map(p=>p.grp))];
-  const list=grps.map(g=>`<div class="hfd-grp">${esc(g)}</div>`+
-    PRESETS.filter(p=>p.grp===g).map(p=>{
-      const off=!!p.need;
-      return `<button class="hfd-m ${D.method===p.id&&!off?"on":""} ${off?"off":""}" data-act="${off?"noop":"method"}" data-id="${p.id}">
-        <b>${esc(p.name)}${p.warn?' <span class="hfd-warn">необычный порядок</span>':''}</b>
-        <i>${esc(p.sub)}${off?" · "+esc(NEED_WHY[p.need]||""):""}</i></button>`;
-    }).join("")).join("");
+  const card=(p,rec)=>{
+    const off=!!p.need;
+    return `<button class="hfd-m ${D.method===p.id&&!off?"on":""} ${off?"off":""}" data-act="${off?"noop":"method"}" data-id="${p.id}">
+      <b>${esc(p.name)}${rec?' <span class="hfd-rec-b">начни с этого</span>':''}${p.warn?' <span class="hfd-warn">необычный порядок</span>':''}</b>
+      <i>${esc(p.sub)}${off?" · "+esc(NEED_WHY[p.need]||""):""}</i></button>`;
+  };
+  let list;
+  if(D.task==="all"){
+    const grps=[...new Set(PRESETS.map(p=>p.grp))];
+    list=grps.map(g=>`<div class="hfd-grp">${esc(g)}</div>`+
+      PRESETS.filter(p=>p.grp===g).map(p=>card(p,false)).join("")).join("");
+  }else{
+    const rec=TASK_REC[D.task];
+    const fit=PRESETS.filter(p=>!p.need&&inTask(p,D.task))
+      .sort((a,b)=>(a.id===rec?-1:0)-(b.id===rec?-1:0));
+    list=fit.map(p=>card(p,p.id===rec)).join("")+
+      `<button class="hfd-allbtn" data-act="task" data-v="all">Показать все ${PRESETS.length} методов →</button>`;
+  }
+  const tHint=(TASKS.find(x=>x.id===D.task)||TASKS[0]).hint;
+  const taskRow=`<div class="hfd-row hfd-task">
+      <label>Задача</label>
+      ${TASKS.map(t=>`<button class="hfd-chip ${D.task===t.id?"on":""}" data-act="task" data-v="${t.id}">${esc(t.label)}</button>`).join("")}
+    </div>
+    <div class="hfd-task-hint">${esc(tHint)}</div>`;
   return `<div class="hfd-setup">
     <div class="hfd-h">📿 Станок заучивания</div>
     <div class="hfd-sub">Приложение ведёт заучивание по программе: показывает порцию нужное число раз в нужном виде, ты повторяешь вслух.</div>
@@ -905,6 +945,7 @@ function setupHTML(){
       <button class="hfd-chip ${D.veil==="fade"?"on":""}" data-act="veil" data-v="fade">гаснет</button>
       <button class="hfd-chip ${D.veil==="hide"?"on":""}" data-act="veil" data-v="hide">по памяти</button>
     </div>
+    ${taskRow}
     <div class="hfd-methods">${list}</div>
     <div class="hfd-go"><button class="hfd-start" data-act="start">Собрать программу и начать</button></div>
   </div>`;
@@ -1160,6 +1201,14 @@ async function onAct(act,el){
   if(act==="veil"){D.veil=el.dataset.v;D.revealed=false;render();return;}
   if(act==="ruku"){rukuTake(+el.dataset.d||0);return;}
   if(act==="page"){pageTake(+el.dataset.d||0);return;}
+  if(act==="task"){
+    D.task=el.dataset.v;
+    // Метод, не попавший в выбранную задачу, остался бы выбранным незримо —
+    // человек нажал «Закрепляю», а собралось бы «Повторяй за чтецом».
+    const cur=presetById(D.method);
+    if(D.task!=="all"&&(!cur||!inTask(cur,D.task)))D.method=TASK_REC[D.task]||D.method;
+    render();return;
+  }
   if(act==="grade"){gate(+el.dataset.g);return;}
   if(act==="lawh"){D.lastKey=el.dataset.k;lawhKey(el.dataset.k);return;}
   if(act==="chan"){D.channel=el.dataset.v;D.lw=0;D.lwBad=0;render();return;}
@@ -1201,6 +1250,7 @@ export function open(start){
   if(start&&start.surah){D.s=start.surah;D.from=start.ayah||1;D.to=Math.min((SU(D.s)||{n:1}).n,(start.ayah||1)+4);}
   const st=(ctx.getSettings&&ctx.getSettings())||{};
   if(st.drill&&st.drill.method&&presetById(st.drill.method))D.method=st.drill.method;
+  D.task=taskOf(D.method);                     // экран открывается на задаче своего метода
   if(st.drill&&st.drill.veil)D.veil=st.drill.veil;
   if(st.drill&&st.drill.pace)D.pace=st.drill.pace;
   if(st.drill&&st.drill.channel)D.channel=st.drill.channel;

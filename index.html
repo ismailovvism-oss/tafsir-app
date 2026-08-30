@@ -1548,6 +1548,17 @@ body.hr-open{overflow:hidden}
   padding:5px 12px;font-family:inherit;font-size:12px;cursor:pointer}
 .hfd-chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .hfd-methods{margin-top:14px}
+/* Выбор по ЗАДАЧЕ. Чипы задачи крупнее остальных: это первое решение на
+   экране, и оно важнее темпа и показа. */
+.hfd-task{margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
+.hfd-task .hfd-chip{font-size:12.5px;padding:6px 13px}
+.hfd-task-hint{font-size:12px;color:var(--text-muted);line-height:1.5;margin:-4px 0 4px 60px}
+.hfd-rec-b{font-size:10px;font-weight:600;color:#fff;background:var(--accent);
+  border-radius:999px;padding:1px 7px;margin-left:6px;vertical-align:1px}
+.hfd-allbtn{display:block;width:100%;margin-top:6px;background:none;border:1px dashed var(--border);
+  border-radius:9px;padding:10px;color:var(--text-sec);font-size:12px;cursor:pointer;font-family:inherit}
+.hfd-allbtn:hover{border-color:var(--accent);color:var(--text)}
+@media(max-width:520px){.hfd-task-hint{margin-left:0}}
 .hfd-grp{font-size:11px;color:var(--text-muted);letter-spacing:.06em;text-transform:uppercase;
   margin:16px 0 7px;padding-bottom:5px;border-bottom:1px solid var(--border)}
 .hfd-m{display:block;width:100%;text-align:left;background:var(--bg-card);color:var(--text);
@@ -2382,7 +2393,7 @@ function renderEruditScreen(el){
 // Оверлеем, а не восьмым режимом, СОЗНАТЕЛЬНО: флаги режимов уже дважды взводились
 // парами (hifzMode+eruditMode), и цена ошибки там — вылет из приложения на «Назад».
 // У оверлея одна запись истории и один владелец — сам модуль.
-const HIFZDRILL_VER="7";  // поднять при правке hifz-drill.js (сброс кеша браузера/CDN)
+const HIFZDRILL_VER="8";  // поднять при правке hifz-drill.js (сброс кеша браузера/CDN)
 let DRILL=null;
 async function drillMod(){
   if(DRILL)return DRILL;
