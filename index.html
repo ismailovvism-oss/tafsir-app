@@ -826,6 +826,16 @@ body.sb-resizing{cursor:col-resize;user-select:none}
 .surah-btn.nosrc{opacity:.4}
 .surah-btn.nosrc .s-meta{font-style:italic}
 /* экран выбора источника = компактная карта покрытия (скроллится) */
+/* Вход в 🧠 Хифз одной строкой. Тот же вид, что у строки «Задача» в станке:
+   человек уже выучил этот приём внутри, незачем показывать ему второй. */
+.hf-do{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:14px 0 6px}
+.hf-do>label{font-size:12px;color:var(--text-muted);min-width:84px}
+.hf-do-b{background:var(--bg-card);color:var(--text-sec);border:1px solid var(--border);
+  border-radius:999px;padding:6px 13px;font-size:12.5px;cursor:pointer;font-family:inherit}
+.hf-do-b:hover{border-color:var(--accent);color:var(--text)}
+.hf-do-b.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.hf-do-hint{font-size:12px;color:var(--text-muted);line-height:1.5;margin:0 0 12px 91px}
+@media(max-width:520px){.hf-do>label{min-width:0;width:100%}.hf-do-hint{margin-left:0}}
 .cov-map-open{width:100%;text-align:left;background:var(--bg-alt);border:1px solid var(--border);border-radius:7px;padding:8px 11px;margin-bottom:8px;cursor:pointer;font-size:12px;font-weight:600;color:var(--accent);font-family:inherit}
 .cov-map-open:hover{border-color:var(--accent)}
 .src-picker{height:100%;overflow-y:auto;padding:14px 16px;max-width:760px;margin:0 auto}
@@ -1551,6 +1561,8 @@ body.hr-open{overflow:hidden}
 /* Выбор по ЗАДАЧЕ. Чипы задачи крупнее остальных: это первое решение на
    экране, и оно важнее темпа и показа. */
 .hfd-task{margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
+.hfd-tune-h{font-size:11px;color:var(--text-muted);letter-spacing:.06em;text-transform:uppercase;
+  margin:20px 0 10px;padding-top:14px;border-top:1px solid var(--border)}
 .hfd-task .hfd-chip{font-size:12.5px;padding:6px 13px}
 .hfd-task-hint{font-size:12px;color:var(--text-muted);line-height:1.5;margin:-4px 0 4px 60px}
 .hfd-rec-b{font-size:10px;font-weight:600;color:#fff;background:var(--accent);
@@ -2393,7 +2405,7 @@ function renderEruditScreen(el){
 // Оверлеем, а не восьмым режимом, СОЗНАТЕЛЬНО: флаги режимов уже дважды взводились
 // парами (hifzMode+eruditMode), и цена ошибки там — вылет из приложения на «Назад».
 // У оверлея одна запись истории и один владелец — сам модуль.
-const HIFZDRILL_VER="8";  // поднять при правке hifz-drill.js (сброс кеша браузера/CDN)
+const HIFZDRILL_VER="9";  // поднять при правке hifz-drill.js (сброс кеша браузера/CDN)
 let DRILL=null;
 async function drillMod(){
   if(DRILL)return DRILL;
@@ -3653,13 +3665,22 @@ function hifzSuName(s){const su=SURAHS.find(x=>x.id===s);return su?su.ru:("Су�
 // ─── Рендер ───
 function renderHifz(){
   const body=document.getElementById("hifzBody");if(!body)return;
-  body.innerHTML=`<div class="prog-h">Проверка заучивания</div><div class="prog-sub">Карта памяти · взвешенный пул · цепочки · SRS</div>
-    <div class="hf-tabs">
-      <button class="${HF.tab==="map"?"on":""}" onclick="hifzTab('map')">🗺 Карта</button>
-      <button class="${HF.tab==="quiz"?"on":""}" onclick="hifzTab('quiz')">🎯 Проверка</button>
+  // Вход в модуль — ОДНА строка «Что сейчас делаешь», а не два таба плюс две
+  // кнопки во всю ширину: четыре разные вещи выглядели четырьмя не связанными
+  // друг с другом. Тот же приём и тот же вид, что у строки «Задача» в станке.
+  const hint=HF.tab==="map"
+    ? "Карта памяти: что уже знаешь, что нетвёрдо, чего ещё не трогал."
+    : "Экзамен по расписанию: приложение само выбирает слабое место и спрашивает.";
+  body.innerHTML=`<div class="prog-h">🧠 Хифз</div>
+    <div class="prog-sub">Одно место для всего заучивания: что знаешь, что учишь, что пора проверить</div>
+    <div class="hf-do">
+      <label>Что сейчас</label>
+      <button class="hf-do-b ${HF.tab==="map"?"on":""}" onclick="hifzTab('map')" title="Что уже знаешь и насколько твёрдо">🗺 Смотрю карту</button>
+      <button class="hf-do-b" onclick="drillStart()" title="Заучивание по программе: порция, число повторов и способ показа выбираются методом">📿 Учу по программе</button>
+      <button class="hf-do-b ${HF.tab==="quiz"?"on":""}" onclick="hifzTab('quiz')" title="Экзамен по расписанию: приложение выбирает слабое место">🎯 Проверяю себя</button>
+      <button class="hf-do-b" onclick="hrStart()" title="Полноэкранный показ: один аят, тап по экрану — следующий">🤲 Читаю по памяти</button>
     </div>
-    <button class="cov-map-open" onclick="hrStart()" title="Полноэкранный показ: один аят, тап по экрану — следующий">🤲 Чтение наизусть — аят на весь экран, тап = дальше</button>
-    <button class="cov-map-open" onclick="drillStart()" title="Заучивание по программе: порция, число повторов и способ показа выбираются методом">📿 Станок заучивания — учить по программе, метод на выбор</button>`
+    <div class="hf-do-hint">${hint}</div>`
     +(HF.tab==="map"?hifzMapHTML():hifzQuizHTML());
 }
 function hifzTab(t){HF.tab=t;if(t==="quiz"&&!HF.sess)hifzBeginSession();else renderHifz();}

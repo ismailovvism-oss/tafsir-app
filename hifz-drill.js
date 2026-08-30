@@ -927,6 +927,9 @@ function setupHTML(){
     </div>
     ${rukuRowHTML()}
     ${pageRowHTML()}
+    ${taskRow}
+    <div class="hfd-methods">${list}</div>
+    <div class="hfd-tune-h">Тонкая настройка</div>
     <div class="hfd-row">
       <label>Темп</label>
       <button class="hfd-chip ${D.pace==="tap"?"on":""}" data-act="pace" data-v="tap" title="Листаешь сам">тап</button>
@@ -945,8 +948,6 @@ function setupHTML(){
       <button class="hfd-chip ${D.veil==="fade"?"on":""}" data-act="veil" data-v="fade">гаснет</button>
       <button class="hfd-chip ${D.veil==="hide"?"on":""}" data-act="veil" data-v="hide">по памяти</button>
     </div>
-    ${taskRow}
-    <div class="hfd-methods">${list}</div>
     <div class="hfd-go"><button class="hfd-start" data-act="start">Собрать программу и начать</button></div>
   </div>`;
 }
