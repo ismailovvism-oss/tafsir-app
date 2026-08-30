@@ -2211,6 +2211,7 @@ const SOURCES={
   //   данными (build_ruku.py из метаданных Tanzil, CC-BY). 556 отрезков, 6 КБ —
   //   ОДИН файл на весь Коран, чанковать нечего —
   ruku:            {baseUrl:"data",  pathTemplate:"{baseUrl}/ruku.json"},
+  qpc_lines:       {baseUrl:"data",  pathTemplate:"{baseUrl}/qpc_lines.json"},  // строки страниц (build_qpc_lines.py)
   // Тематический указатель (фихрист): дерево тем + карта тема→аяты (build_topics.py).
   topics:          {baseUrl:"data",  pathTemplate:"{baseUrl}/topics/{file}"},
   // — печатный мусхаф (глифы QPC, лёгкий JSON) и его шрифты; структуру внутри
@@ -2381,7 +2382,7 @@ function renderEruditScreen(el){
 // Оверлеем, а не восьмым режимом, СОЗНАТЕЛЬНО: флаги режимов уже дважды взводились
 // парами (hifzMode+eruditMode), и цена ошибки там — вылет из приложения на «Назад».
 // У оверлея одна запись истории и один владелец — сам модуль.
-const HIFZDRILL_VER="6";  // поднять при правке hifz-drill.js (сброс кеша браузера/CDN)
+const HIFZDRILL_VER="7";  // поднять при правке hifz-drill.js (сброс кеша браузера/CDN)
 let DRILL=null;
 async function drillMod(){
   if(DRILL)return DRILL;
@@ -2421,6 +2422,8 @@ async function drillMod(){
       pageOf:(sn,an)=>Progress.verseToPage(sn+":"+an,1),
       pageVks:pg=>spdPageVks(pg),
       pagesTotal:()=>(qpcMeta&&qpcMeta.pages)||604,
+      loadLines:()=>loadQpcLines(),
+      pageLines:pg=>qpcPageLines(pg),
       // Муташабихат из данных 🎓: пара «твой аят — его двойник» для шага-развилки.
       loadMut:()=>loadMut(),
       mutTwins:vk=>mutTwins(vk),
@@ -10266,6 +10269,22 @@ function mutTwins(vk){
   const g=MUT&&MUT.by[vk];
   return g?g.filter(x=>x!==vk):[];
 }
+
+// ── Строки страниц мусхафа ──────────────────────────────────────────────────
+// Какие СЛОВА каких аятов лежат на каждой строке (build_qpc_lines.py: прямой
+// связи в данных QPC нет, она выведена сопоставлением глифов). Нужна методам,
+// которые ходят по строкам, — грузим только по требованию, 220 КБ.
+let QLINES=null,_qlinesLoading=null;
+function loadQpcLines(){
+  if(QLINES)return Promise.resolve(QLINES);
+  if(_qlinesLoading)return _qlinesLoading;
+  _qlinesLoading=fetch(resolveUrl("qpc_lines")).then(r=>r.ok?r.json():null).then(d=>{
+    QLINES=(d&&d.pages)?d:null;_qlinesLoading=null;return QLINES;
+  }).catch(()=>{_qlinesLoading=null;return null;});
+  return _qlinesLoading;
+}
+// {"<строка>": [[сура, аят, отСлова, доСлова], …]} для страницы p.
+function qpcPageLines(p){return (QLINES&&QLINES.pages[String(p)])||null;}
 function pageStartsInSurah(surah){
   const out={};
   if(!qpcMeta||!qpcMeta.pageStart)return out;

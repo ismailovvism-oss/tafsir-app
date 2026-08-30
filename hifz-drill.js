@@ -102,6 +102,18 @@ function chunkLabel(ch){
 // ============================================================
 // КОНВЕЙЕР — 1. РЕЗКА
 // ============================================================
+// Соседние отрезки одного аята сливаем: строка может резать аят посередине, а
+// на полустранице его половинки снова оказываются рядом — двумя кусками они
+// произносились бы с разрывом там, где разрыва нет.
+function joinSegs(segs){
+  const out=[];
+  for(const g of segs){
+    const p=out[out.length-1];
+    if(p&&p.s===g.s&&p.a===g.a&&p.w1+1===g.w0)p.w1=g.w1;
+    else out.push({s:g.s,a:g.a,w0:g.w0,w1:g.w1});
+  }
+  return out;
+}
 function cut(vks,unit){
   const out=[];
   // Страница мусхафа как порция. Границы берём у общего отображения аят→страница
@@ -118,6 +130,41 @@ function cut(vks,unit){
     }
     if(grp.length)out.push(grp);
     return out.length?out:cut(vks,{kind:"ayah"});   // мета не загрузилась — не падаем
+  }
+  // Строка мусхафа как порция. Прямой связи «строка → аят» в данных QPC нет —
+  // она выведена сопоставлением глифов (build_qpc_lines.py). Здесь остаётся
+  // только пересечь строки с охватом: чужие аяты со строки выбрасываем.
+  if((unit.kind==="line"||unit.kind==="halfpage")&&ctx.pageLines&&ctx.pageOf){
+    const want=new Set(vks),pages=[];
+    for(const vk of vks){
+      const [sn,an]=vk.split(":").map(Number);
+      let pg=null;try{pg=ctx.pageOf(sn,an);}catch(e){}
+      if(pg&&pages[pages.length-1]!==pg)pages.push(pg);
+    }
+    const res=[];
+    for(const pg of pages){
+      const L=ctx.pageLines(pg);if(!L)continue;
+      const chunks=[];
+      for(const ln of Object.keys(L).sort((x,y)=>x-y)){
+        const segs=[];
+        for(const it of L[ln]){
+          const vk=it[0]+":"+it[1];
+          if(!want.has(vk))continue;
+          const w=wordsOf(vk);if(!w||!w.words.length)continue;
+          const last=w.words.length-1;
+          segs.push(seg(it[0],it[1],Math.min(it[2],last),Math.min(it[3],last)));
+        }
+        if(segs.length)chunks.push(joinSegs(segs));
+      }
+      if(unit.kind==="halfpage"&&chunks.length>1){
+        const mid=Math.ceil(chunks.length/2);
+        const flat=arr=>joinSegs(arr.reduce((acc,c)=>acc.concat(c),[]));
+        res.push(flat(chunks.slice(0,mid)));
+        const rest=chunks.slice(mid);
+        if(rest.length)res.push(flat(rest));
+      }else res.push(...chunks);
+    }
+    return res.length?res:cut(vks,{kind:"ayah"});   // данные не загрузились — не падаем
   }
   if(unit.kind==="block"){                     // весь охват одной порцией (для проходов)
     out.push(vks.map(vk=>{const [s,a]=vk.split(":").map(Number);const w=wordsOf(vk);return seg(s,a,0,w.words.length-1);}));
@@ -530,15 +577,18 @@ const PRESETS=[
   cfg:{unit:{kind:"page"},reps:{pattern:["text","text","text","text","text","text","text","text","text","blind","blind","blind"]},stop:{kind:"criterion",maxExtra:4}}},
  {grp:"Научные",id:"shadow",name:"Синхронно с чтецом",sub:"Читать ВМЕСТЕ с чтецом, не после него: голос ведёт темп, протяжки и таджвид. Пауз нет, поэтому проходит быстро — берут для разгона перед повторами. Требует звука, он включится сам.",
   cfg:{role:"shadow",reps:{n:5,show:"text"},link:{kind:"snowball",every:4,reps:3}},needsAudio:true},
+ {grp:"Научные",id:"bottomup",name:"Снизу вверх",sub:"Строки страницы мусхафа с ПОСЛЕДНЕЙ к первой, потом страница целиком. Порядок ломает опору на «что было выше» — держит только сам текст.",
+  cfg:{unit:{kind:"line"},order:{kind:"reverse"},reps:{pattern:["text","text","blind"]},
+       passes:[{unit:{kind:"line"},order:{kind:"reverse"}},{unit:{kind:"page"},order:{kind:"forward"},reps:{pattern:["text","text","blind","blind"]}}]}},
+ {grp:"Научные",id:"halfpage",name:"Полстраницы",sub:"Порция — половина страницы мусхафа: строки делятся пополам. Середина между аятом и целой страницей.",
+  cfg:{unit:{kind:"halfpage"},reps:{n:10,show:"text"},stop:{kind:"criterion",maxExtra:4}}},
  {grp:"Научные",id:"reverse",name:"С конца блока",sub:"Аяты в обратном порядке: лечит «начало помню, конец плаваю».",
   cfg:{order:{kind:"reverse"},reps:{n:7,show:"text"},link:{kind:"snowball",every:4,reps:3}}},
 
  {grp:"Пока недоступны",id:"ottoman",name:"Концы джузов",sub:"Османский метод: последние страницы каждого джуза, по спирали.",cfg:{},need:"juz"},
- {grp:"Пока недоступны",id:"bottomup",name:"Снизу вверх",sub:"Строки страницы с последней к первой.",cfg:{},need:"line"},
 
 ];
-const NEED_WHY={line:"нужна разметка строк страницы — какие аяты на какой строке",
-  juz:"нужен охват по джузам, а не по сурам",write:"нужен слой рукописи"};
+const NEED_WHY={juz:"нужен охват по джузам, а не по сурам",write:"нужен слой рукописи"};
 const presetById=id=>PRESETS.find(p=>p.id===id);
 function cfgOf(p){return Object.assign({},BASE,p.cfg||{});}
 
@@ -1055,7 +1105,11 @@ async function assemble(){
   const p=presetById(D.method)||PRESETS[0];
   D.seed=(D.s*1000+a*31+b)>>>0;
   const cfg=cfgOf(p);
-  if(cfg.unit&&cfg.unit.kind==="page"&&ctx.loadPages){try{await ctx.loadPages();}catch(e){}}
+  const needPg=cfg.unit&&["page","line","halfpage"].includes(cfg.unit.kind);
+  if(needPg&&ctx.loadPages){try{await ctx.loadPages();}catch(e){}}
+  if(cfg.unit&&(cfg.unit.kind==="line"||cfg.unit.kind==="halfpage")&&ctx.loadLines){
+    try{await ctx.loadLines();}catch(e){}
+  }
   await loadWords(D.vks);
   // Близнецы живут в ДРУГИХ сурах — их текст надо подтянуть отдельно, иначе
   // пара соберётся из аята и пустоты.
