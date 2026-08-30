@@ -913,6 +913,7 @@ function setupHTML(){
     </div>
     <div class="hfd-task-hint">${esc(tHint)}</div>`;
   return `<div class="hfd-setup">
+    <button class="hfd-x hfd-x-top" data-act="close" title="Закрыть и вернуться в 🧠 Хифз">✕</button>
     <div class="hfd-h">📿 Станок заучивания</div>
     <div class="hfd-sub">Приложение ведёт заучивание по программе: показывает порцию нужное число раз в нужном виде, ты повторяешь вслух.</div>
     <div class="hfd-row">
@@ -959,6 +960,7 @@ function planHTML(){
   if(!n){
     const p0=presetById(D.method);
     return `<div class="hfd-plan">
+      <button class="hfd-x hfd-x-top" data-act="close" title="Закрыть и вернуться в 🧠 Хифз">✕</button>
       <div class="hfd-h">${esc(p0?p0.name:"")}</div>
       <div class="hfd-sub">${esc(D.s)}:${D.from}–${D.to}</div>
       <div class="hfd-note2">В этом отрезке нет аятов, которые почти дословно
@@ -971,6 +973,7 @@ function planHTML(){
   const p=presetById(D.method);
   const links=D.prog.filter(a=>a.link).length;
   return `<div class="hfd-plan">
+    <button class="hfd-x hfd-x-top" data-act="close" title="Закрыть и вернуться в 🧠 Хифз">✕</button>
     <div class="hfd-h">${esc(p?p.name:"")}</div>
     <div class="hfd-sub">${esc(D.s)}:${D.from}–${D.to} · ${D.vks.length} ${plural(D.vks.length,"аят","аята","аятов")}</div>
     <div class="hfd-nums">
@@ -1074,6 +1077,7 @@ function runHTML(){
 function doneHTML(){
   const su=SU(D.s)||{ru:""};
   return `<div class="hfd-done">
+    <button class="hfd-x hfd-x-top" data-act="close" title="Закрыть и вернуться в 🧠 Хифз">✕</button>
     <div class="hfd-h">Программа пройдена</div>
     <div class="hfd-sub">${esc(su.ru)} ${D.from}–${D.to} · ${D.prog.length} ${plural(D.prog.length,"повтор","повтора","повторов")}</div>
     <div class="hfd-note2">Отметить эти аяты заученными — они появятся на карте 🗺 и встанут в очередь проверки 🎯.</div>

@@ -834,6 +834,10 @@ body.sb-resizing{cursor:col-resize;user-select:none}
   border-radius:999px;padding:6px 13px;font-size:12.5px;cursor:pointer;font-family:inherit}
 .hf-do-b:hover{border-color:var(--accent);color:var(--text)}
 .hf-do-b.on{background:var(--accent);border-color:var(--accent);color:#fff}
+/* Две кнопки переключают вкладку на месте, две открывают отдельный экран.
+   Разницу видно ДО нажатия: ⤢ — «откроется на весь экран». */
+.hf-do-note{opacity:.8}
+.hf-do-full{font-size:9px;opacity:.55;margin-left:5px;vertical-align:2px}
 .hf-do-hint{font-size:12px;color:var(--text-muted);line-height:1.5;margin:0 0 12px 91px}
 @media(max-width:520px){.hf-do>label{min-width:0;width:100%}.hf-do-hint{margin-left:0}}
 .cov-map-open{width:100%;text-align:left;background:var(--bg-alt);border:1px solid var(--border);border-radius:7px;padding:8px 11px;margin-bottom:8px;cursor:pointer;font-size:12px;font-weight:600;color:var(--accent);font-family:inherit}
@@ -1547,7 +1551,10 @@ body.hr-open{overflow:hidden}
 .hfd .hfd-h{font-size:19px;font-weight:700;color:var(--text);margin-bottom:5px}
 .hfd .hfd-sub{font-size:12px;color:var(--text-muted);line-height:1.5;margin-bottom:14px}
 /* — экран настройки — */
-.hfd-setup,.hfd-plan,.hfd-done{max-width:640px;width:100%;margin:0 auto;padding:18px 14px 40px}
+.hfd-setup,.hfd-plan,.hfd-done{max-width:640px;width:100%;margin:0 auto;padding:18px 14px 40px;position:relative}
+/* Выход был только на экране прогона: с настройки и плана уйти было нечем,
+   кроме аппаратной «Назад». */
+.hfd-x-top{position:absolute;top:12px;right:12px;z-index:2}
 .hfd-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 .hfd-row>label{font-size:12px;color:var(--text-muted);min-width:52px}
 .hfd-in{background:var(--bg-card);color:var(--text);border:1px solid var(--border);border-radius:7px;
@@ -2405,7 +2412,7 @@ function renderEruditScreen(el){
 // Оверлеем, а не восьмым режимом, СОЗНАТЕЛЬНО: флаги режимов уже дважды взводились
 // парами (hifzMode+eruditMode), и цена ошибки там — вылет из приложения на «Назад».
 // У оверлея одна запись истории и один владелец — сам модуль.
-const HIFZDRILL_VER="9";  // поднять при правке hifz-drill.js (сброс кеша браузера/CDN)
+const HIFZDRILL_VER="10";  // поднять при правке hifz-drill.js (сброс кеша браузера/CDN)
 let DRILL=null;
 async function drillMod(){
   if(DRILL)return DRILL;
@@ -2551,6 +2558,9 @@ function hrStart(){
     const lp=gs("lastPos",null);if(lp&&lp.surah){s=lp.surah;a=lp.ayah||1;}
   }
   HR.s=s;HR.a=Math.min(a,(SURAHS[s-1]||{n:1}).n);HR.swiped=false;
+  // Откуда открыли, туда и вернём. Раньше выход ВСЕГДА прыгал в ленту чтения —
+  // из 🧠 Хифза человек уходил читать вместо того, чтобы вернуться к карте.
+  HR.fromMode=ST.hifzMode?"hifz":(ST.eruditMode?"erudit":(ST.homeMode?"home":null));
   HR.ru=!!gs("hrRu",false);                    // показ перевода переживает выход из ридера
   HR.hide=!!gs("hrHide",false);                // «по памяти»: аят скрыт, 1-й тап — показать
   HR.veiled=HR.hide;
@@ -2603,7 +2613,8 @@ function hrStop(viaBack){
   if(HR.el){HR.el.remove();HR.el=null;}
   dfExitFs();
   if(!viaBack)consumeOverlay();
-  jumpTo({surah:HR.s,ayah:HR.a});              // лента — на последний аят сессии
+  if(HR.fromMode)render();                     // вернуться в режим, из которого открыли
+  else jumpTo({surah:HR.s,ayah:HR.a});         // из ленты — на последний аят сессии
 }
 function hrStep(d){
   let s=HR.s,a=HR.a+d;
@@ -3676,11 +3687,11 @@ function renderHifz(){
     <div class="hf-do">
       <label>Что сейчас</label>
       <button class="hf-do-b ${HF.tab==="map"?"on":""}" onclick="hifzTab('map')" title="Что уже знаешь и насколько твёрдо">🗺 Смотрю карту</button>
-      <button class="hf-do-b" onclick="drillStart()" title="Заучивание по программе: порция, число повторов и способ показа выбираются методом">📿 Учу по программе</button>
+      <button class="hf-do-b" onclick="drillStart()" title="Заучивание по программе: порция, число повторов и способ показа выбираются методом">📿 Учу по программе<span class="hf-do-full">⤢</span></button>
       <button class="hf-do-b ${HF.tab==="quiz"?"on":""}" onclick="hifzTab('quiz')" title="Экзамен по расписанию: приложение выбирает слабое место">🎯 Проверяю себя</button>
-      <button class="hf-do-b" onclick="hrStart()" title="Полноэкранный показ: один аят, тап по экрану — следующий">🤲 Читаю по памяти</button>
+      <button class="hf-do-b" onclick="hrStart()" title="Полноэкранный показ: один аят, тап по экрану — следующий">🤲 Читаю по памяти<span class="hf-do-full">⤢</span></button>
     </div>
-    <div class="hf-do-hint">${hint}</div>`
+    <div class="hf-do-hint">${hint} <span class="hf-do-note">⤢ — откроется на весь экран, выход вернёт сюда.</span></div>`
     +(HF.tab==="map"?hifzMapHTML():hifzQuizHTML());
 }
 function hifzTab(t){HF.tab=t;if(t==="quiz"&&!HF.sess)hifzBeginSession();else renderHifz();}
