@@ -104,6 +104,21 @@ function chunkLabel(ch){
 // ============================================================
 function cut(vks,unit){
   const out=[];
+  // Страница мусхафа как порция. Границы берём у общего отображения аят→страница
+  // (то же, что у карты покрытия), поэтому «страница» здесь — ровно та бумага,
+  // что человек видит в режиме «Мусхаф», а не выдуманное окно в N аятов.
+  if(unit.kind==="page"&&ctx.pageOf){
+    let cur=null,grp=[];
+    for(const vk of vks){
+      const [s,a]=vk.split(":").map(Number);
+      const w=wordsOf(vk);if(!w||!w.words.length)continue;
+      let pg=null;try{pg=ctx.pageOf(s,a);}catch(e){}
+      if(pg!==cur&&grp.length){out.push(grp);grp=[];}
+      cur=pg;grp.push(seg(s,a,0,w.words.length-1));
+    }
+    if(grp.length)out.push(grp);
+    return out.length?out:cut(vks,{kind:"ayah"});   // мета не загрузилась — не падаем
+  }
   if(unit.kind==="block"){                     // весь охват одной порцией (для проходов)
     out.push(vks.map(vk=>{const [s,a]=vk.split(":").map(Number);const w=wordsOf(vk);return seg(s,a,0,w.words.length-1);}));
     return out;
@@ -511,17 +526,19 @@ const PRESETS=[
   cfg:{reps:{pattern:["text","text","blind","blind"]},link:{kind:"snowball",every:4,reps:3},stop:{kind:"criterion",maxExtra:4}},chan:"letters"},
  {grp:"Научные",id:"hard",name:"Полезная трудность",sub:"Разнесённый повтор + перемешанный порядок + минимум чтения. Самый неудобный и самый стойкий.",
   cfg:{stop:{kind:"criterion",maxExtra:6},order:{kind:"shuffle"},reps:{pattern:["text","blind","blind","blind","blind"]},spacing:{kind:"expanding",gaps:[1,2,4,8,16]}}},
+ {grp:"Научные",id:"wholepage",name:"Страница целиком",sub:"Порция — не аят, а страница мусхафа целиком: двенадцать прочтений, последние по памяти. Так учат там, где счёт идёт страницами, а не аятами.",
+  cfg:{unit:{kind:"page"},reps:{pattern:["text","text","text","text","text","text","text","text","text","blind","blind","blind"]},stop:{kind:"criterion",maxExtra:4}}},
  {grp:"Научные",id:"shadow",name:"Синхронно с чтецом",sub:"Читать ВМЕСТЕ с чтецом, не после него: голос ведёт темп, протяжки и таджвид. Пауз нет, поэтому проходит быстро — берут для разгона перед повторами. Требует звука, он включится сам.",
   cfg:{role:"shadow",reps:{n:5,show:"text"},link:{kind:"snowball",every:4,reps:3}},needsAudio:true},
  {grp:"Научные",id:"reverse",name:"С конца блока",sub:"Аяты в обратном порядке: лечит «начало помню, конец плаваю».",
   cfg:{order:{kind:"reverse"},reps:{n:7,show:"text"},link:{kind:"snowball",every:4,reps:3}}},
 
- {grp:"Пока недоступны",id:"ottoman",name:"Концы джузов",sub:"Османский метод: последние страницы каждого джуза.",cfg:{},need:"page"},
- {grp:"Пока недоступны",id:"bottomup",name:"Снизу вверх",sub:"Строки страницы с последней к первой.",cfg:{},need:"page"},
- {grp:"Пока недоступны",id:"wholepage",name:"Страница целиком",sub:"Пятнадцать прочтений всей страницы.",cfg:{},need:"page"},
+ {grp:"Пока недоступны",id:"ottoman",name:"Концы джузов",sub:"Османский метод: последние страницы каждого джуза, по спирали.",cfg:{},need:"juz"},
+ {grp:"Пока недоступны",id:"bottomup",name:"Снизу вверх",sub:"Строки страницы с последней к первой.",cfg:{},need:"line"},
 
 ];
-const NEED_WHY={page:"нужны данные страниц мусхафа",write:"нужен слой рукописи"};
+const NEED_WHY={line:"нужна разметка строк страницы — какие аяты на какой строке",
+  juz:"нужен охват по джузам, а не по сурам",write:"нужен слой рукописи"};
 const presetById=id=>PRESETS.find(p=>p.id===id);
 function cfgOf(p){return Object.assign({},BASE,p.cfg||{});}
 
@@ -748,6 +765,44 @@ function rukuRowHTML(){
 // Кто читает и насколько точно режется. Чтец берётся ОБЩИЙ с 🎧 намеренно:
 // специфичность кодирования — заученное под один голос под другим вспоминается
 // хуже, и менять его посреди блока значит частично учить заново.
+// Страница мусхафа как охват. Страница часто ЛЕЖИТ НА ДВУХ СУРАХ, а охват у
+// станка — сура плюс аяты; поэтому берём ту часть страницы, что попала в суру,
+// и говорим об этом прямо, а не молча отдаём огрызок.
+function pageTake(d){
+  if(!ctx.pageOf||!ctx.pageVks)return;
+  let pg=null;try{pg=ctx.pageOf(D.s,D.from);}catch(e){}
+  if(!pg)return;
+  const total=(ctx.pagesTotal&&ctx.pagesTotal())||604;
+  pg=Math.max(1,Math.min(total,pg+(d||0)));
+  const vks=ctx.pageVks(pg)||[];
+  if(!vks.length)return;
+  const bySura={};
+  for(const vk of vks){const [sn,an]=vk.split(":").map(Number);(bySura[sn]=bySura[sn]||[]).push(an);}
+  // Своя сура в приоритете; если страница целиком чужая — переходим в ту, где её больше.
+  const keys=Object.keys(bySura).map(Number);
+  const pick=keys.includes(D.s)?D.s:keys.sort((a,b)=>bySura[b].length-bySura[a].length)[0];
+  const ans=bySura[pick];
+  D.s=pick;D.from=Math.min(...ans);D.to=Math.max(...ans);
+  render();
+}
+function pageRowHTML(){
+  if(!ctx.pageOf)return "";
+  let pg=null;try{pg=ctx.pageOf(D.s,D.from);}catch(e){}
+  if(!pg)return `<div class="hfd-row"><label>Страница</label><span class="hfd-note">данные страниц мусхафа не загрузились</span></div>`;
+  const vks=(ctx.pageVks&&ctx.pageVks(pg))||[];
+  const mine=vks.filter(v=>+v.split(":")[0]===D.s).map(v=>+v.split(":")[1]);
+  const exact=mine.length&&D.from===Math.min(...mine)&&D.to===Math.max(...mine);
+  const split=vks.length&&mine.length&&mine.length<vks.length;
+  const lab=mine.length?`страница ${pg} · аяты ${Math.min(...mine)}–${Math.max(...mine)}`:`страница ${pg}`;
+  return `<div class="hfd-row">
+    <label>Страница</label>
+    <button class="hfd-chip" data-act="page" data-d="-1" title="Предыдущая страница мусхафа">‹</button>
+    <button class="hfd-chip ${exact?"on":""}" data-act="page" data-d="0" title="Взять страницу мусхафа целиком — ту самую бумагу, что видно в режиме «Мусхаф»">▤ взять страницу</button>
+    <button class="hfd-chip" data-act="page" data-d="1" title="Следующая страница мусхафа">›</button>
+    <span class="hfd-note">${esc(lab)}${split?" · часть страницы в соседней суре":""}</span>
+  </div>`;
+}
+
 function paceNote(){
   const pm=presetById(D.method);
   if(D.pace!=="audio")return pm&&pm.needsAudio?"без звука шэдоуинга не выйдет — включи «звук + пауза»":"листаешь сам";
@@ -780,6 +835,7 @@ function setupHTML(){
       <span class="hfd-note">всего в суре ${su.n}</span>
     </div>
     ${rukuRowHTML()}
+    ${pageRowHTML()}
     <div class="hfd-row">
       <label>Темп</label>
       <button class="hfd-chip ${D.pace==="tap"?"on":""}" data-act="pace" data-v="tap" title="Листаешь сам">тап</button>
@@ -999,6 +1055,7 @@ async function assemble(){
   const p=presetById(D.method)||PRESETS[0];
   D.seed=(D.s*1000+a*31+b)>>>0;
   const cfg=cfgOf(p);
+  if(cfg.unit&&cfg.unit.kind==="page"&&ctx.loadPages){try{await ctx.loadPages();}catch(e){}}
   await loadWords(D.vks);
   // Близнецы живут в ДРУГИХ сурах — их текст надо подтянуть отдельно, иначе
   // пара соберётся из аята и пустоты.
@@ -1047,6 +1104,7 @@ async function onAct(act,el){
   }
   if(act==="veil"){D.veil=el.dataset.v;D.revealed=false;render();return;}
   if(act==="ruku"){rukuTake(+el.dataset.d||0);return;}
+  if(act==="page"){pageTake(+el.dataset.d||0);return;}
   if(act==="grade"){gate(+el.dataset.g);return;}
   if(act==="lawh"){D.lastKey=el.dataset.k;lawhKey(el.dataset.k);return;}
   if(act==="chan"){D.channel=el.dataset.v;D.lw=0;D.lwBad=0;render();return;}
@@ -1094,6 +1152,8 @@ export function open(start){
   D.open=true;D.view="setup";
   // Отрезки грузим сразу: строка охвата должна быть живой уже на первом экране.
   if(ctx.loadRuku)ctx.loadRuku().then(()=>{if(D.open&&D.view==="setup")render();});
+  // Страницы — туда же: строка «Страница» без меты показывала бы прочерк.
+  if(ctx.loadPages)ctx.loadPages().then(()=>{if(D.open&&D.view==="setup")render();});
   const el=document.createElement("div");
   el.id="hifzDrill";el.className="hfd";
   el.innerHTML=`<div class="hfd-box"></div>`;
