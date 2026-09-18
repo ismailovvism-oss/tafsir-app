@@ -5184,6 +5184,14 @@ async function loadConfig(){
   ST.setMigrated=migrateDefaultSet();                 // разовое обновление набора «из коробки»
   ST.enabled=getEnabled();
   if(ST.enabled._arabic===undefined)ST.enabled._arabic=true;
+  // Deep-link на ИСТОЧНИК: «?src=<id>[,<id>]» (например из поста в канале) — включает
+  // названные источники в набор читателя, остальной набор не трогает; вместе с
+  // «#сура:аят» открывает нужный аят с нужным тафсиром. Неизвестные id молча пропускаются.
+  try{const srcQ=new URLSearchParams(location.search).get("src");
+    if(srcQ){let added=false;
+      for(const id of srcQ.split(",").map(x=>x.trim()).filter(Boolean)){
+        if(CONFIG.tafsirs.find(t=>t.id===id)&&!ST.enabled[id]){ST.enabled[id]=true;added=true;}}
+      if(added)setEnabled(ST.enabled);}}catch(e){}
   if(!applyHash(true)){                              // нет deep-link/«#home» → Главная (ST.surah из lastPos для «Продолжить»)
     restoreLastPos();ST.homeMode=true;
   }
