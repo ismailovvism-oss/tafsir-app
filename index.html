@@ -497,6 +497,51 @@ body.sb-resizing{cursor:col-resize;user-select:none}
 .warn-inline.lv-moderate{color:#b9822a;border-color:rgba(215,154,43,.5);background:rgba(215,154,43,.1)}
 .warn-inline.lv-minor{color:#4d6fa3;border-color:rgba(106,140,192,.5);background:rgba(106,140,192,.1)}
 .warn-inline:hover{filter:brightness(1.05)}
+/* Слайды (render:"slides"): кадр 16:9 + подпись + точки. Токены схем — на .sl-stage:
+   SVG-схемы красятся ТОЛЬКО через var(--frame/--ink/--path…) (см. build_alqasawi.py),
+   палитра та же, что в проекте книги (слои/визуальный/шаблон.html). */
+.sl-stage{--frame:#fbfbf8;--ink:#1c211e;--muted:#5f6862;--rule:#d7dbd3;
+  --dawn:#b8761f;--dawn-soft:#f5e7cf;--path:#2f5e8a;--path-soft:#e2ebf4;
+  --left:#9b4a3a;--left-soft:#f3e2dd;--right:#6d5b9a;--right-soft:#e9e4f3;
+  --f-body:"Literata",Georgia,serif;--f-ui:"IBM Plex Sans",system-ui,sans-serif;--f-ar:"Amiri","Noto Naskh Arabic",serif;
+  position:relative;aspect-ratio:16/9;max-width:100%;margin-top:6px;border-radius:10px;overflow:hidden;
+  background:var(--frame);border:1px solid var(--rule);touch-action:pan-y;user-select:none;-webkit-user-select:none}
+[data-theme="dark"] .sl-stage,body[data-skin="dark"] .sl-stage{--frame:#1a1f1c;--ink:#e4e8e3;--muted:#9aa39d;--rule:#2b322e;
+  --dawn:#e3a85a;--dawn-soft:#3a2c17;--path:#8fb6dd;--path-soft:#1d2b39;
+  --left:#e08f7d;--left-soft:#3a2420;--right:#b4a5e0;--right-soft:#2a2540}
+.sl-wait{background:linear-gradient(100deg,var(--frame) 40%,var(--rule) 50%,var(--frame) 60%) 0 0/200% 100%;animation:slWait 1.4s linear infinite}
+.sl,.sl-entry .sl-fallback{max-width:760px}
+@keyframes slWait{to{background-position:-200% 0}}
+.sl-track{display:flex;height:100%;transition:transform .35s ease}
+.sl-slide{flex:0 0 100%;min-width:0;height:100%;position:relative;overflow:hidden}
+.sl-slide svg{width:100%;height:100%;display:block}
+.sl-slide img{width:100%;height:100%;object-fit:cover;display:block}
+.sl-big{height:100%;display:grid;place-items:center;padding:7%;background:radial-gradient(120% 90% at 50% 110%,var(--dawn-soft),var(--frame) 70%)}
+.sl-big p{font:400 clamp(16px,3.6vw,30px)/1.35 var(--f-body);color:var(--ink);text-align:center;margin:0;text-wrap:balance;white-space:pre-line}
+.sl-big b{color:var(--dawn);font-weight:600}
+.sl-nav{position:absolute;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;padding:0;
+  border:1px solid var(--rule);background:var(--frame);color:var(--ink);font-size:18px;line-height:1;cursor:pointer;opacity:.85}
+.sl-nav:hover{opacity:1}.sl-prev{left:8px}.sl-next{right:8px}.sl-nav:disabled{opacity:.25;cursor:default}
+.sl-stage .t-h{font:600 46px var(--f-body);fill:var(--ink)}
+.sl-stage .t-b{font:500 34px var(--f-ui);fill:var(--ink)}
+.sl-stage .t-s{font:400 26px var(--f-ui);fill:var(--muted)}
+.sl-stage .t-ar{font:700 40px var(--f-ar);fill:var(--dawn)}
+.sl-cap{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;margin-top:8px;min-height:2.6em}
+.sl-cnt{font:600 12px/1.9 var(--f-ui,system-ui);color:var(--text-muted);font-variant-numeric:tabular-nums}
+.sl-cap p{margin:0;font-size:calc(14px*var(--rs-ru,1));line-height:1.55;color:var(--text);min-width:0}
+.sl-dots{display:flex;gap:6px;justify-content:center;margin-top:6px}
+.sl-dot{width:22px;height:22px;border:0;padding:0;background:none;cursor:pointer;display:grid;place-items:center}
+.sl-dot::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--border)}
+.sl-dot[aria-current="true"]::before{background:var(--accent)}
+.sl-fullbtn{top:8px;right:8px;transform:none;font-size:16px}
+.sl.sl-full{position:fixed;inset:0;z-index:2000;max-width:none;margin:0;background:var(--bg);display:flex;flex-direction:column;justify-content:center;
+  padding:calc(8px + env(safe-area-inset-top,0px)) 12px calc(8px + env(safe-area-inset-bottom,0px))}
+.sl.sl-full .sl-stage{width:min(100%,calc((100vh - 76px)*16/9));width:min(100%,calc((100dvh - 76px)*16/9));margin:0 auto}
+.sl.sl-full .sl-dots{display:none}
+.sl.sl-full .sl-cap,.sl.sl-full .sl-dots{width:min(100%,960px);margin-left:auto;margin-right:auto}
+body.sl-full-open{overflow:hidden}
+.sl-stage:focus-visible,.sl-nav:focus-visible,.sl-dot:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.sl-track{transition:none}.sl-wait{animation:none}}
 /* нижний лист с пояснением к предупреждению */
 .warn-pop{position:fixed;z-index:210;left:50%;transform:translateX(-50%);bottom:0;width:min(560px,100%);max-height:80vh;display:flex;flex-direction:column;
   background:var(--bg-card);border:1px solid var(--border);border-bottom:none;border-radius:14px 14px 0 0;box-shadow:0 -6px 28px rgba(0,0,0,.3)}
@@ -2276,6 +2321,10 @@ const SOURCES={
   visual_map:      {baseUrl:"data",  pathTemplate:"{baseUrl}/media/visual/{pack}.json"},
   visual_map_legacy:{baseUrl:"data", pathTemplate:"{baseUrl}/media/visual.json"},
   visual_media:    {baseUrl:"data",  pathTemplate:"{baseUrl}/media/{file}"},
+  // — кадры источника-слайдов (render:"slides" в config, напр. alqasawi_slides):
+  //   {"<аят>":[{t:"img"|"svg"|"text",…,cap}]} по сурам (build_alqasawi.py).
+  //   Текст самого источника (tafsir_text) — подписи кадров: на нём поиск и покрытие.
+  slides:          {baseUrl:"data",  pathTemplate:"{baseUrl}/slides/{source}/{sura}.json"},
   // — объёмные арабские тома (на будущее, лежат там же, что и тафсиры) —
   arabic_volumes:  {baseUrl:"data",  pathTemplate:"{baseUrl}/tafsirs/{source}/{sura}.json"},     // задел
 };
@@ -6562,12 +6611,12 @@ function isApprovedHere(t){
 // Каждый слой рисуется обычным sourceEntryHTML, поэтому сохраняются все его
 // возможности: сноски, «развернуть», предупреждения, отсылки к блоку. Слои без
 // текста на этом аяте молча пропускаются — иначе карточка была бы в прочерках.
-function contEntryHTML(c,kids,aid,loaded){
+function contEntryHTML(c,kids,aid,loaded,sura){
   const parts=[];
   for(const k of kids){
     const text=loaded[k.id]?.[String(aid)]||null;
     if(!text)continue;
-    parts.push(sourceEntryHTML(k,text,aid));
+    parts.push(sourceEntryHTML(k,text,aid,false,null,sura));
   }
   const n=kids.length;
   const head=`<div class="ab-entry-label">${esc(c.name)} ${c.nameAr?`<span class="lbl-ar">${esc(c.nameAr)}</span>`:''}<span class="ab-corpus-n">· слоёв ${n}</span></div>`;
@@ -6575,7 +6624,8 @@ function contEntryHTML(c,kids,aid,loaded){
     return `<div class="ab-entry taf ab-corpus">${head}<div class="ab-entry-text md"><span style="color:var(--text-muted)">—</span></div></div>`;
   return `<div class="ab-entry taf ab-corpus">${head}<div class="ab-corpus-body">${parts.join("")}</div></div>`;
 }
-function sourceEntryHTML(t,text,aid,adhoc,blockOf){
+// sura — сура аята, когда рисуем не ленту текущей суры (верстак); по умолчанию ST.surah.
+function sourceEntryHTML(t,text,aid,adhoc,blockOf,sura){
   const isAr=t.lang==="ar";
   const badge=adhoc?`<button class="cov-adhoc-x" onclick="removeAdHoc(${aid},'${escAttr(t.id)}')" title="Убрать разовый показ">только здесь ✕</button>`:"";
   // Предупреждения об ошибках (редакторские): подписанная кнопка + рамка у аята
@@ -6597,6 +6647,13 @@ function sourceEntryHTML(t,text,aid,adhoc,blockOf){
       ${wInline}
     </div>`;
   }
+  if(t.render==="slides"&&text&&!blockOf){
+    return `<div class="ab-entry taf sl-entry${isApprovedHere(t)?' approved':''}${wCls}"${adhoc?' style="border-left:2px solid var(--accent)"':''}>
+    <div class="ab-entry-label">${esc(t.name)} <span class="lbl-ar">${t.nameAr||''}</span>${wBadge}${segCredit(t)}${badge}${counterpartChip(t)}</div>
+    ${slidesBoxHTML(t.id,sura||ST.surah,aid,text)}
+    ${wInline}
+  </div>`;
+  }
   const {body,notes}=text?splitNotes(text):{body:null,notes:[]};
   const inner=body?renderRefs(body):'<span style="color:var(--text-muted)">—</span>';
   const long=!ST.noTouch&&body&&body.length>600; // в режиме без касания — сразу развёрнуто, без кнопки
@@ -6610,6 +6667,153 @@ function sourceEntryHTML(t,text,aid,adhoc,blockOf){
     ${notes.length?renderFootnotes(notes):''}
   </div>`;
 }
+// ============================================================
+// СЛАЙДЫ — источник с render:"slides" (визуальный тафсир, alqasawi_slides)
+// ============================================================
+// Под аятом — один кадр 16:9, следующий листается (свайп, ‹ ›, точки, ← →).
+// Кадры: {t:"img",src,alt,cap} — картина (та же, что у аята в полосе 🖼),
+// {t:"svg",svg,cap} — схема, {t:"text",html,cap} — кадр-формула. Данные — класс
+// `slides` (по сурам, лениво). Текст источника = подписи кадров: он остаётся
+// запасным видом, если кадров нет, и на нём же работают поиск и покрытие.
+// ПОЧЕМУ наблюдатель за DOM: ленту рисуют строкой и стирают за краем экрана
+// (setupHydration), верстак — своей разметкой. Оживлять каждый путь отдельно
+// значит забыть один; MutationObserver подхватывает .sl в любом месте.
+// SVG ВСТАВЛЯЕТСЯ в страницу (не <img>): цвета схем — var(--…) токенов .sl-stage,
+// так схемы перекрашиваются вместе с темой. Свайп по кадру не всплывает к
+// свайпу ленты (иначе вместе с кадром перелистнулась бы сура).
+const SLIDES={};            // "id|сура" → {аят:[кадры]} | {} (нет файла)
+const SLIDES_LOAD={};       // "id|сура" → Promise загрузки
+const slidePos=new Map();   // "id|с|а" → текущий кадр (переживает перерисовку ленты)
+function slidesLoad(id,s){
+  const k=id+"|"+s;
+  if(SLIDES[k])return Promise.resolve(SLIDES[k]);
+  if(!SLIDES_LOAD[k])SLIDES_LOAD[k]=fetchJson(resolveUrl("slides",{source:id,sura:s})).then(r=>{
+    delete SLIDES_LOAD[k];
+    if(r.net)return null;                       // сеть — не кешируем, повторим при следующем показе
+    return SLIDES[k]=r.data||{};
+  });
+  return SLIDES_LOAD[k];
+}
+function slideFrameHTML(f){
+  if(f.t==="img")return `<img src="${escAttr(f.src)}" alt="${esc(f.alt||"")}" loading="lazy" decoding="async">`;
+  if(f.t==="svg")return f.svg;                  // свои схемы из build_alqasawi.py — вставляются как есть
+  return `<div class="sl-big"><p>${f.html}</p></div>`;
+}
+function slidesWidgetHTML(frames,i){
+  const n=frames.length;
+  return `<div class="sl-stage" tabindex="0" aria-roledescription="слайды" aria-label="Слайды аята, кадр ${i+1} из ${n}">
+    <div class="sl-track" style="transform:translateX(${-100*i}%)">${frames.map(f=>`<div class="sl-slide">${slideFrameHTML(f)}</div>`).join("")}</div>
+    <button class="sl-nav sl-prev" data-sld="-1" aria-label="Предыдущий кадр"${i===0?" disabled":""}>‹</button>
+    <button class="sl-nav sl-next" data-sld="1" aria-label="Следующий кадр"${i===n-1?" disabled":""}>›</button>
+    <button class="sl-nav sl-fullbtn" data-slfull aria-label="Во весь экран" title="Во весь экран">⤢</button>
+  </div>
+  <div class="sl-cap"><span class="sl-cnt">${i+1} / ${n}</span><p>${esc(frames[i].cap||"")}</p></div>
+  <div class="sl-dots">${frames.map((f,k)=>`<button class="sl-dot" data-slgo="${k}" aria-label="Кадр ${k+1}"${k===i?' aria-current="true"':""}></button>`).join("")}</div>`;
+}
+// Разметка под аятом. Кадры уже в кеше → виджет сразу (без скачка ленты); нет →
+// заготовка того же размера 16:9, а подписи текстом — в скрытом запасе.
+function slidesBoxHTML(id,s,aid,text){
+  const key=id+"|"+s+"|"+aid,data=SLIDES[id+"|"+s],frames=data&&data[String(aid)];
+  const fb=`<div class="ab-entry-text md selectable sl-fallback"${data&&!frames?"":" hidden"}>${renderRefs(text)}</div>`;
+  if(frames&&frames.length){
+    const i=Math.min(slidePos.get(key)||0,frames.length-1);
+    return `<div class="sl" data-sl="${escAttr(key)}" data-ready="1">${slidesWidgetHTML(frames,i)}</div>${fb}`;
+  }
+  return `<div class="sl" data-sl="${escAttr(key)}"${data?' hidden data-ready="1"':""}><div class="sl-stage sl-wait"></div></div>${fb}`;
+}
+function slidesGo(box,i){
+  const [id,s,a]=box.dataset.sl.split("|");
+  const frames=(SLIDES[id+"|"+s]||{})[a];if(!frames)return;
+  i=Math.max(0,Math.min(frames.length-1,i));
+  slidePos.set(box.dataset.sl,i);
+  const n=frames.length;
+  box.querySelector(".sl-track").style.transform=`translateX(${-100*i}%)`;
+  box.querySelector(".sl-cnt").textContent=`${i+1} / ${n}`;
+  box.querySelector(".sl-cap p").textContent=frames[i].cap||"";
+  box.querySelector(".sl-prev").disabled=i===0;
+  box.querySelector(".sl-next").disabled=i===n-1;
+  box.querySelector(".sl-stage").setAttribute("aria-label",`Слайды аята, кадр ${i+1} из ${n}`);
+  box.querySelectorAll(".sl-dot").forEach((d,k)=>d.setAttribute("aria-current",String(k===i)));
+}
+function slidesBind(box){
+  box.dataset.bound="1";
+  const cur=()=>slidePos.get(box.dataset.sl)||0;
+  box.addEventListener("click",e=>{
+    if(e.target.closest("[data-slfull]")){e.stopPropagation();slidesFull(box,!box.classList.contains("sl-full"));return;}
+    const b=e.target.closest("[data-sld],[data-slgo]");if(!b)return;
+    e.stopPropagation();
+    slidesGo(box,b.dataset.slgo!=null?+b.dataset.slgo:cur()+ +b.dataset.sld);
+  });
+  box.addEventListener("keydown",e=>{
+    if(e.key==="Escape"&&box.classList.contains("sl-full")){e.preventDefault();e.stopPropagation();slidesFull(box,false);return;}
+    if(e.key!=="ArrowRight"&&e.key!=="ArrowLeft")return;
+    e.preventDefault();e.stopPropagation();slidesGo(box,cur()+(e.key==="ArrowRight"?1:-1));
+  });
+  let x0=null,y0=0;
+  const stop=e=>e.stopPropagation();
+  box.addEventListener("touchstart",e=>{stop(e);if(e.touches.length===1){x0=e.touches[0].clientX;y0=e.touches[0].clientY;}else x0=null;},{passive:true});
+  box.addEventListener("touchmove",stop,{passive:true});
+  box.addEventListener("touchend",e=>{
+    stop(e);if(x0==null)return;
+    const t=e.changedTouches[0],dx=t.clientX-x0,dy=t.clientY-y0;x0=null;
+    if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy)*1.3)slidesGo(box,cur()+(dx<0?1:-1));
+  },{passive:true});
+}
+// Во весь экран: на телефоне кадр в ленте ~340px, и мелкий текст схем (26 из 1600)
+// становится нечитаемым. Класс .sl-full — запасной вид (iPhone не даёт элементу
+// настоящий fullscreen); где можно — ещё и fullscreen с поворотом в альбомный.
+function slidesFull(box,on){
+  const btn=box.querySelector(".sl-fullbtn");
+  if(on){
+    box.classList.add("sl-full");document.body.classList.add("sl-full-open");
+    if(btn){btn.textContent="✕";btn.setAttribute("aria-label","Свернуть");}
+    box.querySelector(".sl-stage")?.focus();
+    try{const r=box.requestFullscreen&&box.requestFullscreen();
+      if(r)r.then(()=>screen.orientation&&screen.orientation.lock&&screen.orientation.lock("landscape").catch(()=>{})).catch(()=>{});}catch(e){}
+  }else{
+    box.classList.remove("sl-full");document.body.classList.remove("sl-full-open");
+    if(btn){btn.textContent="⤢";btn.setAttribute("aria-label","Во весь экран");}
+    try{screen.orientation&&screen.orientation.unlock&&screen.orientation.unlock();}catch(e){}
+    if(document.fullscreenElement===box)document.exitFullscreen().catch(()=>{});
+  }
+}
+document.addEventListener("fullscreenchange",()=>{
+  if(document.fullscreenElement)return;
+  document.querySelectorAll(".sl.sl-full").forEach(b=>slidesFull(b,false));
+});
+let slidesFontAsked=false;
+function slidesFont(){                           // заголовки схем — Literata; грузим, только когда слайды показаны
+  if(slidesFontAsked)return;slidesFontAsked=true;
+  const l=document.createElement("link");l.rel="stylesheet";
+  l.href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&display=swap";
+  document.head.appendChild(l);
+}
+function slidesHydrate(){
+  document.querySelectorAll(".sl[data-sl]:not([data-bound])").forEach(box=>{
+    slidesFont();
+    if(box.dataset.ready){if(box.hidden)box.dataset.bound="1";else slidesBind(box);return;}
+    const [id,s,a]=box.dataset.sl.split("|");
+    box.dataset.bound="0";                       // занят загрузкой — не брать повторно
+    slidesLoad(id,s).then(data=>{
+      if(!box.isConnected)return;
+      const frames=data&&data[a];
+      const fb=box.nextElementSibling&&box.nextElementSibling.classList.contains("sl-fallback")?box.nextElementSibling:null;
+      if(!frames||!frames.length){
+        box.hidden=true;if(fb)fb.hidden=false;   // нет кадров (или сети) — подписи текстом
+        return;
+      }
+      const i=Math.min(slidePos.get(box.dataset.sl)||0,frames.length-1);
+      box.innerHTML=slidesWidgetHTML(frames,i);box.dataset.ready="1";
+      slidesBind(box);
+    });
+  });
+}
+// setTimeout, а не requestAnimationFrame: rAF стоит, пока вкладка скрыта.
+let slidesTick=0;
+new MutationObserver(muts=>{
+  if(slidesTick||!muts.some(m=>m.addedNodes.length))return;
+  slidesTick=setTimeout(()=>{slidesTick=0;if(document.querySelector(".sl[data-sl]:not([data-bound])"))slidesHydrate();},0);
+}).observe(document.documentElement,{childList:true,subtree:true});
 // Нижний лист с пояснением(ями) к предупреждению об ошибке в источнике у аята.
 function openWarnPopup(id,aid){
   closeWarnPopup();
@@ -10687,12 +10891,12 @@ async function wbRenderRead(){
   for(const node of wbUnits(en)){
     if(node.cont){
       if(!node.kids.some(k=>loaded[k.id]?.[String(a)]))continue;   // пустой корпус не показываем
-      html+=`<div class="wb-src" id="wbs-${escAttr(node.cont.id)}">${contEntryHTML(node.cont,node.kids,a,loaded)}</div>`;
+      html+=`<div class="wb-src" id="wbs-${escAttr(node.cont.id)}">${contEntryHTML(node.cont,node.kids,a,loaded,STU.s)}</div>`;
       continue;
     }
     const t=node.t,text=loaded[t.id]?.[String(a)]||null;
     if(!text)continue;                                  // «—» на пол-экрана в фокусе аята — шум
-    html+=`<div class="wb-src" id="wbs-${escAttr(t.id)}">${sourceEntryHTML(t,text,a)}</div>`;
+    html+=`<div class="wb-src" id="wbs-${escAttr(t.id)}">${sourceEntryHTML(t,text,a,false,null,STU.s)}</div>`;
   }
   stream.innerHTML=html||`<div class="wb-empty">Ни у одного включённого источника нет текста на этом аяте. Слева — те, у кого он есть.</div>`;
 }
@@ -10729,7 +10933,7 @@ function wbCmpHTML(a,loaded){
     return `<div class="wb-cmp-col" data-len="${text?String(text).length:0}">
       <div class="wb-cmp-head"><b>${esc(t.name)}</b>
         <button class="wb-x" onclick="wbCmpToggle('${escAttr(id)}')" title="Убрать из сравнения">✕</button></div>
-      ${text?sourceEntryHTML(t,text,a):`<div class="wb-empty">У этого источника нет текста на ${s}:${a}.</div>`}</div>`;
+      ${text?sourceEntryHTML(t,text,a,false,null,s):`<div class="wb-empty">У этого источника нет текста на ${s}:${a}.</div>`}</div>`;
   }).join("");
 }
 // Полоса режима сравнения. Здесь ТОЛЬКО выбранные источники (их единицы) и
