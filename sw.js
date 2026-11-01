@@ -5,7 +5,8 @@
 
    1) tl-shell-N   — ОБОЛОЧКА приложения (код, иконки, «загрузочные» данные:
       config/coverage/warnings/классификации сур). Стратегия NETWORK-FIRST:
-      сеть всегда в приоритете, кеш отдаётся ТОЛЬКО когда сети нет.
+      сеть всегда в приоритете, кеш отдаётся ТОЛЬКО когда сети нет или она
+      не ответила за 3 с (NET_WAIT; свежий ответ потом всё равно ляжет в кеш).
       Поэтому обновления доезжают мгновенно, ровно как без воркера, и
       приложение физически не может «залипнуть» на старой версии — классическая
       болезнь PWA растёт из cache-first на index.html, которого здесь нет.
@@ -102,40 +103,56 @@ self.addEventListener("fetch", e => {
   // и стриминг mp3), а выигрыша не даёт — аудио мы не кешируем.
   if (req.headers.get("range") || req.destination === "audio" || req.destination === "video") return;
 
-  if (req.mode === "navigate") { e.respondWith(netFirstDoc(req)); return; }
-  if (isShell(url))            { e.respondWith(netFirst(req));    return; }
+  if (req.mode === "navigate") { e.respondWith(netFirstDoc(e)); return; }
+  if (isShell(url))            { e.respondWith(netFirst(e));    return; }
   e.respondWith(offlineFirst(req));
 });
 
+// Сеть вперёд — но ждём её не дольше NET_WAIT. На «полуживой» связи fetch не
+// падает, а висит десятки секунд, и приложение не открывалось вовсе, хотя всё
+// нужное лежало в кеше. Не успела сеть — отдаём кеш; её ответ, когда придёт,
+// всё равно ложится в кеш (waitUntil), и в следующий раз откроется свежее.
+// Кеша нет — ждём сеть сколько потребуется, как раньше.
+const NET_WAIT = 3000;
+function netOrCache(e, net, fromCache) {
+  try { e.waitUntil(net.catch(() => {})); } catch (_) {}   // после await — допустимо, пока ответ не отдан; страховка
+  return new Promise((resolve, reject) => {
+    let done = false;
+    const t = setTimeout(async () => {
+      const hit = await fromCache().catch(() => null);
+      if (hit && !done) { done = true; resolve(hit); }
+    }, NET_WAIT);
+    net.then(r => { if (!done) { done = true; clearTimeout(t); resolve(r); } },
+      async err => {
+        clearTimeout(t); if (done) return;
+        const hit = await fromCache().catch(() => null);
+        done = true; hit ? resolve(hit) : reject(err);
+      });
+  });
+}
+
 // Документ: кладём ВСЕГДА под каноническим ключом, иначе «?cb=…», «?dev=1»,
 // «?r2local=1» наплодили бы копий index.html на каждый набор параметров.
-async function netFirstDoc(req) {
+async function netFirstDoc(e) {
   const c = await shellCache();
-  try {
-    const r = await fetch(req);
+  const net = fetch(e.request).then(r => {
     if (c && r && r.ok) c.put(DOC, r.clone()).catch(() => {});
     return r;
-  } catch (e) {
-    if (!c) throw e;
-    const hit = (await c.match(DOC)) || (await c.match("./", { ignoreSearch: true }));
-    if (hit) return hit;
-    throw e;
-  }
+  });
+  return netOrCache(e, net, async () =>
+    c && ((await c.match(DOC)) || (await c.match("./", { ignoreSearch: true }))));
 }
 
 // Сеть вперёд, кеш — запасной. Сверка по ТОЧНОМУ URL: у media.js/erudit.js
 // версия в «?v=», и ignoreSearch подсунул бы офлайн старый модуль к новому коду.
-async function netFirst(req) {
+async function netFirst(e) {
+  const req = e.request;
   const c = await shellCache();
-  try {
-    const r = await fetch(req);
+  const net = fetch(req).then(r => {
     if (c && r && r.ok && r.type !== "opaque") c.put(req, r.clone()).catch(() => {});
     return r;
-  } catch (e) {
-    const hit = c && await c.match(req);
-    if (hit) return hit;
-    throw e;
-  }
+  });
+  return netOrCache(e, net, async () => c && c.match(req));
 }
 
 // Скачанное пользователем: кеш вперёд. Промаха НЕ кешируем — наполнение только

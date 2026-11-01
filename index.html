@@ -341,6 +341,13 @@ body.sb-resizing{cursor:col-resize;user-select:none}
 
 /* Horizontal layout */
 .ayah-block{margin-bottom:14px;border:1px solid var(--border-light);border-radius:8px;overflow:hidden;background:var(--bg-card)}
+/* Блоки за краем экрана браузер не раскладывает. Каждый догруженный шрифт
+   (страницы мусхафа, русский) заново раскладывал ВСЮ суру — у аль-Бакары
+   ~9400 объектов, 0.2–0.3 с на телефоне, и так 3–4 раза при открытии.
+   93px — высота пустого «скелета» без рамки (шапка + тело до гидратации); auto —
+   браузер помнит настоящую высоту блока, уже бывшего на экране. Обрезки нет:
+   у блока и так overflow:hidden. */
+.reading .ayah-block{content-visibility:auto;contain-intrinsic-size:auto 93px}
 .ab-head{padding:6px 10px;background:var(--bg-alt);border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between;cursor:pointer}
 /* Номер аята: шрифт задан ЯВНО и жёстко — лента может быть в рукописном/антикве
    (data-rufont) или в вязи (скин), а цифры в кружке 24px обязаны читаться. */
@@ -1934,8 +1941,19 @@ svg.svgi{width:19px;height:19px;stroke:currentColor;stroke-width:1.9;fill:none;s
   .cb-chip .chip-lbl{max-width:74px}
   .cb-chip.cb-chip-layers span{display:none}
 }
-.center-bar{transition:max-height .22s,padding .22s;max-height:90px}
-.center-bar.cb-hide{max-height:0;padding-top:0;padding-bottom:0;border-bottom-width:0;overflow:hidden}
+/* Бар чтения висит ПОВЕРХ #centerBody и прячется transform-ом: раскладку не
+   трогает. Раньше он схлопывал max-height — лента съезжала на его высоту, и сдвиг
+   сам засчитывался прокруткой (бар мигал без касаний, текст прыгал на 40 px).
+   Место под бар — отступ сверху (--cbh мерит ResizeObserver): у #centerBody на
+   прочих экранах, а в ленте (.cb-float) — внутри самой прокрутки, чтобы текст
+   уходил под бар и открывался, когда тот уехал. */
+.center{position:relative;--cbh:45px}   /* обычная высота бара — до первого замера (вкладка в фоне не рисует кадры) */
+.center-bar{position:absolute;top:0;left:0;right:0;z-index:6;transition:transform .22s ease}
+#centerBody{padding-top:var(--cbh,0px)}
+.center.cb-float #centerBody{padding-top:0}
+.center.cb-float .reading{padding-top:calc(12px + var(--cbh,0px));scroll-padding-top:var(--cbh,0px)}
+@media(max-width:768px){.center.cb-float .reading{padding-top:calc(8px + var(--cbh,0px))}}
+.center-bar.cb-hide{transform:translateY(-100%);pointer-events:none}
 @media (prefers-reduced-motion:reduce){.center-bar{transition:none}}
 .read-hint{margin:2px 0 10px;display:flex;align-items:center;gap:9px;background:var(--accent-bg);border:1px solid rgba(var(--accent-rgb),.35);color:var(--text);border-radius:12px;padding:9px 12px;font-size:12.5px}
 .read-hint b{color:var(--accent)}
@@ -2443,6 +2461,7 @@ async function eruditMod(){
 function eruditEnterMode(){
   renderCB();renderBottomNav();renderSB();
   const cb=document.getElementById("centerBody");
+  if(cb)cb.parentElement.classList.remove("cb-float");   // бар на месте (не поверх ленты)
   if(cb)cb.innerHTML=`<div class="erd-screen"><div id="erdBody"><div class="erd-note" style="padding:20px">Загружаю упражнения…</div></div></div>`;
   eruditMod().then(m=>m&&m.enterMode());
   pushOverlay();                                 // запись для «Назад»: раунд → список упражнений
@@ -2888,9 +2907,17 @@ function gs(k,d){try{const v=localStorage.getItem("tl_"+k);return v?JSON.parse(v
 function ss(k,v){try{localStorage.setItem("tl_"+k,JSON.stringify(v));if(SYNCED_KEYS.has(k)){_syncDirty=true;if(typeof scheduleSyncPush==="function")scheduleSyncPush();}}catch(e){}}
 // --- Последняя позиция чтения (одна автоточка возврата; НЕ закладки) ---
 // Тем же механизмом (ss/gs). Запоминает суру, аят, страницу мусхафа и активный режим.
+// Верх ВИДИМОЙ части ленты: бар чтения висит поверх неё (.cb-float), пока
+// не уехал — его высоту не считаем видимым текстом.
+function readTop(area){
+  let t=area.getBoundingClientRect().top;
+  const bar=document.getElementById("centerBar");
+  if(bar&&bar.parentElement.classList.contains("cb-float")&&!bar.classList.contains("cb-hide"))t+=bar.offsetHeight;
+  return t;
+}
 function curTopAyah(){
   const area=document.getElementById("readingArea");
-  if(area){const top=area.getBoundingClientRect().top;
+  if(area){const top=readTop(area);
     for(const b of area.querySelectorAll(".ayah-block")){
       if(b.getBoundingClientRect().bottom>top+4)return +b.dataset.aid||1;
     }
@@ -3482,6 +3509,7 @@ async function hifzEnterMode(){
   Progress.ensureInit();
   renderCB();renderBottomNav();renderSB();
   const cb=document.getElementById("centerBody");
+  if(cb)cb.parentElement.classList.remove("cb-float");   // бар на месте (не поверх ленты)
   if(cb)cb.innerHTML=`<div class="hifz-screen"><div id="hifzBody"><div class="hf-muted" style="padding:20px">Загружаю карту…</div></div></div>`;
   if(typeof loadQpcMeta==="function")await loadQpcMeta();  // границы джузов и страниц (карта, verseToPage)
   _progPageIdx=null;
@@ -5227,9 +5255,10 @@ async function loadConfig(){
     if(qs.has("dev"))localStorage.setItem("tl_showHidden",qs.get("dev")==="0"?"":"1");}catch(e){}
   let _showHidden="";try{_showHidden=localStorage.getItem("tl_showHidden")||"";}catch(e){}
   if(!_showHidden&&Array.isArray(CONFIG.tafsirs))CONFIG.tafsirs=CONFIG.tafsirs.filter(t=>!t.hidden);
-  await loadCoverage();
-  await loadWarnings();                               // предупреждения об ошибках (лёгкий файл)
-  await loadNews();                                   // «что нового в библиотеке» (лёгкий файл)
+  // Покрытие, предупреждения об ошибках, «что нового» и мета мусхафа — РАЗОМ, а не
+  // по очереди: каждый ждал предыдущий, и до первого аята набегало пять кругов по сети.
+  const boot=Promise.all([loadCoverage(),loadWarnings(),loadNews(),loadQpcMeta()]);
+  try{warmFonts();}catch(e){}
   ST.setMigrated=migrateDefaultSet();                 // разовое обновление набора «из коробки»
   ST.enabled=getEnabled();
   if(ST.enabled._arabic===undefined)ST.enabled._arabic=true;
@@ -5247,10 +5276,20 @@ async function loadConfig(){
   if(ST.warnMap)history.replaceState({warnMap:ST.warnMap},"",ST.warnMap==="*"?"#warnmap":"#warnmap="+ST.warnMap);
   else if(ST.homeMode)history.replaceState({home:true},"","#home");
   else history.replaceState({surah:ST.surah},"","#"+ST.surah);
-  await loadQpcMeta();                               // для группировки списка сур по джузам (и мусхафа)
+  if(!ST.homeMode&&!ST.pageMode&&!ST.warnMap)prefetchSurah(ST.surah); // текст суры из ссылки — пока ждём остальное
+  await boot;
+  await loadQpcMeta();                               // для группировки списка сур по джузам (и мусхафа); из кеша, если пак тот же
   Progress.ensureInit();                             // запустить таймер активного времени (слой CREDITED)
   render();
   if(syncEnabled()){_lastPullAt=Date.now();syncPull();} // тихий пул при открытии, ре-рендер при слиянии
+}
+// Начать загрузку текстов суры заранее, не дожидаясь: отрисовка ленты потом
+// возьмёт их из кеша или из того же запроса в пути (loadChunk, loadPackSurah).
+function prefetchSurah(s){
+  try{
+    for(const t of [...getEnabledList(),...getEnabledQuranTexts()])if(t.id!=="_notes")loadChunk(t.id,s);
+    if(activePack())loadPackSurah(ST.arFont,s);
+  }catch(e){}
 }
 function useFB(){
   CONFIG={groups:[
@@ -5277,9 +5316,15 @@ function touchChunk(key){
 }
 
 // Lazily load ONE surah of one tafsir. Returns {ayah:text}. Cached + LRU-evicted.
-async function loadChunk(id,surahId){
+// Запрос «в пути» общий: предзагрузка при старте (prefetchSurah) и отрисовка
+// ленты не качают один файл дважды.
+const chunkPending={};
+function loadChunk(id,surahId){
   const key=id+"|"+surahId;
-  if(chunkCache[key]){touchChunk(key);return chunkCache[key];}
+  if(chunkCache[key]){touchChunk(key);return Promise.resolve(chunkCache[key]);}
+  return chunkPending[key]||(chunkPending[key]=loadChunkNow(id,surahId,key).finally(()=>{delete chunkPending[key];}));
+}
+async function loadChunkNow(id,surahId,key){
   let chunk=null,netFail=false;
   // 1. Offline preload (whole Quran in TL_DATA) -> slice the surah
   if(window.TL_DATA&&window.TL_DATA[id])chunk=window.TL_DATA[id][String(surahId)]||{};
@@ -6305,6 +6350,9 @@ function renderCenter(){
 }
 function renderCenterBody(){
   const el=document.getElementById("centerBody");
+  // Бар чтения висит поверх и уезжает при прокрутке только в ленте «Списком»;
+  // на остальных экранах он стоит на месте (cb-float снят — см. CSS .center-bar).
+  const center=el.parentElement;center.classList.remove("cb-float");
   if(ST.homeMode)return renderHome(el);
   if(ST.hifzMode)return renderHifzScreen(el);
   if(ST.eruditMode)return renderEruditScreen(el);
@@ -6319,6 +6367,7 @@ function renderCenterBody(){
   if(ST.topicSel)return renderTopicResults(el);
   if(ST.selectedTag)return renderTagResults(el);
   if(ST.pageMode)return renderMushafPage(el);
+  center.classList.toggle("cb-float",ST.layout==="h");
   return renderReading(el);
 }
 
@@ -7108,27 +7157,52 @@ function setupHydration(area,enabled,loaded,startAid){
     const i=bodies.findIndex(b=>+b.dataset.aid===+startAid);
     if(i>=0)from=Math.max(0,i-1);          // на один выше цели: прокрутка вверх тоже без прыжка
   }
+  // Первый экран — пачками по 4: сначала пишем, потом меряем. Чтение offsetHeight
+  // после КАЖДОЙ вставки — пересчёт раскладки всей суры на каждый аят (у
+  // аль-Бакары ~6500 узлов): на телефоне это полсекунды замершего экрана.
+  // Шрифты страниц мусхафа — заранее и пачкой: страницы этого аята, одна до и три
+  // после, собранные со всех аятов, наполненных за 0.7 с. Каждая догрузка шрифта =
+  // полная раскладка видимого текста, так что одна догрузка на три страницы
+  // вместо двух раскладок на каждую (регистрация + приход).
+  const pk=activePack(),qd=loaded.__qpc;
+  let want=new Set(),wantT=0;
+  const fonts=aid=>{
+    const ps=[...packPagesOf(qd,[aid])];if(!ps.length)return;
+    const lo=Math.min(...ps),hi=Math.max(...ps);
+    for(let p=Math.max(1,lo-1);p<=Math.min(PACK_PAGES,hi+3);p++)want.add(p);
+    clearTimeout(wantT);wantT=setTimeout(()=>{pageFontsLoad(pk,want);want=new Set();},700);
+  };
+  const fill=b=>{b.innerHTML=buildAyahBody(+b.dataset.aid,enabled,loaded);b.dataset.hyd="1";b.style.minHeight="";b.parentElement.style.minHeight="";if(pk&&qd)fonts(+b.dataset.aid);};
   let filled=0;
-  for(let i=from;i<bodies.length&&filled<vh*1.6;i++){
-    const b=bodies[i];
-    b.innerHTML=buildAyahBody(+b.dataset.aid,enabled,loaded);
-    b.dataset.hyd="1";b.style.minHeight="";
-    filled+=b.offsetHeight||0;
+  for(let i=from;i<bodies.length&&filled<vh*1.6;){
+    const pack=bodies.slice(i,i+4);i+=pack.length;
+    pack.forEach(fill);
+    for(const b of pack)filled+=b.offsetHeight||0;
   }
-  const obs=new IntersectionObserver(entries=>{
-    for(const e of entries){
-      const el=e.target;
-      if(e.isIntersecting){
-        if(el.dataset.hyd!=="1"){el.innerHTML=buildAyahBody(+el.dataset.aid,enabled,loaded);el.dataset.hyd="1";el.style.minHeight="";}
-      }else if(el.dataset.hyd==="1"){
-        const h=el.offsetHeight;
-        if(h)el.style.minHeight=h+"px"; // freeze height so scroll position is preserved
-        el.innerHTML="";el.dataset.hyd="0";
-      }
-    }
+  // Наполняем за 1200 px до экрана, а стираем только дальше 4 экранов: при
+  // стирании рядом раскрытый тафсир сворачивался, а высоты блоков над экраном
+  // менялись при возврате (в iOS Safari нет scroll anchoring — там это прыжок).
+  // Наблюдаем БЛОКИ, а не тела: блок за экраном браузер не раскладывает
+  // (content-visibility), у тела внутри него нет геометрии, и наблюдатель
+  // считал бы его невидимым всегда. Высоту при стирании держит блок — она есть
+  // в записи наблюдателя (offsetHeight здесь пересчитывал бы раскладку).
+  const bodyOf=blk=>blk.querySelector(":scope>.ab-body");
+  const near=new IntersectionObserver(entries=>{
+    for(const e of entries){const b=bodyOf(e.target);if(e.isIntersecting&&b&&b.dataset.hyd!=="1")fill(b);}
   },{root:area,rootMargin:"1200px 0px"});
-  bodies.forEach(b=>obs.observe(b));
-  hydrationObserver=obs;
+  const far=Math.max(4000,vh*5);
+  const drop=new IntersectionObserver(entries=>{
+    for(const e of entries){
+      const el=bodyOf(e.target);
+      if(e.isIntersecting||!el||el.dataset.hyd!=="1")continue;
+      if([...el.querySelectorAll(".more-btn")].some(b=>b.previousElementSibling&&!b.previousElementSibling.classList.contains("clamped")))continue; // раскрытый — бережём
+      const h=e.boundingClientRect.height;
+      if(h)e.target.style.minHeight=h+"px"; // freeze height so scroll position is preserved
+      el.innerHTML="";el.dataset.hyd="0";
+    }
+  },{root:area,rootMargin:far+"px 0px"});
+  bodies.forEach(b=>{near.observe(b.parentElement);drop.observe(b.parentElement);});
+  hydrationObserver={disconnect(){near.disconnect();drop.disconnect();}};
 }
 
 // Заметка к ОДНОМУ аяту (кнопка 📝 в панели аята) — инлайн-редактор прямо под панелью.
@@ -7839,6 +7913,28 @@ function toggleHdrMenu(e){
   setTimeout(()=>document.addEventListener("click",_hmOut),10);
 }
 
+// Шрифты текста ленты (русский обычный/жирный/курсив, латиница с диакритикой
+// вроде «ʿ», арабский тафсиров, начертание аята) — качать СРАЗУ при старте, вместе
+// с данными. Иначе они приходят уже после показа ленты, и каждый заново
+// раскладывает весь текст на экране (замер: 150–210 мс на телефоне, 2–3 раза при
+// открытии суры). Невидимый образец с классами ленты запускает загрузку ровно тех
+// начертаний, что нужны при текущих настройках; ждать его никто не ждёт.
+function warmFonts(){
+  const pr=document.createElement("div");
+  pr.setAttribute("aria-hidden","true");
+  pr.className="reading";
+  pr.style.cssText="position:fixed;left:0;top:0;width:200px;height:0;overflow:hidden;visibility:hidden;pointer-events:none;padding:0";
+  // латиница: и готовые «Ḥḥ», и разложенные «h+точка снизу» (U+0323) — у шрифтов
+  // Google это разные подмножества; веса 300–600 — подписи и заголовки ленты
+  const lat="Āā Īī Ūū Ḥḥ ʿʾ h\u0323 a\u0301 «»—";
+  const ru=`Аа Ёё ${lat} <b>Бб</b> <i>Вв</i> `+[300,500,600].map(w=>`<span style="font-weight:${w}">Гг ${lat}</span>`).join(" "),ar="بِسْمِ <b>ٱللَّهِ</b> ﷺ";
+  pr.innerHTML=`<div class="ab-body"><div class="ab-group-head">${ru}</div><div class="ab-entry"><div class="ab-entry-label">${ru}</div>`+
+    `<div class="ab-entry-text md">${ru} ${ar}</div><div class="ab-entry-text md rtl">${ar}</div>`+
+    `<div class="ab-entry-text arabic-main">${ar}</div><div class="ab-basmala arabic-main">${ar}</div></div></div>`;
+  document.body.appendChild(pr);
+  pr.offsetHeight;                              // раскладка образца и запускает загрузку
+  within(document.fonts.ready,4000).then(()=>pr.remove());
+}
 async function renderReading(el){
   const ayahIds=getAyahIds(ST.surah);
   const enabledAll=getEnabledList();
@@ -7858,7 +7954,7 @@ async function renderReading(el){
     if(prevArea){
       // Ориентир верха: в «Колонках» вычитаем высоту липкой шапки колонок, чтобы
       // взять первый аят ПОД шапкой (а не тот, что чуть выглядывает над ней).
-      let refTop=prevArea.getBoundingClientRect().top;
+      let refTop=readTop(prevArea);
       const colWrap=prevArea.querySelector(".col-wrap");
       if(colWrap){const th=colWrap.querySelector("thead");if(th)refTop=colWrap.getBoundingClientRect().top+th.getBoundingClientRect().height;}
       // .ayah-block — режим «Список»; .col-num — режим «Колонки» (ячейки колонки №)
@@ -7873,19 +7969,30 @@ async function renderReading(el){
   // Load only the current surah's chunk for each enabled tafsir + Arabic variant
   const loaded={};
   const toLoad=[...enabled.filter(t=>t.id!=="_notes"),...quranTexts];
-  await Promise.all(toLoad.map(async t=>{loaded[t.id]=await loadChunk(t.id,ST.surah);}));
   // «Открыть здесь»: догрузить чанки разовых источников текущей суры
   const adHocSet=new Set();
   for(const k in ST.adHoc)if(k.startsWith(ST.surah+":"))for(const id of ST.adHoc[k])if(!ST.enabled[id])adHocSet.add(id);
-  await Promise.all([...adHocSet].map(async id=>{loaded[id]=await loadChunk(id,ST.surah);}));
-  // Mushaf pack glyphs (QPC v1 …) for the main Arabic line, if a pack font is active
-  if(activePack())loaded["__qpc"]=await loadPackSurah(ST.arFont,ST.surah);
-  if(tajweedActive())loaded["__tj"]=await loadTajweed(ST.surah); // спаны раскраски таджвида
-  await loadWbwLayer(ST.surah,loaded);          // слой «Со словами»: глоссы + (морфология | глифы)
-  // Границы печатных страниц: нужна ТОЛЬКО мета пака (31 КБ, кэш _qpcMetaCache),
-  // сами страницы мусхафа здесь не грузятся.
-  if(ST.pageSep&&ST.layout==="h")await loadQpcMeta();
-  if(ST.rukuSep&&ST.layout==="h")await loadRuku();
+  // Всё для суры — ОДНИМ заходом. Раньше шло ступеньками (чанки → глифы пака →
+  // таджвид → слова → мета → рукуʿ), и на телефоне каждая ступенька — ещё круг по сети.
+  await Promise.all([
+    ...toLoad.map(async t=>{loaded[t.id]=await loadChunk(t.id,ST.surah);}),
+    ...[...adHocSet].map(async id=>{loaded[id]=await loadChunk(id,ST.surah);}),
+    // Mushaf pack glyphs (QPC v1 …) for the main Arabic line, if a pack font is active
+    activePack()?loadPackSurah(ST.arFont,ST.surah).then(d=>{loaded["__qpc"]=d;}):null,
+    tajweedActive()?loadTajweed(ST.surah).then(d=>{loaded["__tj"]=d;}):null, // спаны раскраски таджвида
+    loadWbwLayer(ST.surah,loaded),              // слой «Со словами»: глоссы + (морфология | глифы)
+    // Границы печатных страниц: нужна ТОЛЬКО мета пака (31 КБ, кэш _qpcMetaCache),
+    // сами страницы мусхафа здесь не грузятся.
+    ST.pageSep&&ST.layout==="h"?loadQpcMeta():null,
+    ST.rukuSep&&ST.layout==="h"?loadRuku():null,
+  ]);
+  // Шрифты страниц мусхафа для первого экрана — ДО вставки ленты: иначе сначала
+  // «крякозябры», потом приход шрифта и ещё одна полная раскладка всего текста.
+  const pk0=activePack();
+  if(pk0&&loaded.__qpc){
+    const a0=+(ST.scrollToAyah!=null?ST.scrollToAyah:anchorAid)||1;
+    await within(pageFontsLoad(pk0,packPagesOf(loaded.__qpc,[a0-1,a0,a0+1,a0+2,a0+3,a0+4])),1500);
+  }
 
   const area=document.getElementById("readingArea");
   if(!area)return;
@@ -9225,6 +9332,12 @@ function flashAyah(ayah){
     scrollToAyah(ayah);
   })();
 }
+// Время последнего касания/колеса/клавиши: отличает прокрутку человеком от той,
+// что делает сам браузер (догрузка тел аятов, переход к аяту). Нужна бару чтения
+// и settleScroll — та не должна тянуть ленту из-под пальца.
+let userScrollT=-1e9;                       // «давно»: 0 сошёл бы за касание в первые 1.5 с жизни страницы
+{const mark=()=>{userScrollT=performance.now();};
+ for(const t of ["touchstart","touchmove","wheel","pointerdown","keydown"])document.addEventListener(t,mark,{passive:true,capture:true});}
 // Скролл к аяту с ДО-выравниванием. В раскладке «Список» тела аятов
 // гидратируются ЛЕНИВО (IntersectionObserver, скелет min-height:48px) и растут
 // уже ПОСЛЕ первого скролла — блоки над целью раздуваются и сдвигают её вниз,
@@ -9232,8 +9345,9 @@ function flashAyah(ayah){
 // вместо 143 при переходе из поиска). Повторяем скролл, пока верх цели не
 // перестанет двигаться (гидратация соседей завершилась), и только тогда — flash.
 function settleScroll(getEl,doScroll,onDone){
-  let n=0,prev=null;
+  let n=0,prev=null;const t0=performance.now();
   (function step(){
+    if(userScrollT>t0){if(onDone){const el=getEl();if(el)onDone(el);}return;}  // человек взялся за ленту — не мешаем
     const el=getEl();
     if(!el){if(n++<25)setTimeout(step,120);return;}          // блок ещё не в DOM — ждём
     doScroll(el);
@@ -9242,12 +9356,15 @@ function settleScroll(getEl,doScroll,onDone){
     if(onDone)onDone(el);
   })();
 }
-// Переход к аяту в раскладке «Список»: центрируем блок (никогда не под липкой
-// шапкой) до устаканивания, опц. подсветка. Общая точка для renderCenter и flashAyah.
+// Переход к аяту в раскладке «Список»: начало блока — под бар чтения
+// (scroll-padding-top ленты), до устаканивания, опц. подсветка. Общая точка для
+// renderCenter и flashAyah. Раньше центрировали: с длинными тафсирами начало
+// аята уходило выше экрана (2:255 — на −470 px), и по ссылке читать было не с чего.
 function jumpToAyahEl(aid,flash){
+  const bar=document.getElementById("centerBar");if(bar)bar.classList.remove("cb-hide");
   settleScroll(
     ()=>{const a=document.getElementById("readingArea");return a&&a.querySelector(`.ayah-block[data-aid="${aid}"]`);},
-    el=>el.scrollIntoView({block:"center"}),
+    el=>el.scrollIntoView({block:"start"}),
     flash?el=>{el.style.boxShadow="0 0 0 2px var(--accent)";setTimeout(()=>{el.style.boxShadow="";},2000);}:null
   );
 }
@@ -10271,29 +10388,58 @@ function showTjLegend(el){
     row("sl","Не читается / слияние")+
     `<div style="margin-top:4px;color:var(--text-muted)">Касание окрашенной буквы — название правила.</div>`);
 }
-// Lazily inject one @font-face per page the first time that page is shown.
-const _packFontsLoaded=new Set();
-function ensurePageFont(pack,page){
-  const key=pack.id+":"+page;
-  if(_packFontsLoaded.has(key))return;
-  _packFontsLoaded.add(key);
-  const st=document.createElement("style");
-  let css=`@font-face{font-family:'${pack.fontFamily(page)}';src:url('${resolveUrl(pack.fontSrc||"mushaf_fonts",{path:pack.fontFile(page)})}') format('woff2');font-display:swap}`;
-  // именованная тёмная палитра пака: одно имя --<pack>-dark на все постраничные
-  // семейства (правила @font-palette-values матчатся парой имя+font-family)
-  if(pack.darkPalette!=null)css+=`@font-palette-values --${pack.id}-dark{font-family:'${pack.fontFamily(page)}';base-palette:${pack.darkPalette}}`;
-  st.textContent=css;
-  document.head.appendChild(st);
+// Постраничные шрифты пака — через FontFace API, ВСЕ 604 страницы одним разом
+// при первом обращении к паку. Замер (лента аль-Бакары, телефон): каждое
+// добавление шрифта и каждая его догрузка заново раскладывают ВЕСЬ текст ленты,
+// 110–150 мс. Раньше на новую страницу вставлялся свой <style> с @font-face —
+// ещё одна полная раскладка сверх догрузки. Регистрация не качает файлы:
+// FontFace грузится по .load() (pageFontsLoad — заранее и пачкой) или при
+// отрисовке. display:block — пока шрифт в пути, глифы невидимы, а не
+// «крякозябры» запасного шрифта (глифы паков — символы частной области).
+const PACK_PAGES=604;
+const _packFaces={};                         // pack.id → [null, FontFace стр.1 … стр.604]
+function packFaces(pack){
+  if(_packFaces[pack.id])return _packFaces[pack.id];
+  const arr=[null];let pal="";
+  for(let p=1;p<=PACK_PAGES;p++){
+    const ff=new FontFace(pack.fontFamily(p),`url('${resolveUrl(pack.fontSrc||"mushaf_fonts",{path:pack.fontFile(p)})}') format('woff2')`,{display:"block"});
+    document.fonts.add(ff);arr.push(ff);
+    // именованная тёмная палитра пака: одно имя --<pack>-dark на все постраничные
+    // семейства (правила @font-palette-values матчатся парой имя+font-family)
+    if(pack.darkPalette!=null)pal+=`@font-palette-values --${pack.id}-dark{font-family:'${pack.fontFamily(p)}';base-palette:${pack.darkPalette}}`;
+  }
+  if(pal){const st=document.createElement("style");st.textContent=pal;document.head.appendChild(st);}
+  return _packFaces[pack.id]=arr;
 }
+function ensurePageFont(pack,page){packFaces(pack);}
+// Загрузить шрифты страниц ОДНОЙ пачкой (догрузки, пришедшие вместе, — одна
+// раскладка, а не по одной на страницу). Обещание не падает.
+function pageFontsLoad(pack,pages){
+  const f=packFaces(pack);
+  return Promise.all([...pages].map(p=>f[p]&&f[p].status==="unloaded"?f[p].load().catch(()=>{}):f[p]&&f[p].loaded.catch(()=>{})));
+}
+// Страницы, на которых лежат слова аятов (данные пака loadPackSurah).
+function packPagesOf(qd,aids){
+  const s=new Set();
+  for(const a of aids){const e=qd&&qd[String(a)];if(!e)continue;for(const wp of e.w||[])s.add(wp[1]);if(e.e)s.add(e.e[1]);}
+  return s;
+}
+// Не ждать дольше ms: на плохой связи лучше показать текст позже, чем повиснуть.
+const within=(p,ms)=>Promise.race([p,new Promise(r=>setTimeout(r,ms))]);
 // Per-surah glyph data: {ayah:{"w":[[glyph,page],...],"e":[glyph,page]|null}}
 const qpcCache={};
+const qpcPending={};
 async function loadPackSurah(packId,surah){
   const k=packId+"|"+surah;
   if(qpcCache[k]!==undefined)return qpcCache[k];
+  if(qpcPending[k])return qpcPending[k];     // уже в пути (предзагрузка при старте)
   const pack=PACKS[packId];
-  try{const r=await fetch(resolveUrl("mushaf_glyphs",{path:`${pack.dataDir}/${surah}.json`}));qpcCache[k]=r.ok?await r.json():null;}
-  catch(e){qpcCache[k]=null;}
-  return qpcCache[k];
+  return qpcPending[k]=(async()=>{
+    try{const r=await fetch(resolveUrl("mushaf_glyphs",{path:`${pack.dataDir}/${surah}.json`}));qpcCache[k]=r.ok?await r.json():null;}
+    catch(e){qpcCache[k]=null;}
+    delete qpcPending[k];
+    return qpcCache[k];
+  })();
 }
 // Build the glyph HTML for one ayah; words stay individually selectable.
 // When loc ("surah:ayah") is given, each word carries data-loc="surah:ayah:pos"
@@ -10400,6 +10546,10 @@ async function renderMushafPage(el){
   el.innerHTML=`<div class="mushaf-shell"><div id="mushafPage" class="mushaf-page"><div style="text-align:center;color:var(--text-muted);padding:40px">Загрузка страницы ${pg}…</div></div><div id="mtrHost"></div></div>`;
   mtrOnPage(pg);                                     // бокс перевода текущего аята (tanzil)
   const data=await loadQpcPage(pack,pg);
+  // Шрифт страницы — до показа (иначе сначала «крякозябры»), соседние — заранее:
+  // листание вперёд-назад не ждёт сети.
+  await within(pageFontsLoad(pack,[pg]),2000);
+  pageFontsLoad(pack,[pg-1,pg+1,pg+2].filter(p=>p>=1&&p<=total));
   const host=document.getElementById("mushafPage");if(!host)return;
   if(!data){host.innerHTML=`<div style="padding:40px;text-align:center;color:var(--text-muted)">Нет данных для страницы ${pg}</div>`;}
   else{
@@ -11878,18 +12028,26 @@ document.addEventListener("keydown",e=>{
 });
 // Auto-hide бара чтения (этап 2): прокрутка ленты вниз прячет [Аяты|Мусхаф]+чипы,
 // вверх — возвращает; шапка остаётся. Scroll не всплывает — ловим capture-фазой.
+// Бар поверх ленты (.cb-float), его высота — в --cbh для отступа под него.
+// Реагируем только на прокрутку пальцем/колесом/клавишами (userScrollT): ленту
+// двигает и сам браузер — догрузка тел аятов, переход к аяту, — и раньше бар
+// мигал от этого без касаний. Порог — 24 px пути в одну сторону, не 4 px за кадр.
 (function(){
-  const cb=document.getElementById("centerBody");if(!cb)return;
-  let lastY=0;
+  const cb=document.getElementById("centerBody"),bar=document.getElementById("centerBar");if(!cb||!bar)return;
+  if(window.ResizeObserver)new ResizeObserver(()=>{
+    bar.parentElement.style.setProperty("--cbh",bar.offsetHeight+"px");
+  }).observe(bar);
+  else bar.parentElement.style.setProperty("--cbh",bar.offsetHeight+"px");
+  let lastY=0,acc=0;
   cb.addEventListener("scroll",e=>{
     const t=e.target;
     if(!t.classList||!t.classList.contains("reading"))return;   // только лента
-    if(ST.pageMode||ST.homeMode||ST.hifzMode||ST.eruditMode)return;
-    const bar=document.getElementById("centerBar");if(!bar)return;
-    const y=t.scrollTop;
-    const d=y-lastY;lastY=y;
-    if(Math.abs(d)>400)return;                        // прыжок (переход к аяту) — не прятать
-    if(Math.abs(d)>4)bar.classList.toggle("cb-hide",d>0&&y>80);
+    const y=t.scrollTop,d=y-lastY;lastY=y;
+    if(!bar.parentElement.classList.contains("cb-float")){acc=0;return;}
+    if(y<=80){acc=0;bar.classList.remove("cb-hide");return;}    // у начала бар всегда виден
+    if(performance.now()-userScrollT>1500||Math.abs(d)>400){acc=0;return;}  // не палец или прыжок к аяту
+    acc=(acc>0)===(d>0)?acc+d:d;                                // путь в текущую сторону
+    if(Math.abs(acc)>24)bar.classList.toggle("cb-hide",acc>0);
   },true);
 })();
 loadConfig();
