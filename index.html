@@ -1192,6 +1192,8 @@ body.notouch #readingArea,body.notouch .mushaf-shell{pointer-events:none}
 .home-nav-link .hnl-main{flex:1;font-size:16px;font-weight:600;color:var(--text)}
 .home-nav-link .hnl-sub{font-size:12px;color:var(--text-muted);font-weight:400}
 .home-nav-link .hnl-arrow{color:var(--accent);font-size:18px;font-weight:700}
+.home-nav-link .hnl-x{border:none;background:none;color:var(--text-muted);cursor:pointer;padding:4px;display:flex;flex-shrink:0}
+.home-nav-link .hnl-x svg.svgi{width:15px;height:15px}
 .home-nav-link .hnl-badge{background:var(--accent);color:#fff;font-size:10px;font-weight:700;
   border-radius:9px;padding:1px 7px;margin-left:auto}
 /* «Что нового в библиотеке» (data/news.json) */
@@ -1874,6 +1876,21 @@ svg.svgi{width:19px;height:19px;stroke:currentColor;stroke-width:1.9;fill:none;s
 .hdr-menu button{display:flex;align-items:center;gap:12px;width:100%;border:none;background:none;text-align:left;padding:10px 12px;border-radius:9px;font-size:13.5px;font-family:inherit;color:var(--text);cursor:pointer}
 .hdr-menu button:hover{background:var(--bg-alt)}
 .hdr-menu svg.svgi{color:var(--text-sec);width:17px;height:17px}
+.hdr-menu .hm-emo{width:17px;text-align:center;font-size:14px;line-height:1}
+/* Установка: лист с шагами и плашка во встроенном браузере Telegram (refreshInstallUI) */
+.inst{padding:2px 8px 6px}
+.inst-p{font-size:13.5px;line-height:1.5;color:var(--text);margin:4px 0 12px}
+.inst-p.sub{font-size:12px;color:var(--text-muted);margin:14px 0 8px}
+.inst-step{display:flex;align-items:flex-start;gap:10px;font-size:13.5px;line-height:1.45;color:var(--text);margin:0 0 10px}
+.inst-n{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:var(--accent-bg);color:var(--accent);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.inst-btn{display:block;width:100%;box-sizing:border-box;text-align:center;text-decoration:none;border:1px solid var(--border);background:var(--bg);color:var(--text);border-radius:10px;padding:11px 14px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;margin:6px 0}
+.inst-btn.prim{background:var(--accent);border-color:var(--accent);color:#fff}
+.inst-bar{position:fixed;left:8px;right:8px;max-width:560px;margin:0 auto;z-index:240;display:flex;align-items:center;gap:8px;background:var(--bg-card);border:1px solid var(--accent);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.2);padding:8px 8px 8px 12px;font-size:12.5px;line-height:1.35;color:var(--text)}
+.inst-bar .ib-t{flex:1;cursor:pointer}
+.inst-bar .ib-go{flex-shrink:0;background:var(--accent);color:#fff;text-decoration:none;font-weight:600;border-radius:8px;padding:8px 12px;font-size:13px}
+.inst-bar .ib-x{flex-shrink:0;border:none;background:none;color:var(--text-muted);cursor:pointer;padding:6px;display:flex}
+.inst-bar .ib-x svg.svgi{width:15px;height:15px}
+body.immersive .inst-bar{display:none}
 /* панелька аята: номер · ▶ · метки · ☆ · ⋯ */
 .ab-row{display:flex;align-items:center;gap:2px;width:100%}
 .ab-num-btn{display:inline-flex;align-items:center;justify-content:center;min-width:38px;height:32px;padding:0 9px;border:1px solid var(--border);border-radius:999px;background:var(--bg-card);color:var(--accent);font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer}
@@ -6443,6 +6460,7 @@ function renderHome(el){
     <span class="hnl-ic">✨</span>
     <span class="hnl-main">Что нового в библиотеке <span class="hnl-sub">— появились новые тафсиры и переводы</span></span>
     <span class="hnl-badge">${nUn}</span><span class="hnl-arrow">›</span></div></div>`;
+  html+=homeInstallHTML();
   // — Коранические темы (тематический указатель) —
   html+=`<div class="home-sec"><div class="home-nav-link" onclick="openTopics()" title="Открыть тематический указатель Корана">
     <span class="hnl-ic">📑</span>
@@ -7908,7 +7926,8 @@ function toggleHdrMenu(e){
     `<button onclick="closeHdrMenu();toggleAudioPanel()">${IC.head}Аудио и чтецы</button>`+
     `<button onclick="closeHdrMenu();toggleViewPanel()">${IC.sliders}Вид и настройки</button>`+
     `<button onclick="closeHdrMenu();toggleFullscreen()">${IC.maxi}${ST.immersive?"Выйти из режима чтения":"Во весь экран"}</button>`+
-    `<button onclick="closeHdrMenu();openHelp()">${IC.help}Справка</button>`;
+    `<button onclick="closeHdrMenu();openHelp()">${IC.help}Справка</button>`+
+    (installMode()&&installMode()!=="app"?`<button onclick="installApp()"><span class="hm-emo">📲</span>Установить приложение</button>`:"");
   document.body.appendChild(m);hdrMenuEl=m;
   setTimeout(()=>document.addEventListener("click",_hmOut),10);
 }
@@ -9812,6 +9831,130 @@ function setVisualPackUI(id){
   ss("visualPack",id);
   renderViewPanel();
   mediaMod().then(m=>{if(m)m.setVisualPack(id);renderCenter();});
+}
+
+// ============================================================
+// УСТАНОВКА «на экран телефона» + плашка во встроенном браузере Telegram
+// ============================================================
+// Жалоба: «открывается не всегда как приложение». Причины:
+// 1) ссылку из Telegram открывают во ВСТРОЕННОМ браузере Telegram: там не
+//    установить, а заметки, закладки и прогресс живут отдельно от браузера;
+// 2) своей кнопки «Установить» не было — Chrome прячет установку в меню;
+// 3) в Safari и части браузеров окна установки нет вовсе — только вручную.
+// Chrome/Edge/Samsung присылают beforeinstallprompt — тогда кнопка зовёт
+// родное окно установки; иначе — лист с подсказкой под этот браузер.
+let installEvt=null;
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installEvt=e;refreshInstallUI();});
+window.addEventListener("appinstalled",()=>{installEvt=null;refreshInstallUI();});
+function isStandalone(){
+  try{return navigator.standalone===true||["standalone","fullscreen","minimal-ui"].some(m=>matchMedia(`(display-mode: ${m})`).matches);}
+  catch(e){return false;}
+}
+const isAndroid=/Android/.test(navigator.userAgent);
+// Встроенный браузер Telegram подкладывает объект TelegramWebviewProxy
+// (исходники Telegram для Android — BotWebViewContainer; на iPhone так же),
+// а строку браузера на Android выдаёт за обычный Chrome — по ней не узнать.
+function inTelegram(){return typeof window.TelegramWebviewProxy!=="undefined"||/Telegram/i.test(navigator.userAgent);}
+// Прочие встроенные браузеры (ВК, Instagram, Facebook): на Android — «; wv)».
+function inAppBrowser(){return inTelegram()||/; wv\)|FBAN|FBAV|Instagram|VKAndroidApp|vkclient/i.test(navigator.userAgent);}
+// "app" — уже открыто как приложение; "inapp" — встроенный браузер (плашка);
+// "prompt" — есть родное окно установки; "ios" — Safari; "manual" — через меню
+// браузера; null — предлагать нечего (компьютер без окна установки).
+function installMode(){
+  if(isStandalone())return "app";
+  if(inAppBrowser())return "inapp";
+  if(installEvt)return "prompt";
+  if(isIOS)return "ios";
+  return isAndroid?"manual":null;
+}
+async function installApp(){
+  closeHdrMenu();
+  if(installEvt){
+    const e=installEvt;installEvt=null;               // событие одноразовое
+    try{await e.prompt();await e.userChoice;}catch(_){}
+    refreshInstallUI();return;
+  }
+  openInstallHelp();
+}
+// Ссылка «открыть вне встроенного браузера». Android: intent:// встроенный
+// браузер Telegram передаёт системе (Browser.openInExternalApp → startActivity),
+// и откроется браузер по умолчанию — или уже установленное приложение, если оно
+// есть. iPhone (iOS 17+): x-safari-https:// открывает Safari; не сработает —
+// останется подсказка через меню.
+// Адрес — с ТЕКУЩИМ местом чтения: в адресной строке лента держит только «#сура»
+// (аят — в history.state), а читать в браузере надо с того же аята.
+function outsideUrl(){
+  let u=location.origin+location.pathname+location.search+location.hash;
+  if(!ST.homeMode&&!ST.pageMode&&ST.surah&&/^#\d+$/.test(location.hash))u=u.replace(/#\d+$/,"#"+ST.surah+":"+curTopAyah());
+  if(isAndroid)return "intent://"+u.replace(/^https?:\/\//,"")+"#Intent;scheme=https;action=android.intent.action.VIEW;end";
+  if(isIOS)return "x-safari-"+u;
+  return u;
+}
+function copyAppLink(btn){
+  const u=location.href,done=()=>{if(btn)btn.textContent="✓ Ссылка скопирована";};
+  const old=()=>{const t=document.createElement("textarea");t.value=u;document.body.appendChild(t);t.select();try{document.execCommand("copy");done();}catch(_){}t.remove();};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(u).then(done,old);else old();
+}
+function openInstallHelp(){
+  const mode=installMode();
+  const step=(n,t)=>`<div class="inst-step"><span class="inst-n">${n}</span><span>${t}</span></div>`;
+  let title="Установить приложение",body="";
+  if(mode==="inapp"){
+    const tg=inTelegram();
+    title=tg?"Вы в браузере Telegram":"Вы во встроенном браузере";
+    body=`<p class="inst-p">Здесь приложение не установить, а заметки, закладки и прогресс сохраняются
+      отдельно от вашего обычного браузера. Откройте библиотеку в браузере — и установите её оттуда.</p>
+      <a class="inst-btn prim" href="#" onclick="this.href=outsideUrl()">${isIOS?"Открыть в Safari":"Открыть в браузере"}</a>
+      <p class="inst-p sub">Если кнопка не сработала:</p>`+
+      (isIOS
+        ?step(1,`Нажмите <b>⋯</b> или значок компаса внизу экрана`)+step(2,`Выберите <b>«Открыть в Safari»</b>`)
+        :step(1,`Нажмите <b>⋮</b> вверху справа`)+step(2,`Выберите <b>«Открыть в браузере»</b> (Chrome)`))+
+      step(3,`В браузере нажмите <b>📲 Установить приложение</b> — на Главной или в меню <b>⋮</b> библиотеки`)+
+      `<button class="inst-btn" onclick="copyAppLink(this)">Скопировать ссылку</button>`;
+  }else if(mode==="ios"){
+    body=`<p class="inst-p">На iPhone приложение ставится из Safari:</p>`+
+      step(1,`Нажмите <b>«Поделиться»</b> — квадрат со стрелкой ⬆ внизу экрана`)+
+      step(2,`Выберите <b>«На экран „Домой“»</b> (если не видно — пролистайте список вниз)`)+
+      step(3,`Нажмите <b>«Добавить»</b> — на экране появится значок «Тафсиры»`);
+  }else if(mode==="app"){
+    body=`<p class="inst-p">Библиотека уже открыта как приложение — всё готово.</p>`;
+  }else{
+    body=`<p class="inst-p">Установить можно через меню браузера:</p>`+
+      step(1,`Нажмите <b>⋮</b> (или <b>≡</b>) — меню браузера`)+
+      step(2,`Выберите <b>«Установить приложение»</b> или <b>«Добавить на главный экран»</b>`)+
+      step(3,`В Яндекс Браузере — <b>«Добавить ярлык»</b>; лучше всего установка работает в Chrome`);
+  }
+  if(mode!=="app")body+=`<p class="inst-p sub">Приложение открывается со значка на экране, без адресной строки, и работает без интернета.</p>`;
+  openSheetShell(title,"",`<div class="inst">${body}</div>`);
+}
+// Плашка внизу во встроенном браузере: «откройте в браузере». ✕ прячет на 30 дней.
+// position:fixed — ленту не сдвигает.
+function refreshInstallUI(){
+  const mode=installMode();
+  let b=document.getElementById("instBar");
+  const hidden=Date.now()-gs("instBarOff",0)<30*864e5;
+  if(mode==="inapp"&&!hidden){
+    if(!b){
+      b=document.createElement("div");b.id="instBar";b.className="inst-bar";
+      b.innerHTML=`<span class="ib-t" onclick="openInstallHelp()">📲 ${inTelegram()?"Вы в браузере Telegram.":"Вы во встроенном браузере."} Откройте в браузере, чтобы установить приложение и не потерять заметки.</span>`+
+        `<a class="ib-go" href="#" onclick="this.href=outsideUrl()">Открыть</a>`+
+        `<button class="ib-x" onclick="ss('instBarOff',Date.now());refreshInstallUI()" title="Скрыть">${IC.x}</button>`;
+      document.body.appendChild(b);
+    }
+    const nav=document.getElementById("bottomNav"),r=nav&&nav.getBoundingClientRect();
+    b.style.bottom=(r&&r.height?Math.max(8,innerHeight-r.top+8):12)+"px";
+  }else if(b)b.remove();
+  if(ST.homeMode&&document.querySelector(".home"))renderCenter();   // строка «Установить» на Главной
+}
+// Строка на Главной: при mode "app"/null и после «Не сейчас» её нет.
+function homeInstallHTML(){
+  const mode=installMode();
+  if(!mode||mode==="app"||Date.now()-gs("instHomeOff",0)<30*864e5)return "";
+  const sub=mode==="inapp"?"вы в браузере Telegram — откройте в обычном браузере":"значок на экране, открывается без браузера и интернета";
+  return `<div class="home-sec"><div class="home-nav-link" onclick="installApp()" title="Установить библиотеку как приложение">
+    <span class="hnl-ic">📲</span>
+    <span class="hnl-main">Установить приложение <span class="hnl-sub">— ${sub}</span></span>
+    <button class="hnl-x" onclick="event.stopPropagation();ss('instHomeOff',Date.now());renderCenter()" title="Не сейчас">${IC.x}</button></div></div>`;
 }
 
 // ============================================================
@@ -12052,6 +12195,7 @@ document.addEventListener("keydown",e=>{
 })();
 loadConfig();
 swInit();          // офлайн-слой: воркер оболочки (network-first) + кеш скачанного
+refreshInstallUI(); // плашка во встроенном браузере Telegram
 </script>
 </body>
 </html>

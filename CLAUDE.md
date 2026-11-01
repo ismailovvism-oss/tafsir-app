@@ -228,6 +228,15 @@ fonts/              ← самохостимые шрифты (.woff2)
 
 ## Текущее состояние и подсистемы (что уже есть в коде)
 Подробная история — в `CHANGELOG.md` («новое сверху»). Кратко, последнее сверху:
+- **Установка и встроенные браузеры** (2026-11-01, фаза 10): блок «УСТАНОВКА»
+  перед «ОФЛАЙН» в `index.html`. `installMode()` → app / inapp / prompt / ios /
+  manual / null; `beforeinstallprompt` перехватывается (`installEvt`), кнопка —
+  `installApp()`, лист — `openInstallHelp()`, строка Главной — `homeInstallHTML()`,
+  плашка — `refreshInstallUI()` (✕ → `tl_instBarOff`/`tl_instHomeOff` на 30 дней).
+  Telegram узнаётся ТОЛЬКО по `window.TelegramWebviewProxy` (UA на Android
+  подделан под Chrome). «Открыть в браузере»: Android — `intent://…#Intent;
+  scheme=https;…;end` (Telegram отдаёт его системе), iPhone — `x-safari-https://`.
+  Адрес строит `outsideUrl()` в момент нажатия — с текущим аятом.
 - **Лента без прыжков и подвисаний** (2026-11-01, фаза 8; замеры — CHANGELOG):
   - **Бар чтения `#centerBar` висит ПОВЕРХ `#centerBody`** (absolute) и прячется
     `transform`-ом. Место под него — отступ `--cbh` (мерит ResizeObserver, по

@@ -2,7 +2,7 @@
   "id": "./",
   "name": "Библиотека тафсиров",
   "short_name": "Тафсиры",
-  "description": "Коран, переводы смыслов и тафсиры в одной библиотеке.",
+  "description": "Коран, переводы смыслов и тафсиры в одной библиотеке: под каждым аятом — переводы, толкования ат-Табари, асары саляфов, ясный тафсир для детей и подростков. Пословный разбор и корни, заучивание наизусть, работа над аятом, заметки и теги. Работает без интернета.",
   "lang": "ru",
   "dir": "ltr",
   "start_url": "./",
@@ -10,7 +10,11 @@
   "display": "standalone",
   "background_color": "#FAF8F5",
   "theme_color": "#14331F",
-  "categories": ["books", "education", "reference"],
+  "categories": [
+    "books",
+    "education",
+    "reference"
+  ],
   "icons": [
     {
       "src": "icons/app-icon-192.png",
@@ -29,6 +33,64 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "docs/img/feed_tabari.webp",
+      "sizes": "640x1384",
+      "type": "image/webp",
+      "form_factor": "narrow",
+      "label": "Аят с изложением ат-Табари"
+    },
+    {
+      "src": "docs/img/feed_athar.webp",
+      "sizes": "640x1384",
+      "type": "image/webp",
+      "form_factor": "narrow",
+      "label": "Асары саляфов под аятом"
+    },
+    {
+      "src": "docs/img/feed_detyam.webp",
+      "sizes": "640x1384",
+      "type": "image/webp",
+      "form_factor": "narrow",
+      "label": "Ясный тафсир для детей"
+    },
+    {
+      "src": "docs/img/wbw.webp",
+      "sizes": "640x1384",
+      "type": "image/webp",
+      "form_factor": "narrow",
+      "label": "Пословный разбор"
+    },
+    {
+      "src": "docs/img/hifz_map.webp",
+      "sizes": "640x1384",
+      "type": "image/webp",
+      "form_factor": "narrow",
+      "label": "Карта заучивания"
+    },
+    {
+      "src": "docs/img/drill.webp",
+      "sizes": "640x1384",
+      "type": "image/webp",
+      "form_factor": "narrow",
+      "label": "Станок заучивания"
+    },
+    {
+      "src": "docs/img/desk_feed.webp",
+      "sizes": "1600x1000",
+      "type": "image/webp",
+      "form_factor": "wide",
+      "label": "Лента на компьютере"
+    },
+    {
+      "src": "docs/img/wb_desk.webp",
+      "sizes": "1600x1000",
+      "type": "image/webp",
+      "form_factor": "wide",
+      "label": "Работа над аятом"
     }
   ]
 }
