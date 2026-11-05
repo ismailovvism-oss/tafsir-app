@@ -7927,6 +7927,7 @@ function toggleHdrMenu(e){
     `<button onclick="closeHdrMenu();toggleViewPanel()">${IC.sliders}Вид и настройки</button>`+
     `<button onclick="closeHdrMenu();toggleFullscreen()">${IC.maxi}${ST.immersive?"Выйти из режима чтения":"Во весь экран"}</button>`+
     `<button onclick="closeHdrMenu();openHelp()">${IC.help}Справка</button>`+
+    `<button onclick="closeHdrMenu();window.open('https://tawhiid.com','_blank','noopener')"><span class="hm-emo">🌐</span>Другие наши приложения</button>`+
     (installMode()&&installMode()!=="app"?`<button onclick="installApp()"><span class="hm-emo">📲</span>Установить приложение</button>`:"");
   document.body.appendChild(m);hdrMenuEl=m;
   setTimeout(()=>document.addEventListener("click",_hmOut),10);
